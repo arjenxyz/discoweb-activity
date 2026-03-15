@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import fetchWithCreds from '@/lib/fetchWithCreds';
 import { apiUrl } from '@/lib/api';
 
 interface DiscordActivityAuthProps {
@@ -199,6 +200,24 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
 
           console.log('✅ Development session created, APIs will fetch real Supabise data');
           return;
+        }
+      }
+
+      // Eğer zaten bearer token varsa, yeniden OAuth istemeden doğrulamayı dene
+      const storedBearerToken = typeof window !== 'undefined' ? localStorage.getItem('discord_bearer_token') : null;
+      if (storedBearerToken) {
+        try {
+          const meRes = await fetchWithCreds(apiUrl('/api/auth/me'));
+          if (meRes.ok) {
+            const user = await meRes.json();
+            setIsAuthenticated(true);
+            setIsLoading(false);
+            localStorage.setItem('discordUser', JSON.stringify(user));
+            localStorage.setItem('selectedGuildId', guildId || '');
+            return;
+          }
+        } catch {
+          // Başarısız olursa normal OAuth akışına devam et
         }
       }
 
