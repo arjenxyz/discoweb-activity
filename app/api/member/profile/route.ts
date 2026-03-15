@@ -19,7 +19,20 @@ const getSupabase = () => {
   return createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
 };
 
-export async function GET() {
+export async function GET(request: Request) {
+  // Development mode'da önce Supabase'i dene, kullanıcı yoksa mock veri dön
+  const userId = await getSessionUserId();
+  if (!userId) {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[member/profile] unauthorized: authorization=', request.headers.get('authorization'));
+      console.log('[member/profile] unauthorized: cookie=', request.headers.get('cookie'));
+    }
+    return NextResponse.json(
+      { error: 'unauthorized' },
+      { status: 401 }
+    );
+  }
+
   const maintenance = await checkMaintenance(['site']);
   if (maintenance.blocked) {
     return NextResponse.json(
@@ -28,110 +41,60 @@ export async function GET() {
     );
   }
 
+  const supabase = getSupabase();
+  if (!supabase) {
+    return NextResponse.json({ error: 'missing_service_role' }, { status: 500 });
+  }
+
   try {
-    const botToken = process.env.DISCORD_BOT_TOKEN;
-    if (!botToken) {
-      return NextResponse.json({ error: 'missing_bot_token' }, { status: 500 });
+    // Önce Supabase'den kullanıcıyı dene
+    const { data: profile, error } = await supabase
+      .from('member_profiles')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (error && error.code !== 'PGRST116') { // PGRST116 = not found
+      throw error;
     }
 
-    const cookieStore = await cookies();
-    const userId = await getSessionUserId();
-    if (!userId) {
-      return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+    if (profile) {
+      // Gerçek profil bulundu, dön
+      return NextResponse.json(profile);
     }
 
-    const selectedGuildId = await getSelectedGuildId();
-
-    const [memberResponse, rolesResponse, guildResponse] = await Promise.all([
-      fetch(`https://discord.com/api/guilds/${selectedGuildId}/members/${userId}`, {
-        headers: { Authorization: `Bot ${botToken}` },
-      }),
-      fetch(`https://discord.com/api/guilds/${selectedGuildId}/roles`, {
-        headers: { Authorization: `Bot ${botToken}` },
-      }),
-      fetch(`https://discord.com/api/guilds/${selectedGuildId}`, {
-        headers: { Authorization: `Bot ${botToken}` },
-      }),
-    ]);
-
-    if (!memberResponse.ok) {
-      if (memberResponse.status === 404) {
-        return NextResponse.json({ error: 'user_not_member' }, { status: 403 });
-      }
-      return NextResponse.json({ error: 'fetch_member_failed' }, { status: 500 });
+    // Development modunda kullanıcı bulunamadı, mock veri dön
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`🔧 Development mode: User ${userId} not found in Supabase, returning mock data`);
+      return NextResponse.json({
+        id: userId,
+        username: 'DevUser',
+        nickname: 'Dev User',
+        displayName: 'Dev User',
+        avatarUrl: '/gif/cat.gif',
+        discriminator: '0001',
+        balance: 1000,
+        level: 1,
+        xp: 0,
+        daily_streak: 0,
+        last_daily: null,
+        created_at: new Date().toISOString(),
+        roles: [
+          { id: 'member-role', name: 'Member', color: 0x95a5a6 },
+          { id: 'vip-role', name: 'VIP', color: 0xf39c12 }
+        ],
+        guilds: [
+          { id: 'dev-guild', name: 'Development Server', icon: null }
+        ]
+      });
     }
 
-    if (!rolesResponse.ok) {
-      return NextResponse.json({ error: 'fetch_roles_failed' }, { status: 500 });
-    }
+    // Production modunda kullanıcı bulunamadı
+    return NextResponse.json({ error: 'profile_not_found' }, { status: 404 });
 
-    const member = (await memberResponse.json()) as {
-      nick?: string;
-      roles: string[];
-      user: { id: string; username: string; avatar: string | null; global_name?: string | null };
-    };
-
-    const roles = (await rolesResponse.json()) as Array<{ id: string; name: string; color: number; position: number }>;
-    const guild = guildResponse.ok
-      ? ((await guildResponse.json()) as { name: string; icon: string | null; id: string })
-      : null;
-    const roleMap = new Map(roles.map((role) => [role.id, role]));
-
-    const avatarHash = member.user.avatar;
-    const avatarUrl = avatarHash
-      ? `https://cdn.discordapp.com/avatars/${member.user.id}/${avatarHash}.png?size=128`
-      : `https://cdn.discordapp.com/embed/avatars/${Number(member.user.id) % 5}.png`;
-
-    const supabase = getSupabase();
-    let about: string | null = null;
-
-    let serverId = selectedGuildId; // fallback
-    if (supabase) {
-      const { data: server } = await supabase
-        .from('servers')
-        .select('id')
-        .eq('discord_id', selectedGuildId)
-        .eq('is_setup', true)
-        .maybeSingle();
-
-      if (server) {
-        serverId = server.id;
-      }
-    }
-
-    if (supabase) {
-      const { data } = await supabase
-        .from('member_profiles')
-        .select('about')
-        .eq('user_id', member.user.id)
-        .eq('guild_id', serverId)
-        .maybeSingle();
-
-      about = data?.about ?? null;
-    }
-
-    return NextResponse.json({
-      username: member.user.username,
-      nickname: member.nick ?? null,
-      displayName: member.user.global_name ?? null,
-      avatarUrl,
-      guildName: guild?.name ?? null,
-      guildIcon: guild?.icon
-        ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png?size=64`
-        : null,
-      roles: member.roles
-        .map((roleId) => roleMap.get(roleId))
-        .filter(Boolean)
-        .sort((a, b) => (b?.position ?? 0) - (a?.position ?? 0))
-        .map((role) => ({
-          id: role!.id,
-          name: role!.name,
-          color: role!.color,
-        })),
-      about,
-    });
-  } catch {
-    return NextResponse.json({ error: 'unhandled_exception' }, { status: 500 });
+  } catch (error) {
+    console.error('Profile fetch error:', error);
+    return NextResponse.json({ error: 'fetch_failed' }, { status: 500 });
   }
 }
 

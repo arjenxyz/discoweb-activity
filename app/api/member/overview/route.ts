@@ -25,6 +25,12 @@ const getSupabase = () => {
 import { NextRequest } from 'next/server';
 
 export async function GET(request: NextRequest) {
+  // Development mode'da da gerçek Supabase verilerini çek
+  const selectedGuildId = await getSelectedGuildId();
+  if (!selectedGuildId) {
+    return NextResponse.json({ error: 'no_guild_selected' }, { status: 400 });
+  }
+
   const maintenance = await checkMaintenance(['site']);
   if (maintenance.blocked) {
     return NextResponse.json(
@@ -43,8 +49,6 @@ export async function GET(request: NextRequest) {
   if (!userId) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
-
-  const selectedGuildId = await getSelectedGuildId();
 
   const [{ data: serverTotals }, { data: userTotals }] = await Promise.all([
     supabase

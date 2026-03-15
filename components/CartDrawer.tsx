@@ -64,8 +64,8 @@ export default function CartDrawer() {
   const isCheckoutDisabled = items.length === 0 || isBelowLimit || checkoutLoading;
 
   // Hoşgeldin ve Özel Kuponları Filtrele
-  const welcomeCoupon = userCoupons.find((c: Coupon) => c.is_welcome);
-  const specialCoupons = userCoupons.filter((c: Coupon) => c.is_special);
+  const welcomeCoupon = Array.isArray(userCoupons) ? userCoupons.find((c: Coupon) => c.is_welcome) : undefined;
+  const specialCoupons = Array.isArray(userCoupons) ? userCoupons.filter((c: Coupon) => c.is_special) : [];
 
   // Kupon uygulandıktan sonra kullanım bilgisini göster
   // NOT: Kupon limiti dolana kadar (userUsageCount >= perUserLimit) listede kalır

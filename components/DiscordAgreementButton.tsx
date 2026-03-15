@@ -56,8 +56,8 @@ export default function DiscordAgreementButton({ href, children, className, targ
       lastActiveEl.current = document.activeElement as HTMLElement | null;
     }
     setShowAgreementModal(true);
-    if (typeof window !== 'undefined' && window.gtag) {
-      window.gtag('event', 'click', {
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'click', {
         event_category: 'engagement',
         event_label: 'discord_agreement_open'
       });
@@ -83,8 +83,8 @@ export default function DiscordAgreementButton({ href, children, className, targ
         if (dontShowAgain) {
           localStorage.setItem('discord_agreement_remember', 'true');
         }
-        if (window.gtag) {
-          window.gtag('event', 'accept_agreement', {
+        if ((window as any).gtag) {
+          (window as any).gtag('event', 'accept_agreement', {
             event_category: 'engagement',
             event_label: 'discord_agreement_accepted',
             remember: dontShowAgain,
@@ -104,8 +104,8 @@ export default function DiscordAgreementButton({ href, children, className, targ
   const declineAgreement = () => {
     setShowAgreementModal(false);
     router.push('/');
-    if (typeof window !== 'undefined' && window.gtag) {
-      window.gtag('event', 'click', {
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'click', {
         event_category: 'engagement',
         event_label: 'discord_agreement_declined'
       });

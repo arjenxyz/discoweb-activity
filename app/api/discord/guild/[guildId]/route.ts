@@ -23,7 +23,6 @@ export async function GET(
       return NextResponse.json({ error: 'forbidden' }, { status: 403 });
     }
 
-    // Discord API'den sunucu bilgilerini al
     const response = await fetch(`https://discord.com/api/guilds/${guildId}`, {
       headers: { Authorization: `Bot ${botToken}` },
     });

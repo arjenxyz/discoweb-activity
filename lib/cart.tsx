@@ -72,22 +72,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // Subscribe to discount changes (so clients see new/updated discounts without refresh)
-  useEffect(() => {
-    const supabase = getSupabaseClient();
-    if (!supabase) return;
-
-    const channel = supabase
-      .channel('public:store_discounts')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'store_discounts' }, () => {
-        void refreshCoupons();
-      })
-      .subscribe();
-
-    return () => {
-      try { supabase.removeChannel(channel); } catch { /* ignore */ }
-    };
-  }, []);
-
+  // DISABLED: Realtime connection causing issues in Discord Activity iframe
+  
   const refreshCoupons = async () => {
     try {
       const res = await fetch('/api/member/coupons');

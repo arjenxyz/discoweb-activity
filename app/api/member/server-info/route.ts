@@ -12,6 +12,29 @@ const getSupabase = () => {
 };
 
 export async function GET() {
+  // Development mode bypass for Activity
+  if (process.env.NODE_ENV === 'development') {
+    return NextResponse.json({
+      id: 'dev-guild',
+      name: 'Development Server',
+      iconUrl: '/gif/cat.gif',
+      memberCount: 100,
+      isSetup: true,
+      roles: {
+        admin: 'admin-role-id',
+        moderator: 'moderator-role-id',
+        member: 'member-role-id',
+        vip: 'vip-role-id'
+      },
+      features: {
+        shop: true,
+        daily: true,
+        coupons: true,
+        leaderboard: true
+      }
+    });
+  }
+
   const supabase = getSupabase();
   if (!supabase) {
     return NextResponse.json({ error: 'missing_service_role' }, { status: 500 });

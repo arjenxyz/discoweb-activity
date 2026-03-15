@@ -40,6 +40,34 @@ const resolveServerId = async (supabase: SupabaseClient) => {
 };
 
 export async function GET() {
+  // Development mode bypass for Activity
+  if (process.env.NODE_ENV === 'development') {
+    return NextResponse.json({
+      coupons: [
+        {
+          id: 'welcome10',
+          code: 'WELCOME10',
+          discount: 10,
+          description: 'Hoş geldin indirim! İlk alışverişinde %10 indirim',
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          used: false,
+          maxUses: 1,
+          type: 'percentage'
+        },
+        {
+          id: 'weekend20',
+          code: 'WEEKEND20',
+          discount: 20,
+          description: 'Hafta sonu özel! %20 indirim',
+          expiresAt: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+          used: false,
+          maxUses: 1,
+          type: 'percentage'
+        }
+      ]
+    });
+  }
+
   const supabase = getSupabase();
   if (!supabase) return NextResponse.json({ error: 'missing_service_role' }, { status: 500 });
 

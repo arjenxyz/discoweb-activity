@@ -13,7 +13,9 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: 'Content-Security-Policy',
-            value: "frame-ancestors 'self' https://discord.com https://*.discordsays.com",
+            value: process.env.NODE_ENV === 'development' 
+              ? "frame-ancestors 'self' https://discord.com https://*.discordsays.com; connect-src 'self' https://discord.com https://*.discordsays.com https://*.supabase.co wss://*.supabase.co data: blob:"
+              : "frame-ancestors 'self' https://discord.com https://*.discordsays.com; connect-src 'self' https://discord.com https://*.discordsays.com https://*.supabase.co wss://*.supabase.co data: blob:",
           },
           {
             key: 'X-Frame-Options',

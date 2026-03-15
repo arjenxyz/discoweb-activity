@@ -41,6 +41,14 @@ const getDiscordProfile = async (userId: string, guildId: string) => {
 };
 
 export async function GET() {
+  // Development mode bypass for Activity
+  if (process.env.NODE_ENV === 'development') {
+    return NextResponse.json({ 
+      flags: {},
+      serverId: 'dev-mode'
+    });
+  }
+
   const selectedGuildId = await getSelectedGuildId();
   const data = await getMaintenanceFlags(selectedGuildId);
   if (!data) {

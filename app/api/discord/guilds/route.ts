@@ -19,7 +19,6 @@ export async function GET() {
     }
 
     console.log('Guilds API: Fetching user guilds from Discord API');
-    // Kullanıcının sunucularını al
     const response = await fetch('https://discord.com/api/users/@me/guilds', {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
@@ -33,7 +32,6 @@ export async function GET() {
     const guilds = await response.json();
     console.log('Guilds API: Fetched', guilds.length, 'guilds from Discord API');
 
-    // Sadece botun bulunduğu sunucuları filtrele
     const botToken = process.env.DISCORD_BOT_TOKEN;
     console.log('Guilds API: Bot token exists:', !!botToken);
     if (!botToken) {
@@ -42,7 +40,7 @@ export async function GET() {
     }
 
     console.log('Guilds API: Filtering guilds where bot is present...');
-    const filteredGuilds = [];
+    const filteredGuilds: any[] = [];
     for (const guild of guilds) {
       try {
         console.log(`Guilds API: Checking bot presence in guild ${guild.name} (${guild.id})`);

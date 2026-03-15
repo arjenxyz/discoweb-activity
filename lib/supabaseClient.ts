@@ -18,6 +18,10 @@ export const getSupabaseClient = () => {
   }
 
   supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      detectSessionInUrl: false,
+      persistSession: false,
+    },
     realtime: {
       params: {
         eventsPerSecond: 10,

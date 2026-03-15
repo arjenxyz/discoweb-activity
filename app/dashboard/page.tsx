@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
-import { getSupabaseClient } from '../../lib/supabaseClient';
+import fetchWithCreds from '@/lib/fetchWithCreds';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -40,19 +40,18 @@ export default function DashboardPage() {
   const [profileError, setProfileError] = useState<string | null>(null);
   const [unauthorized, setUnauthorized] = useState(false);
   const unauthorizedRef = useRef(unauthorized);
+  const tickRef = useRef(0);
   const [walletBalance, setWalletBalance] = useState(0);
   const [walletLoading, setWalletLoading] = useState(true);
   const [overviewStats, setOverviewStats] = useState<OverviewStats | OverviewStatsExpanded | null>(null);
-  const [adminOverview, setAdminOverview] = useState<any | null>(null);
-  const [adminOverviewLoading, setAdminOverviewLoading] = useState(false);
+  const [, setAdminOverview] = useState<any | null>(null);
+  const [, setAdminOverviewLoading] = useState(false);
   const [overviewLoading, setOverviewLoading] = useState(true);
   const [storeItems, setStoreItems] = useState<StoreItem[]>([]);
   const [storeItemsLoading, setStoreItemsLoading] = useState(true);
   const [activeSection, setActiveSection] = useState<Section>('overview');
   const [leaderboardOpen, setLeaderboardOpen] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [isDeveloperRole, setIsDeveloperRole] = useState(false);
-  const [searchParams, setSearchParams] = useState<URLSearchParams | null>(null);
+  const [, setSearchParams] = useState<URLSearchParams | null>(null);
 
   useEffect(() => {
     try {
@@ -63,20 +62,6 @@ export default function DashboardPage() {
         if (s === 'mail') setActiveSection('mail');
       }
     } catch {}
-  }, []);
-  // Rol tespiti (panel switcher için)
-  useEffect(() => {
-    const checkRoles = async () => {
-      try {
-        const [adminRes, devRes] = await Promise.all([
-          fetch('/api/admin/profile', { credentials: 'include', cache: 'no-store' }),
-          fetch('/api/developer/check-access', { credentials: 'include', cache: 'no-store' }),
-        ]);
-        if (adminRes.ok) setIsAdmin(true);
-        if (devRes.ok) setIsDeveloperRole(true);
-      } catch { /* ignore */ }
-    };
-    checkRoles();
   }, []);
 
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -262,7 +247,7 @@ export default function DashboardPage() {
 
     const loadProfile = async (attempt = 1): Promise<void> => {
       try {
-        const response = await fetch('/api/member/profile');
+        const response = await fetchWithCreds('/api/member/profile');
         if (response.status === 401) {
           setUnauthorized(true);
           setProfileLoading(false);
@@ -295,7 +280,7 @@ export default function DashboardPage() {
 
   const refreshWalletBalance = async () => {
     try {
-      const response = await fetch('/api/member/wallet');
+      const response = await fetchWithCreds('/api/member/wallet');
       if (response.ok) {
         const data = (await response.json()) as { balance: number };
         setWalletBalance(Number(data.balance ?? 0));
@@ -322,7 +307,7 @@ export default function DashboardPage() {
 
     const loadOverview = async (attempt = 1): Promise<void> => {
       try {
-        const response = await fetch('/api/member/overview');
+        const response = await fetchWithCreds('/api/member/overview');
         if (response.ok) {
           const data = (await response.json()) as OverviewStats;
           setOverviewStats(data);
@@ -371,7 +356,7 @@ export default function DashboardPage() {
 
   const refreshStoreItems = async () => {
     try {
-      const response = await fetch('/api/member/store');
+      const response = await fetchWithCreds('/api/member/store');
       if (response.ok) {
         const data = (await response.json()) as { items: StoreItem[] };
         setStoreItems(data.items ?? []);
@@ -436,13 +421,13 @@ export default function DashboardPage() {
   }, [unauthorized]);
 
   useEffect(() => {
-    if (unauthorized) return;
+    if (unauthorizedRef.current) return;
 
     const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
 
     const loadSelectedServer = async (attempt = 1): Promise<void> => {
       try {
-        const response = await fetch('/api/member/server-info');
+        const response = await fetchWithCreds('/api/member/server-info');
         if (response.ok) {
           const data = (await response.json()) as { id: string; name: string; iconUrl: string | null };
           setHeaderServer(prev => ({ ...prev, data }));
@@ -464,64 +449,15 @@ export default function DashboardPage() {
     };
 
     void loadSelectedServer();
-  }, [unauthorized]);
 
-  // Supabase realtime subscriptions for live updates
-  useEffect(() => {
-    const supabase = getSupabaseClient();
-    if (!supabase) return;
-    if (unauthorized) return;
-    const guildId = headerServer.data?.id;
-    if (!guildId) return;
-
-    let walletSub: any = null;
-    let overviewSub: any = null;
-
-    try {
-      // subscribe to member_wallets changes for this guild -> refresh balance
-      walletSub = supabase
-        .channel('public:member_wallets')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'member_wallets', filter: `guild_id=eq.${guildId}` }, (payload) => {
-          void refreshWalletBalance();
-        })
-        .subscribe();
-
-      // subscribe to member_overview_stats or server_overview_stats changes -> refresh overview
-      overviewSub = supabase
-        .channel('public:overview_stats')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'member_overview_stats', filter: `guild_id=eq.${guildId}` }, (payload) => {
-          // reload overview for current user
-          (async () => { const res = await fetch('/api/member/overview'); if (res.ok) { const data = await res.json(); setOverviewStats(data); } })();
-        })
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'server_overview_stats', filter: `guild_id=eq.${guildId}` }, (payload) => {
-          (async () => { const res = await fetch('/api/member/overview'); if (res.ok) { const data = await res.json(); setOverviewStats(data); } })();
-        })
-        .subscribe();
-    } catch (e) {
-      // ignore subscription failures (fallback to polling already present)
-      console.warn('Supabase realtime subscription failed', e);
-    }
-
-    return () => {
-      try {
-        if (walletSub) supabase.removeChannel(walletSub);
-        if (overviewSub) supabase.removeChannel(overviewSub);
-      } catch (e) {
-        // ignore
-      }
-    };
-  }, [unauthorized, headerServer.data?.id]);
-
-  // Birleşik polling: 15s tick, wallet her 2. tick (30s), store her 20. tick (300s)
-  useEffect(() => {
-    let tick = 0;
     const interval = setInterval(() => {
       if (unauthorizedRef.current) return;
-      tick += 1;
+      tickRef.current += 1;
       void refreshMailRef.current?.();
-      if (tick % 2 === 0) void refreshWalletRef.current?.();
-      if (tick % 20 === 0) void refreshStoreRef.current?.();
+      if (tickRef.current % 2 === 0) void refreshWalletRef.current?.();
+      if (tickRef.current % 20 === 0) void refreshStoreRef.current?.();
     }, 15000);
+
     return () => clearInterval(interval);
   }, []);
 
@@ -558,7 +494,7 @@ export default function DashboardPage() {
     }
 
     setTransferLoading(true);
-    const response = await fetch('/api/member/transfer', {
+    const response = await fetchWithCreds('/api/member/transfer', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ recipientId: transferRecipientId.trim(), amount: amountValue }),
@@ -716,7 +652,8 @@ export default function DashboardPage() {
     setDiscountsModalOpen(true);
   };
 
-  const handleApplyPromoCode = async (_code: string) => {
+
+  const handleApplyPromoCode = async () => {
     // TODO: promo code API entegrasyonu
   };
 
@@ -730,7 +667,7 @@ export default function DashboardPage() {
     setPurchaseLoadingId(itemId);
     setPurchaseFeedback(prev => ({ ...prev, [itemId]: undefined })); // clear previous
 
-    const response = await fetch('/api/member/store', {
+    const response = await fetchWithCreds('/api/member/store', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ items: [{ itemId, qty: 1 }] }),
@@ -784,16 +721,16 @@ export default function DashboardPage() {
       : 'pt-24 pb-10 gap-6';
 
   return (
-    <div className="min-h-screen bg-[#0b0d12] text-white">
-      <div className="min-h-screen">
+    <div className="h-screen bg-[#0b0d12] text-white overflow-hidden">
+      <div className="h-screen flex flex-col">
         {effectiveSection !== 'mail' && (
         <DashboardHeader
           unauthorized={unauthorized}
           walletLoading={walletLoading}
           walletBalance={walletBalance}
           loginUrl={loginUrl}
-          isDeveloper={isDeveloperRole}
-          isAdmin={isAdmin}
+          isDeveloper={false}
+          isAdmin={false}
           server={headerServer}
           navigation={{
             activeSection: effectiveSection,
@@ -836,7 +773,7 @@ export default function DashboardPage() {
         />
         )}
 
-        <main className={`${mainWrapperClass} flex flex-col ${mainSpacingClass}`}>
+        <main className={`${mainWrapperClass} flex-1 flex flex-col ${mainSpacingClass} overflow-y-auto custom-scrollbar`}>
             {!maintenanceLoading && isSiteMaintenance && (
               <section className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-6">
                 <p className="text-sm font-semibold text-amber-200">Site bakımda</p>

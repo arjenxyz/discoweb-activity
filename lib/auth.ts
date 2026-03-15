@@ -72,7 +72,7 @@ export const setSessionCookies = (response: NextResponse, userId: string) => {
 
   response.cookies.set(SESSION_COOKIE, token, {
     httpOnly: true,
-    sameSite: 'lax',
+    sameSite: 'none',
     secure: process.env.NODE_ENV === 'production',
     maxAge: SESSION_MAX_AGE_SEC,
     path: '/',
@@ -80,11 +80,13 @@ export const setSessionCookies = (response: NextResponse, userId: string) => {
 
   response.cookies.set(CSRF_COOKIE, csrfToken, {
     httpOnly: false,
-    sameSite: 'lax',
+    sameSite: 'none',
     secure: process.env.NODE_ENV === 'production',
     maxAge: SESSION_MAX_AGE_SEC,
     path: '/',
   });
+
+  return token;
 };
 
 export const clearSessionCookies = (response: NextResponse) => {
@@ -93,16 +95,27 @@ export const clearSessionCookies = (response: NextResponse) => {
 };
 
 export const getSessionUserId = async () => {
+  // Development mode bypass for Activity
+  if (process.env.NODE_ENV === 'development') {
+    return 'dev-user-12345';
+  }
+
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE)?.value;
+
   if (!token) {
-    const allCookies = cookieStore.getAll().map(c => c.name);
-    console.log('[auth] No discord_session cookie found. Available cookies:', allCookies);
+    if ((process.env.NODE_ENV as string) === 'development') {
+      const all = cookieStore.getAll().map(c => ({ name: c.name, value: c.value }));
+      console.log('[auth] No discord_session cookie found. Available cookies:', all);
+    }
     return null;
   }
+
   const payload = verifySessionToken(token);
   if (!payload) {
-    console.log('[auth] discord_session cookie exists but verification failed (expired or invalid signature)');
+    if ((process.env.NODE_ENV as string) === 'development') {
+      console.log('[auth] discord_session cookie exists but verification failed (expired or invalid signature)');
+    }
   }
   return payload?.sub ?? null;
 };
@@ -150,9 +163,17 @@ export const assertSameOrigin = (request: Request) => {
  */
 export const getSessionUserIdFromRequest = (request: Request): string | null => {
   const authHeader = request.headers.get('Authorization');
-  if (!authHeader?.startsWith('Bearer ')) return null;
+  if (!authHeader?.startsWith('Bearer ')) {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[auth] Missing or invalid Authorization header:', authHeader);
+    }
+    return null;
+  }
   const token = authHeader.slice(7);
   const payload = verifySessionToken(token);
+  if (!payload && process.env.NODE_ENV === 'development') {
+    console.log('[auth] Bearer token present but verification failed:', token);
+  }
   return payload?.sub ?? null;
 };
 

@@ -29,6 +29,19 @@ const getTodayStartIso = (): string => {
 };
 
 export async function GET() {
+  // Development mode bypass for Activity
+  if (process.env.NODE_ENV === 'development') {
+    return NextResponse.json({
+      balance: 1000,
+      total_earned: 1000,
+      total_spent: 0,
+      daily_reward: 100,
+      last_daily: null,
+      streak: 0,
+      transactions_count: 0
+    });
+  }
+
   const maintenance = await checkMaintenance(['site']);
   if (maintenance.blocked) {
     return NextResponse.json(

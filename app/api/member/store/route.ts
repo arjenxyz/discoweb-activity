@@ -26,6 +26,41 @@ const getSelectedGuildId = async (): Promise<string> => {
 };
 
 export async function GET() {
+  // Development mode bypass for Activity
+  if (process.env.NODE_ENV === 'development') {
+    return NextResponse.json({
+      categories: [
+        {
+          id: 'roles',
+          name: 'Roller',
+          description: 'Sunucu rollerini satın al',
+          items: [
+            {
+              id: 'vip',
+              name: 'VIP Rolü',
+              description: 'Özel renk ve yetkiler',
+              price: 500,
+              icon: '/gif/cat.gif',
+              type: 'role',
+              available: true
+            },
+            {
+              id: 'premium',
+              name: 'Premium Rolü',
+              description: 'Tüm premium özellikler',
+              price: 1000,
+              icon: '/gif/cat.gif',
+              type: 'role',
+              available: true
+            }
+          ]
+        }
+      ],
+      featured: [],
+      limited: []
+    });
+  }
+
   const maintenance = await checkMaintenance(['site', 'store']);
   if (maintenance.blocked) {
     return NextResponse.json(

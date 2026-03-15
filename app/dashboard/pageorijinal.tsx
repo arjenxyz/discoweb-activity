@@ -215,7 +215,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const loadProfile = async () => {
-      const response = await fetch('/api/member/profile');
+      const response = await fetch('/api/member/profile', { credentials: 'include' });
       if (response.status === 401) {
         setUnauthorized(true);
         setProfileLoading(false);
@@ -236,7 +236,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const loadPromotions = async () => {
-      const response = await fetch('/api/member/store');
+      const response = await fetch('/api/member/store', { credentials: 'include' });
       if (response.ok) {
         const data = (await response.json()) as { items: StoreItem[] };
         setItems(data.items ?? []);
@@ -249,7 +249,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const loadWallet = async () => {
-      const response = await fetch('/api/member/wallet');
+      const response = await fetch('/api/member/wallet', { credentials: 'include' });
       if (response.ok) {
         const data = (await response.json()) as { balance: number };
         setWalletBalance(Number(data.balance ?? 0));
@@ -262,7 +262,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const loadOverview = async () => {
-      const response = await fetch('/api/member/overview');
+      const response = await fetch('/api/member/overview', { credentials: 'include' });
       if (response.ok) {
         const data = (await response.json()) as OverviewStats;
         setOverviewStats(data);
@@ -275,7 +275,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const loadOrders = async () => {
-      const response = await fetch('/api/member/transactions');
+      const response = await fetch('/api/member/transactions', { credentials: 'include' });
       if (response.ok) {
         const data = (await response.json()) as { orders: Order[] };
         setOrders(data.orders ?? []);
@@ -343,7 +343,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const loadSelectedServer = async () => {
-      const response = await fetch('/api/member/server-info');
+      const response = await fetch('/api/member/server-info', { credentials: 'include' });
       if (response.ok) {
         const data = (await response.json()) as { id: string; name: string; iconUrl: string | null };
         setHeaderServer(prev => ({ ...prev, data }));
@@ -404,7 +404,7 @@ export default function DashboardPage() {
     }
 
     setTransferLoading(true);
-    const response = await fetch('/api/member/transfer', {
+    const response = await fetch('/api/member/transfer', { credentials: 'include',
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ recipientId: transferRecipientId.trim(), amount: amountValue }),
@@ -493,7 +493,7 @@ export default function DashboardPage() {
 
   const reloadOrders = async () => {
     setOrdersLoading(true);
-    const response = await fetch('/api/member/transactions');
+    const response = await fetch('/api/member/transactions', { credentials: 'include' });
     if (response.ok) {
       const data = (await response.json()) as { orders: Order[] };
       setOrders(data.orders ?? []);
@@ -524,7 +524,7 @@ export default function DashboardPage() {
 
     setPurchaseLoadingId(itemId);
 
-    const response = await fetch('/api/member/purchase', {
+    const response = await fetch('/api/member/purchase', { credentials: 'include',
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ itemId }),
@@ -556,7 +556,7 @@ export default function DashboardPage() {
       return;
     }
 
-    const response = await fetch('/api/member/refund', {
+    const response = await fetch('/api/member/refund', { credentials: 'include',
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ orderId }),
@@ -600,7 +600,7 @@ export default function DashboardPage() {
     }
 
     setPromoLoading(true);
-    const response = await fetch('/api/member/promotion', {
+    const response = await fetch('/api/member/promotion', { credentials: 'include',
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ code: code.trim() }),
