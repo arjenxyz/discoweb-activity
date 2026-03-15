@@ -25,6 +25,15 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  // Discord Activity proxy için /activity/api/* isteklerini /api/*'e yönlendir
+  async rewrites() {
+    return [
+      {
+        source: '/activity/api/:path*',
+        destination: '/api/:path*',
+      },
+    ];
+  },
   // Tell Next to treat these packages as server externals (avoid bundling into ESM chunks)
   serverExternalPackages: [
     'discord.js',

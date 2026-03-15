@@ -24,23 +24,55 @@ async function forwardRequest(request: NextRequest) {
   headers.delete('trailer');
   headers.delete('transfer-encoding');
 
-  const resp = await fetch(targetUrl.toString(), {
-    method: request.method,
-    headers,
-    body: request.body,
-    redirect: 'manual',
-  });
+  try {
+    const resp = await fetch(targetUrl.toString(), {
+      method: request.method,
+      headers,
+      body: request.body,
+      redirect: 'manual',
+    });
 
-  // Forward response headers (but avoid some hop-by-hop headers)
-  const responseHeaders = new Headers(resp.headers);
-  responseHeaders.delete('transfer-encoding');
-  responseHeaders.delete('connection');
+    // Log non-OK responses for easier debugging
+    if (!resp.ok) {
+      console.warn('[activity/api proxy] upstream response not ok', {
+        method: request.method,
+        url: request.url,
+        targetUrl: targetUrl.toString(),
+        status: resp.status,
+        statusText: resp.statusText,
+      });
+    }
 
-  return new Response(resp.body, {
-    status: resp.status,
-    statusText: resp.statusText,
-    headers: responseHeaders,
-  });
+    // Forward response headers (but avoid some hop-by-hop headers)
+    const responseHeaders = new Headers(resp.headers);
+    responseHeaders.delete('transfer-encoding');
+    responseHeaders.delete('connection');
+
+    return new Response(resp.body, {
+      status: resp.status,
+      statusText: resp.statusText,
+      headers: responseHeaders,
+    });
+  } catch (error) {
+    // Log for visibility in server logs
+    console.error('[activity/api proxy] failed to forward', {
+      method: request.method,
+      url: request.url,
+      targetUrl: targetUrl.toString(),
+      error,
+    });
+
+    return new Response(
+      JSON.stringify({
+        error: 'proxy_failure',
+        message: (error as Error)?.message ?? 'unknown',
+      }),
+      {
+        status: 500,
+        headers: { 'content-type': 'application/json' },
+      },
+    );
+  }
 }
 
 export async function GET(request: NextRequest) {

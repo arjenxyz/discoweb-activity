@@ -1,25 +1,34 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { createClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { checkMaintenance } from '@/lib/maintenance';
 import { getSessionUserId } from '@/lib/auth';
 import { cleanupExpiredRolesForUser } from '@/lib/roleCleanup';
+import { getSupabaseServiceClient } from '@/lib/supabaseServiceClient';
 
-const GUILD_ID = process.env.DISCORD_GUILD_ID ?? '1465698764453838882';
+type PapelRow = { user_id: string; balance: number | null };
+
+type DiscordMemberInfo = {
+  userId: string;
+  avatarUrl: string;
+  nickname: string | null;
+  displayName: string | null;
+  username: string;
+};
+
+type DailyStatRow = { message_count: number | null; voice_minutes: number | null };
+
+type PerkRow = {
+  role_id: string;
+  item_title: string | null;
+  applied_at: string | null;
+  expires_at: string | null;
+};
 
 const getSelectedGuildId = async (): Promise<string> => {
   const cookieStore = await cookies();
   const selectedGuildId = cookieStore.get('selected_guild_id')?.value;
   return selectedGuildId || process.env.DISCORD_GUILD_ID || '1465698764453838882';
-};
-
-const getSupabase = () => {
-  const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!supabaseUrl || !serviceRoleKey) {
-    return null;
-  }
-  return createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
 };
 
 import { NextRequest } from 'next/server';
@@ -39,12 +48,11 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const supabase = getSupabase();
+  const supabase = getSupabaseServiceClient();
   if (!supabase) {
     return NextResponse.json({ error: 'missing_service_role' }, { status: 500 });
   }
 
-  const cookieStore = await cookies();
   const userId = await getSessionUserId();
   if (!userId) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
@@ -98,6 +106,7 @@ export async function GET(request: NextRequest) {
     .order('balance', { ascending: false })
     .order('user_id', { ascending: true })
     .range(offset, offset + limit - 1);
+  const papelRowsTyped = papelRows as PapelRow[] | null;
 
   const fetchDiscordUser = async (uid: string) => {
     let avatarUrl = '';
@@ -157,19 +166,19 @@ export async function GET(request: NextRequest) {
     return { userId: uid, avatarUrl, nickname, displayName, username };
   };
 
-  if (papelRows && papelRows.length) {
+  if (papelRowsTyped && papelRowsTyped.length) {
     // Discord API’den hızla kullanıcı bilgisi almak için paralel istekler (kümeleme)
     const concurrency = 30;
-    const discordMembers: Array<any> = [];
+    const discordMembers: DiscordMemberInfo[] = [];
 
-    for (let i = 0; i < papelRows.length; i += concurrency) {
-      const batch = papelRows.slice(i, i + concurrency);
-      const results = await Promise.all(batch.map((row: any) => fetchMember(row.user_id)));
+    for (let i = 0; i < (papelRowsTyped.length ?? 0); i += concurrency) {
+      const batch = papelRowsTyped.slice(i, i + concurrency);
+      const results = await Promise.all(batch.map((row) => fetchMember(row.user_id)));
       discordMembers.push(...results);
     }
 
-    papelLeaderboard = papelRows.map((row: any, idx: number) => {
-      const info = discordMembers[idx] || {};
+    papelLeaderboard = papelRowsTyped.map((row, idx) => {
+      const info = discordMembers[idx] || ({} as DiscordMemberInfo);
       return {
         userId: row.user_id,
         avatarUrl: info.avatarUrl,
@@ -243,8 +252,9 @@ export async function GET(request: NextRequest) {
     .eq('user_id', userId)
     .gte('stat_date', dayAgo);
 
-  const messagesLast24h = (last24 ?? []).reduce((s: number, r: any) => s + Number(r.message_count ?? 0), 0);
-  const voiceMinutesLast24h = (last24 ?? []).reduce((s: number, r: any) => s + Number(r.voice_minutes ?? 0), 0);
+  const statsRows = (last24 ?? []) as DailyStatRow[];
+  const messagesLast24h = statsRows.reduce((s, r) => s + Number(r.message_count ?? 0), 0);
+  const voiceMinutesLast24h = statsRows.reduce((s, r) => s + Number(r.voice_minutes ?? 0), 0);
 
   // determine verified role and when it was first applied (if any)
   let hasVerifyRole = false;
@@ -277,8 +287,9 @@ export async function GET(request: NextRequest) {
       .eq('guild_id', selectedGuildId)
       .eq('user_id', userId)
       .gte('stat_date', sinceDate);
-    const msgs = (sinceRows ?? []).reduce((s: number, r: any) => s + Number(r.message_count ?? 0), 0);
-    const vmins = (sinceRows ?? []).reduce((s: number, r: any) => s + Number(r.voice_minutes ?? 0), 0);
+    const sinceRowsTyped = (sinceRows ?? []) as DailyStatRow[];
+    const msgs = sinceRowsTyped.reduce((s, r) => s + Number(r.message_count ?? 0), 0);
+    const vmins = sinceRowsTyped.reduce((s, r) => s + Number(r.voice_minutes ?? 0), 0);
     totalsSinceVerified = { messages: msgs, voice_minutes: vmins };
   }
 
@@ -295,7 +306,7 @@ export async function GET(request: NextRequest) {
       .order('applied_at', { ascending: false });
     if (perks) {
       const now = Date.now();
-      activePerks = (perks as any[])
+      activePerks = (perks as PerkRow[])
         .filter((p) => !p.expires_at || new Date(p.expires_at).getTime() > now)
         .map((p) => ({ role_id: p.role_id, item_title: p.item_title ?? null, applied_at: p.applied_at ?? null, expires_at: p.expires_at ?? null }));
     }
@@ -325,7 +336,7 @@ export async function GET(request: NextRequest) {
 
   // Süresi dolmuş rolleri arka planda temizle (bot çevrimdışı olsa bile)
   if (serverRow?.id) {
-    cleanupExpiredRolesForUser(supabase as any, serverRow.id, selectedGuildId, userId, botToken).catch(() => {});
+    cleanupExpiredRolesForUser(supabase as SupabaseClient, serverRow.id, selectedGuildId, userId, botToken).catch(() => {});
   }
 
   return NextResponse.json({
