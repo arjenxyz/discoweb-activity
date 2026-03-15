@@ -17,13 +17,18 @@ export function apiUrl(path: string): string {
     // which causes 404s (e.g. `/activity/activity/auth`).
     let cleaned = path.replace(/^\/+/, '');
     // If caller already provided `activity/` path, use it as-is.
-    if (cleaned.startsWith('activity/')) return cleaned;
-    // If caller provided `/api/activity/...`, normalize to avoid
-    // producing `activity/api/activity/...` which leads to 404s.
-    if (cleaned.startsWith('api/activity/')) {
-      cleaned = 'api/' + cleaned.slice('api/activity/'.length);
+    if (cleaned.startsWith('activity/')) {
+      const result = cleaned;
+      try { console.debug('[apiUrl] generated', { input: path, cleaned, result, host: window.location.hostname, pathname: window.location.pathname }); } catch (e) {}
+      return result;
     }
-    return `activity/${cleaned}`;
+    // Preserve `/api/activity/...` segments — the proxy forwarding semantics
+    // may require the inner `activity` segment to reach the backend route
+    // at `/api/activity/...`. Don't strip it here; just prefix with the
+    // outer `activity/` so the proxy receives the correct forwarded path.
+    const result = `activity/${cleaned}`;
+    try { console.debug('[apiUrl] generated', { input: path, cleaned, result, host: window.location.hostname, pathname: window.location.pathname }); } catch (e) {}
+    return result;
   }
 
   const normalizedBase = API_BASE_URL.replace(/\/+$/, '');
