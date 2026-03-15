@@ -250,7 +250,6 @@ const envFlags = {
                 {
                   guild_id: guild.id,
                   user_id: user.id,
-                  balance: 0, // Başlangıç bakiyesi
                   level: 1, // Başlangıç seviyesi
                   xp: 0, // Başlangıç XP
                   daily_streak: 0, // Günlük streak

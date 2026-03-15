@@ -65,7 +65,6 @@ export async function GET(request: Request) {
       {
         guild_id: selectedGuildId,
         user_id: userId,
-        balance: 0,
         level: 1,
         xp: 0,
         daily_streak: 0,
