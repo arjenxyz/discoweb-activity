@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import type { MailItem } from '../../types';
 import { apiUrl } from '@/lib/api';
+import fetchWithCreds from '@/lib/fetchWithCreds';
 import { sanitizeHtml } from '@/lib/sanitizeHtml';
 import {
   LuReply,
@@ -52,7 +53,7 @@ export default function MailPage() {
     const load = async () => {
       setLoading(true);
       try {
-        const res = await fetch(apiUrl('/api/mail'));
+        const res = await fetchWithCreds(apiUrl('/api/mail'));
         if (!res.ok) {
           setError('Mesaj yüklenemedi');
           setLoading(false);
@@ -69,7 +70,7 @@ export default function MailPage() {
           setError(null);
           if (!found.is_read) {
             try {
-              await fetch(apiUrl('/api/mail'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: found.id }) });
+              await fetchWithCreds(apiUrl('/api/mail'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: found.id }) });
             } catch {}
             try { window.dispatchEvent(new CustomEvent('mail:refresh')); } catch {}
           }

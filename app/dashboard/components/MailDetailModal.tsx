@@ -4,6 +4,7 @@ import Image from 'next/image';
 import type { MailItem } from '../types';
 import { useEffect, useRef } from 'react';
 import { apiUrl } from '@/lib/api';
+import fetchWithCreds from '@/lib/fetchWithCreds';
 import { sanitizeHtml } from '@/lib/sanitizeHtml';
 import {
   LuChevronLeft,
@@ -76,7 +77,7 @@ export default function MailDetailModal({ mail, onClose, onDelete, onStar }: Mai
     if (mail && !mail.is_read) {
       void (async () => {
         try {
-          await fetch(apiUrl('/api/mail'), {
+          await fetchWithCreds(apiUrl('/api/mail'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id: mail.id })

@@ -10,6 +10,21 @@ export default async function fetchWithCreds(input: RequestInfo, init: RequestIn
   const resolvedInput =
     typeof input === 'string' && input.startsWith('/api/') ? apiUrl(input) : input;
 
+  // If we're in an Activity embed environment, we may not have cookies sent.
+  // In that case, include the selected guild id as a query parameter so the backend
+  // can still determine the proper guild.
+  let finalInput = resolvedInput;
+  if (typeof window !== 'undefined' && typeof resolvedInput === 'string' && resolvedInput.startsWith('/api/')) {
+    const selectedGuildId = window.localStorage.getItem('selectedGuildId');
+    if (selectedGuildId) {
+      const url = new URL(resolvedInput, window.location.origin);
+      if (!url.searchParams.has('guild_id')) {
+        url.searchParams.set('guild_id', selectedGuildId);
+      }
+      finalInput = url.toString();
+    }
+  }
+
   const bearerTokenFromLocalStorage = typeof window !== 'undefined' ? localStorage.getItem('discord_bearer_token') : null;
   const bearerTokenFromCookie = typeof window !== 'undefined' ? getCookie('discord_session') : null;
   const bearerToken = bearerTokenFromLocalStorage || bearerTokenFromCookie;
