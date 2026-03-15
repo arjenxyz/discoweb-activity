@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { getMaintenanceFlags } from '@/lib/maintenance';
+import { createDefaultFlags, getMaintenanceFlags } from '@/lib/maintenance';
 
 const getSelectedGuildId = async (): Promise<string> => {
   const cookieStore = await cookies();
@@ -52,7 +52,10 @@ export async function GET() {
   const selectedGuildId = await getSelectedGuildId();
   const data = await getMaintenanceFlags(selectedGuildId);
   if (!data) {
-    return NextResponse.json({ error: 'unavailable' }, { status: 500 });
+    // If maintenance flags cannot be loaded (missing server record, missing DB, etc.),
+    // return a safe default set rather than erroring out. This prevents the UI from
+    // breaking when the request is made from an embedded activity iframe.
+    return NextResponse.json({ flags: createDefaultFlags(), updaterProfiles: {} });
   }
 
   const updaterIds = Object.values(data.flags)
