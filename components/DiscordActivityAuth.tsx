@@ -30,6 +30,11 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
       if (guildId && existingGuildId !== guildId) {
         console.log('🔄 New guild detected or dev mode, refreshing user data...');
         localStorage.clear();
+
+        // Ensure backend sees the correct guild immediately via cookie.
+        const sameSiteValue = window.location.protocol === 'https:' ? 'None' : 'Lax';
+        const secureValue = window.location.protocol === 'https:' ? '; Secure' : '';
+        document.cookie = `selected_guild_id=${guildId}; Path=/; Max-Age=604800; SameSite=${sameSiteValue}${secureValue}`;
       }
 
       const setDevCookies = () => {
