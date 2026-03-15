@@ -10,7 +10,12 @@ export function apiUrl(path: string): string {
   // it goes through the proxy. We also need to avoid leading `/` because the
   // proxy likely only forwards within the activity route (e.g. `/activity/...`).
   if (typeof window !== 'undefined' && window.location.hostname.includes('discordsays.com')) {
-    return path.replace(/^\/+/, '');
+    // Proxy may serve the activity under an `/activity` prefix. Ensure requests
+    // go to the activity-scoped path so the proxy will forward them to our
+    // backend. Use a conservative prefix to avoid relying on the current
+    // pathname which can be `/` in some proxy configurations.
+    const cleaned = path.replace(/^\/+/, '');
+    return `activity/${cleaned}`;
   }
 
   const normalizedBase = API_BASE_URL.replace(/\/+$/, '');
