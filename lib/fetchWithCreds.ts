@@ -28,13 +28,5 @@ export default async function fetchWithCreds(input: RequestInfo, init: RequestIn
     },
   };
 
-  const res = await fetch(resolvedInput, merged);
-  const contentType = res.headers.get('content-type') || '';
-  if (contentType.includes('application/json')) {
-    const json = await res.json();
-    if (!res.ok) throw json;
-    return json;
-  }
-  if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-  return res;
+  return fetch(resolvedInput, merged);
 }
