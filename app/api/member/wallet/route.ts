@@ -61,6 +61,9 @@ export async function GET() {
   }
 
   const selectedGuildId = await getSelectedGuildId();
+  if (!selectedGuildId) {
+    return NextResponse.json({ error: 'no_guild_specified' }, { status: 400 });
+  }
 
   const { data: server } = await supabase
     .from('servers')
@@ -79,6 +82,19 @@ export async function GET() {
     .eq('guild_id', selectedGuildId)
     .eq('user_id', userId)
     .maybeSingle();
+
+  // Eğer kullanıcıya ait cüzdan satırı yoksa otomatik oluştur
+  if (!wallet) {
+    await supabase.from('member_wallets').upsert(
+      {
+        guild_id: selectedGuildId,
+        user_id: userId,
+        balance: 0,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'guild_id,user_id' },
+    );
+  }
 
   const { data: sentToday } = await supabase
     .from('wallet_ledger')

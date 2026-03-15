@@ -1,14 +1,8 @@
-import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getSessionUserIdFromRequest, requireSessionUser } from '@/lib/auth';
 import { checkMaintenance } from '@/lib/maintenance';
-
-const getSelectedGuildId = async (): Promise<string> => {
-  const cookieStore = await cookies();
-  const selectedGuildId = cookieStore.get('selected_guild_id')?.value;
-  return selectedGuildId || process.env.DISCORD_GUILD_ID || '1465698764453838882';
-};
+import { getSelectedGuildId } from '@/lib/guild';
 
 const getSupabase = () => {
   const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -30,6 +24,11 @@ export async function GET(request: Request) {
     return session.response;
   }
   const userId = session.userId;
+
+  const selectedGuildId = await getSelectedGuildId(request);
+  if (!selectedGuildId) {
+    return NextResponse.json({ error: 'no_guild_specified' }, { status: 400 });
+  }
 
   const maintenance = await checkMaintenance(['site']);
   if (maintenance.blocked) {
@@ -61,33 +60,39 @@ export async function GET(request: Request) {
       return NextResponse.json(profile);
     }
 
-    // Development modunda kullanıcı bulunamadı, mock veri dön
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`🔧 Development mode: User ${userId} not found in Supabase, returning mock data`);
-      return NextResponse.json({
-        id: userId,
-        username: 'DevUser',
-        nickname: 'Dev User',
-        displayName: 'Dev User',
-        avatarUrl: '/gif/cat.gif',
-        discriminator: '0001',
-        balance: 1000,
+    // Kullanıcının bu sunucuda bir profili yoksa, oluşturmaya çalış
+    const { error: createError } = await supabase.from('member_profiles').upsert(
+      {
+        guild_id: selectedGuildId,
+        user_id: userId,
+        balance: 0,
         level: 1,
         xp: 0,
         daily_streak: 0,
-        last_daily: null,
         created_at: new Date().toISOString(),
-        roles: [
-          { id: 'member-role', name: 'Member', color: 0x95a5a6 },
-          { id: 'vip-role', name: 'VIP', color: 0xf39c12 }
-        ],
-        guilds: [
-          { id: 'dev-guild', name: 'Development Server', icon: null }
-        ]
-      });
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'guild_id,user_id' },
+    );
+
+    if (createError) {
+      console.error('member/profile: profile creation failed', createError);
+      return NextResponse.json({ error: 'profile_creation_failed' }, { status: 500 });
     }
 
-    // Production modunda kullanıcı bulunamadı
+    // Yeniden çekip dön
+    const { data: createdProfile } = await supabase
+      .from('member_profiles')
+      .select('*')
+      .eq('guild_id', selectedGuildId)
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (createdProfile) {
+      return NextResponse.json(createdProfile);
+    }
+
+    // Bunlardan hiçbiri olmadıysa (garip durumda) hata döndür
     return NextResponse.json({ error: 'profile_not_found' }, { status: 404 });
 
   } catch (error) {
