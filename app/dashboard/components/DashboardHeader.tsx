@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiUrl } from '@/lib/api';
 
-import { LuHouse, LuMail, LuShield, LuStore, LuLogOut, LuSettings, LuChevronRight, LuArrowLeft, LuChartBar } from 'react-icons/lu';
+import { LuHouse, LuMail, LuStore, LuLogOut, LuSettings, LuChevronRight, LuChartBar } from 'react-icons/lu';
 import Image from 'next/image';
 import DiscordAgreementButton from '@/components/DiscordAgreementButton';
 import { LuCode } from 'react-icons/lu';
@@ -116,17 +116,11 @@ export default function DashboardHeader({
   const router = useRouter();
   
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [isServerSelectOpen, setIsServerSelectOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [currentGif, setCurrentGif] = useState(RANDOM_GIFS[0]);
   const [isLogoHovered, setIsLogoHovered] = useState(false);
   const [fetchedIcons, setFetchedIcons] = useState<Record<string, string | null>>({});
   const fetchedIconsSeenRef = useRef<Set<string>>(new Set());
-  const [switchingServerId, setSwitchingServerId] = useState<string | null>(null);
-  const switchTimeoutRef = React.useRef<number | null>(null);
-
-  // YENİ: Alt menü state'i (Sunucu seçimi için)
-  const [activeSubmenu, setActiveSubmenu] = useState<'main' | 'servers'>('main');
 
   // Mobile menu body overflow lock
   useEffect(() => {
@@ -138,13 +132,12 @@ export default function DashboardHeader({
     return () => { document.body.style.overflow = ''; };
   }, [mobileMenuOpen]);
 
-  // Menü açıldığında GIF seç ve her açılışta ana menüye dön
+  // Menü açıldığında GIF seç
   useEffect(() => {
     if (isProfileOpen) {
       const randomIndex = Math.floor(Math.random() * RANDOM_GIFS.length);
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setCurrentGif(RANDOM_GIFS[randomIndex]);
-      setActiveSubmenu('main'); // Her açılışta ana menüye sıfırla
     }
   }, [isProfileOpen]);
 
@@ -171,35 +164,6 @@ export default function DashboardHeader({
     });
   }, [server?.guilds]);
 
-  const handleSelectServer = (guild: { id: string; name: string; isSetup: boolean }) => {
-    if (!guild.isSetup) {
-      return;
-    }
-    setSwitchingServerId(guild.id);
-    // clear any existing pending switch
-    if (switchTimeoutRef.current) {
-      clearTimeout(switchTimeoutRef.current);
-      switchTimeoutRef.current = null;
-    }
-    // Schedule the server switch after a short animation window
-    switchTimeoutRef.current = window.setTimeout(() => {
-      server.onSelectServer(guild.id);
-      switchTimeoutRef.current = null;
-    }, 2000);
-    setIsProfileOpen(false);
-  };
-
-  
-
-  useEffect(() => {
-    return () => {
-      if (switchTimeoutRef.current) {
-        clearTimeout(switchTimeoutRef.current);
-        switchTimeoutRef.current = null;
-      }
-    };
-  }, []);
-
   const navItems: Array<{ key: Section; label: string; requiresAuth?: boolean; requiresDeveloper?: boolean; icon: JSX.Element }> = [
     { key: 'overview', label: 'Genel', icon: <LuHouse className="h-4 w-4" /> },
     { key: 'store', label: 'Mağaza', icon: <LuStore className="h-4 w-4" /> },
@@ -213,80 +177,11 @@ export default function DashboardHeader({
       <div 
         onClick={() => {
           setIsProfileOpen(false);
-          setIsServerSelectOpen(false);
         }}
         className={`fixed inset-0 bg-black/60 backdrop-blur-[12px] transition-all duration-500 z-[9990] ${
-          isProfileOpen || isServerSelectOpen ? 'opacity-100 visible cursor-pointer' : 'opacity-0 invisible pointer-events-none'
+          isProfileOpen ? 'opacity-100 visible cursor-pointer' : 'opacity-0 invisible pointer-events-none'
         }`}
       />
-
-      {/* Sunucu geçiş overlay */}
-      {switchingServerId && (() => {
-        const selected    = server?.guilds?.find((g) => g.id === switchingServerId);
-        const selectedName = selected?.name ?? server?.data?.name ?? 'Sunucu';
-        const selectedIcon = selected?.iconUrl ?? fetchedIcons[switchingServerId ?? ''] ?? server.data?.iconUrl ?? null;
-
-        return (
-          <div
-            role="status"
-            aria-live="polite"
-            className="fixed inset-0 z-[10000] flex items-center justify-center bg-[#0b0d12]/90 backdrop-blur-2xl"
-          >
-            {/* Arka plan dekorasyon */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-[#5865F2]/5 blur-3xl" />
-              <div className="absolute top-1/3 left-1/3 w-[300px] h-[300px] rounded-full bg-emerald-500/5 blur-3xl" />
-            </div>
-
-            {/* Kart */}
-            <div className="relative flex flex-col items-center gap-7 px-10 py-10 bg-[#1e1f22]/80 border border-white/8 rounded-[28px] shadow-2xl w-[min(360px,90vw)]">
-
-              {/* Sunucu ikonu */}
-              <div className="relative">
-                {/* Dış parlama */}
-                <div className="absolute -inset-4 rounded-[32px] bg-[#5865F2]/20 blur-2xl animate-pulse" />
-                {/* İkon çerçevesi */}
-                <div className="relative w-24 h-24 rounded-[22px] overflow-hidden ring-2 ring-[#5865F2]/40 shadow-xl">
-                  {selectedIcon ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={selectedIcon} alt={selectedName} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full bg-[#5865F2]/20 flex items-center justify-center text-4xl font-black text-white select-none">
-                      {selectedName.charAt(0)}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Metin */}
-              <div className="text-center space-y-1.5">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/35">
-                  Bağlanıyor
-                </p>
-                <h2 className="text-lg font-bold text-white truncate max-w-[260px]">
-                  {selectedName}
-                </h2>
-              </div>
-
-              {/* Noktalı yükleme göstergesi */}
-              <div className="flex items-center gap-2">
-                {[0, 1, 2].map((i) => (
-                  <span
-                    key={i}
-                    className="block w-2 h-2 rounded-full bg-[#5865F2]"
-                    style={{ animation: `bounce 1.2s ease-in-out ${i * 0.2}s infinite` }}
-                  />
-                ))}
-              </div>
-
-              {/* Alt yazı */}
-              <p className="text-xs text-white/30 text-center -mt-2 max-w-[220px] leading-relaxed">
-                Sunucu verileri yükleniyor, lütfen bekleyin.
-              </p>
-            </div>
-          </div>
-        );
-      })()}
 
       {/* --- HEADER --- */}
       <header className={`fixed inset-x-0 top-0 flex h-20 items-center gap-4 bg-[#0b0d12]/90 px-3 sm:px-6 backdrop-blur border-b border-white/5 shadow-lg overflow-visible transition-all duration-200 ${
@@ -441,24 +336,9 @@ export default function DashboardHeader({
                                 <div className="absolute inset-0 bg-gradient-to-t from-[#1e1f22] via-[#1e1f22]/50 to-transparent"></div>
                                 
                                 <div className="absolute bottom-3 left-4 right-4 z-10 flex items-end justify-between">
-                                    {activeSubmenu === 'main' ? (
-                                      <div>
-                                        <p className="text-white font-bold text-xl drop-shadow-md">Merhaba, {profile?.username}!</p>
-                                      </div>
-                                    ) : (
-                                      <div className="flex items-center gap-2">
-                                         <button 
-                                            onClick={() => setActiveSubmenu('main')}
-                                            className="p-1.5 bg-white/10 rounded-lg hover:bg-white/20 transition-colors"
-                                         >
-                                            <LuArrowLeft className="text-white w-4 h-4" />
-                                         </button>
-                                         <div>
-                                            <p className="text-white font-bold text-lg">Sunucu Değiştir</p>
-                                            <p className="text-white/60 text-xs">Yönetmek istediğin sunucuyu seç</p>
-                                         </div>
-                                      </div>
-                                    )}
+                                    <div>
+                                      <p className="text-white font-bold text-xl drop-shadow-md">Merhaba, {profile?.username}!</p>
+                                    </div>
                                 </div>
                             </div>
 
@@ -466,7 +346,7 @@ export default function DashboardHeader({
                             <div className="p-3">
                                 
                                 {/* 1. GÖRÜNÜM: ANA MENÜ */}
-                                <div className={`space-y-2 transition-all duration-300 ${activeSubmenu === 'main' ? 'block' : 'hidden'}`}>
+                                <div className="space-y-2 transition-all duration-300">
                                     
                                     {/* Mevcut Sunucu Bilgisi */}
                                     <div className="bg-white/5 rounded-xl p-3 border border-white/5 flex items-center gap-3">
@@ -483,18 +363,6 @@ export default function DashboardHeader({
                                     </div>
 
                                     {/* Menü Linkleri */}
-                                    <button 
-                                        onClick={() => setActiveSubmenu('servers')}
-                                        className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-white/5 transition-colors group"
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-lg bg-[#5865F2]/20 text-[#5865F2] flex items-center justify-center">
-                                                <LuShield className="w-4 h-4" />
-                                            </div>
-                                            <span className="text-sm font-medium text-white/80 group-hover:text-white">Sunucu Değiştir</span>
-                                        </div>
-                                        <LuChevronRight className="text-white/40" />
-                                    </button>
 
                                     <button
                                         onClick={settings.onOpenSettings}
@@ -521,48 +389,6 @@ export default function DashboardHeader({
 
                                 </div>
 
-                                {/* 2. GÖRÜNÜM: SUNUCU LİSTESİ */}
-                                <div className={`transition-all duration-300 ${activeSubmenu === 'servers' ? 'block' : 'hidden'}`}>
-                                    <div className="max-h-[250px] overflow-y-auto custom-scrollbar space-y-1 pr-1">
-                                      {server.loading ? (
-                                          <div className="p-4 text-center text-white/50 text-xs">Yükleniyor...</div>
-                                      ) : server.guilds.length === 0 ? (
-                                          <div className="p-4 text-center text-white/50 text-xs">Sunucu bulunamadı.</div>
-                                      ) : (
-                                          server.guilds.map((guild) => {
-                                            const displayIcon = guild.iconUrl ?? fetchedIcons[guild.id] ?? (server.data?.id === guild.id ? server.data.iconUrl : null);
-                                            return (
-                                              <button
-                                                key={guild.id}
-                                                onClick={() => handleSelectServer(guild)}
-                                                disabled={!guild.isSetup}
-                                                className={`group w-full p-2 rounded-xl flex items-center gap-3 transition-all ${
-                                                  server.data?.id === guild.id
-                                                    ? 'bg-[#5865F2] text-white shadow-lg'
-                                                    : guild.isSetup
-                                                      ? 'hover:bg-white/10 text-white/70 hover:text-white'
-                                                      : 'opacity-50 cursor-not-allowed'
-                                                }`}
-                                              >
-                                                {displayIcon ? (
-                                                  // eslint-disable-next-line @next/next/no-img-element
-                                                  <img src={displayIcon} width={32} height={32} className="rounded-lg object-cover" alt={guild.name} loading="lazy" />
-                                                ) : (
-                                                  <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-xs font-bold">
-                                                    {guild.name.charAt(0)}
-                                                  </div>
-                                                )}
-                                                <span className="text-sm font-medium truncate flex-1 text-left">{guild.name}</span>
-                                                {!guild.isSetup && (
-                                                  <span className="ml-2 text-xs text-amber-400 bg-amber-900/40 px-2 py-0.5 rounded-full">Kurulum yapılmamış</span>
-                                                )}
-                                                {server.data?.id === guild.id && <div className="w-2 h-2 rounded-full bg-white animate-pulse"></div>}
-                                              </button>
-                                            );
-                                          })
-                                      )}
-                                    </div>
-                                </div>
 
                             </div>
 
