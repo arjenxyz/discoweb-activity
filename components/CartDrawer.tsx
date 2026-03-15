@@ -7,6 +7,7 @@ import {
 } from 'react-icons/lu';
 import Image from 'next/image';
 import { useCart } from '../lib/cart';
+import fetchWithCreds from '@/lib/fetchWithCreds';
 import { apiUrl } from '@/lib/api';
 
 type Coupon = {
@@ -93,7 +94,7 @@ export default function CartDrawer() {
 
       // Backend doğrulaması
       try {
-        const resp = await fetch(apiUrl('/api/discount/validate'), {
+        const resp = await fetchWithCreds('/api/discount/validate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ code: couponCode, itemId: items[0].itemId, cartTotal: subtotal }),
@@ -156,7 +157,7 @@ export default function CartDrawer() {
         appliedCoupon: appliedCoupon ? { id: appliedCoupon.id } : undefined,
       };
 
-      const response = await fetch(apiUrl('/api/member/store'), {
+      const response = await fetchWithCreds('/api/member/store', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

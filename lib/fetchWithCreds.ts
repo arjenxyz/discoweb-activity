@@ -14,14 +14,28 @@ export default async function fetchWithCreds(input: RequestInfo, init: RequestIn
   // In that case, include the selected guild id as a query parameter so the backend
   // can still determine the proper guild.
   let finalInput = resolvedInput;
-  if (typeof window !== 'undefined' && typeof resolvedInput === 'string' && resolvedInput.startsWith('/api/')) {
+  if (typeof window !== 'undefined' && typeof resolvedInput === 'string') {
     const selectedGuildId = window.localStorage.getItem('selectedGuildId');
     if (selectedGuildId) {
-      const url = new URL(resolvedInput, window.location.origin);
-      if (!url.searchParams.has('guild_id')) {
-        url.searchParams.set('guild_id', selectedGuildId);
+      // Handle both relative paths (/api/...) and full URLs (https://.../api/...)
+      let url: URL | null = null;
+      if (resolvedInput.startsWith('/api/')) {
+        url = new URL(resolvedInput, window.location.origin);
+      } else {
+        try {
+          const parsed = new URL(resolvedInput);
+          if (parsed.pathname.startsWith('/api/')) {
+            url = parsed;
+          }
+        } catch {
+          // Not a valid URL, ignore
+        }
       }
-      finalInput = url.toString();
+
+      if (url && !url.searchParams.has('guild_id')) {
+        url.searchParams.set('guild_id', selectedGuildId);
+        finalInput = url.toString();
+      }
     }
   }
 
@@ -43,5 +57,5 @@ export default async function fetchWithCreds(input: RequestInfo, init: RequestIn
     },
   };
 
-  return fetch(resolvedInput, merged);
+  return fetch(finalInput, merged);
 }

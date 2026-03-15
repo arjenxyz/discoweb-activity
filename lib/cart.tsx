@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { getSupabaseClient } from './supabaseClient';
+import fetchWithCreds from './fetchWithCreds';
 import { apiUrl } from './api';
 import type { StoreItem, CartItem } from '../app/dashboard/types';
 
@@ -62,7 +63,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     // load available coupons for the user
     void (async () => {
       try {
-        const res = await fetch(apiUrl('/api/member/coupons'));
+        const res = await fetchWithCreds('/api/member/coupons');
         if (!res.ok) return;
         const data = (await res.json()) as Coupon[];
         setUserCoupons(data ?? []);
@@ -77,7 +78,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   
   const refreshCoupons = async () => {
     try {
-      const res = await fetch(apiUrl('/api/member/coupons'));
+      const res = await fetchWithCreds('/api/member/coupons');
       if (!res.ok) return;
       const data = (await res.json()) as Coupon[];
       setUserCoupons(data ?? []);
