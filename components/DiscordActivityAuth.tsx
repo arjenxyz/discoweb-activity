@@ -123,24 +123,33 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
             body: JSON.stringify({ code: auth.code }),
           });
 
-          if (response.ok) {
-            const result = await response.json();
-            console.log('✅ Real Discord SDK auth successful in dev mode:', result);
-            
-            if (result.status === 'ok') {
-              setIsAuthenticated(true);
-              setIsLoading(false);
-              localStorage.setItem('discordUser', JSON.stringify(result.user));
-              localStorage.setItem('selectedGuildId', guildId || '');
-              if (result.bearerToken) {
-                localStorage.setItem('discord_bearer_token', result.bearerToken);
-              }
-
-              console.log('✅ User authenticated with real Discord data in dev mode');
-              return;
-            }
+          if (!response.ok) {
+            const text = await response.text().catch(() => '<unreadable body>');
+            console.error('[DiscordActivityAuth] /api/activity/auth failed', {
+              status: response.status,
+              statusText: response.statusText,
+              body: text,
+            });
+            throw new Error('Authentication failed');
           }
+
+          const result = await response.json();
+          console.log('✅ Real Discord SDK auth successful in dev mode:', result);
           
+          if (result.status === 'ok') {
+            setIsAuthenticated(true);
+            setIsLoading(false);
+            localStorage.setItem('discordUser', JSON.stringify(result.user));
+            localStorage.setItem('selectedGuildId', guildId || '');
+            if (result.bearerToken) {
+              localStorage.setItem('discord_bearer_token', result.bearerToken);
+            }
+
+            console.log('✅ User authenticated with real Discord data in dev mode');
+            return;
+          }
+
+          console.error('[DiscordActivityAuth] /api/activity/auth returned ok but status != ok', result);
           throw new Error('Authentication failed');
           
         } catch (sdkError) {

@@ -40,42 +40,49 @@ const resolveServerId = async (supabase: SupabaseClient) => {
 };
 
 export async function GET() {
-  // Development mode bypass for Activity
-  if (process.env.NODE_ENV === 'development') {
-    return NextResponse.json({
-      coupons: [
-        {
-          id: 'welcome10',
-          code: 'WELCOME10',
-          discount: 10,
-          description: 'Hoş geldin indirim! İlk alışverişinde %10 indirim',
-          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-          used: false,
-          maxUses: 1,
-          type: 'percentage'
-        },
-        {
-          id: 'weekend20',
-          code: 'WEEKEND20',
-          discount: 20,
-          description: 'Hafta sonu özel! %20 indirim',
-          expiresAt: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-          used: false,
-          maxUses: 1,
-          type: 'percentage'
-        }
-      ]
-    });
-  }
+  try {
+    // Development mode bypass for Activity
+    if (process.env.NODE_ENV === 'development') {
+      return NextResponse.json({
+        coupons: [
+          {
+            id: 'welcome10',
+            code: 'WELCOME10',
+            discount: 10,
+            description: 'Hoş geldin indirim! İlk alışverişinde %10 indirim',
+            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+            used: false,
+            maxUses: 1,
+            type: 'percentage'
+          },
+          {
+            id: 'weekend20',
+            code: 'WEEKEND20',
+            discount: 20,
+            description: 'Hafta sonu özel! %20 indirim',
+            expiresAt: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+            used: false,
+            maxUses: 1,
+            type: 'percentage'
+          }
+        ]
+      });
+    }
 
-  const supabase = getSupabase();
-  if (!supabase) return NextResponse.json({ error: 'missing_service_role' }, { status: 500 });
+    const supabase = getSupabase();
+    if (!supabase) {
+      console.error('member/coupons: missing Supabase credentials');
+      return NextResponse.json({ error: 'missing_service_role' }, { status: 500 });
+    }
 
-  const cookieStore = await cookies();
-  const userId = await getSessionUserId();
+    const cookieStore = await cookies();
+    const userId = await getSessionUserId();
 
-  const serverId = await resolveServerId(supabase);
-  if (!serverId) return NextResponse.json({ error: 'server_not_found' }, { status: 404 });
+    const serverId = await resolveServerId(supabase);
+    if (!serverId) {
+      console.error('member/coupons: server not found.', { selectedGuildId: await getSelectedGuildId() });
+      return NextResponse.json({ error: 'server_not_found' }, { status: 404 });
+    }
 
   // Fetch active discounts for the server
   const nowIso = new Date().toISOString();
@@ -128,4 +135,13 @@ export async function GET() {
   const result = mapped.filter((d) => d.userUsageCount < d.perUserLimit);
 
   return NextResponse.json(result);
+  } catch (err) {
+    console.error('member/coupons: unhandled error', err);
+    const body: any = { error: 'unhandled_exception' };
+    if (process.env.NODE_ENV !== 'production') {
+      body.details = String(err);
+      if (err instanceof Error) body.stack = err.stack;
+    }
+    return NextResponse.json(body, { status: 500 });
+  }
 }

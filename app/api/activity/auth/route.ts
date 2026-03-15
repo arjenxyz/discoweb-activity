@@ -25,11 +25,21 @@ export async function POST(request: Request) {
     const botToken = process.env.DISCORD_BOT_TOKEN;
 
     if (!code || !clientId || !clientSecret || !botToken) {
-      await logWebEvent(request, {
-        event: 'activity_auth_failed',
-        status: 'missing_env_or_code',
-      });
-      return NextResponse.json({ status: 'error', reason: 'missing_env_or_code' }, { status: 400 });
+const envFlags = {
+      hasClientId: !!process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID,
+      hasClientSecret: !!process.env.DISCORD_CLIENT_SECRET,
+      hasBotToken: !!process.env.DISCORD_BOT_TOKEN,
+      hasSupabaseUrl: !!process.env.SUPABASE_URL || !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+      hasSupabaseKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+    };
+
+    await logWebEvent(request, {
+      event: 'activity_auth_failed',
+      status: 'missing_env_or_code',
+      metadata: { envFlags },
+    });
+
+    return NextResponse.json({ status: 'error', reason: 'missing_env_or_code', env: envFlags }, { status: 400 });
     }
 
     // Activity için özel redirect URI (Discord Embedded App)
@@ -318,21 +328,24 @@ export async function POST(request: Request) {
       },
     });
 
+    const envFlags = {
+      hasClientId: !!process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID,
+      hasClientSecret: !!process.env.DISCORD_CLIENT_SECRET,
+      hasBotToken: !!process.env.DISCORD_BOT_TOKEN,
+      hasSupabaseUrl: !!process.env.SUPABASE_URL || !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+      hasSupabaseKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+    };
+
     const responseBody: Record<string, unknown> = {
       status: 'error',
       reason: 'unhandled_exception',
+      env: envFlags,
     };
 
-    // Provide more debug info in development, including stack and known env vars
+    // Provide more debug info in development, including stack
     if ((process.env.NODE_ENV as string) !== 'production') {
       responseBody.error = String(err);
-      responseBody.env = {
-        clientId: !!process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID,
-        clientSecret: !!process.env.DISCORD_CLIENT_SECRET,
-        botToken: !!process.env.DISCORD_BOT_TOKEN,
-        supabaseUrl: !!process.env.SUPABASE_URL,
-        supabaseServiceRole: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-      };
+      responseBody.stack = err instanceof Error ? err.stack : undefined;
     }
 
     return NextResponse.json(responseBody, { status: 500 });
