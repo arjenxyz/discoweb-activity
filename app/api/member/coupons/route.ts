@@ -1,15 +1,7 @@
-import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { getSessionUserId } from '@/lib/auth';
-
-const GUILD_ID = process.env.DISCORD_GUILD_ID ?? '1465698764453838882';
-
-const getSelectedGuildId = async (): Promise<string> => {
-  const cookieStore = await cookies();
-  const selectedGuildId = cookieStore.get('selected_guild_id')?.value;
-  return selectedGuildId || GUILD_ID; // Fallback to default
-};
+import { getSelectedGuildId } from '@/lib/guild';
 
 const getSupabase = (): SupabaseClient | null => {
   const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -18,13 +10,11 @@ const getSupabase = (): SupabaseClient | null => {
   return createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
 };
 
-const resolveServerId = async (supabase: SupabaseClient) => {
-  const selectedGuildId = await getSelectedGuildId();
-
+const resolveServerId = async (supabase: SupabaseClient, guildId: string) => {
   const { data: byDiscord } = await supabase
     .from('servers')
     .select('id')
-    .eq('discord_id', selectedGuildId)
+    .eq('discord_id', guildId)
     .eq('is_setup', true)
     .maybeSingle();
 
@@ -39,7 +29,7 @@ const resolveServerId = async (supabase: SupabaseClient) => {
   return (bySlug as { id?: string } | null)?.id ?? null;
 };
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     // Development mode bypass for Activity
     if (process.env.NODE_ENV === 'development') {
@@ -75,12 +65,16 @@ export async function GET() {
       return NextResponse.json({ error: 'missing_service_role' }, { status: 500 });
     }
 
-    const cookieStore = await cookies();
     const userId = await getSessionUserId();
 
-    const serverId = await resolveServerId(supabase);
+    const selectedGuildId = await getSelectedGuildId(request);
+    if (!selectedGuildId) {
+      return NextResponse.json({ error: 'no_guild_specified' }, { status: 400 });
+    }
+
+    const serverId = await resolveServerId(supabase, selectedGuildId);
     if (!serverId) {
-      console.error('member/coupons: server not found.', { selectedGuildId: await getSelectedGuildId() });
+      console.error('member/coupons: server not found.', { selectedGuildId });
       // If the server is not configured in the database, return an empty coupon list
       // rather than failing the entire request.
       return NextResponse.json([]);
