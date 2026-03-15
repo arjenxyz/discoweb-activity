@@ -1,8 +1,9 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createClient } from '@supabase/supabase-js';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { getSessionUserId, requireSessionUser } from '@/lib/auth';
+import { getSelectedGuildId } from '@/lib/guild';
 
 type Database = {
   public: {
@@ -67,11 +68,6 @@ type Database = {
   };
 };
 
-const getSelectedGuildId = async (): Promise<string> => {
-  const cookieStore = await cookies();
-  const selectedGuildId = cookieStore.get('selected_guild_id')?.value;
-  return selectedGuildId || '1465698764453838882';
-};
 
 const getSupabase = (): SupabaseClient<Database> | null => {
   const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -83,14 +79,14 @@ const getSupabase = (): SupabaseClient<Database> | null => {
 };
 
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const supabase = getSupabase();
   if (!supabase) {
     return NextResponse.json({ error: 'missing_service_role' }, { status: 500 });
   }
 
   const userId = await getSessionUserId();
-  const selectedGuildId = await getSelectedGuildId();
+  const selectedGuildId = await getSelectedGuildId(request);
 
   if (!selectedGuildId) {
     return NextResponse.json({ error: 'server_not_found' }, { status: 404 });
