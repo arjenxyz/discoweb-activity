@@ -78,7 +78,7 @@ const isDeveloper = async (userId: string) => {
   }
 };
 
-const createDefaultFlags = (): MaintenanceMap =>
+export const createDefaultFlags = (): MaintenanceMap =>
   MAINTENANCE_KEYS.reduce((acc, key) => {
     acc[key] = { key, is_active: false, reason: null, updated_by: null, updated_at: null };
     return acc;
