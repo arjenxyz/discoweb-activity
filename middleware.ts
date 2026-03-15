@@ -91,7 +91,7 @@ const getSessionUserId = async (request: NextRequest) => {
 async function checkUserRoles(userId: string, guildId: string): Promise<string[] | null> {
   // Cache kontrolü
   const cacheKey = `${userId}-${guildId}`;
-  let cached = roleCheckCache.get(cacheKey);
+  const cached = roleCheckCache.get(cacheKey);
   const now = Date.now();
 
   try {

@@ -15,11 +15,11 @@ export function apiUrl(path: string): string {
     // backend. If the caller already provided an `activity/` prefix (or a
     // leading `/activity/...`), don't add another one to avoid double-prefixing
     // which causes 404s (e.g. `/activity/activity/auth`).
-    let cleaned = path.replace(/^\/+/, '');
+    const cleaned = path.replace(/^\/+/, '');
     // If caller already provided `activity/` path, use it as-is.
     if (cleaned.startsWith('activity/')) {
       const result = cleaned;
-      try { console.debug('[apiUrl] generated', { input: path, cleaned, result, host: window.location.hostname, pathname: window.location.pathname }); } catch (e) {}
+      try { console.debug('[apiUrl] generated', { input: path, cleaned, result, host: window.location.hostname, pathname: window.location.pathname }); } catch {}
       return result;
     }
     // Preserve `/api/activity/...` segments — the proxy forwarding semantics
@@ -27,7 +27,7 @@ export function apiUrl(path: string): string {
     // at `/api/activity/...`. Don't strip it here; just prefix with the
     // outer `activity/` so the proxy receives the correct forwarded path.
     const result = `activity/${cleaned}`;
-    try { console.debug('[apiUrl] generated', { input: path, cleaned, result, host: window.location.hostname, pathname: window.location.pathname }); } catch (e) {}
+    try { console.debug('[apiUrl] generated', { input: path, cleaned, result, host: window.location.hostname, pathname: window.location.pathname }); } catch {}
     return result;
   }
 
