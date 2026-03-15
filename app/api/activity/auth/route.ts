@@ -220,11 +220,11 @@ export async function POST(request: Request) {
           .maybeSingle();
 
         if (server) {
-          // Mevcut member_profiles kontrol et
+          // Mevcut member_profiles kontrol et (guild_id olarak Discord guild ID kullanıyoruz)
           const { data: existingProfile } = await supabase
             .from('member_profiles')
             .select('*')
-            .eq('guild_id', server.id)
+            .eq('guild_id', guild.id)
             .eq('user_id', user.id)
             .maybeSingle();
 
@@ -238,7 +238,7 @@ export async function POST(request: Request) {
               .from('member_profiles')
               .upsert(
                 {
-                  guild_id: server.id,
+                  guild_id: guild.id,
                   user_id: user.id,
                   balance: 0, // Başlangıç bakiyesi
                   level: 1, // Başlangıç seviyesi
