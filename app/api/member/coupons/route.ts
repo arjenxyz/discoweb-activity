@@ -81,7 +81,9 @@ export async function GET() {
     const serverId = await resolveServerId(supabase);
     if (!serverId) {
       console.error('member/coupons: server not found.', { selectedGuildId: await getSelectedGuildId() });
-      return NextResponse.json({ error: 'server_not_found' }, { status: 404 });
+      // If the server is not configured in the database, return an empty coupon list
+      // rather than failing the entire request.
+      return NextResponse.json([]);
     }
 
   // Fetch active discounts for the server
