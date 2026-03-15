@@ -48,6 +48,7 @@ export async function GET(request: Request) {
     const { data: profile, error } = await supabase
       .from('member_profiles')
       .select('*')
+      .eq('guild_id', selectedGuildId)
       .eq('user_id', userId)
       .maybeSingle();
 
@@ -65,9 +66,7 @@ export async function GET(request: Request) {
       {
         guild_id: selectedGuildId,
         user_id: userId,
-        level: 1,
-        xp: 0,
-        daily_streak: 0,
+        about: null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       },
@@ -102,12 +101,12 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const botToken = process.env.DISCORD_BOT_TOKEN;
-    if (!botToken) {
-      return NextResponse.json({ error: 'missing_bot_token' }, { status: 500 });
-    }
+  const botToken = process.env.DISCORD_BOT_TOKEN;
+  if (!botToken) {
+    return NextResponse.json({ error: 'missing_bot_token' }, { status: 500 });
+  }
 
-const session = await requireSessionUser(request);
+  const session = await requireSessionUser(request);
   if (!session.ok) {
     return session.response;
   }
@@ -121,26 +120,14 @@ const session = await requireSessionUser(request);
       return NextResponse.json({ error: 'missing_service_role' }, { status: 500 });
     }
 
-    const url = new URL(request.url);
-  const guildIdFromQuery = url.searchParams.get('guild_id');
-
-  const selectedGuildId =
-    guildIdFromQuery ||
-    (await getSelectedGuildId()) ||
-    process.env.DISCORD_GUILD_ID ||
-    '1465698764453838882';
-
-    const { data: server } = await supabase
-      .from('servers')
-      .select('id')
-      .eq('discord_id', selectedGuildId)
-      .maybeSingle();
-
-    const serverId = server?.id || selectedGuildId;
+    const selectedGuildId = await getSelectedGuildId(request);
+    if (!selectedGuildId) {
+      return NextResponse.json({ error: 'no_guild_specified' }, { status: 400 });
+    }
 
     const { error } = await supabase.from('member_profiles').upsert(
       {
-        guild_id: serverId,
+        guild_id: selectedGuildId,
         user_id: userId,
         about: aboutValue.length ? aboutValue : null,
         updated_at: new Date().toISOString(),
