@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { getSessionUserId } from '@/lib/auth';
+import { getSessionUserIdFromRequest, requireSessionUser } from '@/lib/auth';
 import { checkMaintenance } from '@/lib/maintenance';
 
 const getSelectedGuildId = async (): Promise<string> => {
@@ -20,18 +20,16 @@ const getSupabase = () => {
 };
 
 export async function GET(request: Request) {
-  // Development mode'da önce Supabase'i dene, kullanıcı yoksa mock veri dön
-  const userId = await getSessionUserId();
-  if (!userId) {
+  // Allow auth via bearer token (for embedded activity where cookies may be blocked)
+  const session = await requireSessionUser(request);
+  if (!session.ok) {
     if (process.env.NODE_ENV === 'development') {
       console.log('[member/profile] unauthorized: authorization=', request.headers.get('authorization'));
       console.log('[member/profile] unauthorized: cookie=', request.headers.get('cookie'));
     }
-    return NextResponse.json(
-      { error: 'unauthorized' },
-      { status: 401 }
-    );
+    return session.response;
   }
+  const userId = session.userId;
 
   const maintenance = await checkMaintenance(['site']);
   if (maintenance.blocked) {
@@ -105,11 +103,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'missing_bot_token' }, { status: 500 });
     }
 
-    const cookieStore = await cookies();
-    const userId = await getSessionUserId();
-    if (!userId) {
-      return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
-    }
+const session = await requireSessionUser(request);
+  if (!session.ok) {
+    return session.response;
+  }
+  const userId = session.userId;
 
     const payload = (await request.json()) as { about?: string | null };
     const aboutValue = payload.about?.trim() ?? '';
@@ -119,7 +117,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'missing_service_role' }, { status: 500 });
     }
 
-    const selectedGuildId = await getSelectedGuildId();
+    const url = new URL(request.url);
+  const guildIdFromQuery = url.searchParams.get('guild_id');
+
+  const selectedGuildId =
+    guildIdFromQuery ||
+    (await getSelectedGuildId()) ||
+    process.env.DISCORD_GUILD_ID ||
+    '1465698764453838882';
 
     const { data: server } = await supabase
       .from('servers')
