@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { apiUrl } from '@/lib/api';
 import DashboardHeader from './components/DashboardHeader';
 import OverviewSection from './components/OverviewSection';
 import ProfileSection from './components/ProfileSection';
@@ -97,7 +98,7 @@ export default function DashboardPage() {
       if (isMounted) {
         setMaintenanceLoading(true);
       }
-      const response = await fetch('/api/maintenance', { cache: 'no-store' });
+      const response = await fetch(apiUrl('/api/maintenance'), { cache: 'no-store' });
       if (response.ok) {
         const data = (await response.json()) as {
           flags: Record<string, { is_active: boolean; reason: string | null; updated_by?: string | null }>;
@@ -162,7 +163,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const load = async () => {
-      const response = await fetch('/api/notifications');
+      const response = await fetch(apiUrl('/api/notifications'));
       if (response.ok) {
         const data = (await response.json()) as Notification[];
         setNotifications(data);
@@ -215,7 +216,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const loadProfile = async () => {
-      const response = await fetch('/api/member/profile', { credentials: 'include' });
+      const response = await fetch(apiUrl('/api/member/profile'), { credentials: 'include' });
       if (response.status === 401) {
         setUnauthorized(true);
         setProfileLoading(false);
@@ -236,7 +237,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const loadPromotions = async () => {
-      const response = await fetch('/api/member/store', { credentials: 'include' });
+      const response = await fetch(apiUrl('/api/member/store'), { credentials: 'include' });
       if (response.ok) {
         const data = (await response.json()) as { items: StoreItem[] };
         setItems(data.items ?? []);
@@ -249,7 +250,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const loadWallet = async () => {
-      const response = await fetch('/api/member/wallet', { credentials: 'include' });
+      const response = await fetch(apiUrl('/api/member/wallet'), { credentials: 'include' });
       if (response.ok) {
         const data = (await response.json()) as { balance: number };
         setWalletBalance(Number(data.balance ?? 0));
@@ -262,7 +263,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const loadOverview = async () => {
-      const response = await fetch('/api/member/overview', { credentials: 'include' });
+      const response = await fetch(apiUrl('/api/member/overview'), { credentials: 'include' });
       if (response.ok) {
         const data = (await response.json()) as OverviewStats;
         setOverviewStats(data);
@@ -275,7 +276,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const loadOrders = async () => {
-      const response = await fetch('/api/member/transactions', { credentials: 'include' });
+      const response = await fetch(apiUrl('/api/member/transactions'), { credentials: 'include' });
       if (response.ok) {
         const data = (await response.json()) as { orders: Order[] };
         setOrders(data.orders ?? []);
@@ -290,7 +291,7 @@ export default function DashboardPage() {
     const loadMail = async () => {
       setMailLoading(true);
       try {
-        const response = await fetch('/api/mail');
+        const response = await fetch(apiUrl('/api/mail'));
         if (response.ok) {
           const data = (await response.json()) as MailItem[];
           setMailItems(data ?? []);
@@ -313,7 +314,7 @@ export default function DashboardPage() {
     const loadServerData = async () => {
       setHeaderServer(prev => ({ ...prev, loading: true }));
       try {
-        const response = await fetch('/api/discord/guilds');
+        const response = await fetch(apiUrl('/api/discord/guilds'));
         if (response.ok) {
           const data = (await response.json()) as { guilds: Array<{ id: string; name: string; icon: string | null }> };
           const guilds = data.guilds.map(guild => ({
@@ -343,7 +344,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const loadSelectedServer = async () => {
-      const response = await fetch('/api/member/server-info', { credentials: 'include' });
+      const response = await fetch(apiUrl('/api/member/server-info'), { credentials: 'include' });
       if (response.ok) {
         const data = (await response.json()) as { id: string; name: string; iconUrl: string | null };
         setHeaderServer(prev => ({ ...prev, data }));
@@ -404,7 +405,7 @@ export default function DashboardPage() {
     }
 
     setTransferLoading(true);
-    const response = await fetch('/api/member/transfer', { credentials: 'include',
+    const response = await fetch(apiUrl('/api/member/transfer'), { credentials: 'include',
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ recipientId: transferRecipientId.trim(), amount: amountValue }),
@@ -450,7 +451,7 @@ export default function DashboardPage() {
   );
 
   const markNotificationRead = async (id: string) => {
-    await fetch('/api/notifications', {
+    await fetch(apiUrl('/api/notifications'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id }),
@@ -493,7 +494,7 @@ export default function DashboardPage() {
 
   const reloadOrders = async () => {
     setOrdersLoading(true);
-    const response = await fetch('/api/member/transactions', { credentials: 'include' });
+    const response = await fetch(apiUrl('/api/member/transactions'), { credentials: 'include' });
     if (response.ok) {
       const data = (await response.json()) as { orders: Order[] };
       setOrders(data.orders ?? []);
@@ -524,7 +525,7 @@ export default function DashboardPage() {
 
     setPurchaseLoadingId(itemId);
 
-    const response = await fetch('/api/member/purchase', { credentials: 'include',
+    const response = await fetch(apiUrl('/api/member/purchase'), { credentials: 'include',
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ itemId }),
@@ -556,7 +557,7 @@ export default function DashboardPage() {
       return;
     }
 
-    const response = await fetch('/api/member/refund', { credentials: 'include',
+    const response = await fetch(apiUrl('/api/member/refund'), { credentials: 'include',
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ orderId }),
@@ -600,7 +601,7 @@ export default function DashboardPage() {
     }
 
     setPromoLoading(true);
-    const response = await fetch('/api/member/promotion', { credentials: 'include',
+    const response = await fetch(apiUrl('/api/member/promotion'), { credentials: 'include',
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ code: code.trim() }),
@@ -931,7 +932,7 @@ export default function DashboardPage() {
         onApply={async (code: string) => {
           // minimal handler: attempt to post and close
           try {
-            await fetch('/api/discount/validate', {
+            await fetch(apiUrl('/api/discount/validate'), {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ code }),

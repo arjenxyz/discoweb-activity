@@ -1,10 +1,15 @@
+import { apiUrl } from './api';
+
 const getCookie = (name: string): string | null => {
   if (typeof document === 'undefined') return null;
-  const match = document.cookie.match(new RegExp('(?:^|; )' + name.replace(/([.*+?^${}()|[\]\\])/g, '\\$1') + '=([^;]*)'));
+  const match = document.cookie.match(new RegExp('(?:^|; )' + name.replace(/([.*+?^${}()|[\\]\\])/g, '\\$1') + '=([^;]*)'));
   return match ? decodeURIComponent(match[1]) : null;
 };
 
 export default async function fetchWithCreds(input: RequestInfo, init: RequestInit = {}) {
+  const resolvedInput =
+    typeof input === 'string' && input.startsWith('/api/') ? apiUrl(input) : input;
+
   const bearerTokenFromLocalStorage = typeof window !== 'undefined' ? localStorage.getItem('discord_bearer_token') : null;
   const bearerTokenFromCookie = typeof window !== 'undefined' ? getCookie('discord_session') : null;
   const bearerToken = bearerTokenFromLocalStorage || bearerTokenFromCookie;
@@ -23,7 +28,7 @@ export default async function fetchWithCreds(input: RequestInfo, init: RequestIn
     },
   };
 
-  const res = await fetch(input, merged);
+  const res = await fetch(resolvedInput, merged);
   const contentType = res.headers.get('content-type') || '';
   if (contentType.includes('application/json')) {
     const json = await res.json();

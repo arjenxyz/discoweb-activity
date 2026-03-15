@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import fetchWithCreds from '@/lib/fetchWithCreds';
+import { apiUrl } from '@/lib/api';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -112,7 +113,7 @@ export default function DashboardPage() {
       if (isMounted) {
         setMaintenanceLoading(true);
       }
-      const response = await fetch('/api/maintenance', { cache: 'no-store' });
+      const response = await fetch(apiUrl('/api/maintenance'), { cache: 'no-store' });
       if (response.ok) {
         const data = (await response.json()) as {
           flags: Record<string, { is_active: boolean; reason: string | null; updated_by?: string | null }>;
@@ -173,7 +174,7 @@ export default function DashboardPage() {
     const refreshMail = async () => {
       setMailLoading(true);
       try {
-        const response = await fetch('/api/mail');
+        const response = await fetch(apiUrl('/api/mail'));
         if (response.ok) {
           const data = (await response.json()) as MailItem[];
           setMailItems(data);
@@ -336,7 +337,7 @@ export default function DashboardPage() {
     const loadAdminOverview = async () => {
       setAdminOverviewLoading(true);
       try {
-        const res = await fetch('/api/admin/overview-stats?rangeHours=24', { cache: 'no-store' });
+        const res = await fetch(apiUrl('/api/admin/overview-stats?rangeHours=24'), { cache: 'no-store' });
         if (!res.ok) {
           setAdminOverview(null);
           setAdminOverviewLoading(false);
@@ -547,7 +548,7 @@ export default function DashboardPage() {
   );
 
   const markNotificationRead = async (id: string) => {
-    await fetch('/api/notifications', {
+    await fetch(apiUrl('/api/notifications'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id }),
@@ -947,7 +948,7 @@ export default function DashboardPage() {
         onApply={async (code: string) => {
           // minimal handler: attempt to post and close
           try {
-            await fetch('/api/discount/validate', {
+            await fetch(apiUrl('/api/discount/validate'), {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ code }),

@@ -3,6 +3,7 @@
 // Link importunu sildik veya kalsın istiyorsan dursun ama aşağıda kullanmayacağız
 import Image from 'next/image';
 import { LuChevronDown, LuCode, LuGift, LuLogOut, LuSend, LuSettings, LuShield, LuTag } from 'react-icons/lu';
+import { apiUrl } from '@/lib/api';
 import type { RefObject } from 'react';
 
 type SettingsDropdownProps = {
@@ -52,7 +53,7 @@ export default function SettingsDropdown({
         });
       }
       localStorage.clear();
-      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+      await fetch(apiUrl('/api/auth/logout'), { method: 'POST', credentials: 'include' });
       window.location.href = '/';
     } catch {
       window.location.href = '/';

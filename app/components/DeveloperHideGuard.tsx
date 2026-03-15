@@ -1,6 +1,7 @@
 "use client";
 import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
+import { apiUrl } from '@/lib/api';
 
 export default function DeveloperHideGuard() {
   const pathname = usePathname();
@@ -12,7 +13,7 @@ export default function DeveloperHideGuard() {
     const checkAndHide = async () => {
       if (!pathname || !pathname.startsWith('/developer')) return;
       try {
-        const res = await fetch('/api/developer/check-access', { credentials: 'include', cache: 'no-store' });
+        const res = await fetch(apiUrl('/api/developer/check-access'), { credentials: 'include', cache: 'no-store' });
         if (mounted && !res.ok) {
           // Inject CSS to hide common global nav/header elements so menus are not visible
           styleEl = document.createElement('style');

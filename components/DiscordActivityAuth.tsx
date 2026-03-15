@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { apiUrl } from '@/lib/api';
 
 interface DiscordActivityAuthProps {
   children: React.ReactNode;
@@ -77,7 +78,7 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
           }
 
           try {
-            const res = await fetch('/api/activity/dev-session');
+            const res = await fetch(apiUrl('/api/activity/dev-session'));
             if (res.ok) {
               const json = await res.json();
               localStorage.setItem('discord_bearer_token', json.token);
@@ -114,7 +115,7 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
           console.log('📝 Got auth code, exchanging for token...');
 
           // Backend'e code gönder ve token al - Web sitesi ile aynı endpoint
-          const response = await fetch('/api/activity/auth', {
+          const response = await fetch(apiUrl('/api/activity/auth'), {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -172,7 +173,7 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
           // Dev modda cookie 3rd-party olarak engellenebildiği için, API istekleri için
           // Bearer token da alıp localStorage'a kaydet.
           try {
-            const res = await fetch('/api/activity/dev-session');
+            const res = await fetch(apiUrl('/api/activity/dev-session'));
             if (res.ok) {
               const json = await res.json();
               localStorage.setItem('discord_bearer_token', json.token);
@@ -205,7 +206,7 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
         console.log('📝 Got auth code, exchanging for token...');
 
         // Backend'e code gönder ve token al - Web sitesi ile aynı endpoint
-        const response = await fetch('/api/activity/auth', {
+        const response = await fetch(apiUrl('/api/activity/auth'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

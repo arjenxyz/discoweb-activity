@@ -2,6 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
+import { apiUrl } from '@/lib/api';
 import MailSection from '../components/MailSection';
 import type { MailItem } from '../types';
 
@@ -17,7 +18,7 @@ export default function MailIndexPage() {
     const refreshMail = async () => {
       if (mounted) setMailLoading(true);
       try {
-        const response = await fetch('/api/mail');
+        const response = await fetch(apiUrl('/api/mail'));
         if (response.ok) {
           const data = (await response.json()) as MailItem[];
           if (!mounted) return;

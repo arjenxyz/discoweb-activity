@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { apiUrl } from '@/lib/api';
 
 type MaintenanceWatcherProps = {
   signature: string;
@@ -31,7 +32,7 @@ export default function MaintenanceWatcher({ signature }: MaintenanceWatcherProp
   useEffect(() => {
     const poll = async () => {
       try {
-        const response = await fetch('/api/maintenance', { cache: 'no-store' });
+        const response = await fetch(apiUrl('/api/maintenance'), { cache: 'no-store' });
         if (!response.ok) {
           return;
         }

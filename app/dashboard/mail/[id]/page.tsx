@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import type { MailItem } from '../../types';
+import { apiUrl } from '@/lib/api';
 import { sanitizeHtml } from '@/lib/sanitizeHtml';
 import {
   LuReply,
@@ -51,7 +52,7 @@ export default function MailPage() {
     const load = async () => {
       setLoading(true);
       try {
-        const res = await fetch('/api/mail');
+        const res = await fetch(apiUrl('/api/mail'));
         if (!res.ok) {
           setError('Mesaj yüklenemedi');
           setLoading(false);
@@ -68,7 +69,7 @@ export default function MailPage() {
           setError(null);
           if (!found.is_read) {
             try {
-              await fetch('/api/mail', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: found.id }) });
+              await fetch(apiUrl('/api/mail'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: found.id }) });
             } catch {}
             try { window.dispatchEvent(new CustomEvent('mail:refresh')); } catch {}
           }

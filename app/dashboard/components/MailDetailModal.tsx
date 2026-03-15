@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import type { MailItem } from '../types';
 import { useEffect, useRef } from 'react';
+import { apiUrl } from '@/lib/api';
 import { sanitizeHtml } from '@/lib/sanitizeHtml';
 import {
   LuChevronLeft,
@@ -75,7 +76,7 @@ export default function MailDetailModal({ mail, onClose, onDelete, onStar }: Mai
     if (mail && !mail.is_read) {
       void (async () => {
         try {
-          await fetch('/api/mail', {
+          await fetch(apiUrl('/api/mail'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id: mail.id })

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState, useCallback, type ChangeEvent } from 'react';
 import Image from 'next/image';
 import { getSupabaseClient } from '../../lib/supabaseClient';
+import { apiUrl } from '@/lib/api';
 import { useChat } from '../../lib/utils/useChat';
 import { 
   Send, 
@@ -220,7 +221,7 @@ export default function ChatInterface() {
                 // perform the necessary write.
                 try {
                   if ((ferr as { code?: string })?.code === '42501') {
-                    const resp = await fetch('/api/upsert-discord-user', {
+                    const resp = await fetch(apiUrl('/api/upsert-discord-user'), {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify({ id: du.id, username: du.username, avatar: du.avatar })
@@ -259,7 +260,7 @@ export default function ChatInterface() {
       const du = JSON.parse(discordUser) as { id?: string; username?: string; avatar?: string; name?: string };
       // Try server upsert (best-effort). If it fails, still honor local acceptance
       try {
-        await fetch('/api/upsert-discord-user', {
+        await fetch(apiUrl('/api/upsert-discord-user'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id: du.id, username: du.username, avatar: du.avatar, name: du.name })
@@ -285,7 +286,7 @@ export default function ChatInterface() {
     // discordUser state is handled elsewhere and shouldn't be re-read here.
     const adminGuilds = localStorage.getItem('adminGuilds');
     setIsAdmin(!!(adminGuilds && JSON.parse(adminGuilds).length > 0));
-    fetch('/api/developer/check-access', { credentials: 'include' })
+    fetch(apiUrl('/api/developer/check-access'), { credentials: 'include' })
       .then((r) => { if (r.ok) setIsDeveloper(true); })
       .catch(() => {});
   }, []);

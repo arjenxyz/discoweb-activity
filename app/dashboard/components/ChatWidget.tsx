@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
+import { apiUrl } from '@/lib/api';
 import { getSupabaseClient } from '../../../lib/supabaseClient';
 import { useChat } from '../../../lib/utils/useChat';
 import {
@@ -91,7 +92,7 @@ export default function ChatWidget() {
       setIsLoggedIn(!!(discordUser && adminGuilds));
       setIsAdmin(!!(adminGuilds && JSON.parse(adminGuilds).length > 0));
     });
-    fetch('/api/developer/check-access', { credentials: 'include' })
+    fetch(apiUrl('/api/developer/check-access'), { credentials: 'include' })
       .then((r) => { if (r.ok) setIsDeveloper(true); })
       .catch(() => {});
   }, []);

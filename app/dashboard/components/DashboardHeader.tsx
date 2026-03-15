@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { apiUrl } from '@/lib/api';
 
 import { LuHouse, LuMail, LuShield, LuStore, LuLogOut, LuSettings, LuChevronRight, LuArrowLeft, LuChartBar } from 'react-icons/lu';
 import Image from 'next/image';
@@ -90,7 +91,7 @@ const handleLogout = async () => {
     }
 
     localStorage.clear();
-    await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+    await fetch(apiUrl('/api/auth/logout'), { method: 'POST', credentials: 'include' });
     window.location.href = '/';
   } catch {
     localStorage.clear();

@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
+import { apiUrl } from '@/lib/api';
 
 // Dropdown Link
 const DropdownLink = ({ href, children }: { href: string; children: React.ReactNode }) => (
@@ -91,7 +92,7 @@ export default function CuteNavbar() {
 
       // Verify session cookie is still valid
       try {
-        const res = await fetch('/api/auth/me', { credentials: 'include', cache: 'no-store' });
+        const res = await fetch(apiUrl('/api/auth/me'), { credentials: 'include', cache: 'no-store' });
         if (res.ok) {
           setIsLoggedIn(true);
         } else {

@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { apiUrl } from '@/lib/api';
 import type { MailItem } from '../types';
 import { 
   LuMail, LuMailOpen, LuArchive, LuTrash2, LuCheckCheck, 
@@ -248,7 +249,7 @@ export default function MailSection({
                         onClick={async (e) => {
                           e.stopPropagation();
                           try {
-                            await fetch('/api/mail', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids: [item.id] }) });
+                            await fetch(apiUrl('/api/mail'), { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids: [item.id] }) });
                             showToast('Mesaj silindi', 'success');
                             window.dispatchEvent(new CustomEvent('mail:refresh'));
                           } catch (err) {
@@ -303,7 +304,7 @@ export default function MailSection({
                     const ids = filtered.map((m) => m.id);
                     if (ids.length === 0) return showToast('Silinecek mesaj yok', 'error');
                     try {
-                      await fetch('/api/mail', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids }) });
+                      await fetch(apiUrl('/api/mail'), { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids }) });
                       showToast('Mailler silindi', 'success');
                       window.dispatchEvent(new CustomEvent('mail:refresh'));
                     } catch (e) {
@@ -322,7 +323,7 @@ export default function MailSection({
                     const ids = filtered.filter((m) => !m.is_read).map((m) => m.id);
                     if (ids.length === 0) return showToast('Okunmamış mesaj yok', 'error');
                     try {
-                      await fetch('/api/mail', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids }) });
+                      await fetch(apiUrl('/api/mail'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids }) });
                       showToast('Tüm mesajlar okundu olarak işaretlendi', 'success');
                       window.dispatchEvent(new CustomEvent('mail:refresh'));
                     } catch (e) {
@@ -341,7 +342,7 @@ export default function MailSection({
                     const ids = filtered.filter((m) => m.category === 'reward' && !m.is_read).map((m) => m.id);
                     if (ids.length === 0) return showToast('Talep edilecek ödül yok', 'error');
                     try {
-                      await fetch('/api/mail', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids }) });
+                      await fetch(apiUrl('/api/mail'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids }) });
                       showToast('Ödüller talep edildi (okundu sayıldı)', 'success');
                       window.dispatchEvent(new CustomEvent('mail:refresh'));
                     } catch (e) {

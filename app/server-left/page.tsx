@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { apiUrl } from '@/lib/api';
 
 interface UserInfo {
   id: string;
@@ -17,7 +18,7 @@ export default function ServerLeftPage() {
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
-        const response = await fetch('/api/auth/me', { credentials: 'include', cache: 'no-store' });
+        const response = await fetch(apiUrl('/api/auth/me'), { credentials: 'include', cache: 'no-store' });
         if (response.ok) {
           const userData = await response.json();
           setUser(userData);
