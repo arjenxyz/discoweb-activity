@@ -7,9 +7,10 @@ export function apiUrl(path: string): string {
   // Discord Activity iframe runs under a proxy origin like `*.discordsays.com`.
   // That origin enforces a strict CSP, so cross-origin fetches (to our real
   // domain) are blocked. In that case, we must keep the request relative so
-  // it goes through the proxy.
+  // it goes through the proxy. We also need to avoid leading `/` because the
+  // proxy likely only forwards within the activity route (e.g. `/activity/...`).
   if (typeof window !== 'undefined' && window.location.hostname.includes('discordsays.com')) {
-    return path.startsWith('/') ? path : `/${path}`;
+    return path.replace(/^\/+/, '');
   }
 
   const normalizedBase = API_BASE_URL.replace(/\/+$/, '');
