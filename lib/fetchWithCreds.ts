@@ -57,5 +57,39 @@ export default async function fetchWithCreds(input: RequestInfo, init: RequestIn
     },
   };
 
-  return fetch(finalInput, merged);
+  const response = await fetch(finalInput, merged);
+
+  // If token has expired, try refreshing it once and repeat the request.
+  if (response.status === 401 && bearerToken) {
+    try {
+      const refreshResponse = await fetch(apiUrl('/api/auth/refresh'), {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          Authorization: `Bearer ${bearerToken}`,
+        },
+      });
+
+      if (refreshResponse.ok) {
+        const refreshData = await refreshResponse.json().catch(() => null);
+        const newBearer = refreshData?.bearerToken;
+        if (newBearer) {
+          localStorage.setItem('discord_bearer_token', newBearer);
+
+          const retryResponse = await fetch(finalInput, {
+            ...merged,
+            headers: {
+              ...(merged.headers || {}),
+              Authorization: `Bearer ${newBearer}`,
+            },
+          });
+          return retryResponse;
+        }
+      }
+    } catch {
+      // ignore refresh failures, fallback to original 401
+    }
+  }
+
+  return response;
 }

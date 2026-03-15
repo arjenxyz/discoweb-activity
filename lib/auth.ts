@@ -46,7 +46,7 @@ export const createSessionToken = (userId: string) => {
   return `${encoded}.${sig}`;
 };
 
-export const verifySessionToken = (token: string): SessionPayload | null => {
+export const decodeSessionToken = (token: string): SessionPayload | null => {
   try {
     const secret = getSecret();
     if (!secret) {
@@ -58,12 +58,24 @@ export const verifySessionToken = (token: string): SessionPayload | null => {
     if (!timingSafeEqual(sig, expected)) return null;
     const payload = JSON.parse(base64UrlDecode(encoded)) as SessionPayload;
     if (!payload?.sub || !payload?.exp) return null;
-    const now = Math.floor(Date.now() / 1000);
-    if (payload.exp < now) return null;
     return payload;
   } catch {
     return null;
   }
+};
+
+export const verifySessionToken = (token: string): SessionPayload | null => {
+  const payload = decodeSessionToken(token);
+  if (!payload) return null;
+  const now = Math.floor(Date.now() / 1000);
+  if (payload.exp < now) return null;
+  return payload;
+};
+
+export const verifySessionTokenAllowExpired = (token: string): SessionPayload | null => {
+  const payload = decodeSessionToken(token);
+  // Allow token even if expired (used for refresh flow)
+  return payload;
 };
 
 export const setSessionCookies = (response: NextResponse, userId: string) => {
