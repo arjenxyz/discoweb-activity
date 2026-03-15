@@ -12,9 +12,17 @@ export function apiUrl(path: string): string {
   if (typeof window !== 'undefined' && window.location.hostname.includes('discordsays.com')) {
     // Proxy may serve the activity under an `/activity` prefix. Ensure requests
     // go to the activity-scoped path so the proxy will forward them to our
-    // backend. Use a conservative prefix to avoid relying on the current
-    // pathname which can be `/` in some proxy configurations.
-    const cleaned = path.replace(/^\/+/, '');
+    // backend. If the caller already provided an `activity/` prefix (or a
+    // leading `/activity/...`), don't add another one to avoid double-prefixing
+    // which causes 404s (e.g. `/activity/activity/auth`).
+    let cleaned = path.replace(/^\/+/, '');
+    // If caller already provided `activity/` path, use it as-is.
+    if (cleaned.startsWith('activity/')) return cleaned;
+    // If caller provided `/api/activity/...`, normalize to avoid
+    // producing `activity/api/activity/...` which leads to 404s.
+    if (cleaned.startsWith('api/activity/')) {
+      cleaned = 'api/' + cleaned.slice('api/activity/'.length);
+    }
     return `activity/${cleaned}`;
   }
 
