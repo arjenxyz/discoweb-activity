@@ -43,10 +43,13 @@ async function forwardRequest(request: NextRequest) {
       });
     }
 
-    // Forward response headers (but avoid some hop-by-hop headers)
+    // Forward response headers (but avoid some hop-by-hop headers and
+    // headers that Next.js uses for middleware rewrites.
     const responseHeaders = new Headers(resp.headers);
     responseHeaders.delete('transfer-encoding');
     responseHeaders.delete('connection');
+    responseHeaders.delete('x-middleware-rewrite');
+    responseHeaders.delete('x-middleware-next');
 
     return new Response(resp.body, {
       status: resp.status,
