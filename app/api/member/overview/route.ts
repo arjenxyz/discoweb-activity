@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { checkMaintenance } from '@/lib/maintenance';
 import { getSessionUserId } from '@/lib/auth';
 import { cleanupExpiredRolesForUser } from '@/lib/roleCleanup';
 import { getSupabaseServiceClient } from '@/lib/supabaseServiceClient';
+import { getSelectedGuildId } from '@/lib/guild';
 
 type PapelRow = { user_id: string; balance: number | null };
 
@@ -25,17 +25,11 @@ type PerkRow = {
   expires_at: string | null;
 };
 
-const getSelectedGuildId = async (): Promise<string> => {
-  const cookieStore = await cookies();
-  const selectedGuildId = cookieStore.get('selected_guild_id')?.value;
-  return selectedGuildId || process.env.DISCORD_GUILD_ID || '1465698764453838882';
-};
-
 import { NextRequest } from 'next/server';
 
 export async function GET(request: NextRequest) {
   // Development mode'da da gerçek Supabase verilerini çek
-  const selectedGuildId = await getSelectedGuildId();
+  const selectedGuildId = await getSelectedGuildId(request);
   if (!selectedGuildId) {
     return NextResponse.json({ error: 'no_guild_selected' }, { status: 400 });
   }

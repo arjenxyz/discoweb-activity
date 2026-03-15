@@ -115,7 +115,8 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
           console.log('📝 Got auth code, exchanging for token...');
 
           // Backend'e code gönder ve token al - Web sitesi ile aynı endpoint
-          const response = await fetch(apiUrl('/api/activity/auth'), {
+          const authUrl = apiUrl(`/api/activity/auth?guild_id=${encodeURIComponent(guildId ?? '')}`);
+          const response = await fetch(authUrl, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
