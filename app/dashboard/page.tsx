@@ -766,9 +766,9 @@ export default function DashboardPage() {
     ? 'py-0 gap-0'
     : effectiveSection === 'store'
       ? isActivityEmbed
-        ? 'pt-20 pb-0 gap-0'
-        : 'pt-20 sm:pt-24 pb-0 sm:pb-10 gap-0 sm:gap-6'
-      : 'pt-24 pb-10 gap-6';
+        ? 'pt-20 pb-28 gap-0 md:pb-0'
+        : 'pt-20 sm:pt-24 pb-28 sm:pb-10 gap-0 sm:gap-6 md:pb-0'
+      : 'pt-24 pb-28 md:pt-24 md:pb-0 gap-6';
 
   return (
     <div className="min-h-screen bg-[#0b0d12] text-white overflow-auto">
