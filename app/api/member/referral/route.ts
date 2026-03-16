@@ -36,7 +36,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'invalid_code' }, { status: 400 });
     }
 
-    // Already referred?
+    // Ensure user has not already been referred
     const { data: currentProfile } = await supabase
       .from('member_profiles')
       .select('referred_by')
@@ -48,10 +48,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'already_referred' }, { status: 400 });
     }
 
-    // Find owner of code
+    // Find the owner of the referral code
     const { data: ownerProfile } = await supabase
       .from('member_profiles')
-      .select('user_id')
+      .select('user_id, total_invites')
       .eq('guild_id', selectedGuildId)
       .eq('referral_code', code)
       .maybeSingle();
@@ -64,20 +64,45 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'cannot_use_own_code' }, { status: 400 });
     }
 
-    // Update referred_by for current user
-    const { error: updateErr } = await supabase
+    // Mark this user as referred, and create a history row.
+    const now = new Date().toISOString();
+
+    const { error: updateProfileError } = await supabase
       .from('member_profiles')
-      .update({ referred_by: ownerProfile.user_id, updated_at: new Date().toISOString() })
+      .update({ referred_by: ownerProfile.user_id, updated_at: now })
       .eq('guild_id', selectedGuildId)
       .eq('user_id', userId);
 
-    if (updateErr) {
+    if (updateProfileError) {
       return NextResponse.json({ error: 'update_failed' }, { status: 500 });
+    }
+
+    const { error: insertHistoryError } = await supabase.from('referral_history').insert({
+      inviter_id: ownerProfile.user_id,
+      invitee_id: userId,
+      guild_id: selectedGuildId,
+      status: 'accepted',
+      created_at: now,
+      status_changed_at: now,
+    });
+
+    if (insertHistoryError) {
+      return NextResponse.json({ error: 'history_failed' }, { status: 500 });
     }
 
     const reward = 500;
 
-    // Ensure wallets exist and add reward
+    // Increment inviter's total_invites and credit both wallets.
+    const { error: incrementError } = await supabase
+      .from('member_profiles')
+      .update({ total_invites: (ownerProfile.total_invites ?? 0) + 1 })
+      .eq('guild_id', selectedGuildId)
+      .eq('user_id', ownerProfile.user_id);
+
+    if (incrementError) {
+      return NextResponse.json({ error: 'increment_failed' }, { status: 500 });
+    }
+
     const ensureWallet = async (uid: string) => {
       const { data: wallet } = await supabase
         .from('member_wallets')
