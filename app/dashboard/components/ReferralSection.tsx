@@ -20,6 +20,7 @@ export default function ReferralSection() {
   const [loading, setLoading] = useState(false);
   const [inviteAvailable, setInviteAvailable] = useState(false);
   const [inviteError, setInviteError] = useState<string | null>(null);
+  const [inviteFallbackUrl, setInviteFallbackUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -194,6 +195,7 @@ export default function ReferralSection() {
     if (!frameId) {
       // frame_id olmadan da SDK denemesi yapmak istiyoruz; bazı embed durumlarında bu parametre eksik geliyor.
       console.warn('frame_id bulunamadı; yine de SDK denemesi yapılacak');
+      setInviteFallbackUrl(inviteUrl);
     }
 
     try {
@@ -215,7 +217,10 @@ export default function ReferralSection() {
       await sdk.commands.openInviteDialog();
     } catch (err) {
       console.warn('Davet penceresi açılamadı, alternatif URL açılıyor', err);
-      window.open(inviteUrl, '_blank');
+      setInviteFallbackUrl(inviteUrl);
+      setInviteError(
+        (err as Error)?.message ? `Davet penceresi açılamadı: ${(err as Error).message}` : 'Davet penceresi açılamadı.',
+      );
     }
   };
 
@@ -329,16 +334,32 @@ export default function ReferralSection() {
             <div className="text-xs text-white/40">
               <p>Discord SDK yüklenemiyor — davet penceresi açılamıyor.</p>
               {inviteError && <p className="mt-1">Hata: {inviteError}</p>}
-              <p className="mt-1">
-                <a
-                  href={siteConfig.bot.inviteUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="underline"
-                >
-                  Alternatif olarak Discord davet bağlantısını açın.
-                </a>
-              </p>
+              {inviteFallbackUrl && (
+                <div className="mt-2 rounded-lg border border-white/15 bg-white/5 p-3">
+                  <p className="text-xs text-white/60">Bu durumda aşağıdaki bağlantıyı kopyalayıp Discord’da açabilirsiniz:</p>
+                  <div className="mt-2 flex items-center gap-2">
+                    <input
+                      type="text"
+                      readOnly
+                      value={inviteFallbackUrl}
+                      className="w-full rounded-xl bg-black/40 px-3 py-2 text-xs text-white"
+                    />
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          await navigator.clipboard.writeText(inviteFallbackUrl);
+                        } catch {
+                          // ignore
+                        }
+                      }}
+                      className="rounded-xl bg-indigo-500 px-4 py-2 text-xs font-semibold text-white"
+                    >
+                      Kopyala
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
