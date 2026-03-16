@@ -70,8 +70,9 @@ export async function GET(request: Request) {
       : `https://cdn.discordapp.com/embed/avatars/${Number(userId) % 5}.png`;
 
     if (profile) {
-      // Eğer referral_code eksikse, bir tane oluştur
-      if (!profile.referral_code) {
+      // Eğer referral_code sütunu varsa ve kod eksikse, üretip kaydetmeye çalış.
+      const hasReferralColumn = Object.prototype.hasOwnProperty.call(profile, 'referral_code');
+      if (hasReferralColumn && !profile.referral_code) {
         const newCode = (() => {
           const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
           let code = '';
@@ -81,12 +82,18 @@ export async function GET(request: Request) {
           }
           return code;
         })();
-        await supabase
-          .from('member_profiles')
-          .update({ referral_code: newCode, updated_at: new Date().toISOString() })
-          .eq('guild_id', selectedGuildId)
-          .eq('user_id', userId);
-        profile.referral_code = newCode;
+
+        try {
+          await supabase
+            .from('member_profiles')
+            .update({ referral_code: newCode, updated_at: new Date().toISOString() })
+            .eq('guild_id', selectedGuildId)
+            .eq('user_id', userId);
+          profile.referral_code = newCode;
+        } catch (updateError) {
+          // Eğer referral_code sütunu yoksa, burada hata alabiliriz.
+          console.warn('Unable to update referral_code (column missing?)', updateError);
+        }
       }
 
       // Gerçek profil bulundu, dön (kullanıcı bilgilerini ekle)
@@ -111,19 +118,30 @@ export async function GET(request: Request) {
     const ensureReferralCode = async (): Promise<string> => {
       for (let attempt = 0; attempt < 5; attempt += 1) {
         const code = generateReferralCode();
+
+        const insertPayload: Record<string, unknown> = {
+          guild_id: selectedGuildId,
+          user_id: userId,
+          about: null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+        insertPayload['referral_code'] = code;
+
         const { error: conflict } = await supabase
           .from('member_profiles')
-          .insert({
-            guild_id: selectedGuildId,
-            user_id: userId,
-            about: null,
-            referral_code: code,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          });
+          .insert(insertPayload);
+
         if (!conflict) {
           return code;
         }
+
+        // Eğer referral_code sütunu yoksa, retry etmeden çık
+        if (typeof conflict.message === 'string' && conflict.message.includes('column "referral_code"')) {
+          console.warn('Referrals column not present, skipping referral_code insert');
+          return code;
+        }
+
         // If conflict is a unique violation on referral_code, try again
         if (conflict.code !== '23505') {
           throw conflict;
