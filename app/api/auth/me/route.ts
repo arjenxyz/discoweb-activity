@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { getSessionUserId } from '@/lib/auth';
+import { requireSessionUser } from '@/lib/auth';
 
 const getSupabase = () => {
   const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -11,12 +11,14 @@ const getSupabase = () => {
   return createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
 };
 
-export async function GET() {
-  const userId = await getSessionUserId();
-  console.log('[/api/auth/me] getSessionUserId result:', userId ? `found (${userId.substring(0, 6)}...)` : 'null');
-  if (!userId) {
-    return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+export async function GET(request: Request) {
+  const session = await requireSessionUser(request);
+  if (!session.ok) {
+    return session.response;
   }
+
+  const userId = session.userId;
+  console.log('[/api/auth/me] requireSessionUser result:', userId ? `found (${userId.substring(0, 6)}...)` : 'null');
 
   const supabase = getSupabase();
   if (!supabase) {
