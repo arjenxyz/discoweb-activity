@@ -56,9 +56,26 @@ export async function GET(request: Request) {
       throw error;
     }
 
+    // Fetch Discord profile data from users table (username/avatar)
+    const { data: user } = await supabase
+      .from('users')
+      .select('discord_id, username, avatar')
+      .eq('discord_id', userId)
+      .maybeSingle();
+
+    const avatarUrl = user?.avatar
+      ? user.avatar.startsWith('http')
+        ? user.avatar
+        : `https://cdn.discordapp.com/avatars/${userId}/${user.avatar}.png?size=96`
+      : `https://cdn.discordapp.com/embed/avatars/${Number(userId) % 5}.png`;
+
     if (profile) {
-      // Gerçek profil bulundu, dön
-      return NextResponse.json(profile);
+      // Gerçek profil bulundu, dön (kullanıcı bilgilerini ekle)
+      return NextResponse.json({
+        ...profile,
+        username: user?.username ?? null,
+        avatar: avatarUrl,
+      });
     }
 
     // Kullanıcının bu sunucuda bir profili yoksa, oluşturmaya çalış
