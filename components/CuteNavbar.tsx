@@ -30,8 +30,6 @@ const ChevronIcon = ({ isOpen }: { isOpen: boolean }) => (
 export default function CuteNavbar() {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [mobileSubmenu, setMobileSubmenu] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   
   // Logo Hover State
@@ -69,14 +67,6 @@ export default function CuteNavbar() {
   useEffect(() => {
     console.debug('CuteNavbar env', { DISCORD_CLIENT_ID, REDIRECT_RAW, authRedirect, DISCORD_LOGIN_URL });
   }, [DISCORD_CLIENT_ID, REDIRECT_RAW, authRedirect, DISCORD_LOGIN_URL]);
-  // Mobil menü scroll kilidi
-  useEffect(() => {
-    if (mobileOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-  }, [mobileOpen]);
 
   useEffect(() => {
     // Check if user is logged in via localStorage + validate session cookie
@@ -123,9 +113,6 @@ export default function CuteNavbar() {
     };
   }, []);
 
-  function toggleMobileSubmenu(menu: string) {
-    setMobileSubmenu(prev => (prev === menu ? null : menu));
-  }
 
   return (
     <>
@@ -158,8 +145,8 @@ export default function CuteNavbar() {
           {/* Logo & Brand */}
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-[#5865F2] p-0.5 shadow-lg shadow-[#5865F2]/20 group cursor-pointer transition-transform hover:scale-110 relative z-50">
-              <div className="w-full h-full bg-[#1e1f22] rounded-[10px] overflow-hidden">
-                <img src="/gif/cat.gif" alt="avatar" className="w-full h-full object-cover" />
+              <div className="relative w-full h-full bg-[#1e1f22] rounded-[10px] overflow-hidden">
+                <Image src="/gif/cat.gif" alt="avatar" fill className="object-cover" />
               </div>
             </div>
             <div
@@ -173,11 +160,12 @@ export default function CuteNavbar() {
               <div className={`absolute top-[60%] left-1/2 -translate-x-1/2 z-0 transition-all duration-500 cubic-bezier(0.34, 1.56, 0.64, 1) ${
                 isLogoHovered ? 'opacity-100 translate-y-0 rotate-0' : 'opacity-0 -translate-y-12 -rotate-12 pointer-events-none'
               }`}>
-                <div className="w-[280px] drop-shadow-2xl filter brightness-110">
-                  <img
+                <div className="relative w-[280px] drop-shadow-2xl filter brightness-110">
+                  <Image
                     src="/gif/asılıpengu.gif"
                     alt="Hanging Penguin"
-                    className="w-full h-full object-contain"
+                    fill
+                    className="object-contain"
                   />
                 </div>
               </div>
@@ -210,7 +198,9 @@ export default function CuteNavbar() {
                       <DropdownLink href="#">🎯 Özellikler</DropdownLink>
                     </div>
                     <div className="absolute -bottom-6 -right-6 w-40 h-40 pointer-events-none drop-shadow-2xl z-10 transform rotate-[-10deg] transition-transform duration-500 group-hover:rotate-0 group-hover:scale-105">
-                      <img src="/gif/from.gif" alt="Home GIF" className="w-full h-full object-contain" />
+                      <div className="relative w-full h-full">
+                        <Image src="/gif/from.gif" alt="Home GIF" fill className="object-contain" />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -241,7 +231,9 @@ export default function CuteNavbar() {
                       <DropdownLink href="#">🔥 Kampanyalar</DropdownLink>
                     </div>
                     <div className="absolute -bottom-6 -right-6 w-40 h-40 pointer-events-none drop-shadow-2xl z-10 transform rotate-[-10deg] transition-transform duration-500 group-hover:rotate-0 group-hover:scale-105">
-                      <img src="/gif/sungerbubi.gif" alt="Store GIF" className="w-full h-full object-contain" />
+                      <div className="relative w-full h-full">
+                        <Image src="/gif/sungerbubi.gif" alt="Store GIF" fill className="object-contain" />
+                      </div>
                     </div>
                   </div>
                 </div>

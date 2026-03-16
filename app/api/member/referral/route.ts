@@ -12,16 +12,6 @@ const getSupabase = (): SupabaseClient | null => {
   return createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
 };
 
-const generateReferralCode = () => {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let code = '';
-  for (let i = 0; i < 6; i += 1) {
-    const idx = Math.floor(Math.random() * chars.length);
-    code += chars[idx];
-  }
-  return code;
-};
-
 export async function POST(request: Request) {
   try {
     const session = await requireSessionUser(request);

@@ -46,8 +46,8 @@ export default function DashboardPage() {
   const [walletBalance, setWalletBalance] = useState(0);
   const [walletLoading, setWalletLoading] = useState(true);
   const [overviewStats, setOverviewStats] = useState<OverviewStats | OverviewStatsExpanded | null>(null);
-  const [, setAdminOverview] = useState<any | null>(null);
-  const [, setAdminOverviewLoading] = useState(false);
+  const [adminOverview, setAdminOverview] = useState<Record<string, unknown> | null>(null);
+  const [adminOverviewLoading, setAdminOverviewLoading] = useState(false);
   const [overviewLoading, setOverviewLoading] = useState(true);
   const [storeItems, setStoreItems] = useState<StoreItem[]>([]);
   const [storeItemsLoading, setStoreItemsLoading] = useState(true);
@@ -310,7 +310,7 @@ export default function DashboardPage() {
     loadProfile();
   }, []);
 
-  const refreshWalletBalance = async () => {
+  const refreshWalletBalance = useCallback(async () => {
     try {
       const response = await fetchWithCreds('/api/member/wallet');
       if (response.ok) {
@@ -322,7 +322,7 @@ export default function DashboardPage() {
     } catch (error) {
       console.warn('Wallet balance refresh failed:', error);
     }
-  };
+  }, []);
   refreshWalletRef.current = refreshWalletBalance;
 
   useEffect(() => {
@@ -332,7 +332,7 @@ export default function DashboardPage() {
     };
 
     loadWallet();
-  }, [unauthorized]);
+  }, [unauthorized, refreshWalletBalance]);
 
   useEffect(() => {
     const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
@@ -386,7 +386,7 @@ export default function DashboardPage() {
     return () => { isMounted = false; };
   }, [headerServer.guilds]);
 
-  const refreshStoreItems = async (page = 1, append = false) => {
+  const refreshStoreItems = useCallback(async (page = 1, append = false) => {
     if (page === 1) {
       setStoreItemsLoading(true);
     } else {
@@ -416,7 +416,7 @@ export default function DashboardPage() {
         setStoreLoadingMore(false);
       }
     }
-  };
+  }, []);
   refreshStoreRef.current = () => refreshStoreItems(1, false);
 
   const handleSelectServer = useCallback(async (guildId: string) => {
@@ -588,21 +588,21 @@ export default function DashboardPage() {
     [notifications],
   );
 
-  const markNotificationRead = async (id: string) => {
+  const markNotificationRead = useCallback(async (id: string) => {
     await fetch(apiUrl('/api/notifications'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id }),
     });
     setNotifications((prev) => prev.map((item) => (item.id === id ? { ...item, is_read: true } : item)));
-  };
+  }, []);
 
-  const handleOpenNotification = (item: Notification) => {
+  const handleOpenNotification = useCallback((item: Notification) => {
     setActiveNotification(item);
     if (!item.is_read) {
       void markNotificationRead(item.id);
     }
-  };
+  }, [markNotificationRead]);
 
   const renderPapelAmount = (value: number) => (
     <span className="inline-flex items-center gap-2">
@@ -649,7 +649,7 @@ export default function DashboardPage() {
   const handleNotificationClick = useCallback((item: Notification) => {
     handleOpenNotification(item);
     setNotificationsOpen(false);
-  }, []);
+  }, [handleOpenNotification]);
 
   const handleToggleSettings = useCallback(() => {
     setSettingsOpen((prev) => !prev);
