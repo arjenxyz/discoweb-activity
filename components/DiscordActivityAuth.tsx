@@ -13,6 +13,9 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [debugUrl, setDebugUrl] = useState<string | null>(null);
+  const [debugFrameIdUrl, setDebugFrameIdUrl] = useState<string | null>(null);
+  const [debugFrameIdStorage, setDebugFrameIdStorage] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -224,22 +227,51 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
 
       // Production modunda Discord SDK'yi kullan
       try {
+        const getFrameId = () => {
+          const params = new URLSearchParams(window.location.search);
+          const fromUrl = params.get('frame_id');
+          const fromStorage = (() => {
+            try {
+              return localStorage.getItem('discord_frame_id');
+            } catch {
+              return null;
+            }
+          })();
+
+          setDebugUrl(window.location.href);
+          setDebugFrameIdUrl(fromUrl);
+          setDebugFrameIdStorage(fromStorage);
+
+          if (fromUrl) {
+            try {
+              localStorage.setItem('discord_frame_id', fromUrl);
+            } catch {
+              // ignore
+            }
+            return fromUrl;
+          }
+
+          return fromStorage;
+        };
+
+        const frameId = getFrameId();
+
         console.log('� Production mode: Starting Discord SDK authentication...');
-        console.log('🔍 Environment check:', { 
-          isDevMode, 
+        console.log('🔍 Environment check:', {
+          isDevMode,
           hasExistingUser: !!existingUser,
           guildId,
-          frameId: new URLSearchParams(window.location.search).get('frame_id'),
-          searchParams: window.location.search
+          frameId,
+          searchParams: window.location.search,
         });
-        
-        // frame_id kontrolü
-        const urlParams = new URLSearchParams(window.location.search);
-        const frameId = urlParams.get('frame_id');
 
         if (!frameId) {
-          console.warn('⚠️ No frame_id found - this is normal in Discord Developer Portal test');
-          // Discord Developer Portal'da test ederken frame_id gelmez ama SDK çalışabilir
+          console.warn('⚠️ frame_id bulunamadı; Discord Activity iframe içinde açılmıyor olabilir. SDK auth atlanıyor.');
+          setError(
+            'Discord Activity içinde çalışmıyor veya gerekli parametreler gelmiyor. Lütfen Discord içinden tekrar açmayı deneyin.',
+          );
+          setIsLoading(false);
+          return;
         }
 
         console.log('�🚀 Starting Discord SDK authentication...');
@@ -254,6 +286,7 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
         const auth = await sdk.commands.authorize({
           client_id: process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!,
           scope: ['identify', 'guilds'],
+          prompt: 'none',
         });
 
         console.log('📝 Got auth code, exchanging for token...');
@@ -268,30 +301,36 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
           body: JSON.stringify({ code: auth.code }),
         });
 
+        let result: any;
         if (response.ok) {
-          const result = await response.json();
+          result = await response.json();
           console.log('✅ Discord SDK auth successful:', result);
-          
-          if (result.status === 'ok') {
-            setIsAuthenticated(true);
-            setIsLoading(false);
-            localStorage.setItem('discordUser', JSON.stringify(result.user));
-            localStorage.setItem('selectedGuildId', guildId || '');
-            if (result.bearerToken) {
-              localStorage.setItem('discord_bearer_token', result.bearerToken);
-            }
-
-            // Backend'den gelen session cookie'ler zaten ayarlanmış olacak
-            console.log('✅ User authenticated with real Discord data');
-            return;
-          }
+        } else {
+          const body = await response.text().catch(() => '<unreadable>');
+          console.error('❌ /api/activity/auth returned error', response.status, body);
+          throw new Error(`Auth endpoint failed: ${response.status} ${body}`);
         }
-        
-        throw new Error('Authentication failed');
-        
+
+        if (result.status !== 'ok') {
+          console.error('❌ /api/activity/auth returned non-ok status', result);
+          throw new Error(`Auth failed: ${result.reason ?? 'unknown reason'}`);
+        }
+
+        setIsAuthenticated(true);
+        setIsLoading(false);
+        localStorage.setItem('discordUser', JSON.stringify(result.user));
+        localStorage.setItem('selectedGuildId', guildId || '');
+        if (result.bearerToken) {
+          localStorage.setItem('discord_bearer_token', result.bearerToken);
+        }
+
+        // Backend'den gelen session cookie'ler zaten ayarlanmış olacak
+        console.log('✅ User authenticated with real Discord data');
+        return;
       } catch (error) {
         console.error('❌ Authentication failed:', error);
-        setError('Authentication failed. Please try again.');
+        const message = error instanceof Error ? error.message : String(error);
+        setError(`Authentication failed. ${message}`);
         setIsLoading(false);
       }
     }
@@ -315,6 +354,14 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
       <div className="flex items-center justify-center min-h-screen bg-gray-900">
         <div className="text-white text-center">
           <p className="text-red-500 mb-4">{error}</p>
+          {debugUrl && (
+            <div className="mb-4 text-left text-xs text-white/60">
+              <p className="break-all">URL: {debugUrl}</p>
+              <p>search: {new URL(debugUrl).search}</p>
+              <p>frame_id (URL): {debugFrameIdUrl ?? 'yok'}</p>
+              <p>frame_id (storage): {debugFrameIdStorage ?? 'yok'}</p>
+            </div>
+          )}
           <button 
             onClick={() => window.location.reload()} 
             className="bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded"
