@@ -203,14 +203,16 @@ export default function ReferralSection() {
     try {
       const clientId = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
       if (!clientId) {
-        window.open(inviteUrl, '_blank');
+        setInviteFallbackUrl(inviteUrl);
+        setInviteError('Discord client id yok; davet penceresi açılamaz.');
         return;
       }
 
       const discordSdkModule = await import('@discord/embedded-app-sdk');
       const DiscordSDK = discordSdkModule?.DiscordSDK;
       if (!DiscordSDK) {
-        window.open(inviteUrl, '_blank');
+        setInviteFallbackUrl(inviteUrl);
+        setInviteError('Discord SDK bulunamadı; davet penceresi açılamıyor.');
         return;
       }
 
@@ -218,7 +220,7 @@ export default function ReferralSection() {
       await sdk.ready();
       await sdk.commands.openInviteDialog();
     } catch (err) {
-      console.warn('Davet penceresi açılamadı, alternatif URL açılıyor', err);
+      console.warn('Davet penceresi açılamadı, alternatif URL kullanılacak', err);
       setInviteFallbackUrl(inviteUrl);
       setInviteError(
         (err as Error)?.message ? `Davet penceresi açılamadı: ${(err as Error).message}` : 'Davet penceresi açılamadı.',
