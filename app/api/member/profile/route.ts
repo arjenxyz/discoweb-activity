@@ -130,7 +130,7 @@ export async function GET(request: Request) {
       return code;
     };
 
-    const ensureReferralCode = async (): Promise<string> => {
+    const ensureReferralCode = async (): Promise<string | null> => {
       for (let attempt = 0; attempt < 5; attempt += 1) {
         const code = generateReferralCode();
 
@@ -159,18 +159,18 @@ export async function GET(request: Request) {
 
         // If conflict is a unique violation on referral_code, try again
         if (conflict.code !== '23505') {
-          throw conflict;
+          console.warn('member/profile: unexpected insert error', conflict);
+          return null;
         }
       }
-      throw new Error('Referral code collision');
+
+      // If we reach here, we could not find an unused referral_code after multiple tries.
+      // This is non-fatal; proceed without referral_code.
+      console.warn('member/profile: referral code collision, skipping referral_code insertion');
+      return null;
     };
 
-    try {
-      await ensureReferralCode();
-    } catch (createError) {
-      console.error('member/profile: profile creation failed', createError);
-      return NextResponse.json({ error: 'profile_creation_failed' }, { status: 500 });
-    }
+    await ensureReferralCode();
 
     // Yeniden çekip dön
     const { data: createdProfile } = await supabase
