@@ -193,9 +193,11 @@ export default function ReferralSection() {
     })();
 
     if (!frameId) {
-      // frame_id olmadan da SDK denemesi yapmak istiyoruz; bazı embed durumlarında bu parametre eksik geliyor.
-      console.warn('frame_id bulunamadı; yine de SDK denemesi yapılacak');
+      // Discord embed içinde değilsek SDK openInviteDialog kesinlikle çalışmaz,
+      // ayrıca sandboxed iframe'lerde popup açma yetkisi yok.
+      console.warn('frame_id bulunamadı; SDK invite fonksiyonu atlanıyor');
       setInviteFallbackUrl(inviteUrl);
+      return;
     }
 
     try {
