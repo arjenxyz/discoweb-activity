@@ -236,16 +236,20 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
         // frame_id kontrolü
         const urlParams = new URLSearchParams(window.location.search);
         const frameId = urlParams.get('frame_id');
-        
+
         if (!frameId) {
-          console.warn('⚠️ No frame_id found, but continuing anyway...');
-          // frame_id yoksa devam et, Discord SDK bazen frame_id olmadan çalışabilir
+          console.warn('⚠️ No frame_id found; skipping Discord SDK auth to avoid frame_id errors.');
+          setError(
+            'Discord Activity iframe içinde açılmıyor veya frame_id parametresi gönderilmiyor. Lütfen uygulamayı Discord üzerinden başlatmayı deneyin.',
+          );
+          setIsLoading(false);
+          return;
         }
-        
+
         console.log('�🚀 Starting Discord SDK authentication...');
         const discordSdkModule = await import('@discord/embedded-app-sdk');
         const DiscordSDK = discordSdkModule.DiscordSDK;
-        
+
         const sdk = new DiscordSDK(process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!);
         await sdk.ready();
 
