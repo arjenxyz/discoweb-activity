@@ -76,8 +76,9 @@ const RANDOM_GIFS = [
 ];
 
 // Çıkış yapıldığında çerezleri ve localStorage'ı temizle
+// Eğer embed içindeysek Discord Activity'yi kapatmaya çalış
 const handleLogout = async () => {
-  try {
+  const cleanup = () => {
     if (typeof document !== 'undefined') {
       document.cookie.split(';').forEach((cookie) => {
         const eqPos = cookie.indexOf('=');
@@ -90,12 +91,40 @@ const handleLogout = async () => {
         }
       });
     }
-
     localStorage.clear();
+  };
+
+  try {
+    cleanup();
+
+    // Oturum kapat / backend'de temizle
     await fetch(apiUrl('/api/auth/logout'), { method: 'POST', credentials: 'include' });
+
+    try {
+      const discordSdkModule = await import('@discord/embedded-app-sdk');
+      const DiscordSDK = discordSdkModule?.DiscordSDK;
+      if (DiscordSDK) {
+        const sdk = new DiscordSDK(process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!);
+        await sdk.ready();
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const commands: any = sdk.commands;
+        if (commands?.closeActivity) {
+          await commands.closeActivity();
+          return;
+        }
+        if (commands?.close) {
+          await commands.close();
+          return;
+        }
+      }
+    } catch {
+      // ignore - SDK yüklenemezse normal logout davranışı devam etsin
+    }
+
     window.location.href = '/';
   } catch {
-    localStorage.clear();
+    cleanup();
     window.location.href = '/';
   }
 };
