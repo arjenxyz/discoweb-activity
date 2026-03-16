@@ -79,13 +79,12 @@ export default function ReferralSection() {
 
       const frameId = getFrameId();
       if (!frameId) {
-        setInviteAvailable(false);
         setInviteError(
           isInIframe()
             ? 'Discord Activity içinde çalışıyor ancak `frame_id` URL parametresi bulunamadı. Bu durumda davet penceresi açılamayabilir.'
             : 'Uygulama Discord içinde açılmıyor. Davet penceresi yalnızca Discord Activity içinde açılabilir.',
         );
-        return;
+        // frame_id olmadığında da SDK denemeye devam ediyoruz, çünkü bazen bu parametre tarayıcıda kaybolabiliyor.
       }
 
       try {
@@ -193,8 +192,8 @@ export default function ReferralSection() {
     })();
 
     if (!frameId) {
-      window.open(inviteUrl, '_blank');
-      return;
+      // frame_id olmadan da SDK denemesi yapmak istiyoruz; bazı embed durumlarında bu parametre eksik geliyor.
+      console.warn('frame_id bulunamadı; yine de SDK denemesi yapılacak');
     }
 
     try {
