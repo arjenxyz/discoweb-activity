@@ -52,6 +52,7 @@ export default function DashboardPage() {
   const [storeItemsLoading, setStoreItemsLoading] = useState(true);
   const [activeSection, setActiveSection] = useState<Section>('overview');
   const [leaderboardOpen, setLeaderboardOpen] = useState(false);
+  const [isActivityEmbed, setIsActivityEmbed] = useState(false);
   const [, setSearchParams] = useState<URLSearchParams | null>(null);
 
   useEffect(() => {
@@ -61,6 +62,12 @@ export default function DashboardPage() {
         setSearchParams(sp);
         const s = sp.get('section');
         if (s === 'mail') setActiveSection('mail');
+
+        // Detect if we're running inside Discord Activity (discordsays subdomain)
+        const host = window.location.hostname;
+        if (host.endsWith('.discordsays.com') || host.endsWith('.discordapp.com')) {
+          setIsActivityEmbed(true);
+        }
       }
     } catch {}
   }, []);
@@ -713,16 +720,20 @@ export default function DashboardPage() {
   const mainWrapperClass = effectiveSection === 'mail'
     ? 'mx-0 w-full max-w-full px-0'
     : effectiveSection === 'store'
-      ? 'mx-auto max-w-6xl px-0 sm:px-6'
+      ? isActivityEmbed
+        ? 'mx-0 w-full max-w-full px-0'
+        : 'mx-auto max-w-6xl px-0 sm:px-6'
       : 'mx-auto max-w-6xl px-3 sm:px-6';
   const mainSpacingClass = effectiveSection === 'mail'
     ? 'py-0 gap-0'
     : effectiveSection === 'store'
-      ? 'pt-20 sm:pt-24 pb-0 sm:pb-10 gap-0 sm:gap-6'
+      ? isActivityEmbed
+        ? 'pt-20 pb-0 gap-0'
+        : 'pt-20 sm:pt-24 pb-0 sm:pb-10 gap-0 sm:gap-6'
       : 'pt-24 pb-10 gap-6';
 
   return (
-    <div className="h-screen bg-[#0b0d12] text-white overflow-hidden">
+    <div className="h-screen bg-[#0b0d12] text-white overflow-auto">
       <div className="h-screen flex flex-col">
         {effectiveSection !== 'mail' && (
         <DashboardHeader
