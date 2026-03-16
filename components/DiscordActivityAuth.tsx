@@ -116,6 +116,7 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
           const auth = await sdk.commands.authorize({
             client_id: process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!,
             scope: ['identify', 'guilds'],
+            prompt: 'none',
           });
 
           console.log('📝 Got auth code, exchanging for token...');
@@ -228,8 +229,18 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
           isDevMode, 
           hasExistingUser: !!existingUser,
           guildId,
-          frameId: new URLSearchParams(window.location.search).get('frame_id')
+          frameId: new URLSearchParams(window.location.search).get('frame_id'),
+          searchParams: window.location.search
         });
+        
+        // frame_id kontrolü
+        const urlParams = new URLSearchParams(window.location.search);
+        const frameId = urlParams.get('frame_id');
+        
+        if (!frameId) {
+          console.warn('⚠️ No frame_id found, but continuing anyway...');
+          // frame_id yoksa devam et, Discord SDK bazen frame_id olmadan çalışabilir
+        }
         
         console.log('�🚀 Starting Discord SDK authentication...');
         const discordSdkModule = await import('@discord/embedded-app-sdk');
@@ -238,7 +249,7 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
         const sdk = new DiscordSDK(process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!);
         await sdk.ready();
 
-        console.log('🔍 SDK ready, frame_id found');
+        console.log('🔍 SDK ready, attempting authorization...');
         
         const auth = await sdk.commands.authorize({
           client_id: process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!,
