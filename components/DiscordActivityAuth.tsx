@@ -223,14 +223,22 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
 
       // Production modunda Discord SDK'yi kullan
       try {
-        console.log('🚀 Starting Discord SDK authentication...');
+        console.log('� Production mode: Starting Discord SDK authentication...');
+        console.log('🔍 Environment check:', { 
+          isDevMode, 
+          hasExistingUser: !!existingUser,
+          guildId,
+          frameId: new URLSearchParams(window.location.search).get('frame_id')
+        });
+        
+        console.log('�🚀 Starting Discord SDK authentication...');
         const discordSdkModule = await import('@discord/embedded-app-sdk');
         const DiscordSDK = discordSdkModule.DiscordSDK;
         
         const sdk = new DiscordSDK(process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!);
         await sdk.ready();
 
-        console.log('🔍 SDK ready, attempting authorization...');
+        console.log('🔍 SDK ready, frame_id found');
         
         const auth = await sdk.commands.authorize({
           client_id: process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!,
