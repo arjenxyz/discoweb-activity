@@ -70,6 +70,25 @@ export async function GET(request: Request) {
       : `https://cdn.discordapp.com/embed/avatars/${Number(userId) % 5}.png`;
 
     if (profile) {
+      // Eğer referral_code eksikse, bir tane oluştur
+      if (!profile.referral_code) {
+        const newCode = (() => {
+          const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+          let code = '';
+          for (let i = 0; i < 6; i += 1) {
+            const idx = Math.floor(Math.random() * chars.length);
+            code += chars[idx];
+          }
+          return code;
+        })();
+        await supabase
+          .from('member_profiles')
+          .update({ referral_code: newCode, updated_at: new Date().toISOString() })
+          .eq('guild_id', selectedGuildId)
+          .eq('user_id', userId);
+        profile.referral_code = newCode;
+      }
+
       // Gerçek profil bulundu, dön (kullanıcı bilgilerini ekle)
       return NextResponse.json({
         ...profile,
@@ -79,18 +98,43 @@ export async function GET(request: Request) {
     }
 
     // Kullanıcının bu sunucuda bir profili yoksa, oluşturmaya çalış
-    const { error: createError } = await supabase.from('member_profiles').upsert(
-      {
-        guild_id: selectedGuildId,
-        user_id: userId,
-        about: null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: 'guild_id,user_id' },
-    );
+    const generateReferralCode = () => {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      let code = '';
+      for (let i = 0; i < 6; i += 1) {
+        const idx = Math.floor(Math.random() * chars.length);
+        code += chars[idx];
+      }
+      return code;
+    };
 
-    if (createError) {
+    const ensureReferralCode = async (): Promise<string> => {
+      for (let attempt = 0; attempt < 5; attempt += 1) {
+        const code = generateReferralCode();
+        const { error: conflict } = await supabase
+          .from('member_profiles')
+          .insert({
+            guild_id: selectedGuildId,
+            user_id: userId,
+            about: null,
+            referral_code: code,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          });
+        if (!conflict) {
+          return code;
+        }
+        // If conflict is a unique violation on referral_code, try again
+        if (conflict.code !== '23505') {
+          throw conflict;
+        }
+      }
+      throw new Error('Referral code collision');
+    };
+
+    try {
+      await ensureReferralCode();
+    } catch (createError) {
       console.error('member/profile: profile creation failed', createError);
       return NextResponse.json({ error: 'profile_creation_failed' }, { status: 500 });
     }

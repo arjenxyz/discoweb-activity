@@ -13,6 +13,7 @@ import LeaderboardDrawer from './components/LeaderboardDrawer';
 import ProfileSection from './components/ProfileSection';
 import StoreSection from './components/StoreSection';
 import SettingsSection from './components/SettingsSection';
+import ReferralSection from './components/ReferralSection';
 import MailSection from './components/MailSection';
 import NotificationDetailModal from './components/NotificationDetailModal';
 import NotificationsModal from './components/NotificationsModal';
@@ -910,18 +911,21 @@ export default function DashboardPage() {
               </section>
             )}
             {effectiveSection === 'store' && !isSiteMaintenance && !isStoreMaintenance && (
-              <StoreSection
-                storeLoading={storeItemsLoading}
-                isLoadingMore={storeLoadingMore}
-                hasMore={storeHasMore}
-                onLoadMore={handleLoadMoreStore}
-                items={storeItems}
-                purchaseLoadingId={purchaseLoadingId}
-                purchaseFeedback={purchaseFeedback}
-                onPurchase={handlePurchase}
-                onAddToCart={handleAddToCart}
-                renderPapelAmount={renderPapelAmount}
-              />
+              <>
+                <ReferralSection />
+                <StoreSection
+                  storeLoading={storeItemsLoading}
+                  isLoadingMore={storeLoadingMore}
+                  hasMore={storeHasMore}
+                  onLoadMore={handleLoadMoreStore}
+                  items={storeItems}
+                  purchaseLoadingId={purchaseLoadingId}
+                  purchaseFeedback={purchaseFeedback}
+                  onPurchase={handlePurchase}
+                  onAddToCart={handleAddToCart}
+                  renderPapelAmount={renderPapelAmount}
+                />
+              </>
             )}
 
             {effectiveSection === 'settings' && !isSiteMaintenance && isPromotionsMaintenance && (
