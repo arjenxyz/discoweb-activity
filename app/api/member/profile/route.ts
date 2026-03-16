@@ -45,23 +45,38 @@ export async function GET(request: Request) {
 
   try {
     // Önce Supabase'den kullanıcıyı dene
-    const { data: profile, error } = await supabase
-      .from('member_profiles')
-      .select('*')
-      .eq('guild_id', selectedGuildId)
-      .eq('user_id', userId)
-      .maybeSingle();
+    let profile = null;
+    try {
+      const { data, error } = await supabase
+        .from('member_profiles')
+        .select('*')
+        .eq('guild_id', selectedGuildId)
+        .eq('user_id', userId)
+        .maybeSingle();
 
-    if (error && error.code !== 'PGRST116') { // PGRST116 = not found
-      throw error;
+      if (error && error.code !== 'PGRST116') {
+        throw error;
+      }
+
+      profile = data;
+    } catch (fetchError) {
+      console.error('member/profile: profile query failed', fetchError);
+      return NextResponse.json({ error: 'profile_query_failed' }, { status: 500 });
     }
 
     // Fetch Discord profile data from users table (username/avatar)
-    const { data: user } = await supabase
-      .from('users')
-      .select('discord_id, username, avatar')
-      .eq('discord_id', userId)
-      .maybeSingle();
+    let user = null;
+    try {
+      const { data } = await supabase
+        .from('users')
+        .select('discord_id, username, avatar')
+        .eq('discord_id', userId)
+        .maybeSingle();
+      user = data;
+    } catch (userError) {
+      console.warn('member/profile: unable to fetch discord user data', userError);
+      user = null;
+    }
 
     const avatarUrl = user?.avatar
       ? user.avatar.startsWith('http')
