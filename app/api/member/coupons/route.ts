@@ -29,6 +29,9 @@ const resolveServerId = async (supabase: SupabaseClient, guildId: string) => {
   return (bySlug as { id?: string } | null)?.id ?? null;
 };
 
+// Production için fallback server ID
+const FALLBACK_SERVER_ID = 'default-server-id';
+
 export async function GET(request: Request) {
   try {
     // Development mode bypass for Activity
