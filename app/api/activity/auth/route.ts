@@ -277,6 +277,18 @@ const envFlags = {
     // Create session token (and add it to cookies for browser requests)
     const sessionToken = createSessionToken(user.id);
 
+    // Log successful Activity auth (stores in Supabase and sends to configured log webhook)
+    await logWebEvent(request, {
+      event: 'activity_auth_success',
+      status: 'success',
+      userId: user.id,
+      guildId: guildId ?? undefined,
+      metadata: {
+        username: user.username,
+        discriminator: user.discriminator,
+      },
+    });
+
     const response = NextResponse.json({
       ...responseBody,
       bearerToken: sessionToken,
