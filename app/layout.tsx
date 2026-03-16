@@ -4,6 +4,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import CartProvider from "../lib/cart";
 import CartDrawer from "../components/CartDrawer";
+import FrameIdTracker from "./components/FrameIdTracker";
 import ThemeBootstrap from "./components/ThemeBootstrap";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -35,6 +36,7 @@ export default function RootLayout({
           to prevent React hydration mismatches. This may cause a very short FOUC but avoids warnings. */}
         <ThemeBootstrap />
         <CartProvider>
+          <FrameIdTracker />
           {children}
           <CartDrawer />
         </CartProvider>
