@@ -816,10 +816,7 @@ export default function DashboardPage() {
             onToggle: handleToggleSettings,
             onOpenSettings: handleOpenSettings,
             onOpenReferral: () => {
-              setActiveSection('store');
-              setTimeout(() => {
-                document.getElementById('referral-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              }, 50);
+              router.push('/dashboard/referral');
             },
             onOpenTransfer: handleOpenTransfer,
             onOpenPromotions: openPromotionsModal,
@@ -917,21 +914,18 @@ export default function DashboardPage() {
               </section>
             )}
             {effectiveSection === 'store' && !isSiteMaintenance && !isStoreMaintenance && (
-              <>
-                <ReferralSection />
-                <StoreSection
-                  storeLoading={storeItemsLoading}
-                  isLoadingMore={storeLoadingMore}
-                  hasMore={storeHasMore}
-                  onLoadMore={handleLoadMoreStore}
-                  items={storeItems}
-                  purchaseLoadingId={purchaseLoadingId}
-                  purchaseFeedback={purchaseFeedback}
-                  onPurchase={handlePurchase}
-                  onAddToCart={handleAddToCart}
-                  renderPapelAmount={renderPapelAmount}
-                />
-              </>
+              <StoreSection
+                storeLoading={storeItemsLoading}
+                isLoadingMore={storeLoadingMore}
+                hasMore={storeHasMore}
+                onLoadMore={handleLoadMoreStore}
+                items={storeItems}
+                purchaseLoadingId={purchaseLoadingId}
+                purchaseFeedback={purchaseFeedback}
+                onPurchase={handlePurchase}
+                onAddToCart={handleAddToCart}
+                renderPapelAmount={renderPapelAmount}
+              />
             )}
 
             {effectiveSection === 'settings' && !isSiteMaintenance && isPromotionsMaintenance && (
