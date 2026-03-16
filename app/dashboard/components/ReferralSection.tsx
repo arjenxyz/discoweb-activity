@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { siteConfig } from '@/config/site';
 
@@ -12,12 +13,14 @@ type ReferralStatus = {
 const MILESTONES = [5, 10, 20, 50, 100];
 
 export default function ReferralSection() {
+  const searchParams = useSearchParams();
+
   const [referralCode, setReferralCode] = useState<string>('');
-  const [inputCode, setInputCode] = useState('');
   const [referredBy, setReferredBy] = useState<string | null>(null);
   const [totalInvites, setTotalInvites] = useState<number>(0);
   const [status, setStatus] = useState<ReferralStatus | null>(null);
   const [loading, setLoading] = useState(false);
+  const [refSubmitted, setRefSubmitted] = useState(false);
   const [inviteAvailable, setInviteAvailable] = useState(false);
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [inviteFallbackUrl, setInviteFallbackUrl] = useState<string | null>(null);
@@ -42,6 +45,50 @@ export default function ReferralSection() {
 
     loadProfile();
   }, []);
+
+  useEffect(() => {
+    const refCode = searchParams.get('ref');
+    if (!refCode || refSubmitted) return;
+
+    const submitRef = async () => {
+      setLoading(true);
+      setStatus(null);
+
+      try {
+        const res = await fetchWithCreds('/api/member/referral', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: refCode.trim().toUpperCase() }),
+        });
+
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          const messages: Record<string, string> = {
+            already_referred: 'Zaten davet edildiniz.',
+            code_not_found: 'Kod bulunamadı.',
+            cannot_use_own_code: 'Kendi kodunuzu kullanamazsınız.',
+            invalid_code: 'Geçersiz kod.',
+            update_failed: 'Davet bilgisi kaydedilemedi.',
+            history_failed: 'Davet geçmişi kaydedilemedi.',
+            increment_failed: 'Davet sayısı güncellenemedi.',
+            new_account: 'Hesabınız çok yeni; lütfen daha sonra tekrar deneyin.',
+          };
+          setStatus({ type: 'error', message: messages[data.error] ?? 'Kod doğrulama başarısız oldu.' });
+        } else {
+          setStatus({ type: 'success', message: 'Kod başarıyla eklendi! 🎉' });
+          setReferredBy(refCode.trim().toUpperCase());
+          setTotalInvites((prev) => prev + 1);
+        }
+      } catch {
+        setStatus({ type: 'error', message: 'Sunucuya bağlanırken hata oldu.' });
+      } finally {
+        setLoading(false);
+        setRefSubmitted(true);
+      }
+    };
+
+    void submitRef();
+  }, [searchParams, refSubmitted]);
 
   useEffect(() => {
     const getFrameId = (): string | null => {
@@ -265,21 +312,9 @@ export default function ReferralSection() {
             <p className="text-xs text-white/40">Bu bilgi, davet kodunu ilk kullandığın anda kaydedilir.</p>
           </div>
         ) : (
-          <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_auto]">
-            <input
-              value={inputCode}
-              onChange={(e) => setInputCode(e.target.value.toUpperCase())}
-              placeholder="Davet kodu gir…"
-              className="w-full rounded-2xl bg-black/40 border border-white/10 px-4 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-            />
-            <button
-              type="button"
-              onClick={submitReferral}
-              disabled={loading}
-              className="rounded-2xl bg-indigo-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:bg-indigo-400 disabled:opacity-40"
-            >
-              {loading ? 'Onaylanıyor…' : 'Onayla'}
-            </button>
+          <div className="mt-3 rounded-2xl bg-white/5 p-4">
+            <p className="text-sm font-semibold text-white">Davet kodu otomatik olarak çalıştırılıyor.</p>
+            <p className="text-xs text-white/40">Eğer herhangi bir kodunuz yoksa, bir arkadaştan davet bağlantısı isteyin.</p>
           </div>
         )}
 

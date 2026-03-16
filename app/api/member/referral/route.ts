@@ -36,6 +36,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'invalid_code' }, { status: 400 });
     }
 
+    // Reject very new accounts to prevent fake / throwaway referrals.
+    // Snowflake timestamp: (id >> 22) + 1420070400000
+    const accountCreationMs = Number((BigInt(userId) >> 22n) + 1420070400000n);
+    const ageMs = Date.now() - accountCreationMs;
+    const minAgeMs = Number(process.env.REFERRAL_MIN_ACCOUNT_AGE_MS ?? 1000 * 60 * 60 * 24 * 3); // 3 days default
+    if (ageMs < minAgeMs) {
+      return NextResponse.json({ error: 'new_account' }, { status: 400 });
+    }
+
     // Ensure user has not already been referred
     const { data: currentProfile } = await supabase
       .from('member_profiles')
