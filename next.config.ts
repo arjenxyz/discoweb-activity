@@ -25,7 +25,7 @@ const nextConfig: NextConfig = {
           },
           {
             key: 'X-Frame-Options',
-            value: 'ALLOW-FROM https://discord.com',
+            value: 'SAMEORIGIN',
           },
         ],
       },
