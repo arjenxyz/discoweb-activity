@@ -65,7 +65,8 @@ export async function GET(request: Request) {
     }
 
     // Fetch Discord profile data from users table (username/avatar)
-    let user = null;
+    // If not present, fall back to Discord API via bot token
+    let user: { discord_id?: string; username?: string; avatar?: string } | null = null;
     try {
       const { data } = await supabase
         .from('users')
@@ -74,8 +75,22 @@ export async function GET(request: Request) {
         .maybeSingle();
       user = data;
     } catch (userError) {
-      console.warn('member/profile: unable to fetch discord user data', userError);
+      console.warn('member/profile: unable to fetch discord user data from supabase', userError);
       user = null;
+    }
+
+    // If we couldn't fetch from Supabase, try Discord API (bot token) for avatar/username
+    if (!user && process.env.DISCORD_BOT_TOKEN && selectedGuildId) {
+      try {
+        const userRes = await fetch(`https://discord.com/api/users/${userId}`, {
+          headers: { Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN}` },
+        });
+        if (userRes.ok) {
+          user = await userRes.json();
+        }
+      } catch (err) {
+        console.warn('member/profile: discord api user fetch failed', err);
+      }
     }
 
     const avatarUrl = user?.avatar
@@ -83,6 +98,45 @@ export async function GET(request: Request) {
         ? user.avatar
         : `https://cdn.discordapp.com/avatars/${userId}/${user.avatar}.png?size=96`
       : `https://cdn.discordapp.com/embed/avatars/${Number(userId) % 5}.png`;
+
+    let roles: Array<{ id: string; name: string; color: number }> | null = null;
+
+    // Discord API üzerinden roller alınmaya çalışsın (bot token gerektirir)
+    if (process.env.DISCORD_BOT_TOKEN && selectedGuildId) {
+      try {
+        const memberRes = await fetch(
+          `https://discord.com/api/guilds/${selectedGuildId}/members/${userId}`,
+          {
+            headers: { Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN}` },
+          },
+        );
+
+        if (memberRes.ok) {
+          const memberData = (await memberRes.json()) as { roles?: string[] };
+          const roleIds = memberData.roles || [];
+
+          if (roleIds.length > 0) {
+            const rolesRes = await fetch(
+              `https://discord.com/api/guilds/${selectedGuildId}/roles`,
+              {
+                headers: { Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN}` },
+              },
+            );
+
+            if (rolesRes.ok) {
+              const rolesData = (await rolesRes.json()) as Array<{
+                id: string;
+                name: string;
+                color: number;
+              }>;
+              roles = rolesData.filter((r) => roleIds.includes(r.id));
+            }
+          }
+        }
+      } catch (roleErr) {
+        console.warn('member/profile: role fetch failed', roleErr);
+      }
+    }
 
     if (profile) {
       // Eğer referral_code sütunu varsa ve kod eksikse, üretip kaydetmeye çalış.
@@ -116,6 +170,7 @@ export async function GET(request: Request) {
         ...profile,
         username: user?.username ?? null,
         avatar: avatarUrl,
+        roles,
       });
     }
 
