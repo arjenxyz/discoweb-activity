@@ -40,11 +40,51 @@ export default function ReferralSection() {
   }, []);
 
   useEffect(() => {
+    const getFrameId = (): string | null => {
+      if (typeof window === 'undefined') return null;
+      const params = new URLSearchParams(window.location.search);
+      const frameIdFromUrl = params.get('frame_id');
+      if (frameIdFromUrl) {
+        try {
+          localStorage.setItem('discord_frame_id', frameIdFromUrl);
+        } catch {
+          // ignore storage failures
+        }
+        return frameIdFromUrl;
+      }
+
+      try {
+        return localStorage.getItem('discord_frame_id');
+      } catch {
+        return null;
+      }
+    };
+
+    const isInIframe = () => {
+      if (typeof window === 'undefined') return false;
+      try {
+        return window.self !== window.top;
+      } catch {
+        return true; // cross-origin iframe
+      }
+    };
+
     const checkSdk = async () => {
       const clientId = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
       if (!clientId) {
         setInviteAvailable(false);
         setInviteError('Discord client ID bulunamadı. Lütfen `NEXT_PUBLIC_DISCORD_CLIENT_ID` çevre değişkenini ayarlayın.');
+        return;
+      }
+
+      const frameId = getFrameId();
+      if (!frameId) {
+        setInviteAvailable(false);
+        setInviteError(
+          isInIframe()
+            ? 'Discord Activity içinde çalışıyor ancak `frame_id` URL parametresi bulunamadı. Bu durumda davet penceresi açılamayabilir.'
+            : 'Uygulama Discord içinde açılmıyor. Davet penceresi yalnızca Discord Activity içinde açılabilir.',
+        );
         return;
       }
 
@@ -132,6 +172,30 @@ export default function ReferralSection() {
 
   const openInviteDialog = async () => {
     const inviteUrl = siteConfig.bot.inviteUrl;
+
+    const frameId = (() => {
+      if (typeof window === 'undefined') return null;
+      const params = new URLSearchParams(window.location.search);
+      const frameIdFromUrl = params.get('frame_id');
+      if (frameIdFromUrl) {
+        try {
+          localStorage.setItem('discord_frame_id', frameIdFromUrl);
+        } catch {
+          // ignore
+        }
+        return frameIdFromUrl;
+      }
+      try {
+        return localStorage.getItem('discord_frame_id');
+      } catch {
+        return null;
+      }
+    })();
+
+    if (!frameId) {
+      window.open(inviteUrl, '_blank');
+      return;
+    }
 
     try {
       const clientId = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
