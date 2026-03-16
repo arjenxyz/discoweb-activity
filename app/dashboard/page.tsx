@@ -733,8 +733,8 @@ export default function DashboardPage() {
       : 'pt-24 pb-10 gap-6';
 
   return (
-    <div className="h-screen bg-[#0b0d12] text-white overflow-auto">
-      <div className="h-screen flex flex-col">
+    <div className="min-h-screen bg-[#0b0d12] text-white overflow-auto">
+      <div className="flex flex-col min-h-0 h-full">
         {effectiveSection !== 'mail' && (
         <DashboardHeader
           unauthorized={unauthorized}
@@ -785,7 +785,7 @@ export default function DashboardPage() {
         />
         )}
 
-        <main className={`${mainWrapperClass} flex-1 flex flex-col ${mainSpacingClass} overflow-y-auto custom-scrollbar`}>
+        <main className={`${mainWrapperClass} flex-1 flex flex-col min-h-0 ${mainSpacingClass} overflow-y-auto custom-scrollbar`}>
             {!maintenanceLoading && isSiteMaintenance && (
               <section className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-6">
                 <p className="text-sm font-semibold text-amber-200">Site bakımda</p>
