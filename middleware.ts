@@ -243,6 +243,26 @@ export async function middleware(request: NextRequest) {
 		return NextResponse.next();
 	}
 
+	// Admin / Developer yolları sadece doğrudan web sitesi üzerinden erişilebilir olmalı.
+	// Discord Activity embed içinden (origin: discord.com) bu sayfalara erişim engellenir.
+	if (pathname.startsWith('/admin') || pathname.startsWith('/developer')) {
+		const originHeader = request.headers.get('origin');
+		const allowedOrigins = new Set<string>();
+		allowedOrigins.add(origin); // current site origin
+		const configured = process.env.NEXT_PUBLIC_APP_URL ?? process.env.NEXT_PUBLIC_SITE_URL;
+		if (configured) {
+			try {
+				allowedOrigins.add(new URL(configured).origin);
+			} catch {
+				// ignore invalid config
+			}
+		}
+
+		if (originHeader && !allowedOrigins.has(originHeader)) {
+			return new NextResponse(JSON.stringify({ error: 'forbidden' }), { status: 403, headers: { 'content-type': 'application/json' } });
+		}
+	}
+
 	// Ana sayfa ve public sayfaları atla
 	if (pathname === '/' || pathname.startsWith('/maintenance') || pathname.startsWith('/server-left')) {
 		return NextResponse.next();
