@@ -237,6 +237,8 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
           }
         };
 
+        const isIframe = isInIframe();
+
         const getFrameId = () => {
           const params = new URLSearchParams(window.location.search);
           const fromUrl = params.get('frame_id');
@@ -251,7 +253,7 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
           setDebugUrl(window.location.href);
           setDebugFrameIdUrl(fromUrl);
           setDebugFrameIdStorage(fromStorage);
-          setDebugIsInIframe(isInIframe());
+          setDebugIsInIframe(isIframe);
 
           if (fromUrl) {
             try {
@@ -274,10 +276,10 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
           guildId,
           frameId,
           searchParams: window.location.search,
-          isInIframe: isInIframe(),
+          isInIframe: isIframe,
         });
 
-        if (!isInIframe() && !frameId) {
+        if (!isIframe && !frameId) {
           console.warn('⚠️ Discord embed içinde değil ve frame_id yok; auth yapılmayacak.');
           setError(
             'Discord Activity içinde çalışmıyor veya gerekli parametreler gelmiyor. Lütfen Discord içinden tekrar açmayı deneyin.',
