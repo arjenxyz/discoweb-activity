@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { siteConfig } from '@/config/site';
 
@@ -21,6 +21,9 @@ export default function ReferralSection() {
   const [inviteAvailable, setInviteAvailable] = useState(false);
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [inviteFallbackUrl, setInviteFallbackUrl] = useState<string | null>(null);
+
+  const discordSdkRef = useRef<any | null>(null);
+  const sdkReadyRef = useRef(false);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -85,7 +88,7 @@ export default function ReferralSection() {
             ? 'Discord Activity içinde çalışıyor ancak `frame_id` URL parametresi bulunamadı. Bu durumda davet penceresi açılamayabilir.'
             : 'Uygulama Discord içinde açılmıyor. Davet penceresi yalnızca Discord Activity içinde açılabilir.',
         );
-        // frame_id olmadığında da SDK denemeye devam ediyoruz, çünkü bazen bu parametre tarayıcıda kaybolabiliyor.
+        return;
       }
 
       try {
@@ -96,8 +99,11 @@ export default function ReferralSection() {
           setInviteError('Discord SDK modülü yüklendi ancak DiscordSDK tanımlı değil.');
           return;
         }
+
         const sdk = new DiscordSDK(clientId);
         await sdk.ready();
+        discordSdkRef.current = sdk;
+        sdkReadyRef.current = true;
         setInviteAvailable(true);
         setInviteError(null);
       } catch (error) {
@@ -200,25 +206,14 @@ export default function ReferralSection() {
       return;
     }
 
+    if (!sdkReadyRef.current || !discordSdkRef.current) {
+      setInviteFallbackUrl(inviteUrl);
+      setInviteError('Discord SDK bağlantısı hazır değil; davet penceresi açılamıyor.');
+      return;
+    }
+
     try {
-      const clientId = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
-      if (!clientId) {
-        setInviteFallbackUrl(inviteUrl);
-        setInviteError('Discord client id yok; davet penceresi açılamaz.');
-        return;
-      }
-
-      const discordSdkModule = await import('@discord/embedded-app-sdk');
-      const DiscordSDK = discordSdkModule?.DiscordSDK;
-      if (!DiscordSDK) {
-        setInviteFallbackUrl(inviteUrl);
-        setInviteError('Discord SDK bulunamadı; davet penceresi açılamıyor.');
-        return;
-      }
-
-      const sdk = new DiscordSDK(clientId);
-      await sdk.ready();
-      await sdk.commands.openInviteDialog();
+      await discordSdkRef.current.commands.openInviteDialog();
     } catch (err) {
       console.warn('Davet penceresi açılamadı, alternatif URL kullanılacak', err);
       setInviteFallbackUrl(inviteUrl);
