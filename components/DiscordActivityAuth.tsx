@@ -16,6 +16,7 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
   const [debugUrl, setDebugUrl] = useState<string | null>(null);
   const [debugFrameIdUrl, setDebugFrameIdUrl] = useState<string | null>(null);
   const [debugFrameIdStorage, setDebugFrameIdStorage] = useState<string | null>(null);
+  const [debugIsInIframe, setDebugIsInIframe] = useState<boolean | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -227,6 +228,15 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
 
       // Production modunda Discord SDK'yi kullan
       try {
+        const isInIframe = () => {
+          if (typeof window === 'undefined') return false;
+          try {
+            return window.self !== window.top;
+          } catch {
+            return true;
+          }
+        };
+
         const getFrameId = () => {
           const params = new URLSearchParams(window.location.search);
           const fromUrl = params.get('frame_id');
@@ -241,6 +251,7 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
           setDebugUrl(window.location.href);
           setDebugFrameIdUrl(fromUrl);
           setDebugFrameIdStorage(fromStorage);
+          setDebugIsInIframe(isInIframe());
 
           if (fromUrl) {
             try {
@@ -263,15 +274,20 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
           guildId,
           frameId,
           searchParams: window.location.search,
+          isInIframe: isInIframe(),
         });
 
-        if (!frameId) {
-          console.warn('⚠️ frame_id bulunamadı; Discord Activity iframe içinde açılmıyor olabilir. SDK auth atlanıyor.');
+        if (!isInIframe() && !frameId) {
+          console.warn('⚠️ Discord embed içinde değil ve frame_id yok; auth yapılmayacak.');
           setError(
             'Discord Activity içinde çalışmıyor veya gerekli parametreler gelmiyor. Lütfen Discord içinden tekrar açmayı deneyin.',
           );
           setIsLoading(false);
           return;
+        }
+
+        if (!frameId) {
+          console.warn('⚠️ frame_id bulunamadı; yine de SDK auth deneniyor (bazı Discord sürümlerinde frame_id gönderilmeyebiliyor).');
         }
 
         console.log('�🚀 Starting Discord SDK authentication...');
@@ -358,6 +374,7 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
             <div className="mb-4 text-left text-xs text-white/60">
               <p className="break-all">URL: {debugUrl}</p>
               <p>search: {new URL(debugUrl).search}</p>
+              <p>iframe içinde mi: {debugIsInIframe === null ? 'bilinmiyor' : debugIsInIframe ? 'evet' : 'hayır'}</p>
               <p>frame_id (URL): {debugFrameIdUrl ?? 'yok'}</p>
               <p>frame_id (storage): {debugFrameIdStorage ?? 'yok'}</p>
             </div>

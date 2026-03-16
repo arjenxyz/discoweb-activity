@@ -19,7 +19,6 @@ export default function ReferralSection() {
   const [referredBy, setReferredBy] = useState<string | null>(null);
   const [totalInvites, setTotalInvites] = useState<number>(0);
   const [status, setStatus] = useState<ReferralStatus | null>(null);
-  const [loading, setLoading] = useState(false);
   const [refSubmitted, setRefSubmitted] = useState(false);
   const [inviteAvailable, setInviteAvailable] = useState(false);
   const [inviteError, setInviteError] = useState<string | null>(null);
@@ -51,7 +50,6 @@ export default function ReferralSection() {
     if (!refCode || refSubmitted) return;
 
     const submitRef = async () => {
-      setLoading(true);
       setStatus(null);
 
       try {
@@ -82,7 +80,6 @@ export default function ReferralSection() {
       } catch {
         setStatus({ type: 'error', message: 'Sunucuya bağlanırken hata oldu.' });
       } finally {
-        setLoading(false);
         setRefSubmitted(true);
       }
     };
