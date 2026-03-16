@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import fetchWithCreds from '@/lib/fetchWithCreds';
+import { siteConfig } from '@/config/site';
 
 type ReferralStatus = {
   type: 'success' | 'error';
@@ -18,6 +19,7 @@ export default function ReferralSection() {
   const [status, setStatus] = useState<ReferralStatus | null>(null);
   const [loading, setLoading] = useState(false);
   const [inviteAvailable, setInviteAvailable] = useState(false);
+  const [inviteError, setInviteError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -39,15 +41,28 @@ export default function ReferralSection() {
 
   useEffect(() => {
     const checkSdk = async () => {
+      const clientId = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
+      if (!clientId) {
+        setInviteAvailable(false);
+        setInviteError('Discord client ID bulunamadı. Lütfen `NEXT_PUBLIC_DISCORD_CLIENT_ID` çevre değişkenini ayarlayın.');
+        return;
+      }
+
       try {
         const discordSdkModule = await import('@discord/embedded-app-sdk');
         const DiscordSDK = discordSdkModule?.DiscordSDK;
-        if (!DiscordSDK) return;
-        const sdk = new DiscordSDK(process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!);
+        if (!DiscordSDK) {
+          setInviteAvailable(false);
+          setInviteError('Discord SDK modülü yüklendi ancak DiscordSDK tanımlı değil.');
+          return;
+        }
+        const sdk = new DiscordSDK(clientId);
         await sdk.ready();
         setInviteAvailable(true);
-      } catch {
+        setInviteError(null);
+      } catch (error) {
         setInviteAvailable(false);
+        setInviteError((error as Error)?.message ?? 'Discord SDK yüklenemedi.');
       }
     };
 
@@ -116,15 +131,28 @@ export default function ReferralSection() {
   };
 
   const openInviteDialog = async () => {
+    const inviteUrl = siteConfig.bot.inviteUrl;
+
     try {
+      const clientId = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
+      if (!clientId) {
+        window.open(inviteUrl, '_blank');
+        return;
+      }
+
       const discordSdkModule = await import('@discord/embedded-app-sdk');
       const DiscordSDK = discordSdkModule?.DiscordSDK;
-      if (!DiscordSDK) return;
-      const sdk = new DiscordSDK(process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!);
+      if (!DiscordSDK) {
+        window.open(inviteUrl, '_blank');
+        return;
+      }
+
+      const sdk = new DiscordSDK(clientId);
       await sdk.ready();
       await sdk.commands.openInviteDialog();
-    } catch {
-      // ignore
+    } catch (err) {
+      console.warn('Davet penceresi açılamadı, alternatif URL açılıyor', err);
+      window.open(inviteUrl, '_blank');
     }
   };
 
@@ -226,7 +254,6 @@ export default function ReferralSection() {
           <button
             type="button"
             onClick={openInviteDialog}
-            disabled={!inviteAvailable}
             className={inviteButtonClass}
           >
             <span className="flex items-center gap-2">
@@ -236,7 +263,20 @@ export default function ReferralSection() {
           </button>
 
           {!inviteAvailable && (
-            <p className="text-xs text-white/40">Discord SDK yüklenemiyor — davet penceresi açılamıyor.</p>
+            <div className="text-xs text-white/40">
+              <p>Discord SDK yüklenemiyor — davet penceresi açılamıyor.</p>
+              {inviteError && <p className="mt-1">Hata: {inviteError}</p>}
+              <p className="mt-1">
+                <a
+                  href={siteConfig.bot.inviteUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline"
+                >
+                  Alternatif olarak Discord davet bağlantısını açın.
+                </a>
+              </p>
+            </div>
           )}
         </div>
       </div>
