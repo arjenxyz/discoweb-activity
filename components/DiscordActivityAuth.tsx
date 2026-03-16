@@ -350,6 +350,13 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
 
         // Backend'den gelen session cookie'ler zaten ayarlanmış olacak
         console.log('✅ User authenticated with real Discord data');
+        
+        // Discord Activity'de authentication başarılı olunca dashboard'a yönlendir
+        if (window.location.pathname === '/activity') {
+          console.log('🔄 Redirecting to dashboard after authentication...');
+          window.location.href = '/dashboard';
+        }
+        
         return;
       } catch (error) {
         console.error('❌ Authentication failed:', error);
