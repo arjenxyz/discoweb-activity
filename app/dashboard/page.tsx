@@ -50,6 +50,9 @@ export default function DashboardPage() {
   const [overviewLoading, setOverviewLoading] = useState(true);
   const [storeItems, setStoreItems] = useState<StoreItem[]>([]);
   const [storeItemsLoading, setStoreItemsLoading] = useState(true);
+  const [storePage, setStorePage] = useState(1);
+  const [storeHasMore, setStoreHasMore] = useState(true);
+  const [storeLoadingMore, setStoreLoadingMore] = useState(false);
   const [activeSection, setActiveSection] = useState<Section>('overview');
   const [leaderboardOpen, setLeaderboardOpen] = useState(false);
   const [isActivityEmbed, setIsActivityEmbed] = useState(false);
@@ -93,11 +96,6 @@ export default function DashboardPage() {
     data: null as { id: string; name: string; iconUrl: string | null } | null,
     loading: true,
     guilds: [] as Array<{ id: string; name: string; iconUrl: string | null; isAdmin: boolean; isSetup: boolean }>,
-    onSelectServer: (guildId: string) => {
-      // Sunucu seçildiğinde cookie'ye kaydet ve sayfayı yenile
-      document.cookie = `selected_guild_id=${guildId}; path=/; max-age=31536000`;
-      window.location.reload();
-    },
   });
   const [purchaseFeedback, setPurchaseFeedback] = useState<PurchaseFeedback>({});
   const [purchaseLoadingId, setPurchaseLoadingId] = useState<string | null>(null);
@@ -106,6 +104,31 @@ export default function DashboardPage() {
   const [mailError, setMailError] = useState<string | null>(null);
 
   const effectiveSection = unauthorized && activeSection !== 'store' ? 'overview' : activeSection;
+
+  const loadSelectedServer = useCallback(async (attempt = 1): Promise<void> => {
+    if (unauthorizedRef.current) return;
+
+    const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+    try {
+      const response = await fetchWithCreds('/api/member/server-info');
+      if (response.ok) {
+        const data = (await response.json()) as { id: string; name: string; iconUrl: string | null };
+        setHeaderServer(prev => ({ ...prev, data }));
+        return;
+      }
+      if (response.status === 401) return;
+      if (attempt < 2) {
+        await sleep(1000);
+        return loadSelectedServer(attempt + 1);
+      }
+    } catch {
+      if (attempt < 2) {
+        await sleep(1000);
+        return loadSelectedServer(attempt + 1);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     // mirror `unauthorized` into a ref so effects can read it without
@@ -362,30 +385,65 @@ export default function DashboardPage() {
     return () => { isMounted = false; };
   }, [headerServer.guilds]);
 
-  const refreshStoreItems = async () => {
+  const refreshStoreItems = async (page = 1, append = false) => {
+    if (page === 1) {
+      setStoreItemsLoading(true);
+    } else {
+      setStoreLoadingMore(true);
+    }
+
     try {
-      const response = await fetchWithCreds('/api/member/store');
+      const response = await fetchWithCreds(`/api/member/store?page=${page}&limit=20`);
       if (response.ok) {
-        const data = (await response.json()) as { items: StoreItem[] };
-        setStoreItems(data.items ?? []);
+        const data = (await response.json()) as {
+          items: StoreItem[];
+          hasMore?: boolean;
+        };
+
+        setStoreItems((prev) =>
+          append ? [...prev, ...(data.items ?? [])] : (data.items ?? []),
+        );
+        setStorePage(page);
+        setStoreHasMore(data.hasMore ?? ((data.items?.length ?? 0) >= 20));
       }
     } catch (err) {
       console.warn('Mağaza ürünleri yüklenemedi:', err);
+    } finally {
+      if (page === 1) {
+        setStoreItemsLoading(false);
+      } else {
+        setStoreLoadingMore(false);
+      }
     }
   };
-  refreshStoreRef.current = refreshStoreItems;
+  refreshStoreRef.current = () => refreshStoreItems(1, false);
+
+  const handleSelectServer = useCallback(async (guildId: string) => {
+    if (unauthorizedRef.current || isActivityEmbed) return;
+
+    document.cookie = `selected_guild_id=${guildId}; path=/; max-age=31536000`;
+    setHeaderServer(prev => ({ ...prev, loading: true }));
+
+    try {
+      await loadSelectedServer();
+    } finally {
+      setHeaderServer(prev => ({ ...prev, loading: false }));
+    }
+
+    await refreshWalletBalance();
+    await refreshStoreItems(1, false);
+  }, [isActivityEmbed, loadSelectedServer, refreshWalletBalance, refreshStoreItems]);
 
   useEffect(() => {
     const loadStoreItems = async () => {
-      await refreshStoreItems();
-      setStoreItemsLoading(false);
+      await refreshStoreItems(1, false);
     };
 
     loadStoreItems();
   }, [unauthorized]);
 
   useEffect(() => {
-    if (unauthorized) return;
+    if (unauthorized || isActivityEmbed) return;
     let isMounted = true;
 
     const loadServerData = async () => {
@@ -426,35 +484,10 @@ export default function DashboardPage() {
 
     loadServerData();
     return () => { isMounted = false; };
-  }, [unauthorized]);
+  }, [unauthorized, isActivityEmbed]);
 
   useEffect(() => {
     if (unauthorizedRef.current) return;
-
-    const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
-
-    const loadSelectedServer = async (attempt = 1): Promise<void> => {
-      try {
-        const response = await fetchWithCreds('/api/member/server-info');
-        if (response.ok) {
-          const data = (await response.json()) as { id: string; name: string; iconUrl: string | null };
-          setHeaderServer(prev => ({ ...prev, data }));
-          return;
-        }
-        // 401 → zaten unauthorized akışı hallediyor, tekrar deneme
-        if (response.status === 401) return;
-        // Diğer hatalar için 1 kez retry
-        if (attempt < 2) {
-          await sleep(1000);
-          return loadSelectedServer(attempt + 1);
-        }
-      } catch {
-        if (attempt < 2) {
-          await sleep(1000);
-          return loadSelectedServer(attempt + 1);
-        }
-      }
-    };
 
     void loadSelectedServer();
 
@@ -467,7 +500,7 @@ export default function DashboardPage() {
     }, 15000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [loadSelectedServer]);
 
   const loginUrl = useMemo(() => {
     const clientId = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID ?? '';
@@ -717,6 +750,11 @@ export default function DashboardPage() {
     await refreshStoreItems();
   };
 
+  const handleLoadMoreStore = async () => {
+    if (storeLoadingMore || !storeHasMore) return;
+    await refreshStoreItems(storePage + 1, true);
+  };
+
   const mainWrapperClass = effectiveSection === 'mail'
     ? 'mx-0 w-full max-w-full px-0'
     : effectiveSection === 'store'
@@ -743,7 +781,7 @@ export default function DashboardPage() {
           loginUrl={loginUrl}
           isDeveloper={false}
           isAdmin={false}
-          server={headerServer}
+          server={{ ...headerServer, onSelectServer: isActivityEmbed ? undefined : handleSelectServer }}
           navigation={{
             activeSection: effectiveSection,
             onNavigate: setActiveSection,
@@ -874,6 +912,9 @@ export default function DashboardPage() {
             {effectiveSection === 'store' && !isSiteMaintenance && !isStoreMaintenance && (
               <StoreSection
                 storeLoading={storeItemsLoading}
+                isLoadingMore={storeLoadingMore}
+                hasMore={storeHasMore}
+                onLoadMore={handleLoadMoreStore}
                 items={storeItems}
                 purchaseLoadingId={purchaseLoadingId}
                 purchaseFeedback={purchaseFeedback}

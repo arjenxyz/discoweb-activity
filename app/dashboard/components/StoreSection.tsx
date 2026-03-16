@@ -26,6 +26,9 @@ const GIFS = [
 
 type StoreSectionProps = {
   storeLoading: boolean;
+  isLoadingMore?: boolean;
+  hasMore?: boolean;
+  onLoadMore?: () => void;
   items: StoreItem[];
   purchaseLoadingId: string | null;
   purchaseFeedback: PurchaseFeedback;
@@ -36,6 +39,9 @@ type StoreSectionProps = {
 
 export default function StoreSection({
   storeLoading,
+  isLoadingMore,
+  hasMore,
+  onLoadMore,
   items,
   purchaseLoadingId,
   purchaseFeedback,
@@ -57,6 +63,26 @@ export default function StoreSection({
 
     return m;
   }, [items]);
+
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!onLoadMore || !hasMore || storeLoading || isLoadingMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          onLoadMore();
+        }
+      },
+      { rootMargin: '200px' },
+    );
+
+    const el = loadMoreRef.current;
+    if (!el) return;
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [onLoadMore, hasMore, storeLoading, isLoadingMore, items.length]);
 
   return (
     <>
@@ -331,6 +357,26 @@ export default function StoreSection({
                  </div>
                  <h3 className="text-base font-bold text-white">Raflar Bomboş!</h3>
                  <p className="text-white/40 text-xs mt-1">Şu an ürün yok, daha sonra gel.</p>
+              </div>
+            )}
+
+            {hasMore && onLoadMore && (
+              <div className="flex items-center justify-center py-4">
+                {isLoadingMore ? (
+                  <div className="flex items-center gap-2 text-white/60">
+                    <LuLoader className="w-4 h-4 animate-spin" />
+                    <span className="text-sm">Daha fazla yükleniyor…</span>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={onLoadMore}
+                    className="text-xs text-white/60 hover:text-white transition"
+                  >
+                    Daha fazla yükle
+                  </button>
+                )}
+                <div ref={loadMoreRef} className="h-px w-full" />
               </div>
             )}
 

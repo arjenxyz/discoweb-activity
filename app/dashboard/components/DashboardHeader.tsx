@@ -35,7 +35,7 @@ type DashboardHeaderProps = {
     data: { id: string; name: string; iconUrl: string | null } | null;
     loading: boolean;
     guilds: Array<{ id: string; name: string; iconUrl: string | null; isAdmin: boolean; isSetup: boolean }>;
-    onSelectServer: (guildId: string) => void;
+    onSelectServer?: (guildId: string) => void;
   };
   notifications: {
     open: boolean;

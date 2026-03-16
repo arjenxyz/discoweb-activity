@@ -25,7 +25,7 @@ const getSelectedGuildId = async (): Promise<string> => {
   return selectedGuildId || GUILD_ID;
 };
 
-export async function GET() {
+export async function GET(request: Request) {
   // Development mode bypass for Activity
   if (process.env.NODE_ENV === 'development') {
     return NextResponse.json({
@@ -96,6 +96,11 @@ export async function GET() {
 
   const now = new Date().toISOString();
 
+  const url = new URL(request.url);
+  const page = Math.max(1, Number(url.searchParams.get('page') ?? '1'));
+  const limit = Math.min(100, Math.max(1, Number(url.searchParams.get('limit') ?? '20')));
+  const offset = (page - 1) * limit;
+
   const { data: promotions, error: promotionsError } = await supabase
     .from('promotions')
     .select('id,code,value,max_uses,used_count,status,expires_at,created_at')
@@ -115,13 +120,15 @@ export async function GET() {
     .eq('server_id', server.id)
     .eq('status', 'active')
     .order('created_at', { ascending: false })
-    .limit(20);
+    .range(offset, offset + limit - 1);
 
   if (itemsError) {
     return NextResponse.json({ error: 'fetch_failed' }, { status: 500 });
   }
 
-  return NextResponse.json({ promotions: promotions ?? [], items: items ?? [] });
+  const hasMore = (items?.length ?? 0) >= limit;
+
+  return NextResponse.json({ promotions: promotions ?? [], items: items ?? [], hasMore, page, limit });
 }
 
 export async function POST(request: Request) {
