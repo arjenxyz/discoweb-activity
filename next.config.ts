@@ -5,6 +5,12 @@ const nextConfig: NextConfig = {
   experimental: {
     webpackBuildWorker: true,
   },
+  // Discord iframe için development origin izni
+  allowedDevOrigins: [
+    'https://*.discordsays.com',
+    'https://discord.com',
+    'https://*.trycloudflare.com'
+  ],
   // Activity sayfalarının Discord iframe'inde çalışmasına izin ver
   async headers() {
     return [
