@@ -108,7 +108,7 @@ export default function ReferralSection() {
   }, [inviteAvailable]);
 
   return (
-    <section className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-2xl p-6 shadow-2xl space-y-4">
+    <section id="referral-section" className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-2xl p-6 shadow-2xl space-y-4">
       <h2 className="text-lg font-semibold text-white">Davet Et & Kazan</h2>
 
       <div className="grid gap-3 sm:grid-cols-2">

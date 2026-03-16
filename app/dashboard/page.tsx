@@ -815,6 +815,12 @@ export default function DashboardPage() {
             open: settingsOpen,
             onToggle: handleToggleSettings,
             onOpenSettings: handleOpenSettings,
+            onOpenReferral: () => {
+              setActiveSection('store');
+              setTimeout(() => {
+                document.getElementById('referral-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }, 50);
+            },
             onOpenTransfer: handleOpenTransfer,
             onOpenPromotions: openPromotionsModal,
             onOpenDiscounts: openDiscountsModal,

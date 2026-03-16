@@ -55,6 +55,7 @@ type DashboardHeaderProps = {
     onOpenTransfer: () => void;
     onOpenPromotions: () => void;
     onOpenDiscounts: () => void;
+    onOpenReferral?: () => void;
     logoutHref: string;
     menuRef: RefObject<HTMLDivElement | null>;
   };
@@ -373,6 +374,19 @@ export default function DashboardHeader({
                                                 <LuSettings className="w-4 h-4" />
                                             </div>
                                             <span className="text-sm font-medium text-white/80 group-hover:text-white">Hesap Ayarları</span>
+                                        </div>
+                                        <LuChevronRight className="text-white/40" />
+                                    </button>
+
+                                    <button
+                                        onClick={settings.onOpenReferral}
+                                        className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-white/5 transition-colors group"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-300 flex items-center justify-center">
+                                                <span className="text-sm">🎁</span>
+                                            </div>
+                                            <span className="text-sm font-medium text-white/80 group-hover:text-white">Davet Et & Kazan</span>
                                         </div>
                                         <LuChevronRight className="text-white/40" />
                                     </button>
