@@ -183,46 +183,6 @@ export default function ReferralSection() {
     window.setTimeout(() => setStatus(null), 2500);
   };
 
-  const submitReferral = async () => {
-    if (!inputCode.trim()) {
-      setStatus({ type: 'error', message: 'Lütfen bir kod girin.' });
-      return;
-    }
-
-    setLoading(true);
-    setStatus(null);
-
-    try {
-      const res = await fetchWithCreds('/api/member/referral', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: inputCode.trim().toUpperCase() }),
-      });
-
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        const messages: Record<string, string> = {
-          already_referred: 'Zaten davet edildiniz.',
-          code_not_found: 'Kod bulunamadı.',
-          cannot_use_own_code: 'Kendi kodunuzu kullanamazsınız.',
-          invalid_code: 'Geçersiz kod.',
-          update_failed: 'Davet bilgisi kaydedilemedi.',
-          history_failed: 'Davet geçmişi kaydedilemedi.',
-          increment_failed: 'Davet sayısı güncellenemedi.',
-        };
-        setStatus({ type: 'error', message: messages[data.error] ?? 'Kod doğrulama başarısız oldu.' });
-      } else {
-        setStatus({ type: 'success', message: 'Kod başarıyla eklendi! 🎉' });
-        setReferredBy(inputCode.trim().toUpperCase());
-        setTotalInvites((prev) => prev + 1);
-      }
-    } catch {
-      setStatus({ type: 'error', message: 'Sunucuya bağlanırken hata oldu.' });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const openInviteDialog = async () => {
     const inviteUrl = siteConfig.bot.inviteUrl;
 

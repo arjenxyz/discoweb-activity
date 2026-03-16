@@ -38,7 +38,7 @@ export async function POST(request: Request) {
 
     // Reject very new accounts to prevent fake / throwaway referrals.
     // Snowflake timestamp: (id >> 22) + 1420070400000
-    const accountCreationMs = Number((BigInt(userId) >> 22n) + 1420070400000n);
+    const accountCreationMs = Number((BigInt(userId) >> BigInt(22)) + BigInt('1420070400000'));
     const ageMs = Date.now() - accountCreationMs;
     const minAgeMs = Number(process.env.REFERRAL_MIN_ACCOUNT_AGE_MS ?? 1000 * 60 * 60 * 24 * 3); // 3 days default
     if (ageMs < minAgeMs) {
