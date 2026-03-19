@@ -62,7 +62,7 @@ export async function POST(request: Request) {
   const { error } = await supabase
     .from('system_mail_contacts')
     .insert({
-      guild_id: selectedGuildId,
+      guild_id: selectedGuildId ?? '',
       user_id: userId,
       subject,
       message,

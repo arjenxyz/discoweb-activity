@@ -148,7 +148,7 @@ export async function POST(request: Request) {
     appliedDiscount = discount;
   }
 
-  const currentBalance = await getBalance(supabase, userId, selectedGuildId);
+  const currentBalance = await getBalance(supabase, userId, selectedGuildId ?? '');
   console.log('Purchase debug:', { userId, selectedGuildId, finalPrice, currentBalance });
 
   if (!Number.isFinite(currentBalance) || currentBalance < finalPrice) {
@@ -495,7 +495,7 @@ export async function POST(request: Request) {
     event: 'store_purchase',
     status: 'success',
     userId,
-    guildId: selectedGuildId,
+    guildId: selectedGuildId ?? undefined,
     roleId: item.role_id ?? undefined,
     metadata: {
       orderId: order?.id,

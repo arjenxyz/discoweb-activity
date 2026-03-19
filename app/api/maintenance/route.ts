@@ -50,7 +50,7 @@ export async function GET() {
   }
 
   const selectedGuildId = await getSelectedGuildId();
-  const data = await getMaintenanceFlags(selectedGuildId);
+  const data = await getMaintenanceFlags(selectedGuildId ?? undefined);
   if (!data) {
     // If maintenance flags cannot be loaded (missing server record, missing DB, etc.),
     // return a safe default set rather than erroring out. This prevents the UI from
@@ -63,7 +63,7 @@ export async function GET() {
     .filter((value): value is string => Boolean(value));
 
   const uniqueIds = [...new Set(updaterIds)];
-  const profiles = await Promise.all(uniqueIds.map(async (id) => [id, await getDiscordProfile(id, selectedGuildId)]));
+  const profiles = await Promise.all(uniqueIds.map(async (id) => [id, await getDiscordProfile(id, selectedGuildId ?? '')]));
   const updaterProfiles = Object.fromEntries(
     profiles.filter(([, profile]) => profile).map(([id, profile]) => [id, profile]),
   ) as Record<string, { id: string; name: string; avatarUrl: string }>;

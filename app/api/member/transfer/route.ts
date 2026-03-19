@@ -196,7 +196,7 @@ export async function POST(request: Request) {
     payload.recipientId,
     server.id,
     'Papel transferi aldınız',
-    `Size ${payload.amount} papel gönderildi. Gönderen: ${await getSenderLabel(userId, selectedGuildId)}`,
+    `Size ${payload.amount} papel gönderildi. Gönderen: ${await getSenderLabel(userId, selectedGuildId ?? '')}`,
   );
 
   return NextResponse.json({

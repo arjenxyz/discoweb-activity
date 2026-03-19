@@ -91,7 +91,7 @@ export async function GET(request: Request) {
   // Clean up expired store roles for this user (if logged in) even if bot is offline.
   const sessionUserId = await getSessionUserId();
   if (sessionUserId) {
-    await cleanupExpiredRolesForUser(supabaseClient, server.id, selectedGuildId, sessionUserId, process.env.DISCORD_BOT_TOKEN);
+    await cleanupExpiredRolesForUser(supabaseClient, server.id, selectedGuildId ?? '', sessionUserId, process.env.DISCORD_BOT_TOKEN);
   }
 
   const now = new Date().toISOString();
@@ -167,7 +167,7 @@ export async function POST(request: Request) {
   }
 
   // Cleanup expired roles for this user (in case bot is offline)
-  await cleanupExpiredRolesForUser(supabaseClient, server.id, selectedGuildId, userId, process.env.DISCORD_BOT_TOKEN);
+  await cleanupExpiredRolesForUser(supabaseClient, server.id, selectedGuildId ?? '', userId, process.env.DISCORD_BOT_TOKEN);
 
   console.log('Server found:', server.id);
 
@@ -568,7 +568,7 @@ export async function POST(request: Request) {
     event: 'store_purchase',
     status: 'success',
     userId,
-    guildId: selectedGuildId,
+    guildId: selectedGuildId ?? undefined,
     metadata: {
       orderId: order.id,
       itemCount: orderItems.length,

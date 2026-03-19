@@ -164,7 +164,7 @@ export async function GET(request: NextRequest) {
         username = userInfo.username;
       }
     } catch {
-      // ignore fetch errors, dönen roster’da boş kalacak
+      // ignore fetch errors, dönen roster'da boş kalacak
       username = uid;
     }
 
@@ -172,7 +172,7 @@ export async function GET(request: NextRequest) {
   };
 
   if (papelRowsTyped && papelRowsTyped.length) {
-    // Discord API’den kullanıcı bilgisi — rate limit koruması için max 5 paralel
+    // Discord API'den kullanıcı bilgisi — rate limit koruması için max 5 paralel
     const concurrency = 5;
     const discordMembers: DiscordMemberInfo[] = [];
 
@@ -186,11 +186,11 @@ export async function GET(request: NextRequest) {
       const info = discordMembers[idx] || ({} as DiscordMemberInfo);
       return {
         userId: row.user_id,
-        avatarUrl: info.avatarUrl || ‘’,
+        avatarUrl: info.avatarUrl || '',
         nickname: info.nickname ?? null,
         displayName: info.displayName ?? null,
-        // username boşsa userId’nin ilk 8 karakterini göster
-        username: info.username || row.user_id.slice(0, 8) + ‘...’,
+        // username boşsa userId'nin ilk 8 karakterini göster
+        username: info.username || row.user_id.slice(0, 8) + '...',
         papel: Number(row.balance ?? 0),
         isCurrentUser: row.user_id === userId,
       };

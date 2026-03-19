@@ -139,7 +139,7 @@ export async function POST(request: Request) {
     event: 'store_promo_redeem',
     status: 'success',
     userId,
-    guildId: selectedGuildId,
+    guildId: selectedGuildId ?? undefined,
     metadata: {
       promoId: promo.id,
       code: promo.code,
