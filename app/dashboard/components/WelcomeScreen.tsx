@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import type { ActivityReadiness } from './ActivityReadinessGate';
+import fetchWithCreds from '@/lib/fetchWithCreds';
 
 type Props = {
   readiness: ActivityReadiness;
@@ -30,7 +31,7 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
     setPhase('loading');
     setError(null);
     try {
-      const response = await fetch(`/api/member/profile?guild_id=${encodeURIComponent(readiness.guildId)}`, {
+      const response = await fetchWithCreds(`/api/member/profile?guild_id=${encodeURIComponent(readiness.guildId)}`, {
         method: 'GET',
         cache: 'no-store',
       });
@@ -57,7 +58,9 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
           loop
           muted
           playsInline
+          disablePictureInPicture
           className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+          style={{ WebkitObjectFit: 'cover' } as React.CSSProperties}
         />
       )}
 
