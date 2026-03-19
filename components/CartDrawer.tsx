@@ -385,11 +385,19 @@ export default function CartDrawer() {
                         <div className="text-[9px] text-white/40 space-y-0.5">
                           {currentMinSpend > 0 && <p>Min. {currentMinSpend} Papel</p>}
                           <p>
-                            Kullanım: {Number((appliedCoupon as Coupon).userUsageCount ?? (appliedCoupon as Coupon).used_count ?? 0)} / {typeof (appliedCoupon as Coupon).perUserLimit === 'number' && (appliedCoupon as Coupon).perUserLimit > 0
-                              ? (appliedCoupon as Coupon).perUserLimit
-                              : (typeof (appliedCoupon as Coupon).max_uses === 'number' && (appliedCoupon as Coupon).max_uses > 0
-                                ? (appliedCoupon as Coupon).max_uses
-                                : '∞')}
+                            Kullanım: {
+                              (() => {
+                                const coupon = appliedCoupon as Coupon | undefined;
+                                const usage = Number(coupon?.userUsageCount ?? coupon?.used_count ?? 0);
+                                let limit: string | number = '∞';
+                                if (typeof coupon?.perUserLimit === 'number' && coupon.perUserLimit > 0) {
+                                  limit = coupon.perUserLimit;
+                                } else if (typeof coupon?.max_uses === 'number' && coupon.max_uses > 0) {
+                                  limit = coupon.max_uses;
+                                }
+                                return `${usage} / ${limit}`;
+                              })()
+                            }
                           </p>
                         </div>
                       </div>
