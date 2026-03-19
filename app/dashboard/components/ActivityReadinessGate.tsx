@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Image from 'next/image';
+import WelcomeScreen from './WelcomeScreen';
 
 export type ActivityReadinessStatus =
   | 'ready'
@@ -110,9 +111,11 @@ const COPY_BY_STATUS: Record<ActivityReadinessStatus, GateCopy> = {
 };
 
 export default function ActivityReadinessGate({ readiness, loading, onRetry }: GateProps) {
+  if (readiness.status === 'missing_user_profile') {
+    return <WelcomeScreen readiness={readiness} onRetry={onRetry} />;
+  }
+
   const [copied, setCopied] = useState(false);
-  const [creatingProfile, setCreatingProfile] = useState(false);
-  const [createProfileError, setCreateProfileError] = useState<string | null>(null);
 
   const copy = useMemo(() => COPY_BY_STATUS[readiness.status], [readiness.status]);
   const isBotMissing = readiness.status === 'bot_not_in_guild';
@@ -136,37 +139,6 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
       setTimeout(() => setCopied(false), 1600);
     } catch {
       setCopied(false);
-    }
-  };
-
-  const createUserProfile = async () => {
-    if (creatingProfile) return; // çift tıklama koruması
-    if (!readiness.guildId) {
-      setCreateProfileError('Sunucu bilgisi bulunamadı, lütfen yeniden deneyin.');
-      return;
-    }
-
-    setCreatingProfile(true);
-    setCreateProfileError(null);
-    try {
-      const response = await fetch(`/api/member/profile?guild_id=${encodeURIComponent(readiness.guildId)}`, {
-        method: 'GET',
-        cache: 'no-store',
-      });
-
-      if (!response.ok) {
-        const json = await response.json().catch(() => null);
-        const errorMsg = json?.error || response.statusText || 'Profil oluşturma başarısız.';
-        setCreateProfileError(String(errorMsg));
-        return;
-      }
-
-      // yeniden kontrol et
-      await onRetry();
-    } catch {
-      setCreateProfileError('Profil oluşturma isteği başarısız oldu.');
-    } finally {
-      setCreatingProfile(false);
     }
   };
 
@@ -214,20 +186,6 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
               >
                 Çerezleri Temizle
               </button>
-
-              {readiness.status === 'missing_user_profile' && (
-                <button
-                  type="button"
-                  onClick={createUserProfile}
-                  disabled={creatingProfile}
-                  className="rounded-full border border-green-300 bg-green-500/20 px-4 py-2 text-sm font-semibold text-green-100 transition hover:bg-green-500/40 disabled:opacity-50"
-                >
-                  {creatingProfile ? 'Profil Oluşturuluyor...' : 'Profil Oluştur'}
-                </button>
-              )}
-              {createProfileError && (
-                <p className="w-full text-left text-xs text-rose-300">{createProfileError}</p>
-              )}
 
               {isBotMissing && isAdmin && readiness.inviteUrl && (
                 <>
