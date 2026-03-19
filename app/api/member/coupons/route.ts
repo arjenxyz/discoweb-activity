@@ -69,6 +69,9 @@ export async function GET(request: Request) {
     }
 
     const userId = await getSessionUserId();
+    if (!userId) {
+      return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+    }
 
     const selectedGuildId = await getSelectedGuildId(request);
     if (!selectedGuildId) {

@@ -124,12 +124,15 @@ async function checkUserRoles(userId: string, guildId: string): Promise<string[]
     });
 
     if (!memberResponse.ok) {
-      if (cached && now < cached.expires + CACHE_GRACE_MS) {
-        return cached.roles;
+      // User was kicked/left — evict cache immediately
+      if (memberResponse.status === 404) {
+        roleCheckCache.delete(cacheKey);
+        return [];
       }
 
-      if (memberResponse.status === 404) {
-        return [];
+      // Transient Discord API error — serve stale cache within grace period
+      if (cached && now < cached.expires + CACHE_GRACE_MS) {
+        return cached.roles;
       }
 
       return null;

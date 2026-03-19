@@ -7,7 +7,7 @@ import { getSessionUserId, requireSessionUser } from '@/lib/auth';
 import { logWebEvent } from '@/lib/serverLogger';
 import { cleanupExpiredRolesForUser } from '@/lib/roleCleanup';
 
-const GUILD_ID = process.env.DISCORD_GUILD_ID ?? '1465698764453838882';
+const GUILD_ID = process.env.DISCORD_GUILD_ID ?? null;
 
 const getSupabase = (): SupabaseClient | null => {
   const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -19,7 +19,7 @@ const getSupabase = (): SupabaseClient | null => {
 };
 
 
-const getSelectedGuildId = async (): Promise<string> => {
+const getSelectedGuildId = async (): Promise<string | null> => {
   const cookieStore = await cookies();
   const selectedGuildId = cookieStore.get('selected_guild_id')?.value;
   return selectedGuildId || GUILD_ID;
@@ -194,13 +194,16 @@ export async function POST(request: Request) {
   const orderItems = items.map(cartItem => {
     const item = storeItems.find(si => si.id === cartItem.itemId);
     if (!item) throw new Error('item_not_found');
-    const itemTotal = item.price * cartItem.qty;
+    const unitPrice = Number(item.price ?? 0);
+    const qty = Math.max(1, Number(cartItem.qty ?? 1));
+    if (isNaN(unitPrice) || unitPrice < 0) throw new Error('invalid_item_price');
+    const itemTotal = unitPrice * qty;
     subtotal += itemTotal;
     return {
       item_id: item.id,
       title: item.title,
-      price: item.price,
-      qty: cartItem.qty,
+      price: unitPrice,
+      qty,
       total: itemTotal,
       role_id: item.role_id,
       duration_days: item.duration_days,
@@ -260,10 +263,12 @@ export async function POST(request: Request) {
     wallet = newWallet;
   }
 
-  console.log('Checkout debug:', { userId, selectedGuildId, serverId: server.id, total, wallet: wallet?.balance });
+  const currentBalance = Number(wallet.balance ?? 0);
 
-  if (wallet.balance < total) {
-    return NextResponse.json({ error: 'insufficient_balance', required: total, available: wallet.balance }, { status: 400 });
+  console.log('Checkout debug:', { userId, selectedGuildId, serverId: server.id, total, currentBalance });
+
+  if (currentBalance < total) {
+    return NextResponse.json({ error: 'insufficient_balance', required: total, available: currentBalance }, { status: 400 });
   }
 
   // Create order with pending status
@@ -341,7 +346,7 @@ export async function POST(request: Request) {
   // Attempt to atomically deduct from wallet only if enough balance
   const { data: updatedWallet, error: walletUpdateError } = await supabase
     .from('member_wallets')
-    .update({ balance: wallet.balance - total, updated_at: new Date().toISOString() })
+    .update({ balance: currentBalance - total, updated_at: new Date().toISOString() })
     .eq('user_id', userId)
     .eq('guild_id', selectedGuildId)
     .filter('balance', 'gte', total)
@@ -350,21 +355,50 @@ export async function POST(request: Request) {
 
   if (walletUpdateError || !updatedWallet) {
     console.error('Wallet deduction failed:', walletUpdateError);
-    // Rollback order if wallet deduction fails (e.g., concurrent spend or insufficient funds)
-    // attempt to remove roles we assigned during pre-check
+    // Rollback: assigned rollerini geri almaya çalış
+    const rollbackFailed: string[] = [];
     try {
       const botToken = process.env.DISCORD_BOT_TOKEN;
       if (botToken) {
         for (const r of assignedRoles) {
-          await fetch(`https://discord.com/api/guilds/${selectedGuildId}/members/${userId}/roles/${r.roleId}`, { method: 'DELETE', headers: { Authorization: `Bot ${botToken}` } }).catch(() => null);
+          const res = await fetch(
+            `https://discord.com/api/guilds/${selectedGuildId}/members/${userId}/roles/${r.roleId}`,
+            { method: 'DELETE', headers: { Authorization: `Bot ${botToken}` } }
+          ).catch(() => null);
+          if (!res || !res.ok) {
+            rollbackFailed.push(r.roleId);
+          }
         }
       }
     } catch (e) {
       console.warn('Failed to rollback roles after wallet failure', e);
     }
 
-    await supabaseClient.from('store_orders').delete().eq('id', order?.id);
-    return NextResponse.json({ error: 'insufficient_balance', required: total, available: wallet.balance }, { status: 400 });
+    if (rollbackFailed.length > 0) {
+      // Rollback başarısız — order'ı silme, kayıt tut
+      console.error('Role rollback failed for roles:', rollbackFailed);
+      await supabaseClient
+        .from('store_orders')
+        .update({ status: 'rollback_failed', failure_reason: `role_rollback_failed: ${rollbackFailed.join(',')}` })
+        .eq('id', order?.id);
+      // Kullanıcıya bilgi ver
+      try {
+        await supabaseClient.from('system_mails').insert({
+          guild_id: selectedGuildId,
+          user_id: userId,
+          title: 'Sipariş Hatası: Yönetici İncelemesi Gerekiyor',
+          body: `Sipariş #${order?.id} işleminizde ödeme alınamadı ancak rol geri alınamadı. Yönetici inceleyecektir.`,
+          category: 'system',
+          status: 'published',
+          author_name: 'DiscoWeb Sistem',
+          created_at: new Date().toISOString(),
+        });
+      } catch {}
+      return NextResponse.json({ error: 'rollback_failed', message: 'Ödeme işlemi başarısız, yönetici bilgilendirildi.' }, { status: 500 });
+    }
+
+    await supabaseClient.from('store_orders').update({ status: 'failed', failure_reason: 'insufficient_balance_concurrent' }).eq('id', order?.id);
+    return NextResponse.json({ error: 'insufficient_balance', required: total, available: currentBalance }, { status: 400 });
   }
 
   // Mark order as paid and calculate expires_at so the system can revoke role even if bot is offline

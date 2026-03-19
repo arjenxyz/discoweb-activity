@@ -15,10 +15,10 @@ const getSupabase = () => {
   return createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
 };
 
-const getSelectedGuildId = async (): Promise<string> => {
+const getSelectedGuildId = async (): Promise<string | null> => {
   const cookieStore = await cookies();
   const selectedGuildId = cookieStore.get('selected_guild_id')?.value;
-  return selectedGuildId || process.env.DISCORD_GUILD_ID || '1465698764453838882';
+  return selectedGuildId || process.env.DISCORD_GUILD_ID || null;
 };
 
 export async function GET() {

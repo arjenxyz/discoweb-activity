@@ -5,7 +5,7 @@ import { checkMaintenance } from '@/lib/maintenance';
 import { getSessionUserId } from '@/lib/auth';
 
 const DEFAULT_SLUG = 'default';
-const GUILD_ID = process.env.DISCORD_GUILD_ID ?? '1465698764453838882';
+const GUILD_ID = process.env.DISCORD_GUILD_ID ?? null;
 
 const getSupabase = () => {
   const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -16,7 +16,7 @@ const getSupabase = () => {
   return createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
 };
 
-const getSelectedGuildId = async (): Promise<string> => {
+const getSelectedGuildId = async (): Promise<string | null> => {
   const cookieStore = await cookies();
   const selectedGuildId = cookieStore.get('selected_guild_id')?.value;
   return selectedGuildId || GUILD_ID;
@@ -85,7 +85,7 @@ export async function GET() {
 
   // Eğer kullanıcıya ait cüzdan satırı yoksa otomatik oluştur
   if (!wallet) {
-    await supabase.from('member_wallets').upsert(
+    const { error: walletCreateError } = await supabase.from('member_wallets').upsert(
       {
         guild_id: selectedGuildId,
         user_id: userId,
@@ -94,6 +94,10 @@ export async function GET() {
       },
       { onConflict: 'guild_id,user_id' },
     );
+    if (walletCreateError) {
+      console.error('Wallet auto-create failed:', walletCreateError);
+      return NextResponse.json({ error: 'wallet_init_failed' }, { status: 500 });
+    }
   }
 
   const { data: sentToday } = await supabase

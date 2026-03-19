@@ -33,29 +33,39 @@ export async function GET() {
     console.log('Guilds API: Fetched', guilds.length, 'guilds from Discord API');
 
     const botToken = process.env.DISCORD_BOT_TOKEN;
-    console.log('Guilds API: Bot token exists:', !!botToken);
     if (!botToken) {
-      console.log('Guilds API: No bot token, returning empty guilds');
-      return NextResponse.json({ guilds: [] });
+      console.log('Guilds API: No bot token configured');
+      return NextResponse.json({ error: 'missing_bot_token' }, { status: 500 });
     }
 
-    console.log('Guilds API: Filtering guilds where bot is present...');
+    // Paralel kontrol — max 5 eş zamanlı istek (rate limit koruması)
+    const CONCURRENCY = 5;
     const filteredGuilds: any[] = [];
-    for (const guild of guilds) {
-      try {
-        console.log(`Guilds API: Checking bot presence in guild ${guild.name} (${guild.id})`);
-        const botResponse = await fetch(`https://discord.com/api/guilds/${guild.id}`, {
-          headers: { Authorization: `Bot ${botToken}` },
-        });
-        if (botResponse.ok) {
-          console.log(`Guilds API: Bot is present in ${guild.name}`);
-          filteredGuilds.push(guild);
-        } else {
-          console.log(`Guilds API: Bot not present in ${guild.name}, status: ${botResponse.status}`);
-        }
-      } catch (error) {
-        console.log(`Guilds API: Error checking bot presence in ${guild.name}:`, error);
-      }
+
+    for (let i = 0; i < guilds.length; i += CONCURRENCY) {
+      const batch = guilds.slice(i, i + CONCURRENCY);
+      const results = await Promise.all(
+        batch.map(async (guild: any) => {
+          try {
+            const botResponse = await fetch(`https://discord.com/api/guilds/${guild.id}`, {
+              headers: { Authorization: `Bot ${botToken}` },
+            });
+            if (botResponse.status === 429) {
+              const retryAfter = botResponse.headers.get('Retry-After');
+              const waitMs = retryAfter ? Math.min(parseFloat(retryAfter) * 1000, 3000) : 1000;
+              await new Promise((r) => setTimeout(r, waitMs));
+              const retryResponse = await fetch(`https://discord.com/api/guilds/${guild.id}`, {
+                headers: { Authorization: `Bot ${botToken}` },
+              });
+              return retryResponse.ok ? guild : null;
+            }
+            return botResponse.ok ? guild : null;
+          } catch {
+            return null;
+          }
+        })
+      );
+      filteredGuilds.push(...results.filter(Boolean));
     }
 
     console.log('Guilds API: Returning', filteredGuilds.length, 'filtered guilds');

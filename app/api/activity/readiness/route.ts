@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { requireSessionUser } from '@/lib/auth';
 import { getSelectedGuildId } from '@/lib/guild';
+import { checkMaintenance } from '@/lib/maintenance';
 
 type ReadinessStatus =
   | 'ready'
@@ -73,7 +74,17 @@ const fetchWithRetry = async (url: string, init: RequestInit, retries = 2): Prom
   for (let attempt = 0; attempt <= retries; attempt += 1) {
     try {
       const response = await fetch(url, init);
-      if (response.ok || ![502, 503, 504].includes(response.status)) {
+      if (response.ok || ![429, 502, 503, 504].includes(response.status)) {
+        return response;
+      }
+      if (response.status === 429) {
+        const retryAfter = response.headers.get('Retry-After');
+        const waitMs = retryAfter ? Math.min(parseFloat(retryAfter) * 1000, 5000) : 1000;
+        lastError = new Error(`Discord rate limited for ${url}`);
+        if (attempt < retries) {
+          await new Promise((resolve) => setTimeout(resolve, waitMs));
+          continue;
+        }
         return response;
       }
       lastError = new Error(`Discord returned ${response.status} for ${url}`);
@@ -153,6 +164,14 @@ const resolveGuildAdminFromOAuth = async (
 };
 
 export async function GET(request: Request) {
+  const maintenance = await checkMaintenance(['site']);
+  if (maintenance.blocked) {
+    return NextResponse.json(
+      buildResponse({ status: 'discord_api_error', debug: { reason: `maintenance: ${maintenance.reason ?? maintenance.key}` } }),
+      { status: 503 },
+    );
+  }
+
   const session = await requireSessionUser(request);
   if (!session.ok) {
     return NextResponse.json(
@@ -190,12 +209,11 @@ export async function GET(request: Request) {
     .eq('discord_id', guildId)
     .maybeSingle();
 
-  const adminFromOAuth = await resolveGuildAdminFromOAuth(supabase, session.userId, guildId);
-
   const nonOkStatus = (payload: Parameters<typeof buildResponse>[0]) =>
     NextResponse.json(buildResponse(payload), { status: 200 });
 
   if (!server) {
+    const adminFromOAuth = await resolveGuildAdminFromOAuth(supabase, session.userId, guildId);
     return nonOkStatus({
       status: 'server_not_registered',
       guildId,
@@ -205,6 +223,7 @@ export async function GET(request: Request) {
   }
 
   if (!server.is_setup) {
+    const adminFromOAuth = await resolveGuildAdminFromOAuth(supabase, session.userId, guildId);
     return nonOkStatus({
       status: 'server_setup_required',
       guildId,
@@ -220,7 +239,7 @@ export async function GET(request: Request) {
       status: 'missing_bot_token',
       guildId,
       guildName: server.name ?? null,
-      isAdmin: adminFromOAuth,
+      isAdmin: false,
       canInviteBot: false,
     });
   }
@@ -236,8 +255,8 @@ export async function GET(request: Request) {
         status: 'bot_not_in_guild',
         guildId,
         guildName: server.name ?? null,
-        isAdmin: adminFromOAuth,
-        canInviteBot: adminFromOAuth,
+        isAdmin: false,
+        canInviteBot: false,
         debug: { discordStatus: guildResponse.status },
       });
     }
@@ -246,8 +265,8 @@ export async function GET(request: Request) {
       status: 'discord_api_error',
       guildId,
       guildName: server.name ?? null,
-      isAdmin: adminFromOAuth,
-      canInviteBot: adminFromOAuth,
+      isAdmin: false,
+      canInviteBot: false,
       debug: { discordStatus: guildResponse.status, reason: 'guild_fetch_failed' },
     });
   }
@@ -265,7 +284,7 @@ export async function GET(request: Request) {
         status: 'user_not_in_guild',
         guildId,
         guildName: guild.name ?? server.name ?? null,
-        isAdmin: adminFromOAuth,
+        isAdmin: false,
         canInviteBot: false,
         debug: { discordStatus: memberResponse.status },
       });
@@ -275,14 +294,15 @@ export async function GET(request: Request) {
       status: 'discord_api_error',
       guildId,
       guildName: guild.name ?? server.name ?? null,
-      isAdmin: adminFromOAuth,
-      canInviteBot: adminFromOAuth,
+      isAdmin: false,
+      canInviteBot: false,
       debug: { discordStatus: memberResponse.status, reason: 'member_fetch_failed' },
     });
   }
 
   const member = (await memberResponse.json()) as { roles?: string[] };
   const roleIds = Array.isArray(member.roles) ? member.roles : [];
+  const adminFromOAuth = await resolveGuildAdminFromOAuth(supabase, session.userId, guildId);
   const isAdmin =
     adminFromOAuth ||
     (Boolean(server.admin_role_id) && roleIds.includes(server.admin_role_id as string)) ||

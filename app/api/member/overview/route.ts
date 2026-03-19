@@ -71,16 +71,27 @@ export async function GET(request: NextRequest) {
   let memberRoles: string[] = [];
   let boosterSince: string | null = null;
   let isBooster = false;
+  let memberFetchFailed = false;
   if (botToken) {
-    const memberResponse = await fetch(`https://discord.com/api/guilds/${selectedGuildId}/members/${userId}`, {
-      headers: { Authorization: `Bot ${botToken}` },
-    });
-    if (memberResponse.ok) {
-      const member = (await memberResponse.json()) as { joined_at?: string; roles?: string[]; premium_since?: string | null };
-      joinedAt = member.joined_at ?? null;
-      memberRoles = member.roles ?? [];
-      boosterSince = member.premium_since ?? null;
-      isBooster = Boolean(boosterSince);
+    try {
+      const memberCtrl = new AbortController();
+      const memberTid = setTimeout(() => memberCtrl.abort(), 10000);
+      const memberResponse = await fetch(`https://discord.com/api/guilds/${selectedGuildId}/members/${userId}`, {
+        headers: { Authorization: `Bot ${botToken}` },
+        signal: memberCtrl.signal,
+      });
+      clearTimeout(memberTid);
+      if (memberResponse.ok) {
+        const member = (await memberResponse.json()) as { joined_at?: string; roles?: string[]; premium_since?: string | null };
+        joinedAt = member.joined_at ?? null;
+        memberRoles = member.roles ?? [];
+        boosterSince = member.premium_since ?? null;
+        isBooster = Boolean(boosterSince);
+      } else {
+        memberFetchFailed = true;
+      }
+    } catch {
+      memberFetchFailed = true;
     }
   }
 
@@ -161,8 +172,8 @@ export async function GET(request: NextRequest) {
   };
 
   if (papelRowsTyped && papelRowsTyped.length) {
-    // Discord API’den hızla kullanıcı bilgisi almak için paralel istekler (kümeleme)
-    const concurrency = 30;
+    // Discord API’den kullanıcı bilgisi — rate limit koruması için max 5 paralel
+    const concurrency = 5;
     const discordMembers: DiscordMemberInfo[] = [];
 
     for (let i = 0; i < (papelRowsTyped.length ?? 0); i += concurrency) {
@@ -175,10 +186,11 @@ export async function GET(request: NextRequest) {
       const info = discordMembers[idx] || ({} as DiscordMemberInfo);
       return {
         userId: row.user_id,
-        avatarUrl: info.avatarUrl,
-        nickname: info.nickname,
-        displayName: info.displayName,
-        username: info.username,
+        avatarUrl: info.avatarUrl || ‘’,
+        nickname: info.nickname ?? null,
+        displayName: info.displayName ?? null,
+        // username boşsa userId’nin ilk 8 karakterini göster
+        username: info.username || row.user_id.slice(0, 8) + ‘...’,
         papel: Number(row.balance ?? 0),
         isCurrentUser: row.user_id === userId,
       };
@@ -254,7 +266,18 @@ export async function GET(request: NextRequest) {
   let hasVerifyRole = false;
   let verifiedSince: string | null = null;
   if (serverRow?.verify_role_id) {
-    hasVerifyRole = memberRoles.includes(serverRow.verify_role_id);
+    if (memberFetchFailed) {
+      // Discord API unavailable — fall back to bot-written DB value
+      const { data: fallbackProfile } = await supabase
+        .from('member_profiles')
+        .select('has_tag')
+        .eq('guild_id', selectedGuildId)
+        .eq('user_id', userId)
+        .maybeSingle();
+      hasVerifyRole = fallbackProfile?.has_tag === true || fallbackProfile?.has_tag === 'true';
+    } else {
+      hasVerifyRole = memberRoles.includes(serverRow.verify_role_id);
+    }
 
     // look for a paid store_order that applied the verify role
     const { data: verifyOrders } = await supabase

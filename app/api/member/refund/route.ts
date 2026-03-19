@@ -5,10 +5,10 @@ import { checkMaintenance } from '@/lib/maintenance';
 import { getSessionUserId } from '@/lib/auth';
 
 const DEFAULT_SLUG = 'default';
-const GUILD_ID = process.env.DISCORD_GUILD_ID ?? '1465698764453838882';
+const GUILD_ID = process.env.DISCORD_GUILD_ID ?? null;
 const TIMEZONE_OFFSET_MINUTES = Number(process.env.PAPEL_TIMEZONE_OFFSET || 180);
 
-const getSelectedGuildId = async (): Promise<string> => {
+const getSelectedGuildId = async (): Promise<string | null> => {
   const cookieStore = await cookies();
   const selectedGuildId = cookieStore.get('selected_guild_id')?.value;
   return selectedGuildId || GUILD_ID;

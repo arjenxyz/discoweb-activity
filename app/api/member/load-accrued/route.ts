@@ -4,9 +4,9 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { checkMaintenance } from '@/lib/maintenance';
 import { getSessionUserId } from '@/lib/auth';
 
-const GUILD_ID = process.env.DISCORD_GUILD_ID ?? '1465698764453838882';
+const GUILD_ID = process.env.DISCORD_GUILD_ID ?? null;
 
-const getSelectedGuildId = async (): Promise<string> => {
+const getSelectedGuildId = async (): Promise<string | null> => {
   const cookieStore = await cookies();
   const selectedGuildId = cookieStore.get('selected_guild_id')?.value;
   return selectedGuildId || GUILD_ID;

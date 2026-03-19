@@ -100,9 +100,13 @@ export async function GET(request: Request) {
     // If we couldn't fetch from Supabase, try Discord API (bot token) for avatar/username
     if (!user && process.env.DISCORD_BOT_TOKEN && selectedGuildId) {
       try {
+        const ctrl = new AbortController();
+        const tid = setTimeout(() => ctrl.abort(), 10000);
         const userRes = await fetch(`https://discord.com/api/users/${userId}`, {
           headers: { Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN}` },
+          signal: ctrl.signal,
         });
+        clearTimeout(tid);
         if (userRes.ok) {
           user = await userRes.json();
         }
@@ -122,24 +126,32 @@ export async function GET(request: Request) {
     // Discord API üzerinden roller alınmaya çalışsın (bot token gerektirir)
     if (process.env.DISCORD_BOT_TOKEN && selectedGuildId) {
       try {
+        const memberCtrl = new AbortController();
+        const memberTid = setTimeout(() => memberCtrl.abort(), 10000);
         const memberRes = await fetch(
           `https://discord.com/api/guilds/${selectedGuildId}/members/${userId}`,
           {
             headers: { Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN}` },
+            signal: memberCtrl.signal,
           },
         );
+        clearTimeout(memberTid);
 
         if (memberRes.ok) {
           const memberData = (await memberRes.json()) as { roles?: string[] };
           const roleIds = memberData.roles || [];
 
           if (roleIds.length > 0) {
+            const rolesCtrl = new AbortController();
+            const rolesTid = setTimeout(() => rolesCtrl.abort(), 10000);
             const rolesRes = await fetch(
               `https://discord.com/api/guilds/${selectedGuildId}/roles`,
               {
                 headers: { Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN}` },
+                signal: rolesCtrl.signal,
               },
             );
+            clearTimeout(rolesTid);
 
             if (rolesRes.ok) {
               const rolesData = (await rolesRes.json()) as Array<{

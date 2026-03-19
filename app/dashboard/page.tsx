@@ -36,7 +36,7 @@ export default function DashboardPage() {
   const cart = useCart();
   const router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [loading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<MemberProfile | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
   const [profileError, setProfileError] = useState<string | null>(null);
@@ -290,10 +290,11 @@ export default function DashboardPage() {
           setMailItems(data);
           setMailError(null);
         } else {
-          setMailError('Mail bilgileri alÄ±namadÄ±.');
+          // Hata anında mevcut listeyi koruyup sadece banner göster
+          setMailError('Mailler güncellenemedi. Mevcut liste gösteriliyor.');
         }
       } catch {
-        setMailError('Mail bilgileri alÄ±namadÄ±.');
+        setMailError('Mailler güncellenemedi. Mevcut liste gösteriliyor.');
       }
       setMailLoading(false);
     };
@@ -311,6 +312,30 @@ export default function DashboardPage() {
     return () => {
       window.removeEventListener('mail:refresh', onRefresh as EventListener);
     };
+  }, [activityReadinessLoading, isBlockedByReadiness]);
+
+  useEffect(() => {
+    if (activityReadinessLoading || isBlockedByReadiness) {
+      setLoading(false);
+      return;
+    }
+
+    const fetchNotifications = async () => {
+      setLoading(true);
+      try {
+        const response = await fetchWithCreds(apiUrl('/api/notifications'));
+        if (response.ok) {
+          const data = (await response.json()) as Notification[];
+          setNotifications(data);
+        }
+      } catch {
+        // Bildirimler yüklenemedi, sessizce devam et
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNotifications();
   }, [activityReadinessLoading, isBlockedByReadiness]);
 
   useEffect(() => {
@@ -732,7 +757,7 @@ export default function DashboardPage() {
 
   const handlePurchase = async (itemId: string) => {
     if (isSiteMaintenance || isStoreMaintenance) {
-      setPurchaseFeedback(prev => ({ ...prev, [itemId]: { status: 'error', message: 'MaÄŸaza bakÄ±mda' } }));
+      setPurchaseFeedback(prev => ({ ...prev, [itemId]: { status: 'error', message: 'Mağaza bakımda' } }));
       setTimeout(() => setPurchaseFeedback(prev => ({ ...prev, [itemId]: undefined })), 3000);
       return;
     }
@@ -749,36 +774,43 @@ export default function DashboardPage() {
       success?: boolean;
       error?: string;
       newBalance?: number;
+      mailInserted?: boolean;
     };
 
     setPurchaseLoadingId(null);
 
     if (!response.ok) {
       const errorMessages: Record<string, string> = {
-        missing_bot_token: 'Bot bilgisi eksik. Lutfen yoneticiye haber verin.',
-        bot_missing_manage_roles: 'Bot rol yÃ¶netim yetkisine sahip deÄŸil',
-        bot_role_hierarchy: 'Botun rol sirasi hedef rolden dusuk. Yetki sirasi duzeltilmeli.',
-        insufficient_balance: 'Yetersiz bakiye',
-        item_not_found: 'ÃœrÃ¼n bulunamadÄ±',
-        already_owned: 'Bu Ã¼rÃ¼ne zaten sahipsiniz',
-        role_not_found: 'Rol bulunamadÄ±',
-        not_verified: 'HesabÄ±nÄ±z doÄŸrulanmamÄ±ÅŸ',
-        server_not_found: 'Sunucu ayarlari bulunamadi. Kurulum tekrar yapilmali.',
-        no_guild_selected: 'Sunucu secimi bulunamadi. Activityyi yeniden acin.',
-        forbidden: 'EriÅŸim reddedildi',
+        missing_bot_token: 'Bot yapılandırması eksik, yöneticiye haber ver.',
+        bot_missing_manage_roles: 'Botun rol yönetim yetkisi yok.',
+        bot_role_hierarchy: 'Botun rol sırası hedef rolden düşük, yönetici düzeltmeli.',
+        insufficient_balance: 'Yetersiz bakiye.',
+        item_not_found: 'Ürün bulunamadı.',
+        invalid_item_price: 'Ürün fiyatı geçersiz, yöneticiye haber ver.',
+        already_owned: 'Bu ürüne zaten sahipsin.',
+        role_not_found: 'Rol bulunamadı.',
+        not_verified: 'Hesabın doğrulanmamış.',
+        server_not_found: 'Sunucu ayarları bulunamadı, kurulum tekrar yapılmalı.',
+        no_guild_selected: 'Sunucu seçimi bulunamadı, Activity\'yi yeniden aç.',
+        forbidden: 'Erişim reddedildi.',
+        rollback_failed: 'İşlem sırasında hata oluştu, yönetici bilgilendirildi.',
+        role_assign_failed: 'Rol verilemedi, ödeme alınmadı.',
       };
-      const msg = errorMessages[data.error ?? ''] || data.error || 'SatÄ±n alma baÅŸarÄ±sÄ±z';
+      const msg = errorMessages[data.error ?? ''] || data.error || 'Satın alma başarısız.';
       setPurchaseFeedback(prev => ({ ...prev, [itemId]: { status: 'error', message: msg } }));
-      setTimeout(() => setPurchaseFeedback(prev => ({ ...prev, [itemId]: undefined })), 3000);
+      setTimeout(() => setPurchaseFeedback(prev => ({ ...prev, [itemId]: undefined })), 4000);
       return;
     }
 
     if (data.success && typeof data.newBalance === 'number') {
       setWalletBalance(data.newBalance);
-      setPurchaseFeedback(prev => ({ ...prev, [itemId]: { status: 'success', message: 'SatÄ±n alÄ±ndÄ±!' } }));
+      const successMsg = data.mailInserted === false
+        ? 'Satın alındı! (Bildirim maili gönderilemedi)'
+        : 'Satın alındı!';
+      setPurchaseFeedback(prev => ({ ...prev, [itemId]: { status: 'success', message: successMsg } }));
       setTimeout(() => setPurchaseFeedback(prev => ({ ...prev, [itemId]: undefined })), 3000);
     } else {
-      setPurchaseFeedback(prev => ({ ...prev, [itemId]: { status: 'error', message: 'Bilinmeyen hata' } }));
+      setPurchaseFeedback(prev => ({ ...prev, [itemId]: { status: 'error', message: 'Bilinmeyen hata oluştu.' } }));
       setTimeout(() => setPurchaseFeedback(prev => ({ ...prev, [itemId]: undefined })), 3000);
     }
     // Bakiye ve maÄŸaza Ã¼rÃ¼nleri gÃ¼ncellemesi iÃ§in yeniden yÃ¼kle

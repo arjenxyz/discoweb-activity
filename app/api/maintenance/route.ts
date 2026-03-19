@@ -2,10 +2,10 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createDefaultFlags, getMaintenanceFlags } from '@/lib/maintenance';
 
-const getSelectedGuildId = async (): Promise<string> => {
+const getSelectedGuildId = async (): Promise<string | null> => {
   const cookieStore = await cookies();
   const selectedGuildId = cookieStore.get('selected_guild_id')?.value;
-  return selectedGuildId || process.env.DISCORD_GUILD_ID || '1465698764453838882';
+  return selectedGuildId || process.env.DISCORD_GUILD_ID || null;
 };
 
 const getDiscordProfile = async (userId: string, guildId: string) => {

@@ -6,9 +6,9 @@ import { logWebEvent } from '@/lib/serverLogger';
 import { discordFetch } from '@/lib/discordRest';
 import { requireSessionUser } from '@/lib/auth';
 
-const GUILD_ID = process.env.DISCORD_GUILD_ID ?? '1465698764453838882';
+const GUILD_ID = process.env.DISCORD_GUILD_ID ?? null;
 
-const getSelectedGuildId = async (): Promise<string> => {
+const getSelectedGuildId = async (): Promise<string | null> => {
   const cookieStore = await cookies();
   const selectedGuildId = cookieStore.get('selected_guild_id')?.value;
   return selectedGuildId || GUILD_ID; // Fallback to default
@@ -263,8 +263,10 @@ export async function POST(request: Request) {
     );
 
     if (!assignRes.ok) {
+      // Hata detayını log'a yaz ama DB'ye kaydetme (güvenlik: Discord hata metni hassas bilgi içerebilir)
       const respText = await assignRes.text().catch(() => '');
-      await supabase.from('store_orders').update({ status: 'failed', failure_reason: 'role_assign_failed', failure_code: assignRes.status, failure_response: respText }).eq('id', order?.id);
+      console.error('Role assign failed:', { status: assignRes.status, body: respText });
+      await supabase.from('store_orders').update({ status: 'failed', failure_reason: 'role_assign_failed', failure_code: assignRes.status }).eq('id', order?.id);
 
       // Insert HTML system mail to inform user
       try {

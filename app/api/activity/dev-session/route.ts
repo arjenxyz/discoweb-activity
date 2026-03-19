@@ -2,11 +2,9 @@ import { NextResponse } from 'next/server';
 import { createSessionToken } from '@/lib/auth';
 
 export async function GET() {
-  // Only enable in development environment (or when explicitly enabled via env)
+  // Sadece development ortamında aktif — production'da ENABLE_DEV_SESSION ile bile açılmaz
   const isDev = (process.env.NODE_ENV as string) === 'development';
-  const allowDevSession = isDev || process.env.ENABLE_DEV_SESSION === 'true';
-
-  if (!allowDevSession) {
+  if (!isDev) {
     return NextResponse.json({ error: 'not_available' }, { status: 403 });
   }
 

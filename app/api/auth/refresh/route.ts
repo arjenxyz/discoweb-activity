@@ -25,6 +25,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
     }
 
+    // Çok eski token'ları (30 günden fazla süresi geçmiş) reddet
+    const now = Math.floor(Date.now() / 1000);
+    const MAX_EXPIRED_AGE_SEC = 30 * 24 * 60 * 60;
+    if (payload.exp && now - payload.exp > MAX_EXPIRED_AGE_SEC) {
+      return NextResponse.json({ error: 'token_too_old' }, { status: 401 });
+    }
+
     const userId = payload.sub;
     const supabase = getSupabase();
     if (!supabase) {

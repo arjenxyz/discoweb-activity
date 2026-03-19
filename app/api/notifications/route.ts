@@ -3,10 +3,10 @@ import { cookies } from 'next/headers';
 import { createClient } from '@supabase/supabase-js';
 import { getSessionUserId, requireSessionUser } from '@/lib/auth';
 
-const getSelectedGuildId = async (): Promise<string> => {
+const getSelectedGuildId = async (): Promise<string | null> => {
   const cookieStore = await cookies();
   const selectedGuildId = cookieStore.get('selected_guild_id')?.value;
-  return selectedGuildId || '1465698764453838882'; // Fallback to default
+  return selectedGuildId || process.env.DISCORD_GUILD_ID || null; // Fallback to default
 };
 
 

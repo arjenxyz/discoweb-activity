@@ -162,14 +162,16 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
         }
       })();
 
-      // Yeni guild detect edilirse sadece seçili guildId'yi güncelle, kullanıcıyı silme
+      // Yeni guild detect edilirse cookie + localStorage güncelle ve sayfayı yenile
       if (guildId && existingGuildId && existingGuildId !== guildId) {
-        addLog('🔄 Yeni guild algılandı, selectedGuildId güncelleniyor...');
+        addLog('🔄 Yeni guild algılandı, selectedGuildId güncelleniyor ve sayfa yenileniyor...');
         localStorage.setItem('selectedGuildId', guildId);
         const sameSiteValue = window.location.protocol === 'https:' ? 'None' : 'Lax';
         const secureValue = window.location.protocol === 'https:' ? '; Secure' : '';
         document.cookie = `selected_guild_id=${guildId}; Path=/; Max-Age=604800; SameSite=${sameSiteValue}${secureValue}`;
-        // Kullanıcı bilgilerini silme, sadece guild değiştiği için token hala geçerli olabilir
+        // Eski guild'in tüm data'sı temizlensin diye sayfayı yenile
+        window.location.reload();
+        return;
       }
 
       // Discord runtime'da eski dev session varsa temizle

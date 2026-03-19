@@ -139,8 +139,9 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
   };
 
   const createUserProfile = async () => {
+    if (creatingProfile) return; // çift tıklama koruması
     if (!readiness.guildId) {
-      setCreateProfileError('Sunucu bilgisi bulundu, lütfen yeniden deneyin.');
+      setCreateProfileError('Sunucu bilgisi bulunamadı, lütfen yeniden deneyin.');
       return;
     }
 
