@@ -24,6 +24,7 @@ export type ActivityReadiness = {
   isAdmin: boolean;
   canInviteBot: boolean;
   inviteUrl: string | null;
+  debug?: Record<string, unknown>;
 };
 
 type GateProps = {
@@ -182,6 +183,12 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
             <h1 className="text-2xl font-black tracking-tight sm:text-3xl">{copy.title}</h1>
             <p className="text-sm text-white/80 sm:text-base">{copy.description}</p>
             <p className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/70">{copy.helper}</p>
+
+            {readiness.status === 'discord_api_error' && readiness.debug && (
+              <p className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-xs font-mono text-red-300">
+                debug: {JSON.stringify(readiness.debug)}
+              </p>
+            )}
 
             <div className="flex flex-wrap gap-3 pt-2">
               <button
