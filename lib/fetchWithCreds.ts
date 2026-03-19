@@ -13,7 +13,10 @@ export default async function fetchWithCreds(input: RequestInfo, init: RequestIn
 
   let finalInput = resolvedInput;
   if (typeof window !== 'undefined' && typeof resolvedInput === 'string') {
-    const selectedGuildId = window.localStorage.getItem('selectedGuildId');
+    const selectedGuildIdFromStorage = window.localStorage.getItem('selectedGuildId');
+    const selectedGuildIdFromCookie = getCookie('selected_guild_id');
+    const selectedGuildId = selectedGuildIdFromStorage || selectedGuildIdFromCookie;
+
     if (selectedGuildId) {
       let url: URL | null = null;
       if (resolvedInput.startsWith('/api/')) {

@@ -72,7 +72,8 @@ export async function GET(request: Request) {
 
     const selectedGuildId = await getSelectedGuildId(request);
     if (!selectedGuildId) {
-      return NextResponse.json({ error: 'no_guild_specified' }, { status: 400 });
+      console.warn('member/coupons: no guild specified, returning empty coupon list');
+      return NextResponse.json([]);
     }
 
     const serverId = await resolveServerId(supabase, selectedGuildId);

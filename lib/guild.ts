@@ -25,5 +25,10 @@ export const getSelectedGuildId = async (request?: Request): Promise<string | nu
   const selectedGuildId = cookieStore.get('selected_guild_id')?.value;
   if (selectedGuildId) return selectedGuildId;
 
-  return process.env.DISCORD_GUILD_ID ?? null;
+  const envGuildId = process.env.DISCORD_GUILD_ID || process.env.NEXT_PUBLIC_DISCORD_GUILD_ID;
+  if (envGuildId) return envGuildId;
+
+  // As a last fallback, return a default ID if set. This should be set by deployment env.
+  const fallbackGuildId = process.env.DEFAULT_DISCORD_GUILD_ID;
+  return fallbackGuildId ?? null;
 };
