@@ -104,6 +104,7 @@ export const setSessionCookies = (response: NextResponse, userId: string) => {
 export const clearSessionCookies = (response: NextResponse) => {
   response.cookies.set(SESSION_COOKIE, '', { maxAge: 0, path: '/' });
   response.cookies.set(CSRF_COOKIE, '', { maxAge: 0, path: '/' });
+  response.cookies.set('discord_activity_session', '', { maxAge: 0, path: '/' });
 };
 
 export const getSessionUserId = async () => {
@@ -173,18 +174,60 @@ export const assertSameOrigin = (request: Request) => {
  * Request'ten Bearer token ile userId çıkarır.
  * Activity iframe'i cookie gönderemediği için Authorization header kullanır.
  */
+const parseCookies = (cookieHeader: string | null): Record<string, string> => {
+  if (!cookieHeader) return {};
+  return Object.fromEntries(
+    cookieHeader
+      .split(';')
+      .map((pair) => pair.trim().split('='))
+      .filter((parts) => parts.length === 2)
+      .map(([key, value]) => [key, decodeURIComponent(value)]),
+  );
+};
+
 export const getSessionUserIdFromRequest = (request: Request): string | null => {
   const authHeader = request.headers.get('Authorization');
-  if (!authHeader?.startsWith('Bearer ')) {
-    if (process.env.NODE_ENV === 'development') {
+
+  let token: string | null = null;
+
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.slice(7);
+  } else {
+    const fallbackKeys = ['x-access-token', 'x-authorization', 'x-discord-session'];
+    for (const key of fallbackKeys) {
+      const value = request.headers.get(key);
+      if (value) {
+        token = value;
+        break;
+      }
+    }
+
+    if (!token) {
+      const cookies = parseCookies(request.headers.get('cookie'));
+      if (cookies.discord_session) {
+        token = cookies.discord_session;
+      }
+    }
+
+    if (!token) {
+      try {
+        const url = new URL(request.url);
+        token = url.searchParams.get('token');
+      } catch {
+        token = null;
+      }
+    }
+
+    if (!token && process.env.NODE_ENV === 'development') {
       console.log('[auth] Missing or invalid Authorization header:', authHeader);
     }
-    return null;
   }
-  const token = authHeader.slice(7);
+
+  if (!token) return null;
+
   const payload = verifySessionToken(token);
   if (!payload && process.env.NODE_ENV === 'development') {
-    console.log('[auth] Bearer token present but verification failed:', token);
+    console.log('[auth] Bearer session token verification failed:', token);
   }
   return payload?.sub ?? null;
 };

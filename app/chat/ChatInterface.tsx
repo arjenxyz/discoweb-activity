@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useMemo, useRef, useState, useCallback, type ChangeEvent } from 'react';
 import Image from 'next/image';
@@ -105,8 +105,6 @@ export default function ChatInterface() {
   const [activeRoom, setActiveRoom] = useState<string | null>(null);
   const [users, setUsers] = useState<Record<string, User>>({});
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [isDeveloper, setIsDeveloper] = useState(false);
   const CHAT_RULES_VERSION = process.env.NEXT_PUBLIC_CHAT_RULES_VERSION ?? '1';
   const [chatAccepted, setChatAccepted] = useState<boolean>(false);
   const [, setNeedsChatAcceptance] = useState<boolean>(false);
@@ -230,7 +228,7 @@ export default function ChatInterface() {
                     console.debug('server upsert result', json);
                     if (!resp.ok) {
                       console.error('Server upsert responded with status', resp.status, json);
-                      setError('Kullanıcı veritabanına kaydedilemedi');
+                      setError('KullanÄ±cÄ± veritabanÄ±na kaydedilemedi');
                       setNeedsChatAcceptance(true);
                     }
                   }
@@ -279,17 +277,6 @@ export default function ChatInterface() {
     setNeedsChatAcceptance(false);
     setError(null);
   };
-
-  // determine admin/developer roles from storage/server
-  useEffect(() => {
-    // we only care about adminGuilds for determining admin status;
-    // discordUser state is handled elsewhere and shouldn't be re-read here.
-    const adminGuilds = localStorage.getItem('adminGuilds');
-    setIsAdmin(!!(adminGuilds && JSON.parse(adminGuilds).length > 0));
-    fetch(apiUrl('/api/developer/check-access'), { credentials: 'include' })
-      .then((r) => { if (r.ok) setIsDeveloper(true); })
-      .catch(() => {});
-  }, []);
 
   // ============================================================================
   // DATA LOADING
@@ -378,7 +365,7 @@ export default function ChatInterface() {
         }
       } catch (err) {
         console.error('Failed to load rooms:', err);
-        setError('Odalar yüklenemedi');
+        setError('Odalar yÃ¼klenemedi');
       }
     };
 
@@ -546,21 +533,6 @@ export default function ChatInterface() {
     if (!input.trim() && uploadingFiles.length === 0) {
       return;
     }
-
-    const room = rooms.find(r => r.id === activeRoom);
-    
-    // Permission check for persistent rooms
-    if (room?.is_persistent) {
-      if (room.name === 'Admin Help' && !isAdmin && !isDeveloper) {
-        setError('Bu kanala erişiminiz yok.');
-        return;
-      }
-      if (room.name === 'Developer Help' && !isDeveloper) {
-        setError('Bu kanala erişiminiz yok.');
-        return;
-      }
-    }
-
     try {
       const messageContent = input.trim();
       setInput('');
@@ -586,7 +558,7 @@ export default function ChatInterface() {
       scrollToBottom(true);
     } catch (err) {
       console.error('Failed to send message:', err);
-      setError('Mesaj gönderilemedi');
+      setError('Mesaj gÃ¶nderilemedi');
     }
   };
 
@@ -605,12 +577,12 @@ export default function ChatInterface() {
       setInput('');
     } catch (err) {
       console.error('Failed to edit message:', err);
-      setError('Mesaj düzenlenemedi');
+      setError('Mesaj dÃ¼zenlenemedi');
     }
   };
 
   const deleteMessage = async (messageId: string) => {
-    if (!confirm('Bu mesajı silmek istediğinizden emin misiniz?')) return;
+    if (!confirm('Bu mesajÄ± silmek istediÄŸinizden emin misiniz?')) return;
     
     try {
       await client
@@ -800,7 +772,7 @@ export default function ChatInterface() {
       }
     } catch (err) {
       console.error('Failed to create DM:', err);
-      setError('Özel mesaj oluşturulamadı');
+      setError('Ã–zel mesaj oluÅŸturulamadÄ±');
     }
   };
 
@@ -823,7 +795,7 @@ export default function ChatInterface() {
 
   const getRoomName = (room: Room) => {
     if (room.name) return room.name;
-    if (room.room_type === 'dm') return 'Özel Mesaj';
+    if (room.room_type === 'dm') return 'Ã–zel Mesaj';
     return 'Sohbet';
   };
 
@@ -839,9 +811,9 @@ export default function ChatInterface() {
     yesterday.setDate(yesterday.getDate() - 1);
 
     if (d.toDateString() === today.toDateString()) {
-      return 'Bugün';
+      return 'BugÃ¼n';
     } else if (d.toDateString() === yesterday.toDateString()) {
-      return 'Dün';
+      return 'DÃ¼n';
     } else {
       return d.toLocaleDateString('tr-TR', { 
         day: 'numeric', 
@@ -885,10 +857,10 @@ export default function ChatInterface() {
 
   const getStatusText = (status: UserStatus) => {
     switch (status) {
-      case 'online': return 'Çevrimiçi';
+      case 'online': return 'Ã‡evrimiÃ§i';
       case 'away': return 'Uzakta';
-      case 'dnd': return 'Rahatsız Etmeyin';
-      default: return 'Çevrimdışı';
+      case 'dnd': return 'RahatsÄ±z Etmeyin';
+      default: return 'Ã‡evrimdÄ±ÅŸÄ±';
     }
   };
 
@@ -901,11 +873,11 @@ export default function ChatInterface() {
       <div className="flex items-center justify-center h-full bg-[#0a0b0e]">
         <div className="text-center p-8">
           <h2 className="text-2xl font-bold text-white mb-4">
-            Sohbete Hoş Geldiniz
+            Sohbete HoÅŸ Geldiniz
           </h2>
-          <p className="text-white/60 mb-6">Devam etmek için Discord ile giriş yapın</p>
+          <p className="text-white/60 mb-6">Devam etmek iÃ§in Discord ile giriÅŸ yapÄ±n</p>
           <button className="px-6 py-3 bg-[#5865f2] hover:bg-[#4752c4] text-white rounded-lg transition-colors">
-            Discord ile Giriş Yap
+            Discord ile GiriÅŸ Yap
           </button>
         </div>
       </div>
@@ -916,27 +888,27 @@ export default function ChatInterface() {
     return (
       <div className="flex items-center justify-center h-full bg-[#0a0b0e] text-white p-6">
         <div className="max-w-2xl w-full bg-[#13141a] border border-white/5 rounded-lg p-6">
-          <h2 className="text-lg font-semibold mb-4">Sohbet Kuralları</h2>
+          <h2 className="text-lg font-semibold mb-4">Sohbet KurallarÄ±</h2>
           <div className="text-sm text-white/70 mb-4">
             <ul className="list-disc list-inside space-y-2">
-              <li>Saygılı olun.</li>
-              <li>Reklam veya saldırgan içerik yasaktır.</li>
-              <li>Kişisel verileri paylaşmayın.</li>
+              <li>SaygÄ±lÄ± olun.</li>
+              <li>Reklam veya saldÄ±rgan iÃ§erik yasaktÄ±r.</li>
+              <li>KiÅŸisel verileri paylaÅŸmayÄ±n.</li>
             </ul>
-            <p className="mt-3 text-xs text-white/50">Bu kuralları onayladığınızda sohbet kullanım hakkı, bir sonraki geliştirici kural değişikliğine kadar geçerli olacaktır.</p>
+            <p className="mt-3 text-xs text-white/50">Bu kurallarÄ± onayladÄ±ÄŸÄ±nÄ±zda sohbet kullanÄ±m hakkÄ±, bir sonraki geliÅŸtirici kural deÄŸiÅŸikliÄŸine kadar geÃ§erli olacaktÄ±r.</p>
           </div>
           <div className="flex items-center gap-3">
             <button
               onClick={acceptChatRules}
               className="px-4 py-2 bg-[#5865f2] hover:bg-[#4752c4] rounded-lg"
             >
-              Onaylıyorum
+              OnaylÄ±yorum
             </button>
             <button
-              onClick={() => { setError('Sohbet kurallarını kabul etmeniz gerekiyor'); }}
+              onClick={() => { setError('Sohbet kurallarÄ±nÄ± kabul etmeniz gerekiyor'); }}
               className="px-4 py-2 bg-transparent border border-white/10 rounded-lg"
             >
-              Vazgeç
+              VazgeÃ§
             </button>
           </div>
         </div>
@@ -981,7 +953,7 @@ export default function ChatInterface() {
                   searchMessages(searchQuery);
                 }
               }}
-              placeholder="Sohbet ara veya başlat..."
+              placeholder="Sohbet ara veya baÅŸlat..."
               className="w-full pl-10 pr-4 py-2.5 bg-[#0a0b0e] border border-white/10 rounded-lg text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-[#5865f2] transition-colors"
             />
             {isSearching && (
@@ -1047,7 +1019,7 @@ export default function ChatInterface() {
                         <p className={`text-xs truncate ${
                           hasUnread ? 'text-white/70 font-medium' : 'text-white/40'
                         }`}>
-                          {room.last_message_preview || 'Henüz mesaj yok'}
+                          {room.last_message_preview || 'HenÃ¼z mesaj yok'}
                         </p>
                         {hasUnread && (
                           <span className="flex-shrink-0 ml-2 px-2 py-0.5 bg-[#5865f2] text-white text-xs font-bold rounded-full min-w-[20px] text-center">
@@ -1063,7 +1035,7 @@ export default function ChatInterface() {
 
             {filteredRooms.length === 0 && (
               <div className="text-center py-8 text-white/40 text-sm">
-                {searchQuery ? 'Sohbet bulunamadı' : 'Henüz sohbet yok'}
+                {searchQuery ? 'Sohbet bulunamadÄ±' : 'HenÃ¼z sohbet yok'}
               </div>
             )}
           </div>
@@ -1116,8 +1088,8 @@ export default function ChatInterface() {
               </h2>
               {typingUsers.length > 0 && (
                 <p className="text-xs text-[#5865f2] font-medium">
-                  {typingUsers[0].username} yazıyor
-                  {typingUsers.length > 1 && ` ve ${typingUsers.length - 1} kişi daha`}
+                  {typingUsers[0].username} yazÄ±yor
+                  {typingUsers.length > 1 && ` ve ${typingUsers.length - 1} kiÅŸi daha`}
                   <span className="animate-pulse">...</span>
                 </p>
               )}
@@ -1161,8 +1133,8 @@ export default function ChatInterface() {
             <div className="flex items-center justify-center h-full text-white/40 text-center">
               <div>
                 <MessageCircle className="w-16 h-16 mx-auto mb-4 opacity-20" />
-                <p className="text-lg font-medium mb-2">Henüz mesaj yok</p>
-                <p className="text-sm">İlk mesajı göndererek sohbeti başlatın</p>
+                <p className="text-lg font-medium mb-2">HenÃ¼z mesaj yok</p>
+                <p className="text-sm">Ä°lk mesajÄ± gÃ¶ndererek sohbeti baÅŸlatÄ±n</p>
               </div>
             </div>
           ) : (
@@ -1240,7 +1212,7 @@ export default function ChatInterface() {
                             </span>
                             {message.is_edited && (
                               <span className="text-[10px] text-white/30 italic">
-                                (düzenlendi)
+                                (dÃ¼zenlendi)
                               </span>
                             )}
                           </div>
@@ -1251,7 +1223,7 @@ export default function ChatInterface() {
                           <div className="mb-2 pl-3 border-l-2 border-white/20 py-1">
                             <div className="text-xs text-white/40 flex items-center gap-1">
                               <Reply className="w-3 h-3" />
-                              <span>Yanıtlanan mesaj</span>
+                              <span>YanÄ±tlanan mesaj</span>
                             </div>
                           </div>
                         )}
@@ -1327,7 +1299,7 @@ export default function ChatInterface() {
                           <button
                             onClick={() => setReplyTo(message)}
                             className="p-1.5 hover:bg-white/10 rounded transition-colors"
-                            title="Yanıtla"
+                            title="YanÄ±tla"
                           >
                             <Reply className="w-4 h-4 text-white/60" />
                           </button>
@@ -1339,7 +1311,7 @@ export default function ChatInterface() {
                                   setInput(message.content);
                                 }}
                                 className="p-1.5 hover:bg-white/10 rounded transition-colors"
-                                title="Düzenle"
+                                title="DÃ¼zenle"
                               >
                                 <Edit2 className="w-4 h-4 text-white/60" />
                               </button>
@@ -1360,7 +1332,7 @@ export default function ChatInterface() {
                     {showEmojiPicker === message.id && (
                       <div className="absolute z-50 mt-2 p-2 bg-[#13141a] border border-white/10 rounded-lg shadow-lg">
                         <div className="grid grid-cols-8 gap-1">
-                          {['👍', '❤️', '😂', '😮', '😢', '🔥', '✅', '👏'].map((emoji) => (
+                          {['ğŸ‘', 'â¤ï¸', 'ğŸ˜‚', 'ğŸ˜®', 'ğŸ˜¢', 'ğŸ”¥', 'âœ…', 'ğŸ‘'].map((emoji) => (
                             <button
                               key={emoji}
                               onClick={() => reactToMessage(message.id, emoji)}
@@ -1400,14 +1372,14 @@ export default function ChatInterface() {
                     <>
                       <Reply className="w-4 h-4 text-[#5865f2]" />
                       <span className="text-sm text-white/60">
-                        {users[replyTo.sender_id]?.username || 'Birine'} yanıt veriliyor
+                        {users[replyTo.sender_id]?.username || 'Birine'} yanÄ±t veriliyor
                       </span>
                     </>
                   ) : (
                     <>
                       <Edit2 className="w-4 h-4 text-[#5865f2]" />
                       <span className="text-sm text-white/60">
-                        Mesaj düzenleniyor
+                        Mesaj dÃ¼zenleniyor
                       </span>
                     </>
                   )}
@@ -1499,17 +1471,17 @@ export default function ChatInterface() {
                   }}
                   placeholder={
                     editingMessage 
-                      ? 'Mesajı düzenle...' 
+                      ? 'MesajÄ± dÃ¼zenle...' 
                       : replyTo 
-                      ? 'Yanıt yaz...'
-                      : 'Mesaj yazın...'
+                      ? 'YanÄ±t yaz...'
+                      : 'Mesaj yazÄ±n...'
                   }
                   disabled={!isLoggedIn}
                   className="w-full px-4 py-3 bg-transparent text-sm text-white placeholder:text-white/40 focus:outline-none"
                 />
                 {!isLoggedIn && (
                   <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white text-sm">
-                    Giriş yapmadan mesaj gönderemezsiniz
+                    GiriÅŸ yapmadan mesaj gÃ¶nderemezsiniz
                   </div>
                 )}
               </div>
@@ -1531,7 +1503,7 @@ export default function ChatInterface() {
                 }}
                 disabled={!input.trim() && uploadingFiles.length === 0}
                 className="p-2.5 bg-[#5865f2] hover:bg-[#4752c4] disabled:bg-white/10 disabled:cursor-not-allowed rounded-lg transition-colors flex-shrink-0"
-                title={editingMessage ? 'Kaydet' : 'Gönder'}
+                title={editingMessage ? 'Kaydet' : 'GÃ¶nder'}
               >
                 {editingMessage ? (
                   <Check className="w-5 h-5" />
@@ -1545,15 +1517,15 @@ export default function ChatInterface() {
             <div className="mt-2 text-xs text-white/40 flex items-center gap-4">
               {typingUsers.length > 0 && (
                 <span>
-                  {typingUsers[0].username} yazıyor
-                  {typingUsers.length > 1 && ` ve ${typingUsers.length - 1} kişi daha`}
+                  {typingUsers[0].username} yazÄ±yor
+                  {typingUsers.length > 1 && ` ve ${typingUsers.length - 1} kiÅŸi daha`}
                   <span className="animate-pulse">...</span>
                 </span>
               )}
               {currentRoom && (
                 <span>
-                  {currentRoom.room_type === 'dm' && '🔒 Şifreli sohbet'}
-                  {currentRoom.room_type === 'help' && '💬 Yardım odası'}
+                  {currentRoom.room_type === 'dm' && 'ğŸ”’ Åifreli sohbet'}
+                  {currentRoom.room_type === 'help' && 'ğŸ’¬ YardÄ±m odasÄ±'}
                 </span>
               )}
             </div>
@@ -1563,3 +1535,6 @@ export default function ChatInterface() {
     </div>
   );
 }
+
+
+

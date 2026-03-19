@@ -11,5 +11,24 @@ export async function GET() {
   }
 
   const token = createSessionToken('dev-user-12345');
-  return NextResponse.json({ token });
+  const sameSiteValue = process.env.NODE_ENV === 'production' ? 'none' : 'lax';
+  const secureValue = process.env.NODE_ENV === 'production';
+
+  const response = NextResponse.json({ token });
+  response.cookies.set('discord_session', token, {
+    httpOnly: true,
+    sameSite: sameSiteValue,
+    secure: secureValue,
+    maxAge: 60 * 60 * 24 * 7,
+    path: '/',
+  });
+  response.cookies.set('discord_activity_session', '1', {
+    httpOnly: true,
+    sameSite: sameSiteValue,
+    secure: secureValue,
+    maxAge: 60 * 60 * 24 * 7,
+    path: '/',
+  });
+
+  return response;
 }

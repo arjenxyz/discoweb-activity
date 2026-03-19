@@ -7,7 +7,6 @@ import { apiUrl } from '@/lib/api';
 import { LuHouse, LuMail, LuStore, LuLogOut, LuSettings, LuChevronRight, LuChartBar } from 'react-icons/lu';
 import Image from 'next/image';
 import DiscordAgreementButton from '@/components/DiscordAgreementButton';
-import { LuCode } from 'react-icons/lu';
 import type { Notification, Section } from '../types';
 import type { JSX, RefObject } from 'react';
 
@@ -17,8 +16,6 @@ type DashboardHeaderProps = {
   walletLoading: boolean;
   walletBalance: number;
   loginUrl: string;
-  isDeveloper: boolean;
-  isAdmin: boolean;
   navigation: {
     activeSection: Section;
     onNavigate: (section: Section) => void;
@@ -34,7 +31,7 @@ type DashboardHeaderProps = {
   server: {
     data: { id: string; name: string; iconUrl: string | null } | null;
     loading: boolean;
-    guilds: Array<{ id: string; name: string; iconUrl: string | null; isAdmin: boolean; isSetup: boolean }>;
+    guilds: Array<{ id: string; name: string; iconUrl: string | null; isSetup: boolean }>;
     onSelectServer?: (guildId: string) => void;
   };
   notifications: {
@@ -134,8 +131,6 @@ export default function DashboardHeader({
   walletLoading,
   walletBalance,
   loginUrl,
-  isDeveloper,
-  isAdmin,
   navigation,
   onOpenLeaderboard,
   profile,
@@ -151,6 +146,22 @@ export default function DashboardHeader({
   const [isLogoHovered, setIsLogoHovered] = useState(false);
   const [fetchedIcons, setFetchedIcons] = useState<Record<string, string | null>>({});
   const fetchedIconsSeenRef = useRef<Set<string>>(new Set());
+
+  const buildDashboardPath = (path: string) => {
+    if (typeof window === 'undefined') return path;
+    const current = new URL(window.location.href);
+    const params = new URLSearchParams(current.search);
+    const target = new URL(path, window.location.origin);
+
+    ['activity', 'frame_id', 'instance_id', 'guild_id'].forEach((key) => {
+      const value = params.get(key);
+      if (value) {
+        target.searchParams.set(key, value);
+      }
+    });
+
+    return `${target.pathname}${target.search}`;
+  };
 
   // Mobile menu body overflow lock
   useEffect(() => {
@@ -194,7 +205,7 @@ export default function DashboardHeader({
     });
   }, [server?.guilds]);
 
-  const navItems: Array<{ key: Section; label: string; requiresAuth?: boolean; requiresDeveloper?: boolean; icon: JSX.Element }> = [
+  const navItems: Array<{ key: Section; label: string; requiresAuth?: boolean; icon: JSX.Element }> = [
     { key: 'overview', label: 'Genel', icon: <LuHouse className="h-4 w-4" /> },
     { key: 'store', label: 'Mağaza', icon: <LuStore className="h-4 w-4" /> },
     { key: 'mail', label: 'Mail', requiresAuth: true, icon: <LuMail className="h-4 w-4" /> },
@@ -260,13 +271,36 @@ export default function DashboardHeader({
                     key={item.key}
                     type="button"
                     onClick={() => {
+                      const current = typeof window !== 'undefined' ? new URL(window.location.href) : null;
+                      const props = new URLSearchParams(current?.search || '');
+                      const guildId = server.data?.id;
+
+                      if (guildId) {
+                        props.set('guild_id', guildId);
+                      }
+                      if (current?.searchParams.get('activity')) {
+                        props.set('activity', current.searchParams.get('activity') || '1');
+                      }
+                      if (current?.searchParams.get('frame_id')) {
+                        props.set('frame_id', current.searchParams.get('frame_id') || '');
+                      }
+                      if (current?.searchParams.get('instance_id')) {
+                        props.set('instance_id', current.searchParams.get('instance_id') || '');
+                      }
+
                       if (item.key === 'mail') {
                         navigation.onNavigate('mail');
-                        try { router.push('/dashboard/mail'); } catch { navigation.onNavigate('mail'); }
+                        try { router.push(`/dashboard/mail?${props.toString()}`); } catch { navigation.onNavigate('mail'); }
                         return;
                       }
                       if (item.key === 'leaderboard') {
                         onOpenLeaderboard?.();
+                        return;
+                      }
+                      if ((item.key as string) === 'referral') {
+                        try { router.push(`/dashboard/referral?${props.toString()}`); } catch {
+                          // fallback if router fails
+                        }
                         return;
                       }
 
@@ -520,15 +554,18 @@ export default function DashboardHeader({
             {/* Navigasyon */}
             <nav className="px-4 py-3 space-y-1">
               {navItems
-                .filter((item) => (!item.requiresAuth || !unauthorized) && (!item.requiresDeveloper || isDeveloper))
+                .filter((item) => (!item.requiresAuth || !unauthorized))
                 .map((item) => (
                   <button
                     key={item.key}
                     type="button"
                     onClick={() => {
+                      const currentGuildId = server.data?.id || '';
+                      const guildQuery = currentGuildId ? `?guild_id=${encodeURIComponent(currentGuildId)}` : '';
+
                       if (item.key === 'mail') {
                         navigation.onNavigate('mail');
-                        try { router.push('/dashboard/mail'); } catch { navigation.onNavigate('mail'); }
+                        try { router.push(`/dashboard/mail${guildQuery}`); } catch { navigation.onNavigate('mail'); }
                       } else if (item.key === 'leaderboard') {
                         onOpenLeaderboard?.();
                       } else {

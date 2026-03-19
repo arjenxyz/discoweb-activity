@@ -154,13 +154,13 @@ const isSuspiciousEvent = (payload: LogPayload): boolean => {
 };
 
 const resolveEventChannel = (payload: LogPayload): LogChannelKey => {
-  const event     = payload.event.toLowerCase();
-  const isAdmin   = event.startsWith('admin_');
+  const event = payload.event.toLowerCase();
+  const hasAdminPrefix = event.startsWith('admin_');
   const isSuspect = isSuspiciousEvent(payload);
 
-  if (isSuspect) return isAdmin ? 'admin_main' : 'user_main';
+  if (isSuspect) return hasAdminPrefix ? 'admin_main' : 'user_main';
 
-  if (isAdmin) {
+  if (hasAdminPrefix) {
     if (event.startsWith('admin_wallet'))       return 'admin_wallet';
     if (event.startsWith('admin_notification')) return 'admin_notifications';
     if (event.startsWith('admin_settings') || event.startsWith('admin_log_channels'))

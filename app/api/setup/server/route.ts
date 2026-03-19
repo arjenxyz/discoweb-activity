@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { getSessionUserId, requireSessionUser } from '@/lib/auth';
@@ -36,7 +36,7 @@ type SavedChannel = { channel_type: string; channel_name: string; webhook_url?: 
 export async function GET(request: Request) {
   const supabase = getSupabase();
   if (!supabase) {
-    return NextResponse.json({ error: 'Veritabanı bağlantısı yapılandırılmamış' }, { status: 500 });
+    return NextResponse.json({ error: 'VeritabanÄ± baÄŸlantÄ±sÄ± yapÄ±landÄ±rÄ±lmamÄ±ÅŸ' }, { status: 500 });
   }
 
   const userId = await getSessionUserId();
@@ -47,7 +47,7 @@ export async function GET(request: Request) {
   const guildId = await getSelectedGuildId();
 
   if (!guildId) {
-    return NextResponse.json({ error: 'Sunucu kimliği bulunamadı' }, { status: 400 });
+    return NextResponse.json({ error: 'Sunucu kimliÄŸi bulunamadÄ±' }, { status: 400 });
   }
 
   const { data: server, error } = await supabase
@@ -57,7 +57,7 @@ export async function GET(request: Request) {
     .maybeSingle();
 
   if (error) {
-    return NextResponse.json({ error: 'Sunucu bilgileri alınamadı' }, { status: 500 });
+    return NextResponse.json({ error: 'Sunucu bilgileri alÄ±namadÄ±' }, { status: 500 });
   }
 
   if (!server) {
@@ -94,7 +94,7 @@ export async function POST(request: Request) {
     const botToken = process.env.DISCORD_BOT_TOKEN;
     if (!botToken) {
       return NextResponse.json(
-        { error: 'Bot token yapılandırılmamış' },
+        { error: 'Bot token yapÄ±landÄ±rÄ±lmamÄ±ÅŸ' },
         { status: 500 }
       );
     }
@@ -102,19 +102,19 @@ export async function POST(request: Request) {
     const supabase = getSupabase();
     if (!supabase) {
       return NextResponse.json(
-        { error: 'Veritabanı bağlantısı yapılandırılmamış' },
+        { error: 'VeritabanÄ± baÄŸlantÄ±sÄ± yapÄ±landÄ±rÄ±lmamÄ±ÅŸ' },
         { status: 500 }
       );
     }
 
-    // Kullanıcının admin olup olmadığını kontrol et
+    // KullanÄ±cÄ±nÄ±n admin olup olmadÄ±ÄŸÄ±nÄ± kontrol et
     const session = await requireSessionUser(request);
     if (!session.ok) {
       return session.response;
     }
     const userId = session.userId;
 
-    // Kullanıcının sunucuda admin olup olmadığını kontrol et
+    // KullanÄ±cÄ±nÄ±n sunucuda admin olup olmadÄ±ÄŸÄ±nÄ± kontrol et
     const memberResponse = await fetch(
       `https://discord.com/api/guilds/${guildId}/members/${userId}`,
       {
@@ -124,7 +124,7 @@ export async function POST(request: Request) {
 
     if (!memberResponse.ok) {
       return NextResponse.json(
-        { error: 'Kullanıcı sunucuda bulunamadı' },
+        { error: 'KullanÄ±cÄ± sunucuda bulunamadÄ±' },
         { status: 403 }
       );
     }
@@ -141,21 +141,20 @@ export async function POST(request: Request) {
 
     if (!guildResponse.ok) {
       return NextResponse.json(
-        { error: 'Sunucu bilgileri alınamadı' },
+        { error: 'Sunucu bilgileri alÄ±namadÄ±' },
         { status: 500 }
       );
     }
 
     const guild = await guildResponse.json();
 
-    // Kurulum öncesi: Sadece sunucu sahibi kurulum yapabilir
-    // Kurulum sonrası: Admin rolü ile kontrol yapılır
+    // Kurulum Ã¶ncesi: Sadece sunucu sahibi kurulum yapabilir
+    // Kurulum sonrasÄ±: Admin rolÃ¼ ile kontrol yapÄ±lÄ±r
     const isOwner = guild.owner_id === userId;
-    const isAdmin = member.roles.includes(adminRoleId);
 
     if (!isOwner) {
       return NextResponse.json(
-        { error: 'Bu işlem için sunucu sahibi olmanız gerekir' },
+        { error: 'Bu iÅŸlem iÃ§in sunucu sahibi olmanÄ±z gerekir' },
         { status: 403 }
       );
     }
@@ -174,7 +173,7 @@ export async function POST(request: Request) {
       console.warn('Warning: could not fetch guild roles for validation', rolesResponse.status);
     }
 
-    // Veritabanında sunucuyu güncelle/kaydet
+    // VeritabanÄ±nda sunucuyu gÃ¼ncelle/kaydet
     const { data: existingServer } = await supabase
       .from('servers')
       .select('id, discord_id')
@@ -190,20 +189,20 @@ export async function POST(request: Request) {
 
     // Admin role must exist and have admin/manage guild/manage roles perms
     if (!adminRoleObj) {
-      return NextResponse.json({ error: 'Belirtilen admin rolü sunucuda bulunamadı' }, { status: 400 });
+      return NextResponse.json({ error: 'Belirtilen admin rolÃ¼ sunucuda bulunamadÄ±' }, { status: 400 });
     }
     const perms = BigInt(adminRoleObj.permissions ?? '0');
     const hasAdminPerm = (perms & BigInt(0x8)) !== BigInt(0) || (perms & BigInt(0x20)) !== BigInt(0) || (perms & BigInt(0x10000000)) !== BigInt(0);
     if (!hasAdminPerm) {
-      return NextResponse.json({ error: 'Seçilen admin rolü gerekli yönetim izinlerine sahip değil' }, { status: 400 });
+      return NextResponse.json({ error: 'SeÃ§ilen admin rolÃ¼ gerekli yÃ¶netim izinlerine sahip deÄŸil' }, { status: 400 });
     }
 
     if (!verifyRoleObj) {
-      return NextResponse.json({ error: 'Belirtilen verify rolü sunucuda bulunamadı' }, { status: 400 });
+      return NextResponse.json({ error: 'Belirtilen verify rolÃ¼ sunucuda bulunamadÄ±' }, { status: 400 });
     }
 
     if (existingServer) {
-      // Mevcut sunucuyu güncelle
+      // Mevcut sunucuyu gÃ¼ncelle
       const { data: updatedServer, error: updateError } = await supabase
         .from('servers')
         .update({
@@ -229,14 +228,14 @@ export async function POST(request: Request) {
       if (updateError) {
         console.error('Server update error:', updateError);
         return NextResponse.json(
-          { error: 'Sunucu güncellenirken hata oluştu' },
+          { error: 'Sunucu gÃ¼ncellenirken hata oluÅŸtu' },
           { status: 500 }
         );
       }
       serverId = updatedServer.id;
       console.log('Server updated:', updatedServer);
     } else {
-      // Yeni sunucu oluştur
+      // Yeni sunucu oluÅŸtur
       const uniqueSlug = `${slugify(guild.name)}-${guildId}`;
       const { data: newServer, error: insertError } = await supabase
         .from('servers')
@@ -264,7 +263,7 @@ export async function POST(request: Request) {
       if (insertError) {
         console.error('Server insert error:', insertError);
         return NextResponse.json(
-          { error: 'Sunucu oluşturulurken hata oluştu', detail: insertError.message, code: insertError.code },
+          { error: 'Sunucu oluÅŸturulurken hata oluÅŸtu', detail: insertError.message, code: insertError.code },
           { status: 500 }
         );
       }
@@ -291,7 +290,7 @@ export async function POST(request: Request) {
       console.warn('Exception fetching saved server row:', fetchErr);
     }
 
-    // Log kanalları için kategoriler oluştur
+    // Log kanallarÄ± iÃ§in kategoriler oluÅŸtur
     const createCategory = async (name: string) => {
       const resp = await fetch(`https://discord.com/api/guilds/${guildId}/channels`, {
         method: 'POST',
@@ -325,12 +324,12 @@ export async function POST(request: Request) {
       return category.id as string;
     };
 
-    const userCategoryId = await createCategory('💠Web Logs • Üyeler');
-    const adminCategoryId = await createCategory('💠Web Logs • Admin');
+    const userCategoryId = await createCategory('ğŸ’ Web Logs â€¢ Ãœyeler');
+    const adminCategoryId = await createCategory('ğŸ’ Web Logs â€¢ Admin');
     const createdChannels: Array<{ type: string; name: string; id?: string; webhookUrl?: string | null }> = [];
 
     if (userCategoryId && adminCategoryId) {
-      // Log kanallarını oluştur
+      // Log kanallarÄ±nÄ± oluÅŸtur
       const logChannels = [
         { name: 'user-main-log', type: 'user_main', parentId: userCategoryId },
         { name: 'user-auth-log', type: 'user_auth', parentId: userCategoryId },
@@ -358,7 +357,7 @@ export async function POST(request: Request) {
               name: logChannel.name,
               type: 0, // Text channel
               parent_id: logChannel.parentId,
-              topic: `Automated log channel (${logChannel.type}) — created by Web setup`,
+              topic: `Automated log channel (${logChannel.type}) â€” created by Web setup`,
               permission_overwrites: [
                 {
                   id: guildId, // @everyone
@@ -378,7 +377,7 @@ export async function POST(request: Request) {
         if (channelResponse.ok) {
           const channel = await channelResponse.json();
 
-          // Webhook oluştur veya mevcut webhook'u bul
+          // Webhook oluÅŸtur veya mevcut webhook'u bul
           let webhookUrl: string | null = null;
           try {
             // Try to create new webhook
@@ -399,10 +398,10 @@ export async function POST(request: Request) {
             if (webhookResponse.ok) {
               const webhook = await webhookResponse.json();
               webhookUrl = `https://discord.com/api/webhooks/${webhook.id}/${webhook.token}`;
-              console.log('✅ Webhook oluşturuldu:', logChannel.type, webhookUrl);
+              console.log('âœ… Webhook oluÅŸturuldu:', logChannel.type, webhookUrl);
             } else {
               // If creation fails, try to list existing webhooks and pick first
-              console.warn('⚠️ Webhook oluşturulamadı, deneyeceğim mevcut webhookları almak:', logChannel.type, webhookResponse.status);
+              console.warn('âš ï¸ Webhook oluÅŸturulamadÄ±, deneyeceÄŸim mevcut webhooklarÄ± almak:', logChannel.type, webhookResponse.status);
               const listResp = await fetch(`https://discord.com/api/channels/${channel.id}/webhooks`, {
                 headers: { Authorization: `Bot ${botToken}` },
               });
@@ -411,12 +410,12 @@ export async function POST(request: Request) {
                 if (Array.isArray(list) && list.length > 0) {
                   const wh = list[0];
                   webhookUrl = `https://discord.com/api/webhooks/${wh.id}/${wh.token}`;
-                  console.log('ℹ️ Mevcut webhook bulundu:', webhookUrl);
+                  console.log('â„¹ï¸ Mevcut webhook bulundu:', webhookUrl);
                 }
               }
             }
           } catch (webhookError) {
-            console.log(`❌ Webhook işlemi sırasında hata (create/list) ${logChannel.name}:`, webhookError);
+            console.log(`âŒ Webhook iÅŸlemi sÄ±rasÄ±nda hata (create/list) ${logChannel.name}:`, webhookError);
           }
 
           createdChannels.push({
@@ -426,7 +425,7 @@ export async function POST(request: Request) {
             webhookUrl,
           });
 
-          // Veritabanına kaydet (webhook_url nil olabilir)
+          // VeritabanÄ±na kaydet (webhook_url nil olabilir)
           const { error: botLogUpsertError } = await supabase
             .from('bot_log_channels')
             .upsert({
@@ -439,10 +438,10 @@ export async function POST(request: Request) {
             });
 
           if (botLogUpsertError) {
-            console.error('❌ bot_log_channels upsert error:', botLogUpsertError);
+            console.error('âŒ bot_log_channels upsert error:', botLogUpsertError);
           }
 
-          // Ayrıca konfigürasyon tablosuna webhook'u kaydet (varsayılan aktiflik webhooka bağlı)
+          // AyrÄ±ca konfigÃ¼rasyon tablosuna webhook'u kaydet (varsayÄ±lan aktiflik webhooka baÄŸlÄ±)
           const { error: logConfigUpsertError } = await supabase
             .from('log_channel_configs')
             .upsert({
@@ -453,7 +452,7 @@ export async function POST(request: Request) {
             });
 
           if (logConfigUpsertError) {
-            console.error('❌ log_channel_configs upsert error:', logConfigUpsertError);
+            console.error('âŒ log_channel_configs upsert error:', logConfigUpsertError);
           }
         } else {
           createdChannels.push({
@@ -464,7 +463,7 @@ export async function POST(request: Request) {
       }
     }
 
-    // Log kanal konfigürasyonlarını da (varsayılan aktif) kaydet - varsa güncelle
+    // Log kanal konfigÃ¼rasyonlarÄ±nÄ± da (varsayÄ±lan aktif) kaydet - varsa gÃ¼ncelle
     const defaultChannels = [
       'user_main',
       'user_auth',
@@ -539,12 +538,12 @@ export async function POST(request: Request) {
                   avatar_url: botAvatarUrl ?? undefined,
                   embeds: [
                     {
-                      title: 'Webhook Bağlantı Onayı',
+                      title: 'Webhook BaÄŸlantÄ± OnayÄ±',
                       description:
-                        `Bu mesaj, webhook servisinin hedef URL ile başarılı bir şekilde eşleştiğini doğrulamak amacıyla sistem tarafından otomatik olarak oluşturulmuştur.\n\n` +
-                        `İşlem: Otomatik Kurulum Testi\n` +
+                        `Bu mesaj, webhook servisinin hedef URL ile baÅŸarÄ±lÄ± bir ÅŸekilde eÅŸleÅŸtiÄŸini doÄŸrulamak amacÄ±yla sistem tarafÄ±ndan otomatik olarak oluÅŸturulmuÅŸtur.\n\n` +
+                        `Ä°ÅŸlem: Otomatik Kurulum Testi\n` +
                         `Kanal: ${channelText}\n\n` +
-                        `Önemli Not: Eğer bu mesajın iletildiği kanal bilgileri veya yapılandırma ayarları sisteminizle uyuşmuyorsa, lütfen vakit kaybetmeden destek sunucumuza gelerek teknik ekibimizle iletişime geçiniz.`,
+                        `Ã–nemli Not: EÄŸer bu mesajÄ±n iletildiÄŸi kanal bilgileri veya yapÄ±landÄ±rma ayarlarÄ± sisteminizle uyuÅŸmuyorsa, lÃ¼tfen vakit kaybetmeden destek sunucumuza gelerek teknik ekibimizle iletiÅŸime geÃ§iniz.`,
                       color: 3982620,
                       author: botAvatarUrl ? { name: 'Veri Merkezi', icon_url: botAvatarUrl } : { name: 'Veri Merkezi' },
                     },
@@ -572,12 +571,12 @@ export async function POST(request: Request) {
         const payload = {
           embeds: [
             {
-              title: '✅ Sunucu Kurulumu Tamamlandı',
-              description: `Sunucu **${guild.name}** için log kanalları başarıyla oluşturuldu ve webhook'lar atandı.`,
+              title: 'âœ… Sunucu Kurulumu TamamlandÄ±',
+              description: `Sunucu **${guild.name}** iÃ§in log kanallarÄ± baÅŸarÄ±yla oluÅŸturuldu ve webhook'lar atandÄ±.`,
               color: 5793266,
               fields: [
                 { name: 'Toplam Kanal', value: `${summaryItems.length}`, inline: true },
-                { name: 'Kanallar', value: summaryItems.map(s => `• ${s.name} (${s.type}) — ${s.webhook ? 'Webhook ✅' : 'Webhook ❌'}`).join('\n'), inline: false },
+                { name: 'Kanallar', value: summaryItems.map(s => `â€¢ ${s.name} (${s.type}) â€” ${s.webhook ? 'Webhook âœ…' : 'Webhook âŒ'}`).join('\n'), inline: false },
               ],
               timestamp: new Date().toISOString(),
             },
@@ -591,12 +590,12 @@ export async function POST(request: Request) {
         });
       }
     } catch (summaryErr) {
-      console.warn('⚠️ Özet webhook gönderimi sırasında hata:', summaryErr);
+      console.warn('âš ï¸ Ã–zet webhook gÃ¶nderimi sÄ±rasÄ±nda hata:', summaryErr);
     }
 
     return NextResponse.json({
       success: true,
-      message: 'Sunucu başarıyla kuruldu',
+      message: 'Sunucu baÅŸarÄ±yla kuruldu',
       serverId,
       userCategoryId,
       adminCategoryId,
@@ -606,8 +605,9 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Setup API error:', error);
     return NextResponse.json(
-      { error: 'Kurulum sırasında beklenmeyen hata oluştu' },
+      { error: 'Kurulum sÄ±rasÄ±nda beklenmeyen hata oluÅŸtu' },
       { status: 500 }
     );
   }
 }
+

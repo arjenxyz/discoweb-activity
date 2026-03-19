@@ -1,6 +1,4 @@
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { getSessionUserId } from '@/lib/auth';
-
+﻿import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 export const MAINTENANCE_KEYS = [
   'site',
@@ -28,54 +26,12 @@ type MaintenanceMap = Record<MaintenanceKey, MaintenanceFlag>;
 const getSupabase = (): SupabaseClient | null => {
   const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
   if (!supabaseUrl || !serviceRoleKey) {
     return null;
   }
+
   return createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
-};
-
-const DEFAULT_DEVELOPER_GUILD_ID = '1465698764453838882';
-const DEFAULT_DEVELOPER_ROLE_ID = '1467580199481639013';
-
-const getUserIdFromCookies = async () => {
-  try {
-    return await getSessionUserId();
-  } catch {
-    return null;
-  }
-};
-
-const isDeveloper = async (userId: string) => {
-  const botToken = process.env.DISCORD_BOT_TOKEN;
-  const roleId = process.env.DEVELOPER_ROLE_ID ?? DEFAULT_DEVELOPER_ROLE_ID;
-  const guildId = process.env.DEVELOPER_GUILD_ID ?? process.env.DISCORD_GUILD_ID ?? DEFAULT_DEVELOPER_GUILD_ID;
-
-  if (!botToken || !roleId || !guildId) {
-    return false;
-  }
-  // Use AbortController to avoid hanging requests and handle network errors gracefully
-  const controller = new AbortController();
-  const timeout = Number(process.env.DISCORD_API_TIMEOUT_MS ?? 10000);
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-  try {
-    const response = await fetch(`https://discord.com/api/guilds/${guildId}/members/${userId}`, {
-      headers: { Authorization: `Bot ${botToken}` },
-      signal: controller.signal,
-    });
-
-    if (!response.ok) {
-      return false;
-    }
-
-    const member = (await response.json()) as { roles?: string[] };
-    return Boolean(member.roles?.includes(roleId));
-  } catch (err) {
-    // Network error, timeout, or fetch aborted — treat as non-developer to avoid crashing
-    return false;
-  } finally {
-    clearTimeout(timeoutId);
-  }
 };
 
 export const createDefaultFlags = (): MaintenanceMap =>
@@ -108,6 +64,7 @@ export const getMaintenanceFlags = async (guildId?: string) => {
     .eq('server_id', server.id);
 
   const flags = createDefaultFlags();
+
   (data ?? []).forEach((row) => {
     if (MAINTENANCE_KEYS.includes(row.key as MaintenanceKey)) {
       flags[row.key as MaintenanceKey] = {
@@ -124,14 +81,6 @@ export const getMaintenanceFlags = async (guildId?: string) => {
 };
 
 export const checkMaintenance = async (keys: MaintenanceKey[], guildId?: string) => {
-  const userId = await getUserIdFromCookies();
-  if (userId) {
-    const developer = await isDeveloper(userId);
-    if (developer) {
-      return { blocked: false as const, key: null, reason: null };
-    }
-  }
-
   const data = await getMaintenanceFlags(guildId);
   if (!data) {
     return { blocked: false as const, key: null, reason: null };

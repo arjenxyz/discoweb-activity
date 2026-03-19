@@ -14,6 +14,22 @@ export default function MailIndexPage() {
   const [mailError, setMailError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      const sp = url.searchParams;
+      const hasFrameId = sp.has('frame_id');
+      const hasInstanceId = sp.has('instance_id');
+      if (!hasFrameId && !hasInstanceId) {
+        const storedFrameId = window.localStorage.getItem('discord_frame_id');
+        const storedInstanceId = window.localStorage.getItem('discord_instance_id');
+        if (storedFrameId || storedInstanceId) {
+          if (storedFrameId) sp.set('frame_id', storedFrameId);
+          if (storedInstanceId) sp.set('instance_id', storedInstanceId);
+          window.history.replaceState(null, '', `${url.pathname}?${sp.toString()}`);
+        }
+      }
+    }
+
     let mounted = true;
 
     const refreshMail = async () => {

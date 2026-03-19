@@ -59,6 +59,24 @@ export async function GET(request: Request) {
       }
 
       profile = data;
+
+      // Eğer guild scoped profile bulunamazsa, global user_id eşleşmesine bak
+      if (!profile) {
+        const { data: globalProfile, error: globalError } = await supabase
+          .from('member_profiles')
+          .select('*')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+        if (globalError && globalError.code !== 'PGRST116') {
+          throw globalError;
+        }
+
+        if (globalProfile) {
+          console.warn('member/profile: no server-specific profile, using global user profile', globalProfile);
+          profile = globalProfile;
+        }
+      }
     } catch (fetchError) {
       console.error('member/profile: profile query failed', fetchError);
       return NextResponse.json({ error: 'profile_query_failed' }, { status: 500 });
@@ -167,10 +185,22 @@ export async function GET(request: Request) {
 
       // Gerçek profil bulundu, dön (kullanıcı bilgilerini ekle)
       return NextResponse.json({
-        ...profile,
-        username: user?.username ?? null,
-        avatar: avatarUrl,
-        roles,
+        userId,
+        username: user?.username ?? profile.username ?? '',
+        nickname: profile.nickname ?? null,
+        displayName: profile.displayName ?? null,
+        avatarUrl,
+        about: profile.about ?? null,
+        guildName: profile.guildName ?? null,
+        guildIcon: profile.guildIcon ?? null,
+        roles: roles ?? [],
+        tag_granted_at: profile.tag_granted_at ?? null,
+        has_tag: profile.has_tag ?? false,
+        is_booster: profile.is_booster ?? false,
+        booster_since: profile.booster_since ?? null,
+        referral_code: profile.referral_code ?? null,
+        referred_by: profile.referred_by ?? null,
+        total_invites: profile.total_invites ?? 0,
       });
     }
 
@@ -212,11 +242,19 @@ export async function GET(request: Request) {
           return code;
         }
 
-        // If conflict is a unique violation on referral_code, try again
-        if (conflict.code !== '23505') {
-          console.warn('member/profile: unexpected insert error', conflict);
+        // Eğer conflict user_id üzerinde ise, zaten bir profile var demektir.
+        if (conflict.code === '23505' && conflict.details?.includes('(user_id)')) {
+          console.warn('member/profile: existing profile for user_id, using existing profile path');
           return null;
         }
+
+        // If conflict is a unique violation on referral_code, try again
+        if (conflict.code === '23505' && conflict.details?.includes('(referral_code)')) {
+          continue;
+        }
+
+        console.warn('member/profile: unexpected insert error', conflict);
+        return null;
       }
 
       // If we reach here, we could not find an unused referral_code after multiple tries.
@@ -225,7 +263,31 @@ export async function GET(request: Request) {
       return null;
     };
 
-    await ensureReferralCode();
+    const insertedCode = await ensureReferralCode();
+
+    // Eğer referral_code eklenemedi ise, en azından boş bir profil yaratmayı tekrar dene.
+    if (!insertedCode) {
+      try {
+        const insertPayload: Record<string, unknown> = {
+          guild_id: selectedGuildId,
+          user_id: userId,
+          about: null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+
+        const { error } = await supabase.from('member_profiles').upsert(insertPayload, {
+          onConflict: 'user_id',
+          ignoreDuplicates: false,
+        });
+
+        if (error) {
+          console.warn('member/profile: fallback profile upsert without referral_code failed', error);
+        }
+      } catch (err) {
+        console.warn('member/profile: fallback profile upsert without referral_code threw', err);
+      }
+    }
 
     // Yeniden çekip dön
     const { data: createdProfile } = await supabase
@@ -239,8 +301,8 @@ export async function GET(request: Request) {
       return NextResponse.json(createdProfile);
     }
 
-    // Bunlardan hiçbiri olmadıysa (garip durumda) hata döndür
-    return NextResponse.json({ error: 'profile_not_found' }, { status: 404 });
+    // Bunlardan hiçbiri olmadıysa (garip durumda) sorunlu prolfile oluşturma hatası
+    return NextResponse.json({ error: 'profile_creation_failed' }, { status: 500 });
 
   } catch (error) {
     console.error('Profile fetch error:', error);

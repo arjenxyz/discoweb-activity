@@ -7,9 +7,14 @@ export function apiUrl(path: string): string {
   // URL'nin her zaman '/' ile başlamasını garanti altına alalım
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
 
-  // Eğer Discord Activity içindeysek, hiçbir ekleme yapmadan doğrudan relative path'i döndür.
-  // Çünkü Discord proxy'miz '/api' isteklerini otomatik yakalayıp Vercel'e iletecek.
+  // Eğer Discord Activity içindeysek, webview üzerinden çağrılan API path'leri
+  // next.config rewrite ile '/activity/api/:path*' -> '/api/:path*' olarak yönlendirilecek.
+  // Böylece discord host (ör: 146xxxxx.discordsays.com) üzerinde /activity/api
+  // olarak çalışan endpoint'ler uygulamanın backend'ine ulaşır.
   if (typeof window !== 'undefined' && window.location.hostname.includes('discordsays.com')) {
+    if (normalizedPath.startsWith('/api/')) {
+      return `/activity${normalizedPath}`;
+    }
     return normalizedPath;
   }
 

@@ -1,6 +1,6 @@
-import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { getSelectedGuildId } from '@/lib/guild';
 
 const getSupabase = () => {
   const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -11,7 +11,7 @@ const getSupabase = () => {
   return createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
 };
 
-export async function GET() {
+export async function GET(request: Request) {
   // Development mode bypass for Activity
   if (process.env.NODE_ENV === 'development') {
     return NextResponse.json({
@@ -20,12 +20,6 @@ export async function GET() {
       iconUrl: '/gif/cat.gif',
       memberCount: 100,
       isSetup: true,
-      roles: {
-        admin: 'admin-role-id',
-        moderator: 'moderator-role-id',
-        member: 'member-role-id',
-        vip: 'vip-role-id'
-      },
       features: {
         shop: true,
         daily: true,
@@ -40,8 +34,7 @@ export async function GET() {
     return NextResponse.json({ error: 'missing_service_role' }, { status: 500 });
   }
 
-  const cookieStore = await cookies();
-  const selectedGuildId = cookieStore.get('selected_guild_id')?.value;
+  const selectedGuildId = await getSelectedGuildId(request);
   if (!selectedGuildId) {
     return NextResponse.json({ error: 'no_selected_guild' }, { status: 400 });
   }

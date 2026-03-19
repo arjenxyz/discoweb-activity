@@ -9,7 +9,7 @@ import type { MailItem } from '../types';
 import {
   LuMail, LuMailOpen, LuTrash2,
   LuRefreshCw, LuSearch, LuInbox,
-  LuStar, LuClock, LuCheckCheck,
+  LuStar, LuCheckCheck,
   LuMegaphone, LuWrench, LuGift,
   LuReceipt, LuChevronLeft, LuChevronDown, LuChevronUp,
   LuArchive, LuTag, LuSparkles,
@@ -71,6 +71,7 @@ type MailSectionProps = {
   loading: boolean;
   error: string | null;
   items: MailItem[];
+  serverName?: string;
   onOpenMail?: (mail: MailItem) => void;
   onBack?: () => void;
 };
@@ -79,6 +80,7 @@ export default function MailSection({
   loading,
   error,
   items,
+  serverName,
   onOpenMail,
   onBack,
 }: MailSectionProps) {
@@ -168,6 +170,17 @@ export default function MailSection({
     return base;
   }, [items, activeCategory, sortOrder, searchQuery]);
 
+  const getCurrentGuildPath = () => {
+    const paramKeys = ['activity', 'frame_id', 'instance_id', 'guild_id'];
+    const nextParams = new URLSearchParams();
+    paramKeys.forEach((key) => {
+      const value = searchParams?.get(key);
+      if (value) nextParams.set(key, value);
+    });
+    const query = nextParams.toString();
+    return `/dashboard/mail${query ? `?${query}` : ''}`;
+  };
+
   const toggleSort = () => setSortOrder(s => (s === 'desc' ? 'asc' : 'desc'));
 
   const formatDate = (date: string) => {
@@ -214,6 +227,11 @@ export default function MailSection({
 
   return (
     <section className="relative w-full h-screen overflow-hidden bg-[#0b0d12] flex flex-col">
+      {serverName && (
+        <div className="px-4 py-2 bg-[#1f2430] border-b border-white/10 text-sm text-white/80">
+          <span className="font-semibold text-white">Sunucu:</span> {serverName}
+        </div>
+      )}
 
       {/* Background decorations */}
       <div className="absolute top-0 left-0 w-96 h-96 bg-[#5865F2]/10 rounded-full blur-[100px] pointer-events-none" />
@@ -690,7 +708,7 @@ export default function MailSection({
           mail={selectedMail}
           onClose={() => {
             setSelectedMail(null);
-            try { router.push('/dashboard/mail'); } catch {}
+            try { router.push(getCurrentGuildPath()); } catch {}
           }}
           onDelete={async (id) => {
             try {
@@ -698,7 +716,7 @@ export default function MailSection({
               if (!res.ok) { showToast('Silme hatası', 'error'); return; }
               showToast('Mesaj silindi', 'success');
               setSelectedMail(null);
-              try { router.push('/dashboard/mail'); } catch {}
+              try { router.push(getCurrentGuildPath()); } catch {}
               window.dispatchEvent(new CustomEvent('mail:refresh'));
             } catch { showToast('Silme hatası', 'error'); }
           }}

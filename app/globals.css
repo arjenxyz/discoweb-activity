@@ -351,7 +351,7 @@ html, body {
 
 
 
-/* Developer Panel Animations */
+/* Shared panel animations */
 @keyframes slideUp {
   0% {
     opacity: 0;

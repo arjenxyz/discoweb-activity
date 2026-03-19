@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import fetchWithCreds from '@/lib/fetchWithCreds';
@@ -13,13 +13,13 @@ import LeaderboardDrawer from './components/LeaderboardDrawer';
 import ProfileSection from './components/ProfileSection';
 import StoreSection from './components/StoreSection';
 import SettingsSection from './components/SettingsSection';
-import ReferralSection from './components/ReferralSection';
 import MailSection from './components/MailSection';
 import NotificationDetailModal from './components/NotificationDetailModal';
 import NotificationsModal from './components/NotificationsModal';
 import TransferModal from './components/TransferModal';
 import PromotionsModal from './components/PromotionsModal';
 import DiscountsModal from './components/DiscountsModal';
+import ActivityReadinessGate, { type ActivityReadiness } from './components/ActivityReadinessGate';
 import { sanitizeHtml } from '@/lib/sanitizeHtml';
 import type {
   MemberProfile,
@@ -46,8 +46,6 @@ export default function DashboardPage() {
   const [walletBalance, setWalletBalance] = useState(0);
   const [walletLoading, setWalletLoading] = useState(true);
   const [overviewStats, setOverviewStats] = useState<OverviewStats | OverviewStatsExpanded | null>(null);
-  const [adminOverview, setAdminOverview] = useState<Record<string, unknown> | null>(null);
-  const [adminOverviewLoading, setAdminOverviewLoading] = useState(false);
   const [overviewLoading, setOverviewLoading] = useState(true);
   const [storeItems, setStoreItems] = useState<StoreItem[]>([]);
   const [storeItemsLoading, setStoreItemsLoading] = useState(true);
@@ -96,15 +94,80 @@ export default function DashboardPage() {
   const [headerServer, setHeaderServer] = useState({
     data: null as { id: string; name: string; iconUrl: string | null } | null,
     loading: true,
-    guilds: [] as Array<{ id: string; name: string; iconUrl: string | null; isAdmin: boolean; isSetup: boolean }>,
+    guilds: [] as Array<{ id: string; name: string; iconUrl: string | null; isSetup: boolean }>,
   });
   const [purchaseFeedback, setPurchaseFeedback] = useState<PurchaseFeedback>({});
   const [purchaseLoadingId, setPurchaseLoadingId] = useState<string | null>(null);
   const [mailItems, setMailItems] = useState<MailItem[]>([]);
   const [mailLoading, setMailLoading] = useState(true);
   const [mailError, setMailError] = useState<string | null>(null);
+  const activeServerName = headerServer.data?.name ?? 'Sunucu bilinmiyor';
+  const [activityReadiness, setActivityReadiness] = useState<ActivityReadiness | null>(null);
+  const [activityReadinessLoading, setActivityReadinessLoading] = useState(true);
+
+  const isBlockedByReadiness = Boolean(activityReadiness?.blocking);
 
   const effectiveSection = unauthorized && activeSection !== 'store' ? 'overview' : activeSection;
+
+  const getCurrentGuildId = () => {
+    if (typeof window === 'undefined') return null;
+
+    const urlGuildId = new URL(window.location.href).searchParams.get('guild_id');
+    if (urlGuildId) {
+      // URL'den gelen guild_id varsa hem cookie hem localStorage'da güncelle
+      try {
+        window.localStorage.setItem('selectedGuildId', urlGuildId);
+      } catch {
+        // ignore
+      }
+      document.cookie = `selected_guild_id=${urlGuildId}; path=/; max-age=31536000`;
+      return urlGuildId;
+    }
+
+    const localGuildId = window.localStorage.getItem('selectedGuildId');
+    if (localGuildId) return localGuildId;
+
+    const cookieMatch = document.cookie.match(/(?:^|; )selected_guild_id=([^;]+)/);
+    if (cookieMatch) return decodeURIComponent(cookieMatch[1] || '');
+
+    return null;
+  };
+
+  const checkActivityReadiness = useCallback(async () => {
+    setActivityReadinessLoading(true);
+    try {
+      const guildId = getCurrentGuildId();
+      const readinessUrl = `/api/activity/readiness${guildId ? `?guild_id=${encodeURIComponent(guildId)}` : ''}`;
+      const response = await fetchWithCreds(readinessUrl, { cache: 'no-store' });
+      const data = (await response.json().catch(() => null)) as ActivityReadiness | null;
+
+      if (data && typeof data.status === 'string') {
+        setActivityReadiness(data);
+      } else {
+        setActivityReadiness({
+          status: 'discord_api_error',
+          blocking: true,
+          guildId: null,
+          guildName: null,
+          isAdmin: false,
+          canInviteBot: false,
+          inviteUrl: null,
+        });
+      }
+    } catch {
+      setActivityReadiness({
+        status: 'discord_api_error',
+        blocking: true,
+        guildId: null,
+        guildName: null,
+        isAdmin: false,
+        canInviteBot: false,
+        inviteUrl: null,
+      });
+    } finally {
+      setActivityReadinessLoading(false);
+    }
+  }, []);
 
   const loadSelectedServer = useCallback(async (attempt = 1): Promise<void> => {
     if (unauthorizedRef.current) return;
@@ -112,7 +175,9 @@ export default function DashboardPage() {
     const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
     try {
-      const response = await fetchWithCreds('/api/member/server-info');
+      const guildId = getCurrentGuildId();
+      const serverInfoUrl = `/api/member/server-info${guildId ? `?guild_id=${encodeURIComponent(guildId)}` : ''}`;
+      const response = await fetchWithCreds(serverInfoUrl);
       if (response.ok) {
         const data = (await response.json()) as { id: string; name: string; iconUrl: string | null };
         setHeaderServer(prev => ({ ...prev, data }));
@@ -138,6 +203,15 @@ export default function DashboardPage() {
   }, [unauthorized]);
 
   useEffect(() => {
+    void checkActivityReadiness();
+  }, [checkActivityReadiness]);
+
+  useEffect(() => {
+    if (activityReadinessLoading || isBlockedByReadiness) {
+      setMaintenanceLoading(false);
+      return;
+    }
+
     let isMounted = true;
 
     const loadMaintenance = async () => {
@@ -170,7 +244,7 @@ export default function DashboardPage() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [activityReadinessLoading, isBlockedByReadiness]);
 
   const isSiteMaintenance = Boolean(maintenanceFlags?.site?.is_active);
   const siteReason = maintenanceFlags?.site?.reason;
@@ -202,6 +276,11 @@ export default function DashboardPage() {
   const refreshStoreRef = useRef<() => Promise<void>>();
 
   useEffect(() => {
+    if (activityReadinessLoading || isBlockedByReadiness) {
+      setMailLoading(false);
+      return;
+    }
+
     const refreshMail = async () => {
       setMailLoading(true);
       try {
@@ -211,10 +290,10 @@ export default function DashboardPage() {
           setMailItems(data);
           setMailError(null);
         } else {
-          setMailError('Mail bilgileri alınamadı.');
+          setMailError('Mail bilgileri alÄ±namadÄ±.');
         }
       } catch {
-        setMailError('Mail bilgileri alınamadı.');
+        setMailError('Mail bilgileri alÄ±namadÄ±.');
       }
       setMailLoading(false);
     };
@@ -232,7 +311,7 @@ export default function DashboardPage() {
     return () => {
       window.removeEventListener('mail:refresh', onRefresh as EventListener);
     };
-  }, []);
+  }, [activityReadinessLoading, isBlockedByReadiness]);
 
   useEffect(() => {
     if (!notificationsOpen) {
@@ -275,6 +354,11 @@ export default function DashboardPage() {
   }, [settingsOpen]);
 
   useEffect(() => {
+    if (activityReadinessLoading || isBlockedByReadiness) {
+      setProfileLoading(false);
+      return;
+    }
+
     const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
 
     const loadProfile = async (attempt = 1): Promise<void> => {
@@ -290,7 +374,7 @@ export default function DashboardPage() {
             await sleep(1000 * attempt);
             return loadProfile(attempt + 1);
           }
-          setProfileError('Profil bilgileri alınamadı.');
+          setProfileError('Profil bilgileri alÄ±namadÄ±.');
           setProfileLoading(false);
           return;
         }
@@ -302,13 +386,13 @@ export default function DashboardPage() {
           await sleep(1000 * attempt);
           return loadProfile(attempt + 1);
         }
-        setProfileError('Profil bilgileri alınamadı.');
+        setProfileError('Profil bilgileri alÄ±namadÄ±.');
         setProfileLoading(false);
       }
     };
 
     loadProfile();
-  }, []);
+  }, [activityReadinessLoading, isBlockedByReadiness]);
 
   const refreshWalletBalance = useCallback(async () => {
     try {
@@ -326,15 +410,25 @@ export default function DashboardPage() {
   refreshWalletRef.current = refreshWalletBalance;
 
   useEffect(() => {
+    if (activityReadinessLoading || isBlockedByReadiness) {
+      setWalletLoading(false);
+      return;
+    }
+
     const loadWallet = async () => {
       await refreshWalletBalance();
       setWalletLoading(false);
     };
 
     loadWallet();
-  }, [unauthorized, refreshWalletBalance]);
+  }, [activityReadinessLoading, isBlockedByReadiness, unauthorized, refreshWalletBalance]);
 
   useEffect(() => {
+    if (activityReadinessLoading || isBlockedByReadiness) {
+      setOverviewLoading(false);
+      return;
+    }
+
     const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
 
     const loadOverview = async (attempt = 1): Promise<void> => {
@@ -352,39 +446,13 @@ export default function DashboardPage() {
           await sleep(1000 * attempt);
           return loadOverview(attempt + 1);
         }
-        console.warn('Overview yüklenemedi (tüm denemeler başarısız)');
+        console.warn('Overview yÃ¼klenemedi (tÃ¼m denemeler baÅŸarÄ±sÄ±z)');
       }
       setOverviewLoading(false);
     };
 
     loadOverview();
-  }, []);
-
-  useEffect(() => {
-    // fetch admin overview stats if user has admin guilds
-    const hasAdminGuilds = Array.isArray(headerServer.guilds) && headerServer.guilds.length > 0;
-    if (!hasAdminGuilds) return;
-    let isMounted = true;
-    const loadAdminOverview = async () => {
-      setAdminOverviewLoading(true);
-      try {
-        const res = await fetch(apiUrl('/api/admin/overview-stats?rangeHours=24'), { cache: 'no-store' });
-        if (!res.ok) {
-          setAdminOverview(null);
-          setAdminOverviewLoading(false);
-          return;
-        }
-        const data = await res.json();
-        if (isMounted) setAdminOverview(data);
-      } catch (err) {
-        console.warn('Admin overview yüklenemedi:', err);
-        if (isMounted) setAdminOverview(null);
-      }
-      if (isMounted) setAdminOverviewLoading(false);
-    };
-    void loadAdminOverview();
-    return () => { isMounted = false; };
-  }, [headerServer.guilds]);
+  }, [activityReadinessLoading, isBlockedByReadiness]);
 
   const refreshStoreItems = useCallback(async (page = 1, append = false) => {
     if (page === 1) {
@@ -408,7 +476,7 @@ export default function DashboardPage() {
         setStoreHasMore(data.hasMore ?? ((data.items?.length ?? 0) >= 20));
       }
     } catch (err) {
-      console.warn('Mağaza ürünleri yüklenemedi:', err);
+      console.warn('MaÄŸaza Ã¼rÃ¼nleri yÃ¼klenemedi:', err);
     } finally {
       if (page === 1) {
         setStoreItemsLoading(false);
@@ -427,67 +495,30 @@ export default function DashboardPage() {
 
     try {
       await loadSelectedServer();
+      await checkActivityReadiness();
     } finally {
       setHeaderServer(prev => ({ ...prev, loading: false }));
     }
 
     await refreshWalletBalance();
     await refreshStoreItems(1, false);
-  }, [isActivityEmbed, loadSelectedServer, refreshWalletBalance, refreshStoreItems]);
+  }, [checkActivityReadiness, isActivityEmbed, loadSelectedServer, refreshWalletBalance, refreshStoreItems]);
 
   useEffect(() => {
+    if (activityReadinessLoading || isBlockedByReadiness) {
+      setStoreItemsLoading(false);
+      return;
+    }
+
     const loadStoreItems = async () => {
       await refreshStoreItems(1, false);
     };
 
     loadStoreItems();
-  }, [unauthorized]);
+  }, [activityReadinessLoading, isBlockedByReadiness, refreshStoreItems, unauthorized]);
 
   useEffect(() => {
-    if (unauthorized || isActivityEmbed) return;
-    let isMounted = true;
-
-    const loadServerData = async () => {
-      if (isMounted) setHeaderServer(prev => ({ ...prev, loading: true }));
-      try {
-        const adminGuilds = localStorage.getItem('adminGuilds');
-        if (!adminGuilds) {
-          if (isMounted) setHeaderServer(prev => ({ ...prev, loading: false }));
-          return;
-        }
-
-        try {
-          const parsedGuilds = JSON.parse(adminGuilds);
-          type GuildFromStorage = {
-            id: string;
-            name: string;
-            icon?: string | null;
-            isAdmin?: boolean;
-            isSetup?: boolean;
-          };
-          const guilds = (parsedGuilds as GuildFromStorage[]).map((guild) => ({
-            id: guild.id,
-            name: guild.name,
-            iconUrl: guild.icon ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png` : null,
-            isAdmin: guild.isAdmin || false,
-            isSetup: guild.isSetup || false,
-          }));
-          if (isMounted) setHeaderServer(prev => ({ ...prev, guilds, loading: false }));
-        } catch (parseError) {
-          console.warn('adminGuilds parse hatası:', parseError);
-          if (isMounted) setHeaderServer(prev => ({ ...prev, loading: false }));
-        }
-      } catch (error) {
-        console.warn('Server verisi yüklenemedi:', error);
-        if (isMounted) setHeaderServer(prev => ({ ...prev, loading: false }));
-      }
-    };
-
-    loadServerData();
-    return () => { isMounted = false; };
-  }, [unauthorized, isActivityEmbed]);
-
-  useEffect(() => {
+    if (activityReadinessLoading || isBlockedByReadiness) return;
     if (unauthorizedRef.current) return;
 
     void loadSelectedServer();
@@ -501,7 +532,7 @@ export default function DashboardPage() {
     }, 15000);
 
     return () => clearInterval(interval);
-  }, [loadSelectedServer]);
+  }, [activityReadinessLoading, isBlockedByReadiness, loadSelectedServer]);
 
   const loginUrl = useMemo(() => {
     const clientId = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID ?? '';
@@ -518,7 +549,7 @@ export default function DashboardPage() {
 
   const handleTransfer = async () => {
     if (isSiteMaintenance || isTransfersMaintenance) {
-      setTransferError(transfersReason ?? 'Papel gönderme bakımdadır.');
+      setTransferError(transfersReason ?? 'Papel gÃ¶nderme bakÄ±mdadÄ±r.');
       return;
     }
 
@@ -527,11 +558,11 @@ export default function DashboardPage() {
 
     const amountValue = Number(transferAmount);
     if (!transferRecipientId.trim()) {
-      setTransferError('Alıcı ID zorunlu.');
+      setTransferError('AlÄ±cÄ± ID zorunlu.');
       return;
     }
     if (Number.isNaN(amountValue) || amountValue <= 0) {
-      setTransferError('Geçerli bir miktar girin.');
+      setTransferError('GeÃ§erli bir miktar girin.');
       return;
     }
 
@@ -549,19 +580,19 @@ export default function DashboardPage() {
 
     if (!response.ok) {
       if (data.error === 'invalid_amount') {
-        setTransferError('Geçersiz miktar.');
+        setTransferError('GeÃ§ersiz miktar.');
       } else if (data.error === 'self_transfer') {
-        setTransferError('Kendinize transfer yapamazsınız.');
+        setTransferError('Kendinize transfer yapamazsÄ±nÄ±z.');
       } else if (data.error === 'insufficient_funds') {
         setTransferError('Yetersiz bakiye.');
       } else if (data.error === 'daily_limit_exceeded') {
-        setTransferError('Günlük transfer limiti aşıldı.');
+        setTransferError('GÃ¼nlÃ¼k transfer limiti aÅŸÄ±ldÄ±.');
       } else if (data.error === 'invalid_payload') {
-        setTransferError('Eksik bilgi gönderildi.');
+        setTransferError('Eksik bilgi gÃ¶nderildi.');
       } else if (data.error === 'unauthorized') {
         setTransferError('Oturum gerekli.');
       } else {
-        setTransferError('Transfer başarısız.');
+        setTransferError('Transfer baÅŸarÄ±sÄ±z.');
       }
       setTransferLoading(false);
       return;
@@ -570,11 +601,11 @@ export default function DashboardPage() {
     if (typeof data.senderBalance === 'number') {
       setWalletBalance(data.senderBalance);
     }
-    setTransferSuccess(`Transfer tamamlandı. Kesinti: ${Number(data.taxAmount ?? 0).toFixed(2)} papel.`);
+    setTransferSuccess(`Transfer tamamlandÄ±. Kesinti: ${Number(data.taxAmount ?? 0).toFixed(2)} papel.`);
     setTransferRecipientId('');
     setTransferAmount('');
     setTransferLoading(false);
-    // Bakiye güncellemesi için yeniden yükle
+    // Bakiye gÃ¼ncellemesi iÃ§in yeniden yÃ¼kle
     await refreshWalletBalance();
   };
 
@@ -662,7 +693,7 @@ export default function DashboardPage() {
 
   const handleOpenTransfer = useCallback(() => {
     if (isSiteMaintenance || isTransfersMaintenance) {
-      setTransferError(transfersReason ?? 'Papel gönderme bakımdadır.');
+      setTransferError(transfersReason ?? 'Papel gÃ¶nderme bakÄ±mdadÄ±r.');
       setTransferSuccess(null);
       setTransferModalOpen(true);
       setSettingsOpen(false);
@@ -701,7 +732,7 @@ export default function DashboardPage() {
 
   const handlePurchase = async (itemId: string) => {
     if (isSiteMaintenance || isStoreMaintenance) {
-      setPurchaseFeedback(prev => ({ ...prev, [itemId]: { status: 'error', message: 'Mağaza bakımda' } }));
+      setPurchaseFeedback(prev => ({ ...prev, [itemId]: { status: 'error', message: 'MaÄŸaza bakÄ±mda' } }));
       setTimeout(() => setPurchaseFeedback(prev => ({ ...prev, [itemId]: undefined })), 3000);
       return;
     }
@@ -724,15 +755,19 @@ export default function DashboardPage() {
 
     if (!response.ok) {
       const errorMessages: Record<string, string> = {
-        bot_missing_manage_roles: 'Bot rol yönetim yetkisine sahip değil',
+        missing_bot_token: 'Bot bilgisi eksik. Lutfen yoneticiye haber verin.',
+        bot_missing_manage_roles: 'Bot rol yÃ¶netim yetkisine sahip deÄŸil',
+        bot_role_hierarchy: 'Botun rol sirasi hedef rolden dusuk. Yetki sirasi duzeltilmeli.',
         insufficient_balance: 'Yetersiz bakiye',
-        item_not_found: 'Ürün bulunamadı',
-        already_owned: 'Bu ürüne zaten sahipsiniz',
-        role_not_found: 'Rol bulunamadı',
-        not_verified: 'Hesabınız doğrulanmamış',
-        forbidden: 'Erişim reddedildi',
+        item_not_found: 'ÃœrÃ¼n bulunamadÄ±',
+        already_owned: 'Bu Ã¼rÃ¼ne zaten sahipsiniz',
+        role_not_found: 'Rol bulunamadÄ±',
+        not_verified: 'HesabÄ±nÄ±z doÄŸrulanmamÄ±ÅŸ',
+        server_not_found: 'Sunucu ayarlari bulunamadi. Kurulum tekrar yapilmali.',
+        no_guild_selected: 'Sunucu secimi bulunamadi. Activityyi yeniden acin.',
+        forbidden: 'EriÅŸim reddedildi',
       };
-      const msg = errorMessages[data.error ?? ''] || data.error || 'Satın alma başarısız';
+      const msg = errorMessages[data.error ?? ''] || data.error || 'SatÄ±n alma baÅŸarÄ±sÄ±z';
       setPurchaseFeedback(prev => ({ ...prev, [itemId]: { status: 'error', message: msg } }));
       setTimeout(() => setPurchaseFeedback(prev => ({ ...prev, [itemId]: undefined })), 3000);
       return;
@@ -740,13 +775,13 @@ export default function DashboardPage() {
 
     if (data.success && typeof data.newBalance === 'number') {
       setWalletBalance(data.newBalance);
-      setPurchaseFeedback(prev => ({ ...prev, [itemId]: { status: 'success', message: 'Satın alındı!' } }));
+      setPurchaseFeedback(prev => ({ ...prev, [itemId]: { status: 'success', message: 'SatÄ±n alÄ±ndÄ±!' } }));
       setTimeout(() => setPurchaseFeedback(prev => ({ ...prev, [itemId]: undefined })), 3000);
     } else {
       setPurchaseFeedback(prev => ({ ...prev, [itemId]: { status: 'error', message: 'Bilinmeyen hata' } }));
       setTimeout(() => setPurchaseFeedback(prev => ({ ...prev, [itemId]: undefined })), 3000);
     }
-    // Bakiye ve mağaza ürünleri güncellemesi için yeniden yükle
+    // Bakiye ve maÄŸaza Ã¼rÃ¼nleri gÃ¼ncellemesi iÃ§in yeniden yÃ¼kle
     await refreshWalletBalance();
     await refreshStoreItems();
   };
@@ -771,6 +806,29 @@ export default function DashboardPage() {
         : 'md:pt-20 pb-28 sm:pb-10 gap-0 sm:gap-6 md:pb-0'
       : 'md:pt-24 pb-28 md:pt-24 md:pb-0 gap-6';
 
+  if (activityReadinessLoading) {
+    return (
+      <div className="min-h-screen bg-[#0b0d12] text-white">
+        <div className="mx-auto flex min-h-screen w-full max-w-5xl flex-col items-center justify-center gap-4 px-6 text-center">
+          <Image src="/gif/indir2.gif" alt="loading" width={220} height={220} unoptimized className="h-40 w-40 rounded-2xl object-cover" />
+          <p className="text-sm text-white/70">Sunucu durumu kontrol ediliyor...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (activityReadiness?.blocking) {
+    return (
+      <ActivityReadinessGate
+        readiness={activityReadiness}
+        loading={activityReadinessLoading}
+        onRetry={() => {
+          void checkActivityReadiness();
+        }}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#0b0d12] text-white overflow-auto">
       <div className="flex flex-col min-h-0 h-full">
@@ -780,8 +838,6 @@ export default function DashboardPage() {
           walletLoading={walletLoading}
           walletBalance={walletBalance}
           loginUrl={loginUrl}
-          isDeveloper={false}
-          isAdmin={false}
           server={{ ...headerServer, onSelectServer: isActivityEmbed ? undefined : handleSelectServer }}
           navigation={{
             activeSection: effectiveSection,
@@ -830,9 +886,9 @@ export default function DashboardPage() {
         <main className={`${mainWrapperClass} flex-1 flex flex-col min-h-0 ${mainSpacingClass} overflow-y-auto custom-scrollbar`}>
             {!maintenanceLoading && isSiteMaintenance && (
               <section className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-6">
-                <p className="text-sm font-semibold text-amber-200">Site bakımda</p>
+                <p className="text-sm font-semibold text-amber-200">Site bakÄ±mda</p>
                 <p className="mt-2 text-sm text-amber-100/80">
-                  {siteReason ?? 'Sistem geçici olarak bakıma alınmıştır. Lütfen daha sonra tekrar deneyin.'}
+                  {siteReason ?? 'Sistem geÃ§ici olarak bakÄ±ma alÄ±nmÄ±ÅŸtÄ±r. LÃ¼tfen daha sonra tekrar deneyin.'}
                 </p>
                 {siteUpdater && (
                   <div className="mt-3 flex items-center gap-2 text-xs text-amber-100/70">
@@ -850,13 +906,13 @@ export default function DashboardPage() {
             )}
             {unauthorized && (
               <section className="rounded-2xl border border-rose-500/30 bg-rose-500/10 p-6">
-                <p className="text-sm font-semibold text-rose-200">Oturumunuz sonlandı</p>
-                <p className="mt-2 text-sm text-rose-100/80">Lütfen tekrar giriş yapın.</p>
+                <p className="text-sm font-semibold text-rose-200">Oturumunuz sonlandÄ±</p>
+                <p className="mt-2 text-sm text-rose-100/80">LÃ¼tfen tekrar giriÅŸ yapÄ±n.</p>
                 <Link
                   href={loginUrl}
                   className="mt-4 inline-flex rounded-full border border-rose-300/40 px-4 py-2 text-sm text-rose-100 transition hover:border-rose-200"
                 >
-                  Discord ile tekrar giriş
+                  Discord ile tekrar giriÅŸ
                 </Link>
               </section>
             )}
@@ -898,7 +954,7 @@ export default function DashboardPage() {
 
             {effectiveSection === 'store' && !isSiteMaintenance && isStoreMaintenance && (
               <section className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-6 text-sm text-amber-100/80">
-                {storeReason ?? 'Mağaza geçici olarak bakımdadır.'}
+                {storeReason ?? 'MaÄŸaza geÃ§ici olarak bakÄ±mdadÄ±r.'}
                 {storeUpdater && (
                   <div className="mt-3 flex items-center gap-2 text-xs text-amber-100/70">
                     <Image
@@ -930,7 +986,7 @@ export default function DashboardPage() {
 
             {effectiveSection === 'settings' && !isSiteMaintenance && isPromotionsMaintenance && (
               <section className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-6 text-sm text-amber-100/80">
-                {promotionsReason ?? 'Promosyon ve indirim kodları şu anda bakımdadır.'}
+                {promotionsReason ?? 'Promosyon ve indirim kodlarÄ± ÅŸu anda bakÄ±mdadÄ±r.'}
                 {promotionsUpdater && (
                   <div className="mt-3 flex items-center gap-2 text-xs text-amber-100/70">
                     <Image
@@ -957,6 +1013,7 @@ export default function DashboardPage() {
                 loading={mailLoading}
                 error={mailError}
                 items={mailItems}
+                serverName={activeServerName}
                 onOpenMail={(mail) => router.push(`/dashboard/mail/${mail.id}`)}
                 onBack={() => setActiveSection('overview')}
               />
@@ -1018,3 +1075,6 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+
+

@@ -220,35 +220,35 @@ const envFlags = {
         );
       }
 
-      // Kullanıcının üye olduğu sunucular için member_profiles oluştur veya güncelle
-      for (const guild of guilds) {
+      // Sadece Activity'nin açıldığı sunucu için member_profiles oluştur veya güncelle
+      if (guildId) {
+        const activeGuild = guilds.find((g) => g.id === guildId);
+        const guildName = activeGuild?.name ?? guildId;
+
         // Sunucunun bizim sistemimizde kayıtlı olup olmadığını kontrol et
         const { data: server } = await supabase
           .from('servers')
           .select('id')
-          .eq('discord_id', guild.id)
+          .eq('discord_id', guildId)
           .maybeSingle();
 
         if (server) {
-          // Mevcut member_profiles kontrol et (guild_id olarak Discord guild ID kullanıyoruz)
           const { data: existingProfile } = await supabase
             .from('member_profiles')
             .select('*')
-            .eq('guild_id', guild.id)
+            .eq('guild_id', guildId)
             .eq('user_id', user.id)
             .maybeSingle();
 
           if (existingProfile) {
-            console.log('✅ Existing member profile found for server:', guild.name);
-            // Mevcut profil zaten var, güncelleme gerekmiyor
+            console.log('✅ Existing member profile found for server:', guildName);
           } else {
-            console.log('👤 Creating new member profile for server:', guild.name);
-            // Yeni member_profiles oluştur
+            console.log('👤 Creating new member profile for server:', guildName);
             await supabase
               .from('member_profiles')
               .upsert(
                 {
-                  guild_id: guild.id,
+                  guild_id: guildId,
                   user_id: user.id,
                   created_at: new Date().toISOString(),
                   updated_at: new Date().toISOString(),
@@ -299,6 +299,13 @@ const envFlags = {
     const secureValue = process.env.NODE_ENV === 'production';
 
     response.cookies.set('discord_session', sessionToken, {
+      httpOnly: true,
+      sameSite: sameSiteValue,
+      secure: secureValue,
+      maxAge: 60 * 60 * 24 * 7,
+      path: '/',
+    });
+    response.cookies.set('discord_activity_session', '1', {
       httpOnly: true,
       sameSite: sameSiteValue,
       secure: secureValue,

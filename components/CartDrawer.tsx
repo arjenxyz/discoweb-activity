@@ -8,7 +8,7 @@ import {
 import Image from 'next/image';
 import { useCart } from '../lib/cart';
 import fetchWithCreds from '@/lib/fetchWithCreds';
-import { apiUrl } from '@/lib/api';
+
 
 type Coupon = {
   id: string | number;
@@ -75,8 +75,14 @@ export default function CartDrawer() {
 
   // Eğer sepette ürün ekleme/çıkarma yapıldıysa kupon girişini kapat (kullanıcı gizlediyse açılmasın)
   useEffect(() => {
-    setShowCouponInput(false);
-  }, [items.length]);
+    if (showCouponInput) {
+      // Use setTimeout to avoid synchronous state updates that can trigger cascading renders
+      const timer = setTimeout(() => {
+        setShowCouponInput(false);
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [items.length, showCouponInput]);
 
   if (!open) return null;
 
@@ -378,7 +384,13 @@ export default function CartDrawer() {
                         <p className="text-xs font-bold text-emerald-400">{appliedCoupon.code}</p>
                         <div className="text-[9px] text-white/40 space-y-0.5">
                           {currentMinSpend > 0 && <p>Min. {currentMinSpend} Papel</p>}
-                            <p>Kullanım: {(appliedCoupon as any).userUsageCount ?? (appliedCoupon as any).used_count ?? 0} / {(appliedCoupon as any).perUserLimit ?? (appliedCoupon as any).max_uses ?? '∞'}</p>
+                          <p>
+                            Kullanım: {Number((appliedCoupon as Coupon).userUsageCount ?? (appliedCoupon as Coupon).used_count ?? 0)} / {typeof (appliedCoupon as Coupon).perUserLimit === 'number' && (appliedCoupon as Coupon).perUserLimit > 0
+                              ? (appliedCoupon as Coupon).perUserLimit
+                              : (typeof (appliedCoupon as Coupon).max_uses === 'number' && (appliedCoupon as Coupon).max_uses > 0
+                                ? (appliedCoupon as Coupon).max_uses
+                                : '∞')}
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -390,8 +402,8 @@ export default function CartDrawer() {
                   <>
                     {/* Hoşgeldin Kuponu */}
                     {welcomeCoupon && !appliedCoupon && (() => {
-                      const wUsage = (welcomeCoupon as any).userUsageCount ?? 0;
-                      const wLimit = (welcomeCoupon as any).perUserLimit ?? 1;
+                      const wUsage = (welcomeCoupon as Coupon).userUsageCount ?? 0;
+                      const wLimit = (welcomeCoupon as Coupon).perUserLimit ?? 1;
                       return (
                         <div className="mt-3 p-3 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 rounded-lg">
                           <div className="flex items-center justify-between">
@@ -414,8 +426,8 @@ export default function CartDrawer() {
                     {!appliedCoupon && specialCoupons.length > 0 && (
                       <div className="mt-3 max-h-44 overflow-y-auto space-y-2 pr-2">
                         {specialCoupons.map((coupon) => {
-                          const userUsageCount = (coupon as any).userUsageCount ?? 0;
-                          const perUserLimit = (coupon as any).perUserLimit ?? 1;
+                          const userUsageCount = (coupon as Coupon).userUsageCount ?? 0;
+                          const perUserLimit = (coupon as Coupon).perUserLimit ?? 1;
                           return (
                             <div key={coupon.id} className="p-3 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 rounded-lg">
                               <div className="flex items-center justify-between">

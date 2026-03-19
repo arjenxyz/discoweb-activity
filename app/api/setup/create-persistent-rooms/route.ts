@@ -14,8 +14,7 @@ export async function POST() {
     const supabase = createClient(supabaseUrl, serviceKey);
 
     const desired = [
-      { name: 'Admin Help', room_type: 'help', is_persistent: true },
-      { name: 'Developer Help', room_type: 'help', is_persistent: true },
+      { name: 'Member Help', room_type: 'help', is_persistent: true },
       { name: 'Command Room', room_type: 'help', is_persistent: true },
       { name: 'Komut Help', room_type: 'help', is_persistent: true },
     ];

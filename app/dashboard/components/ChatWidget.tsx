@@ -1,9 +1,8 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
-import { apiUrl } from '@/lib/api';
 import { getSupabaseClient } from '../../../lib/supabaseClient';
 import { useChat } from '../../../lib/utils/useChat';
 import {
@@ -67,8 +66,6 @@ export default function ChatWidget() {
   const [showRoomsMobile, setShowRoomsMobile] = useState(false);
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [isDeveloper, setIsDeveloper] = useState(false);
 
   const [devViewMessages, setDevViewMessages] = useState<Message[] | null>(null);
   const [devViewTitle, setDevViewTitle] = useState<string | null>(null);
@@ -83,18 +80,12 @@ export default function ChatWidget() {
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
   }, []);
-
-  // login / roles
+  // login state
   useEffect(() => {
     const discordUser = localStorage.getItem('discordUser');
-    const adminGuilds = localStorage.getItem('adminGuilds');
     Promise.resolve().then(() => {
-      setIsLoggedIn(!!(discordUser && adminGuilds));
-      setIsAdmin(!!(adminGuilds && JSON.parse(adminGuilds).length > 0));
+      setIsLoggedIn(Boolean(discordUser));
     });
-    fetch(apiUrl('/api/developer/check-access'), { credentials: 'include' })
-      .then((r) => { if (r.ok) setIsDeveloper(true); })
-      .catch(() => {});
   }, []);
 
   // load rooms
@@ -115,28 +106,6 @@ export default function ChatWidget() {
     };
     load();
   }, [client]);
-
-  // ensure help room membership
-  useEffect(() => {
-    const ensure = async (name: string) => {
-      if (!client || !currentUserId) return;
-      try {
-        const { data: room } = await client
-          .from('rooms')
-          .select('id')
-          .eq('name', name)
-          .maybeSingle();
-        if (room?.id) {
-          await client.from('room_members').insert(
-            { room_id: room.id, user_id: currentUserId },
-            { upsert: true }
-          );
-        }
-      } catch {}
-    };
-    if (isAdmin) ensure('Admin Help');
-    if (isDeveloper) ensure('Developer Help');
-  }, [client, currentUserId, isAdmin, isDeveloper]);
 
   // load profiles
   useEffect(() => {
@@ -201,21 +170,10 @@ export default function ChatWidget() {
 
   const sendMessage = async () => {
     if (!isLoggedIn) {
-      alert('Sohbete başlamadan önce Discord ile giriş yapın.');
+      alert('Sohbete baÅŸlamadan Ã¶nce Discord ile giriÅŸ yapÄ±n.');
       return;
     }
     if (!activeRoom || input.trim() === '') return;
-    const room = rooms.find((r) => r.id === activeRoom);
-    if (room?.is_persistent) {
-      if (room.name === 'Admin Help' && !isAdmin && !isDeveloper) {
-        alert('Bu kanala erişiminiz yok.');
-        return;
-      }
-      if (room.name === 'Developer Help' && !isDeveloper) {
-        alert('Bu kanala erişiminiz yok.');
-        return;
-      }
-    }
     setInput('');
     await chatSendMessage(input);
   };
@@ -236,32 +194,11 @@ export default function ChatWidget() {
 
   const handleSearch = async () => {
     if (!isLoggedIn) {
-      alert('Sohbete başlamadan önce Discord ile giriş yapın.');
+      alert('Sohbete baÅŸlamadan Ã¶nce Discord ile giriÅŸ yapÄ±n.');
       return;
     }
     const query = searchQuery.trim();
     if (!query) return;
-
-    if (isDeveloper && query.includes(',')) {
-      const parts = query.split(',').map((p) => p.trim()).filter(Boolean);
-      if (parts.length === 2) {
-        try {
-          const res = await fetch(`/api/chat/fetch-history?u1=${encodeURIComponent(
-            parts[0]
-          )}&u2=${encodeURIComponent(parts[1])}`, { credentials: 'include' });
-          if (res.ok) {
-            const body = await res.json();
-            setDevViewMessages(body.messages || []);
-            setDevViewTitle(`Conversation ${parts[0]} ↔ ${parts[1]}`);
-            setSearchQuery('');
-          }
-        } catch (e) {
-          console.error('history error', e);
-        }
-      }
-      return;
-    }
-
     const discordId = query;
     try {
       let callerId = currentUserId;
@@ -270,7 +207,7 @@ export default function ChatWidget() {
         try { callerId = du ? JSON.parse(du).id : null; } catch { callerId = null; }
       }
       if (!callerId) {
-        alert('Sohbete başlamadan önce Discord ile giriş yapın.');
+        alert('Sohbete baÅŸlamadan Ã¶nce Discord ile giriÅŸ yapÄ±n.');
         return;
       }
 
@@ -280,12 +217,12 @@ export default function ChatWidget() {
         try {
           const { data: userRow } = await client.from('users').select('id').eq('id', discordId).maybeSingle();
           if (!userRow) {
-            alert('Kullanıcı bulunamadı.');
+            alert('KullanÄ±cÄ± bulunamadÄ±.');
             return;
           }
         } catch (err) {
           console.error('User lookup failed', err);
-          alert('Kullanıcı doğrulanırken hata oluştu.');
+          alert('KullanÄ±cÄ± doÄŸrulanÄ±rken hata oluÅŸtu.');
           return;
         }
       }
@@ -303,7 +240,7 @@ export default function ChatWidget() {
       }
     } catch (e) {
       console.error('Search error', e);
-      alert('Sohbet oluşturulamadı — konsolu kontrol edin.');
+      alert('Sohbet oluÅŸturulamadÄ± â€” konsolu kontrol edin.');
     }
   };
 
@@ -325,10 +262,6 @@ export default function ChatWidget() {
           !room.room_type.toLowerCase().includes(s)) {
         return false;
       }
-    }
-    if (room.is_persistent) {
-      if (room.name === 'Admin Help' && !isAdmin && !isDeveloper) return false;
-      if (room.name === 'Developer Help' && !isDeveloper) return false;
     }
     return true;
   });
@@ -357,7 +290,7 @@ export default function ChatWidget() {
     if (days === 0) {
       return d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
     } else if (days === 1) {
-      return 'Dün';
+      return 'DÃ¼n';
     } else if (days < 7) {
       return d.toLocaleDateString('tr-TR', { weekday: 'short' });
     } else {
@@ -392,7 +325,7 @@ export default function ChatWidget() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
-              placeholder="Sohbet ara veya yeni başlat..."
+              placeholder="Sohbet ara veya yeni baÅŸlat..."
               className="w-full pl-10 pr-4 py-2.5 bg-[#0a0b0e] border border-white/10 rounded-lg text-sm text-white placeholder:text-white/40 focus:outline-none"
             />
             {userSuggestions.length > 0 && (
@@ -436,10 +369,10 @@ export default function ChatWidget() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="text-sm font-medium truncate">
-                      {room.name ?? (room.room_type === 'dm' ? 'Özel Mesaj' : 'Sohbet')}
+                      {room.name ?? (room.room_type === 'dm' ? 'Ã–zel Mesaj' : 'Sohbet')}
                     </h3>
                     <p className="text-xs truncate text-white/40">
-                      {room.last_message_preview ?? 'Henüz mesaj yok'}
+                      {room.last_message_preview ?? 'HenÃ¼z mesaj yok'}
                     </p>
                     {room.last_message_at && (
                       <span className="text-xs text-white/40">
@@ -470,18 +403,18 @@ export default function ChatWidget() {
               }}
               className="p-2 text-white hover:bg-white/5 rounded-lg transition-colors"
             >
-              {showRoomsMobile ? '✕' : pathname === '/chat' ? <ArrowLeft className="w-5 h-5" /> : '◀'}
+              {showRoomsMobile ? 'âœ•' : pathname === '/chat' ? <ArrowLeft className="w-5 h-5" /> : 'â—€'}
             </button>
             <div className="flex-1 text-center text-sm font-semibold truncate">
               {rooms.find((r) => r.id === activeRoom)?.name ||
-                (rooms.find((r) => r.id === activeRoom)?.room_type === 'dm' ? 'Özel Mesaj' : 'Sohbet')}
+                (rooms.find((r) => r.id === activeRoom)?.room_type === 'dm' ? 'Ã–zel Mesaj' : 'Sohbet')}
             </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowRoomsMobile((v) => !v)}
                 className="p-2 text-white hover:bg-white/5 rounded-lg transition-colors"
               >
-                ☰
+                â˜°
               </button>
               <button
                 onClick={() => setShowRoomsMobile(true)}
@@ -512,13 +445,13 @@ export default function ChatWidget() {
                 <h2 className="text-sm font-semibold">
                   {rooms.find((r) => r.id === activeRoom)?.name ||
                     (rooms.find((r) => r.id === activeRoom)?.room_type === 'dm'
-                      ? 'Özel Mesaj'
+                      ? 'Ã–zel Mesaj'
                       : 'Sohbet')}
                 </h2>
                 {typingUsers.length > 0 && (
                   <p className="text-xs text-[#5865f2] font-medium">
-                    {profiles[typingUsers[0]]?.username || 'Biri'} yazıyor
-                    {typingUsers.length > 1 && ` ve ${typingUsers.length - 1} kişi daha`}...
+                    {profiles[typingUsers[0]]?.username || 'Biri'} yazÄ±yor
+                    {typingUsers.length > 1 && ` ve ${typingUsers.length - 1} kiÅŸi daha`}...
                   </p>
                 )}
               </div>
@@ -537,13 +470,13 @@ export default function ChatWidget() {
                 <button
                   onClick={() => setDevViewMessages(null)}
                   className="text-white hover:text-gray-300"
-                >✕</button>
+                >âœ•</button>
               </div>
               <div className="flex-1 overflow-y-auto p-4">
                 {devViewMessages.map((msg) => (
                   <div key={msg.id} className="mb-2">
                     <div className="text-xs text-white/40">
-                      {msg.sender_id} • {getMessageTimeDisplay(msg.created_at)}
+                      {msg.sender_id} â€¢ {getMessageTimeDisplay(msg.created_at)}
                     </div>
                     <div className="text-sm text-white/80">{msg.content}</div>
                   </div>
@@ -554,7 +487,7 @@ export default function ChatWidget() {
             <div className="max-w-4xl mx-auto space-y-1">
               {messages.length === 0 && activeRoom && (
                 <div className="text-center text-white/40 mt-10">
-                  Henüz mesaj yok – bir şey yazın veya bir oda seçin.
+                  HenÃ¼z mesaj yok â€“ bir ÅŸey yazÄ±n veya bir oda seÃ§in.
                 </div>
               )}
               {messages.map((msg, idx) => {
@@ -623,7 +556,7 @@ export default function ChatWidget() {
                           {msg.content}
                         </p>
                         {msg.edited_at && (
-                          <span className="text-[10px] text-white/30 italic ml-1">(düzenlendi)</span>
+                          <span className="text-[10px] text-white/30 italic ml-1">(dÃ¼zenlendi)</span>
                         )}
                       </div>
                     </div>
@@ -649,13 +582,13 @@ export default function ChatWidget() {
                         sendMessage();
                       }
                     }}
-                    placeholder="Mesaj yazın..."
+                    placeholder="Mesaj yazÄ±n..."
                     disabled={!isLoggedIn}
                     className="w-full px-4 py-3 bg-transparent text-sm text-white placeholder:text-white/40 focus:outline-none"
                   />
                   {!isLoggedIn && (
                     <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white text-sm">
-                      Giriş yapmadan mesaj gönderemezsiniz
+                      GiriÅŸ yapmadan mesaj gÃ¶nderemezsiniz
                     </div>
                   )}
                 </div>
@@ -680,7 +613,7 @@ export default function ChatWidget() {
               onClick={() => setShowRoomsMobile(false)}
               className="p-2 text-white hover:bg-white/5 rounded-lg transition-colors"
             >
-              ✕
+              âœ•
             </button>
             <div className="flex-1 text-center text-sm font-semibold">Sohbetler</div>
           </div>
@@ -692,7 +625,7 @@ export default function ChatWidget() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
-                placeholder="Sohbet ara veya yeni başlat..."
+                placeholder="Sohbet ara veya yeni baÅŸlat..."
                 className="w-full pl-10 pr-4 py-2.5 bg-[#0a0b0e] border border-white/10 rounded-lg text-sm text-white placeholder:text-white/40 focus:outline-none"
               />
               {userSuggestions.length > 0 && (
@@ -720,7 +653,7 @@ export default function ChatWidget() {
             <button
               onClick={() => { const el = document.querySelector('#chat-search-input') as HTMLInputElement | null; if (el) el.focus(); }}
               className="ml-2 p-2 hover:bg-white/5 rounded-lg transition-colors"
-              title="Yeni sohbet başlat"
+              title="Yeni sohbet baÅŸlat"
             >
               <Plus className="w-5 h-5 text-white/60" />
             </button>
@@ -746,10 +679,10 @@ export default function ChatWidget() {
                       <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center bg-white/5`}>{getRoomIcon(room)}</div>
                       <div className="flex-1 min-w-0 text-left">
                         <h3 className="text-sm font-medium truncate">
-                          {room.name ?? (room.room_type === 'dm' ? 'Özel Mesaj' : 'Sohbet')}
+                          {room.name ?? (room.room_type === 'dm' ? 'Ã–zel Mesaj' : 'Sohbet')}
                         </h3>
                         <p className="text-xs truncate text-white/40">
-                          {room.last_message_preview || 'Henüz mesaj yok'}
+                          {room.last_message_preview || 'HenÃ¼z mesaj yok'}
                         </p>
                         {room.last_message_at && (
                           <span className="text-xs text-white/40">
@@ -789,3 +722,6 @@ export default function ChatWidget() {
     </div>
   );
 }
+
+
+

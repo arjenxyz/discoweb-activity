@@ -29,6 +29,12 @@ function handleLogout(request: NextRequest) {
     maxAge: 0,
     path: '/',
   });
+  response.cookies.set('discord_activity_session', '', {
+    httpOnly: true,
+    sameSite: 'lax',
+    maxAge: 0,
+    path: '/',
+  });
 
   return response;
 }

@@ -8,20 +8,24 @@ export default function FrameIdTracker() {
 
     const params = new URLSearchParams(window.location.search);
     const frameId = params.get('frame_id');
-    if (!frameId) return;
+    const instanceId = params.get('instance_id');
+
+    if (!frameId && !instanceId) return;
 
     try {
-      localStorage.setItem('discord_frame_id', frameId);
+      if (frameId) {
+        localStorage.setItem('discord_frame_id', frameId);
+      }
+      if (instanceId) {
+        localStorage.setItem('discord_instance_id', instanceId);
+      }
     } catch {
       // ignore storage failures
     }
 
-    // Eğer URL'in temiz görünmesini isterseniz, frame_id'yi URL'den kaldırabilirsiniz.
-    // Bu, `router` yerine history API ile yapılır ve sayfayı yeniden yüklemeden çalışır.
-    // Ancak dikkat: bu kod, query param'ı tamamen kaldırır.
-    const url = new URL(window.location.href);
-    url.searchParams.delete('frame_id');
-    window.history.replaceState(null, '', url.toString());
+    // NOT: frame_id veya instance_id'yi URL'den silmeyin!
+    // DiscordSDK constructor'ı bu parametreleri window.location.search'den okur.
+    // Silersek SDK "frame_id query param is not defined" veya "instance_id query param is not defined" hatası verir.
   }, []);
 
   return null;
