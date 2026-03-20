@@ -111,9 +111,10 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
   const [muted, setMuted] = useState(true);
   const [adminPhase, setAdminPhase] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
   const [adminError, setAdminError] = useState<string | null>(null);
-  const [reported, setReported] = useState(false);
+  const [reportedStatus, setReportedStatus] = useState<string | null>(null);
 
   const REPORTABLE = new Set(['discord_api_error', 'missing_service_role', 'missing_bot_token', 'server_not_registered', 'server_setup_required']);
+  const alreadyReported = reportedStatus === readiness.status;
 
   const handleReport = async () => {
     try {
@@ -127,7 +128,7 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
           debug: readiness.debug,
         }),
       });
-      setReported(true);
+      setReportedStatus(readiness.status);
     } catch { /* sessizce geç */ }
   };
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -339,10 +340,10 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
               <button
                 type="button"
                 onClick={handleReport}
-                disabled={reported}
+                disabled={alreadyReported}
                 className="rounded-full border border-red-400/30 bg-red-500/20 px-5 py-2.5 text-sm font-semibold text-red-200 backdrop-blur-md transition hover:bg-red-500/30 disabled:opacity-50"
               >
-                {reported ? '✓ Bildirildi' : 'Bildir'}
+                {alreadyReported ? '✓ Bildirildi' : 'Bildir'}
               </button>
             )}
             {isBotMissing && isAdmin && readiness.inviteUrl && (
