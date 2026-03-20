@@ -17,8 +17,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   };
 
   return (
-    <div className="relative isolate min-h-screen overflow-hidden bg-[#0b0d12] text-white">
-      {/* Arka plan — kalıcı, hiç unmount olmaz */}
+    <div className="relative min-h-screen text-white">
+      {/* Arka plan — fixed, hiç unmount olmaz, içerik boyutundan etkilenmez */}
       {videoUrl ? (
         <video
           ref={videoRef}
@@ -28,22 +28,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           muted
           playsInline
           disablePictureInPicture
-          className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+          className="pointer-events-none fixed inset-0 -z-10 h-full w-full object-cover"
         />
       ) : (
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,#5865F255_0%,transparent_45%),radial-gradient(circle_at_bottom_right,#3a9cff33_0%,transparent_40%)]" />
+        <div className="pointer-events-none fixed inset-0 -z-10 bg-[#0b0d12] bg-[radial-gradient(circle_at_top_left,#5865F255_0%,transparent_45%),radial-gradient(circle_at_bottom_right,#3a9cff33_0%,transparent_40%)]" />
       )}
 
-      {/* Overlay */}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/10" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+      {/* Overlay — fixed */}
+      <div className="pointer-events-none fixed inset-0 -z-10 bg-gradient-to-t from-black/90 via-black/40 to-black/10" />
+      <div className="pointer-events-none fixed inset-x-0 bottom-0 -z-10 h-2/3 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
 
-      {/* Ses butonu — sağ üst, her zaman görünür */}
+      {/* Ses butonu */}
       {videoUrl && (
         <button
           type="button"
           onClick={toggleMute}
-          className="absolute right-4 top-4 z-50 flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white backdrop-blur-md transition hover:bg-black/60"
+          className="fixed right-4 top-4 z-50 flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white backdrop-blur-md transition hover:bg-black/60"
           aria-label={muted ? 'Sesi aç' : 'Sesi kapat'}
         >
           {muted ? (
@@ -62,9 +62,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       )}
 
       {/* İçerik */}
-      <div className="relative z-10">
-        {children}
-      </div>
+      {children}
     </div>
   );
 }
