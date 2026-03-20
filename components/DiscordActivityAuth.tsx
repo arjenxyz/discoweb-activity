@@ -287,13 +287,6 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
           addLog('STEP 3a: SDK import ediliyor...');
           const discordSdkModule = await import('@discord/embedded-app-sdk');
           const DiscordSDK = discordSdkModule.DiscordSDK;
-          const patchUrlMappings = discordSdkModule.patchUrlMappings;
-
-          // Supabase asset URL'lerini Discord proxy'sine tanıt
-          patchUrlMappings([
-            { prefix: '/supabase-storage', target: 'dotmvirtfyepdpcvgucc.supabase.co' },
-          ]);
-
           if (inDiscordRuntime && !resolvedFrameId) {
             setError('Discord frame_id veya instance_id parametresi eksik. Activity penceresini kapatıp yeniden açın.');
             setIsLoading(false);
