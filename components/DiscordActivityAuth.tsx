@@ -149,12 +149,28 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
 
       const urlParams = new URLSearchParams(window.location.search);
       const guildId = urlParams.get('guild_id');
-      
+
       const isDevMode = process.env.NODE_ENV === 'development';
       const inDiscordRuntime = isDiscordEmbedRuntime();
       addLog(`STEP 1: guildId=${guildId}, dev=${isDevMode}, discord=${inDiscordRuntime}, path=${window.location.pathname}`);
 
       let existingUser = getExistingUser();
+
+      // --- YENİ SESSION KONTROLÜ ---
+      // frame_id her yeni Activity açılışında değişir.
+      // Değiştiyse = farklı kullanıcı veya farklı sunucu olabilir → temizle + tam auth yap.
+      const frameIdFromUrlEarly = urlParams.get('frame_id') || urlParams.get('instance_id');
+      const storedFrameIdEarly = (() => { try { return localStorage.getItem('discord_frame_id'); } catch { return null; } })();
+
+      if (inDiscordRuntime && frameIdFromUrlEarly && frameIdFromUrlEarly !== storedFrameIdEarly) {
+        addLog(`🔄 Yeni Activity session algılandı (frame_id değişti: ${storedFrameIdEarly?.substring(0,8)} → ${frameIdFromUrlEarly.substring(0,8)}), tüm auth temizleniyor...`);
+        localStorage.removeItem('discordUser');
+        localStorage.removeItem('discord_bearer_token');
+        document.cookie = 'discord_session=; Path=/; Max-Age=0';
+        document.cookie = 'selected_guild_id=; Path=/; Max-Age=0';
+        existingUser = null;
+      }
+
       const existingGuildId = (() => {
         try {
           return localStorage.getItem('selectedGuildId');
@@ -162,18 +178,6 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
           return null;
         }
       })();
-
-      // Yeni guild detect edilirse cookie + localStorage güncelle ve sayfayı yenile
-      if (guildId && existingGuildId && existingGuildId !== guildId) {
-        addLog('🔄 Yeni guild algılandı, selectedGuildId güncelleniyor ve sayfa yenileniyor...');
-        localStorage.setItem('selectedGuildId', guildId);
-        const sameSiteValue = window.location.protocol === 'https:' ? 'None' : 'Lax';
-        const secureValue = window.location.protocol === 'https:' ? '; Secure' : '';
-        document.cookie = `selected_guild_id=${guildId}; Path=/; Max-Age=604800; SameSite=${sameSiteValue}${secureValue}`;
-        // Eski guild'in tüm data'sı temizlensin diye sayfayı yenile
-        window.location.reload();
-        return;
-      }
 
       // Discord runtime'da eski dev session varsa temizle
       if (inDiscordRuntime) {
@@ -329,7 +333,9 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
           );
           if (signal.aborted) return;
           addLog('STEP 4b: sdk.ready() BAŞARILI!');
-          setDiscordSdk(sdk);
+            setDiscordSdk(sdk);
+          // Başarılı auth sonrası frame_id kaydet — gelecek girişte karşılaştırılacak
+          if (frameIdFromUrlEarly) localStorage.setItem('discord_frame_id', frameIdFromUrlEarly);
 
           addLog('STEP 5: authorize() çağrılıyor...');
           const auth = await authorizeWithFallback(sdk, clientId);
@@ -405,7 +411,8 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
       }
 
       // --- Production modu ---
-      // Önce mevcut bearer token varsa dene (cookie'ler sayesinde)
+      // Mevcut bearer token shortcut'ı sadece AYNI session'da çalışır.
+      // frame_id değiştiyse (yukarıda temizlendi) bu bloğa hiç girmeyiz.
       const storedBearerToken = (() => {
         try {
           return localStorage.getItem('discord_bearer_token');
@@ -426,6 +433,8 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
             setIsLoading(false);
             localStorage.setItem('discordUser', JSON.stringify(user));
             localStorage.setItem('selectedGuildId', resolvedGuildId);
+            // frame_id'yi de güncelle ki aynı session olduğu bilinsin
+            if (frameIdFromUrlEarly) localStorage.setItem('discord_frame_id', frameIdFromUrlEarly);
             try { localStorage.setItem('auth_ready', 'true'); } catch {}
             addLog('Mevcut oturum geçerli, direkt geçildi');
             return;
@@ -500,6 +509,8 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
         if (result.bearerToken) {
           localStorage.setItem('discord_bearer_token', result.bearerToken);
         }
+        // frame_id kaydet — bir sonraki girişte yeni session tespiti için
+        if (frameIdFromUrlEarly) localStorage.setItem('discord_frame_id', frameIdFromUrlEarly);
         try { localStorage.setItem('auth_ready', 'true'); } catch {}
         addLog('Auth tamamlandı (production)');
       } catch (error) {
