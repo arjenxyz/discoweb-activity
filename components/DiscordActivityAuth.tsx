@@ -270,17 +270,8 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
   }, [addLog]);
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-[#0b0d12]">
-        <div className="text-white text-center max-w-md w-full px-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4" />
-          <p className="text-sm text-white/70">Discord ile bağlanılıyor...</p>
-          <div className="mt-4 text-left text-xs text-white/40 bg-black/40 rounded-xl p-3 max-h-48 overflow-y-auto">
-            {debugLogs.map((log, i) => <p key={i} className="break-all">{log}</p>)}
-          </div>
-        </div>
-      </div>
-    );
+    // Auth arka planda çalışır, kullanıcıya siyah ekran gösterilir
+    return <div className="min-h-screen bg-[#0b0d12]" />;
   }
 
   if (error) {
