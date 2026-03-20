@@ -123,14 +123,37 @@ type SupabaseOAuthReader = {
   };
 };
 
+const checkGuildAdminWithToken = async (token: string, guildId: string): Promise<boolean> => {
+  try {
+    const res = await fetch('https://discord.com/api/users/@me/guilds', {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: 'no-store',
+    });
+    if (!res.ok) return false;
+    const guilds = (await res.json()) as Array<{ id: string; owner?: boolean; permissions?: string }>;
+    const guild = guilds.find((g) => g.id === guildId);
+    if (!guild) return false;
+    return Boolean(guild.owner) || hasAdminLikePermission(guild.permissions);
+  } catch {
+    return false;
+  }
+};
+
 const resolveGuildAdminFromOAuth = async (
   supabaseClient: unknown,
   userId: string,
   guildId: string,
+  requestBearerToken?: string,
 ) => {
   try {
-    const supabase = supabaseClient as SupabaseOAuthReader;
+    // Önce request'ten gelen token'ı dene (en güncel)
+    if (requestBearerToken) {
+      const result = await checkGuildAdminWithToken(requestBearerToken, guildId);
+      if (result) return true;
+    }
 
+    // Fallback: DB'deki token
+    const supabase = supabaseClient as SupabaseOAuthReader;
     const { data: userRow } = await (supabase.from('users') as unknown as {
       select: (columns: string) => {
         eq: (column: string, value: string) => {
@@ -145,22 +168,7 @@ const resolveGuildAdminFromOAuth = async (
     const userToken = userRow?.oauth_access_token ?? undefined;
     if (!userToken) return false;
 
-    const guildsResponse = await fetch('https://discord.com/api/users/@me/guilds', {
-      headers: { Authorization: `Bearer ${userToken}` },
-      cache: 'no-store',
-    });
-
-    if (!guildsResponse.ok) return false;
-
-    const guilds = (await guildsResponse.json()) as Array<{
-      id: string;
-      owner?: boolean;
-      permissions?: string;
-    }>;
-    const guild = guilds.find((item) => item.id === guildId);
-    if (!guild) return false;
-
-    return Boolean(guild.owner) || hasAdminLikePermission(guild.permissions);
+    return await checkGuildAdminWithToken(userToken, guildId);
   } catch {
     return false;
   }
@@ -184,6 +192,10 @@ export async function GET(request: Request) {
       { status: 401 },
     );
   }
+
+  // Request'teki bearer token (discord_bearer_token from localStorage)
+  const authHeader = request.headers.get('Authorization');
+  const requestBearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : undefined;
 
   const guildId = await getSelectedGuildId(request);
   if (!guildId) {
@@ -223,7 +235,7 @@ export async function GET(request: Request) {
   if (!guildResponse.ok) {
     console.error('[readiness] guild fetch failed', { guildId, status: guildResponse.status });
     if (guildResponse.status === 403 || guildResponse.status === 404) {
-      const adminFromOAuth = await resolveGuildAdminFromOAuth(supabase, session.userId, guildId);
+      const adminFromOAuth = await resolveGuildAdminFromOAuth(supabase, session.userId, guildId, requestBearerToken);
       return nonOkStatus({
         status: 'bot_not_in_guild',
         guildId,
@@ -255,7 +267,7 @@ export async function GET(request: Request) {
   const isOwnerViaBot = guild.owner_id === session.userId;
 
   if (!server) {
-    const adminFromOAuth = isOwnerViaBot || await resolveGuildAdminFromOAuth(supabase, session.userId, guildId);
+    const adminFromOAuth = isOwnerViaBot || await resolveGuildAdminFromOAuth(supabase, session.userId, guildId, requestBearerToken);
     return nonOkStatus({
       status: 'server_not_registered',
       guildId,
@@ -267,7 +279,7 @@ export async function GET(request: Request) {
   }
 
   if (!server.is_setup) {
-    const adminFromOAuth = isOwnerViaBot || await resolveGuildAdminFromOAuth(supabase, session.userId, guildId);
+    const adminFromOAuth = isOwnerViaBot || await resolveGuildAdminFromOAuth(supabase, session.userId, guildId, requestBearerToken);
     return nonOkStatus({
       status: 'server_setup_required',
       guildId,
@@ -307,7 +319,7 @@ export async function GET(request: Request) {
 
   const member = (await memberResponse.json()) as { roles?: string[] };
   const roleIds = Array.isArray(member.roles) ? member.roles : [];
-  const adminFromOAuth = await resolveGuildAdminFromOAuth(supabase, session.userId, guildId);
+  const adminFromOAuth = await resolveGuildAdminFromOAuth(supabase, session.userId, guildId, requestBearerToken);
   const isAdmin =
     adminFromOAuth ||
     (Boolean(server.admin_role_id) && roleIds.includes(server.admin_role_id as string)) ||
