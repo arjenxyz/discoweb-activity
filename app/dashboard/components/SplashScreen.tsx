@@ -2,6 +2,7 @@
 
 import { useRef, useState, useEffect } from 'react';
 import { MuteButton, VideoBackground } from './VideoBackground';
+import { apiUrl } from '@/lib/api';
 
 type Props = {
   onEnter: () => void;
@@ -11,10 +12,22 @@ export default function SplashScreen({ onEnter }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [muted, setMuted] = useState(true);
   const [visible, setVisible] = useState(false);
+  const [maintenance, setMaintenance] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), 80);
-    return () => clearTimeout(t);
+
+    const checkMaintenance = () => {
+      fetch(apiUrl('/api/activity/maintenance'))
+        .then(r => r.json())
+        .then(d => setMaintenance(d.maintenance === true))
+        .catch(() => {});
+    };
+
+    checkMaintenance();
+    const interval = setInterval(checkMaintenance, 30000);
+
+    return () => { clearTimeout(t); clearInterval(interval); };
   }, []);
 
   const toggleMute = () => {
@@ -110,16 +123,19 @@ export default function SplashScreen({ onEnter }: Props) {
             <MuteButton muted={muted} onToggle={toggleMute} />
             <button
               type="button"
-              onClick={onEnter}
-              className="group relative overflow-hidden rounded-full bg-[#5865F2] px-8 py-3.5 text-sm font-bold text-white transition-all duration-300 hover:bg-[#4752C4] active:scale-95"
-              style={{ boxShadow: '0 0 32px rgba(88,101,242,0.5), 0 4px 16px rgba(0,0,0,0.5)' }}
+              onClick={maintenance ? undefined : onEnter}
+              disabled={maintenance}
+              className={`group relative overflow-hidden rounded-full px-8 py-3.5 text-sm font-bold text-white transition-all duration-300 active:scale-95 ${maintenance ? 'cursor-not-allowed bg-white/10' : 'bg-[#5865F2] hover:bg-[#4752C4]'}`}
+              style={maintenance ? {} : { boxShadow: '0 0 32px rgba(88,101,242,0.5), 0 4px 16px rgba(0,0,0,0.5)' }}
             >
-              <span className="pointer-events-none absolute inset-0 -translate-x-full skew-x-12 bg-white/20 transition-transform duration-500 group-hover:translate-x-full" />
+              {!maintenance && <span className="pointer-events-none absolute inset-0 -translate-x-full skew-x-12 bg-white/20 transition-transform duration-500 group-hover:translate-x-full" />}
               <span className="relative flex items-center gap-2">
-                Keşfet
-                <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-0.5">
-                  <path d="M3.75 7.25a.75.75 0 000 1.5h6.19l-2.72 2.72a.75.75 0 001.06 1.06l4-4a.75.75 0 000-1.06l-4-4a.75.75 0 00-1.06 1.06l2.72 2.72H3.75z" />
-                </svg>
+                {maintenance ? 'Activity Bakımda' : 'Keşfet'}
+                {!maintenance && (
+                  <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-0.5">
+                    <path d="M3.75 7.25a.75.75 0 000 1.5h6.19l-2.72 2.72a.75.75 0 001.06 1.06l4-4a.75.75 0 000-1.06l-4-4a.75.75 0 00-1.06 1.06l2.72 2.72H3.75z" />
+                  </svg>
+                )}
               </span>
             </button>
           </div>
