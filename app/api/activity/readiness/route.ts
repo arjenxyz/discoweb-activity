@@ -15,6 +15,7 @@ type ReadinessStatus =
   | 'bot_not_in_guild'
   | 'user_not_in_guild'
   | 'missing_user_profile'
+  | 'missing_verify_role'
   | 'discord_api_error';
 
 type ReadinessResponse = {
@@ -205,7 +206,7 @@ export async function GET(request: Request) {
 
   const { data: server } = await supabase
     .from('servers')
-    .select('discord_id, name, is_setup, admin_role_id')
+    .select('discord_id, name, is_setup, admin_role_id, verify_role_id')
     .eq('discord_id', guildId)
     .maybeSingle();
 
@@ -351,6 +352,18 @@ export async function GET(request: Request) {
   if (!memberProfile) {
     return nonOkStatus({
       status: 'missing_user_profile',
+      guildId,
+      guildName: guild.name ?? server.name ?? null,
+      isAdmin,
+      canInviteBot: isAdmin,
+    });
+  }
+
+  // Verify rolü kontrolü: profil var ama verify rolü yoksa
+  const verifyRoleId = (server as { verify_role_id?: string | null }).verify_role_id;
+  if (verifyRoleId && !roleIds.includes(verifyRoleId) && !isAdmin) {
+    return nonOkStatus({
+      status: 'missing_verify_role',
       guildId,
       guildName: guild.name ?? server.name ?? null,
       isAdmin,

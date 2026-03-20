@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import Image from 'next/image';
 import WelcomeScreen from './WelcomeScreen';
+import VerifyRoleScreen from './VerifyRoleScreen';
 
 export type ActivityReadinessStatus =
   | 'ready'
@@ -15,6 +16,7 @@ export type ActivityReadinessStatus =
   | 'bot_not_in_guild'
   | 'user_not_in_guild'
   | 'missing_user_profile'
+  | 'missing_verify_role'
   | 'discord_api_error';
 
 export type ActivityReadiness = {
@@ -90,6 +92,12 @@ const COPY_BY_STATUS: Record<ActivityReadinessStatus, GateCopy> = {
     helper: 'Kaydinizi olusturmak icin asagidaki butona Tiklayin.',
     gif: '/gif/from.gif',
   },
+  missing_verify_role: {
+    title: 'Dogrulanmamis hesap',
+    description: 'Bu sunucuya erisim icin dogrulanmis uye rolune sahip olman gerekiyor.',
+    helper: 'Asagidaki butona tikla, rol aninda atansin.',
+    gif: '/gif/from.gif',
+  },
   bot_not_in_guild: {
     title: 'Bot bu sunucuda degil',
     description: 'Kazanc ve rol islemleri icin botun sunucuda olmasi zorunlu.',
@@ -113,6 +121,10 @@ const COPY_BY_STATUS: Record<ActivityReadinessStatus, GateCopy> = {
 export default function ActivityReadinessGate({ readiness, loading, onRetry }: GateProps) {
   if (readiness.status === 'missing_user_profile') {
     return <WelcomeScreen readiness={readiness} onRetry={onRetry} />;
+  }
+
+  if (readiness.status === 'missing_verify_role') {
+    return <VerifyRoleScreen readiness={readiness} onRetry={onRetry} />;
   }
 
   const [copied, setCopied] = useState(false);
