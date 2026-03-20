@@ -1,7 +1,26 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseServiceClient } from '@/lib/supabaseServiceClient';
+import { requireSessionUser } from '@/lib/auth';
+import { getSupabaseServiceClient as getDevCheck } from '@/lib/supabaseServiceClient';
 
 export const dynamic = 'force-dynamic';
+
+const DEV_GUILD_ID = process.env.DISCORD_GUILD_ID ?? '';
+const DEV_ROLE_ID = process.env.DEVELOPER_ROLE_ID ?? '';
+
+async function isDeveloper(userId: string): Promise<boolean> {
+  if (!DEV_GUILD_ID || !DEV_ROLE_ID) return false;
+  const supabase = getDevCheck();
+  if (!supabase) return false;
+  const { data } = await supabase
+    .from('member_profiles')
+    .select('roles')
+    .eq('user_id', userId)
+    .eq('guild_id', DEV_GUILD_ID)
+    .single();
+  const roles: string[] = data?.roles ?? [];
+  return roles.includes(DEV_ROLE_ID);
+}
 
 export async function GET() {
   const supabase = getSupabaseServiceClient();
@@ -16,4 +35,25 @@ export async function GET() {
     .single();
 
   return NextResponse.json({ maintenance: data?.is_enabled === true });
+}
+
+export async function PATCH(request: Request) {
+  const auth = await requireSessionUser(request);
+  if (!auth.ok) return auth.response;
+
+  const dev = await isDeveloper(auth.userId);
+  if (!dev) return NextResponse.json({ error: 'forbidden' }, { status: 403 });
+
+  const { enabled } = (await request.json()) as { enabled: boolean };
+
+  const supabase = getSupabaseServiceClient();
+  if (!supabase) return NextResponse.json({ error: 'db_unavailable' }, { status: 500 });
+
+  const { error } = await supabase
+    .from('maintenance_flags')
+    .upsert({ key: 'activity', is_enabled: enabled }, { onConflict: 'key' });
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  return NextResponse.json({ maintenance: enabled });
 }
