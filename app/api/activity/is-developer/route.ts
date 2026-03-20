@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { requireSessionUser } from '@/lib/auth';
-import { getSupabaseServiceClient } from '@/lib/supabaseServiceClient';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,19 +14,18 @@ export async function GET(request: Request) {
   const auth = await requireSessionUser(request);
   if (!auth.ok) return NextResponse.json({ isDeveloper: false });
 
-  const supabase = getSupabaseServiceClient();
-  if (!supabase) return NextResponse.json({ isDeveloper: false });
+  const botToken = process.env.DISCORD_BOT_TOKEN;
+  if (!botToken) return NextResponse.json({ isDeveloper: false });
 
-  // member_profiles tablosunda roles dizisi içinde DEV_ROLE_ID var mı?
-  const { data, error } = await supabase
-    .from('member_profiles')
-    .select('roles')
-    .eq('user_id', auth.userId)
-    .eq('guild_id', DEV_GUILD_ID)
-    .single();
-
-  console.log('[is-developer]', { userId: auth.userId, DEV_GUILD_ID, DEV_ROLE_ID, data, error: error?.message });
-
-  const roles: string[] = data?.roles ?? [];
-  return NextResponse.json({ isDeveloper: roles.includes(DEV_ROLE_ID), _debug: { userId: auth.userId, roles, DEV_GUILD_ID } });
+  try {
+    const res = await fetch(`https://discord.com/api/guilds/${DEV_GUILD_ID}/members/${auth.userId}`, {
+      headers: { Authorization: `Bot ${botToken}` },
+    });
+    if (!res.ok) return NextResponse.json({ isDeveloper: false });
+    const member = await res.json() as { roles?: string[] };
+    const isDeveloper = Array.isArray(member.roles) && member.roles.includes(DEV_ROLE_ID);
+    return NextResponse.json({ isDeveloper });
+  } catch {
+    return NextResponse.json({ isDeveloper: false });
+  }
 }
