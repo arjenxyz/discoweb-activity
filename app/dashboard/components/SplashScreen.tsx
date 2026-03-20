@@ -104,7 +104,7 @@ export default function SplashScreen({ onEnter }: Props) {
                 className="h-6 w-6 rounded-full border border-white/20"
               />
               <span className="text-xs text-white/40">
-                Created by <span className="text-white/60 font-medium">thearjen</span> · Tüm hakları saklıdır
+                Created by <span className="text-white/60 font-medium">thearjen</span> · All rights reserved
               </span>
             </div>
           </div>
