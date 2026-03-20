@@ -1,7 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import Image from 'next/image';
+import { useMemo, useRef, useState } from 'react';
 import WelcomeScreen from './WelcomeScreen';
 import VerifyRoleScreen from './VerifyRoleScreen';
 
@@ -40,81 +39,68 @@ type GateCopy = {
   title: string;
   description: string;
   helper: string;
-  gif: string;
 };
 
 const COPY_BY_STATUS: Record<ActivityReadinessStatus, GateCopy> = {
   ready: {
-    title: 'Her sey hazir',
-    description: 'Sistem kullanima hazir.',
-    helper: 'Sorun goruyorsan yeniden deneyebilirsin.',
-    gif: '/gif/cat.gif',
+    title: 'Her şey hazır',
+    description: 'Sistem kullanıma hazır.',
+    helper: 'Sorun görüyorsan yeniden deneyebilirsin.',
   },
   unauthorized: {
-    title: 'Oturum dogrulanamadi',
-    description: 'Discord Activity oturumun su an dogrulanamiyor.',
-    helper: 'Activity ekranini kapatip tekrar ac.',
-    gif: '/gif/indir2.gif',
+    title: 'Oturum doğrulanamadı',
+    description: 'Discord Activity oturumun şu an doğrulanamıyor.',
+    helper: 'Activity ekranını kapatıp tekrar aç.',
   },
   missing_guild: {
     title: 'Sunucu bilgisi eksik',
-    description: 'Bu Activity acilisinda sunucu bilgisi gelmedi.',
-    helper: 'Activityyi sunucu icindeki ses kanalindan tekrar baslat.',
-    gif: '/gif/world.gif',
+    description: 'Bu Activity açılışında sunucu bilgisi gelmedi.',
+    helper: 'Activity\'yi sunucu içindeki ses kanalından tekrar başlat.',
   },
   missing_service_role: {
     title: 'Sistem konfig eksik',
-    description: 'Sunucu tarafi servis anahtari eksik veya hatali.',
-    helper: 'Lutfen proje gelistiricisine haber ver.',
-    gif: '/penguin/water.gif',
+    description: 'Sunucu tarafı servis anahtarı eksik veya hatalı.',
+    helper: 'Lütfen proje geliştiricisine haber ver.',
   },
   server_not_registered: {
-    title: 'Sunucu sisteme kayitli degil',
-    description: 'Bu sunucu icin aktivite ayarlari henuz olusturulmamis.',
-    helper: 'Yonetici setup islemini tamamladiktan sonra tekrar dene.',
-    gif: '/penguin/hopidi.gif',
+    title: 'Sunucu kayıtlı değil',
+    description: 'Bu sunucu için aktivite ayarları henüz oluşturulmamış.',
+    helper: 'Yönetici setup işlemini tamamladıktan sonra tekrar dene.',
   },
   server_setup_required: {
-    title: 'Sunucu kurulumu tamamlanmamis',
-    description: 'Ekonomi ve rol sistemi icin zorunlu ayarlar eksik.',
-    helper: 'Sunucu yoneticisinin setup komutunu tamamlamasi gerekiyor.',
-    gif: '/penguin/yuppi.gif',
+    title: 'Sunucu kurulumu eksik',
+    description: 'Ekonomi ve rol sistemi için zorunlu ayarlar eksik.',
+    helper: 'Sunucu yöneticisinin setup komutunu tamamlaması gerekiyor.',
   },
   missing_bot_token: {
-    title: 'Bot tokeni eksik',
-    description: 'Sunucu tarafinda bot tokeni bulunamadi.',
-    helper: 'Yonetici veya gelistirici ortami kontrol etmeli.',
-    gif: '/penguin/water.gif',
+    title: 'Bot token\'i eksik',
+    description: 'Sunucu tarafında bot token\'i bulunamadı.',
+    helper: 'Yönetici veya geliştirici ortamı kontrol etmeli.',
   },
   missing_user_profile: {
-    title: 'Profil kaydi bulunamadi',
-    description: 'Bu sunucuda henüz bir profiliniz kayitli degil.',
-    helper: 'Kaydinizi olusturmak icin asagidaki butona Tiklayin.',
-    gif: '/gif/from.gif',
+    title: 'Profil bulunamadı',
+    description: 'Bu sunucuda henüz bir profilin kayıtlı değil.',
+    helper: 'Kayıt oluşturmak için butona tıkla.',
   },
   missing_verify_role: {
-    title: 'Dogrulanmamis hesap',
-    description: 'Bu sunucuya erisim icin dogrulanmis uye rolune sahip olman gerekiyor.',
-    helper: 'Asagidaki butona tikla, rol aninda atansin.',
-    gif: '/gif/from.gif',
+    title: 'Doğrulanmamış hesap',
+    description: 'Erişim için doğrulanmış üye rolüne sahip olman gerekiyor.',
+    helper: 'Butona tıkla, rol anında atansın.',
   },
   bot_not_in_guild: {
-    title: 'Bot bu sunucuda degil',
-    description: 'Kazanc ve rol islemleri icin botun sunucuda olmasi zorunlu.',
-    helper: 'Yetkili bir yonetici botu sunucuya eklemeli.',
-    gif: '/penguin/cryformoney.gif',
+    title: 'Bot sunucuda değil',
+    description: 'Kazanç ve rol işlemleri için botun sunucuda olması zorunlu.',
+    helper: 'Yetkili bir yönetici botu sunucuya eklemeli.',
   },
   user_not_in_guild: {
-    title: 'Sunucu uyeligi bulunamadi',
-    description: 'Bu hesap secili sunucuda uye degil ya da ayrilmis gorunuyor.',
-    helper: 'Sunucuya tekrar katilip Activityyi yeniden baslat.',
-    gif: '/gif/sungorbobcry.gif',
+    title: 'Sunucu üyeliği yok',
+    description: 'Bu hesap seçili sunucuda üye değil ya da ayrılmış görünüyor.',
+    helper: 'Sunucuya tekrar katılıp Activity\'yi yeniden başlat.',
   },
   discord_api_error: {
-    title: 'Discord API gecici hatasi',
-    description: 'Discord servisinden gecici bir cevap alinamadi.',
+    title: 'Discord API geçici hatası',
+    description: 'Discord servisinden geçici bir cevap alınamadı.',
     helper: 'Biraz bekleyip tekrar denemen yeterli.',
-    gif: '/gif/herewego.gif',
   },
 };
 
@@ -128,6 +114,17 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
   }
 
   const [copied, setCopied] = useState(false);
+  const [muted, setMuted] = useState(true);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const videoUrl = process.env.NEXT_PUBLIC_WELCOME_VIDEO_URL ?? null;
+
+  const toggleMute = () => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (v.muted) { v.muted = false; v.volume = 1; v.play().catch(() => {}); }
+    else { v.muted = true; }
+    setMuted(v.muted);
+  };
 
   const copy = useMemo(() => COPY_BY_STATUS[readiness.status], [readiness.status]);
   const isBotMissing = readiness.status === 'bot_not_in_guild';
@@ -136,12 +133,12 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
   const supportMessage = useMemo(() => {
     const serverName = readiness.guildName ?? readiness.guildId ?? 'bu sunucu';
     if (isBotMissing && isAdmin && readiness.inviteUrl) {
-      return `Merhaba, ${serverName} icin bot eksik gorunuyor. Davet linki: ${readiness.inviteUrl}`;
+      return `Merhaba, ${serverName} için bot eksik görünüyor. Davet linki: ${readiness.inviteUrl}`;
     }
     if (isBotMissing) {
-      return `Merhaba, ${serverName} icin Activity acilirken botun sunucuda olmadigi hatasi aliyorum. Lutfen botu sunucuya ekleyebilir misiniz?`;
+      return `Merhaba, ${serverName} için Activity açılırken botun sunucuda olmadığı hatası alıyorum. Lütfen botu sunucuya ekleyebilir misiniz?`;
     }
-    return `Merhaba, ${serverName} icin Activity acilirken ${readiness.status} hatasi aliyorum. Kontrol edebilir misiniz?`;
+    return `Merhaba, ${serverName} için Activity açılırken ${readiness.status} hatası alıyorum. Kontrol edebilir misiniz?`;
   }, [isAdmin, isBotMissing, readiness.guildId, readiness.guildName, readiness.inviteUrl, readiness.status]);
 
   const copyToClipboard = async (text: string) => {
@@ -154,101 +151,132 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
     }
   };
 
+  const clearAndReload = () => {
+    localStorage.removeItem('selectedGuildId');
+    localStorage.removeItem('discord_bearer_token');
+    localStorage.removeItem('discord_frame_id');
+    localStorage.removeItem('discordUser');
+    document.cookie = 'discord_session=; Max-Age=0; path=/;';
+    document.cookie = 'selected_guild_id=; Max-Age=0; path=/;';
+    window.location.reload();
+  };
+
   return (
     <div className="relative isolate min-h-screen overflow-hidden bg-[#0b0d12] text-white">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,#5865F255_0%,transparent_45%),radial-gradient(circle_at_bottom_right,#3a9cff33_0%,transparent_40%)]" />
+      {/* Arka plan video */}
+      {videoUrl && (
+        <video
+          ref={videoRef}
+          src={videoUrl}
+          autoPlay
+          loop
+          muted
+          playsInline
+          disablePictureInPicture
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+        />
+      )}
 
-      <main className="relative z-10 mx-auto flex min-h-screen w-full max-w-5xl items-center px-4 py-10 sm:px-6">
-        <section className="grid w-full gap-6 rounded-3xl border border-white/10 bg-[#0f1118]/80 p-5 shadow-2xl shadow-black/40 backdrop-blur-xl md:grid-cols-[1.1fr_0.9fr] md:p-8">
-          <div className="space-y-4">
-            <p className="inline-flex rounded-full border border-[#5865F2]/40 bg-[#5865F2]/15 px-3 py-1 text-xs font-semibold text-[#c7ceff]">
-              Discord Activity Durumu
+      {/* Overlay */}
+      <div className="pointer-events-none absolute inset-0 bg-black/60 backdrop-blur-[2px]" />
+      {!videoUrl && (
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,#5865F255_0%,transparent_45%),radial-gradient(circle_at_bottom_right,#3a9cff33_0%,transparent_40%)]" />
+      )}
+
+      {/* Alt gradient — okunabilirlik */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+
+      <main className="relative z-10 flex min-h-screen w-full items-end justify-between gap-4 px-6 pb-10">
+        {/* Sol alt — durum metni */}
+        <div className="flex flex-col gap-3 max-w-sm">
+          {readiness.guildName && (
+            <p className="inline-flex w-fit rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-white/70 backdrop-blur-md">
+              {readiness.guildName}
             </p>
-            <h1 className="text-2xl font-black tracking-tight sm:text-3xl">{copy.title}</h1>
-            <p className="text-sm text-white/80 sm:text-base">{copy.description}</p>
-            <p className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/70">{copy.helper}</p>
+          )}
+          <h1
+            className="text-4xl font-black leading-tight tracking-tight text-white"
+            style={{ textShadow: '0 0 40px rgba(255,255,255,0.2), 0 2px 12px rgba(0,0,0,1)' }}
+          >
+            {copy.title}
+          </h1>
+          <p className="text-sm text-white/60 leading-relaxed" style={{ textShadow: '0 1px 6px rgba(0,0,0,1)' }}>
+            {copy.description}
+          </p>
+          <p className="text-xs text-white/45 leading-relaxed" style={{ textShadow: '0 1px 6px rgba(0,0,0,1)' }}>
+            {copy.helper}
+          </p>
+          {readiness.status === 'discord_api_error' && readiness.debug && (
+            <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs font-mono text-red-300 backdrop-blur-md">
+              debug: {JSON.stringify(readiness.debug)}
+            </p>
+          )}
+          {copied && <p className="text-xs font-semibold text-emerald-400">Kopyalandı.</p>}
+        </div>
 
-            {readiness.status === 'discord_api_error' && readiness.debug && (
-              <p className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-xs font-mono text-red-300">
-                debug: {JSON.stringify(readiness.debug)}
-              </p>
+        {/* Sağ alt — butonlar */}
+        <div className="flex shrink-0 flex-col items-end gap-2">
+          {/* Ses butonu */}
+          {videoUrl && (
+            <button
+              type="button"
+              onClick={toggleMute}
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white backdrop-blur-md transition hover:bg-black/60"
+              aria-label={muted ? 'Sesi aç' : 'Sesi kapat'}
+            >
+              {muted ? (
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                  <path d="M13 3.586L7.707 8.879A1 1 0 017 9H4a1 1 0 00-1 1v4a1 1 0 001 1h3a1 1 0 01.707.293L13 20.414V3.586z" />
+                  <line x1="18" y1="9" x2="23" y2="14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  <line x1="23" y1="9" x2="18" y2="14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                  <path d="M13 3.586L7.707 8.879A1 1 0 017 9H4a1 1 0 001 1h3a1 1 0 01.707.293L13 20.414V3.586z" />
+                  <path d="M17.5 7.5a7 7 0 010 9M20 5a10 10 0 010 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+                </svg>
+              )}
+            </button>
+          )}
+
+          <div className="flex flex-wrap justify-end gap-2">
+            <button
+              type="button"
+              onClick={onRetry}
+              disabled={loading}
+              className="rounded-full border border-white/20 bg-white/10 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur-md transition hover:bg-white/20 disabled:opacity-50"
+            >
+              {loading ? 'Kontrol ediliyor...' : 'Tekrar dene'}
+            </button>
+            <button
+              type="button"
+              onClick={clearAndReload}
+              className="rounded-full border border-orange-400/30 bg-orange-500/20 px-5 py-2.5 text-sm font-semibold text-orange-100 backdrop-blur-md transition hover:bg-orange-500/30"
+            >
+              Sıfırla
+            </button>
+
+            {isBotMissing && isAdmin && readiness.inviteUrl && (
+              <button
+                type="button"
+                onClick={() => copyToClipboard(readiness.inviteUrl as string)}
+                className="rounded-full border border-emerald-400/30 bg-emerald-500/20 px-5 py-2.5 text-sm font-semibold text-emerald-100 backdrop-blur-md transition hover:bg-emerald-500/30"
+              >
+                Bot davet linki
+              </button>
             )}
 
-            <div className="flex flex-wrap gap-3 pt-2">
+            {isBotMissing && (
               <button
                 type="button"
-                onClick={onRetry}
-                disabled={loading}
-                className="rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:border-white/30 hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-60"
+                onClick={() => copyToClipboard(supportMessage)}
+                className="rounded-full border border-yellow-400/30 bg-yellow-500/20 px-5 py-2.5 text-sm font-semibold text-yellow-100 backdrop-blur-md transition hover:bg-yellow-500/30"
               >
-                {loading ? 'Kontrol ediliyor...' : 'Tekrar kontrol et'}
+                {isAdmin ? 'Yetkili notunu kopyala' : 'Yetkiliye mesaj kopyala'}
               </button>
-              <button
-                type="button"
-                onClick={() => {
-                  localStorage.removeItem('selectedGuildId');
-                  localStorage.removeItem('discord_bearer_token');
-                  localStorage.removeItem('discord_frame_id');
-                  localStorage.removeItem('discordUser');
-                  document.cookie = 'discord_session=; Max-Age=0; path=/;';
-                  document.cookie = 'selected_guild_id=; Max-Age=0; path=/;';
-                  window.location.reload();
-                }}
-                className="rounded-full border border-orange-300 bg-orange-500/20 px-4 py-2 text-sm font-semibold text-orange-100 transition hover:bg-orange-500/40"
-              >
-                Çerezleri Temizle
-              </button>
-
-              {isBotMissing && isAdmin && readiness.inviteUrl && (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => copyToClipboard(readiness.inviteUrl as string)}
-                    className="rounded-full border border-[#3dc481]/40 bg-[#3dc481]/20 px-4 py-2 text-sm font-semibold text-[#c8ffe2] transition hover:bg-[#3dc481]/30"
-                  >
-                    Bot davet linkini kopyala
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => copyToClipboard(supportMessage)}
-                    className="rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-white/90 transition hover:border-white/30 hover:bg-white/20"
-                  >
-                    Yetkili notunu kopyala
-                  </button>
-                </>
-              )}
-
-              {isBotMissing && !isAdmin && (
-                <button
-                  type="button"
-                  onClick={() => copyToClipboard(supportMessage)}
-                  className="rounded-full border border-[#f5b942]/40 bg-[#f5b942]/20 px-4 py-2 text-sm font-semibold text-[#ffe4aa] transition hover:bg-[#f5b942]/30"
-                >
-                  Yetkiliye mesaji kopyala
-                </button>
-              )}
-            </div>
-
-            {copied && <p className="text-xs font-semibold text-emerald-300">Kopyalandi.</p>}
-
-            <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-xs text-white/60">
-              Sunucu: <span className="font-semibold text-white/85">{readiness.guildName ?? readiness.guildId ?? 'Bilinmiyor'}</span>
-            </div>
+            )}
           </div>
-
-          <div className="relative flex items-center justify-center rounded-2xl border border-white/10 bg-gradient-to-b from-white/5 to-transparent p-4">
-            <div className="absolute inset-x-5 bottom-4 h-28 rounded-full bg-[#5865F2]/20 blur-3xl" />
-            <Image
-              src={copy.gif}
-              alt="activity-state"
-              width={420}
-              height={320}
-              loading="eager"
-              unoptimized
-              className="relative z-10 h-auto max-h-[290px] w-auto rounded-2xl object-contain"
-            />
-          </div>
-        </section>
+        </div>
       </main>
     </div>
   );
