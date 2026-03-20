@@ -172,13 +172,14 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
 
   const supportMessage = useMemo(() => {
     const serverName = readiness.guildName ?? readiness.guildId ?? 'bu sunucu';
-    if (isBotMissing && isAdmin && readiness.inviteUrl) {
-      return `Merhaba, ${serverName} için bot eksik görünüyor. Davet linki: ${readiness.inviteUrl}`;
+    const botLink = readiness.inviteUrl ? `\nBot davet linki: ${readiness.inviteUrl}` : '';
+    if (isBotMissing && isAdmin) {
+      return `Merhaba, "${serverName}" sunucusu için Activity açılırken bot sunucuda bulunamıyor. Botu eklemem gerekiyor.${botLink}`;
     }
     if (isBotMissing) {
-      return `Merhaba, ${serverName} için Activity açılırken botun sunucuda olmadığı hatası alıyorum. Lütfen botu sunucuya ekleyebilir misiniz?`;
+      return `Merhaba, "${serverName}" sunucusu için Activity açılırken bot sunucuda bulunamıyor hatası alıyorum. Botu sunucuya ekleyebilir misiniz?${botLink}`;
     }
-    return `Merhaba, ${serverName} için Activity açılırken ${readiness.status} hatası alıyorum. Kontrol edebilir misiniz?`;
+    return `Merhaba, "${serverName}" sunucusu için Activity açılırken "${readiness.status}" hatası alıyorum. Kontrol edebilir misiniz?`;
   }, [isAdmin, isBotMissing, readiness.guildId, readiness.guildName, readiness.inviteUrl, readiness.status]);
 
   const copyToClipboard = async (text: string) => {
