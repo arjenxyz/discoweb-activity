@@ -7,14 +7,12 @@ type Props = {
   onEnter: () => void;
 };
 
-
 export default function SplashScreen({ onEnter }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [muted, setMuted] = useState(true);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    // Kısa gecikme ile içerik fade-in başlar
     const t = setTimeout(() => setVisible(true), 80);
     return () => clearTimeout(t);
   }, []);
@@ -31,30 +29,28 @@ export default function SplashScreen({ onEnter }: Props) {
     <div className="relative isolate flex min-h-screen w-full flex-col overflow-hidden bg-[#0b0d12]">
       <VideoBackground videoRef={videoRef} />
 
-      {/* Ses butonu */}
-      <div className="absolute right-4 top-4 z-20">
-        <MuteButton muted={muted} onToggle={toggleMute} />
-      </div>
-
-      {/* İçerik — ekranın altına hizalı */}
+      {/* İçerik — alt hizalı, tüm genişlik */}
       <div
-        className="relative z-10 mt-auto flex w-full flex-row items-end justify-between gap-6 px-6 pb-10 pt-16 sm:px-10 sm:pb-12"
+        className="relative z-10 mt-auto flex w-full flex-col gap-6 px-6 pb-8 pt-16 sm:px-10 sm:pb-12"
         style={{
           opacity: visible ? 1 : 0,
           transform: visible ? 'translateY(0)' : 'translateY(18px)',
           transition: 'opacity 0.7s ease, transform 0.7s ease',
         }}
       >
-        {/* Sol — başlık + pilleri */}
-        <div className="flex flex-col gap-6">
-          <div className="flex items-center gap-2">
-            <span className="h-px w-6 bg-white/30" />
-            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-white/40">
-              Discord Economy Platform
-            </span>
-          </div>
+        {/* Üst etiket */}
+        <div className="flex items-center gap-2">
+          <span className="h-px w-6 bg-white/30" />
+          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-white/40">
+            Discord Economy Platform
+          </span>
+        </div>
 
-          <div className="flex flex-col gap-3 max-w-lg">
+        {/* Alt satır: sol başlık, sağ butonlar — mobilde alt alta */}
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+
+          {/* Başlık + created by */}
+          <div className="flex flex-col gap-3">
             <h1
               className="cursor-pointer text-6xl font-black leading-none tracking-tight sm:text-7xl"
               onClick={async () => {
@@ -96,8 +92,8 @@ export default function SplashScreen({ onEnter }: Props) {
                 }
               `}</style>
             </h1>
-            {/* Created by */}
-            <div className="flex items-center gap-2 mt-1">
+
+            <div className="flex items-center gap-2">
               <img
                 src="https://cdn.discordapp.com/avatars/1163500308270436442/8c2eeba5e9c137e4f9375bccb0f0bf40.png?size=128"
                 alt="thearjen"
@@ -109,24 +105,24 @@ export default function SplashScreen({ onEnter }: Props) {
             </div>
           </div>
 
-        </div>
-
-        {/* Sağ — buton + link, sol içerikle alt hizalı */}
-        <div className="flex shrink-0 flex-col items-end justify-end gap-3">
-          <button
-            type="button"
-            onClick={onEnter}
-            className="group relative overflow-hidden rounded-full bg-[#5865F2] px-8 py-3.5 text-sm font-bold text-white transition-all duration-300 hover:bg-[#4752C4] active:scale-95"
-            style={{ boxShadow: '0 0 32px rgba(88,101,242,0.5), 0 4px 16px rgba(0,0,0,0.5)' }}
-          >
-            <span className="pointer-events-none absolute inset-0 -translate-x-full skew-x-12 bg-white/20 transition-transform duration-500 group-hover:translate-x-full" />
-            <span className="relative flex items-center gap-2">
-              Keşfet
-              <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-0.5">
-                <path d="M3.75 7.25a.75.75 0 000 1.5h6.19l-2.72 2.72a.75.75 0 001.06 1.06l4-4a.75.75 0 000-1.06l-4-4a.75.75 0 00-1.06 1.06l2.72 2.72H3.75z" />
-              </svg>
-            </span>
-          </button>
+          {/* Butonlar: ses + keşfet yan yana, mobilde sol hizalı */}
+          <div className="flex items-center gap-3 sm:justify-end">
+            <MuteButton muted={muted} onToggle={toggleMute} />
+            <button
+              type="button"
+              onClick={onEnter}
+              className="group relative overflow-hidden rounded-full bg-[#5865F2] px-8 py-3.5 text-sm font-bold text-white transition-all duration-300 hover:bg-[#4752C4] active:scale-95"
+              style={{ boxShadow: '0 0 32px rgba(88,101,242,0.5), 0 4px 16px rgba(0,0,0,0.5)' }}
+            >
+              <span className="pointer-events-none absolute inset-0 -translate-x-full skew-x-12 bg-white/20 transition-transform duration-500 group-hover:translate-x-full" />
+              <span className="relative flex items-center gap-2">
+                Keşfet
+                <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-0.5">
+                  <path d="M3.75 7.25a.75.75 0 000 1.5h6.19l-2.72 2.72a.75.75 0 001.06 1.06l4-4a.75.75 0 000-1.06l-4-4a.75.75 0 00-1.06 1.06l2.72 2.72H3.75z" />
+                </svg>
+              </span>
+            </button>
+          </div>
 
         </div>
       </div>
