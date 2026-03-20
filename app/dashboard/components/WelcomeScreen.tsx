@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { ActivityReadiness } from './ActivityReadinessGate';
 import fetchWithCreds from '@/lib/fetchWithCreds';
+import { VideoBackground, MuteButton } from './VideoBackground';
 
 type Props = {
   readiness: ActivityReadiness;
@@ -14,6 +15,16 @@ type Phase = 'intro' | 'loading' | 'success';
 export default function WelcomeScreen({ readiness, onRetry }: Props) {
   const [phase, setPhase] = useState<Phase>('intro');
   const [error, setError] = useState<string | null>(null);
+  const [muted, setMuted] = useState(true);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  const toggleMute = () => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (v.muted) { v.muted = false; v.volume = 1; v.play().catch(() => {}); }
+    else { v.muted = true; }
+    setMuted(v.muted);
+  };
 
   useEffect(() => {
     if (phase === 'success') {
@@ -48,15 +59,16 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
   };
 
   return (
-    <div className="min-h-screen text-white">
-      <main className="flex min-h-screen w-full flex-col items-start justify-end gap-6 px-5 pb-8 sm:flex-row sm:items-end sm:justify-between sm:px-6 sm:pb-10">
+    <div className="relative isolate min-h-screen overflow-hidden bg-[#0b0d12] text-white">
+      <VideoBackground videoRef={videoRef} />
+
+      <main className="relative z-10 flex min-h-screen w-full flex-col items-start justify-end gap-6 px-5 pb-8 sm:flex-row sm:items-end sm:justify-between sm:px-6 sm:pb-10">
         {phase === 'success' ? (
           <div className="flex w-full justify-center pb-6">
             <SuccessState />
           </div>
         ) : (
           <>
-            {/* Sol alt — metinler */}
             <div className="flex flex-col gap-2 w-full sm:max-w-[55%]">
               {readiness.guildName && (
                 <p className="w-fit rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-white/60 backdrop-blur-md">
@@ -79,8 +91,8 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
               )}
             </div>
 
-            {/* Sağ alt — butonlar */}
             <div className="flex w-full shrink-0 items-center gap-2 sm:w-auto sm:justify-end">
+              <MuteButton muted={muted} onToggle={toggleMute} />
               <button
                 type="button"
                 onClick={handleStart}

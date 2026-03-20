@@ -1,5 +1,8 @@
 'use client';
 
+import { useRef, useState } from 'react';
+import { MuteButton, VideoBackground } from './VideoBackground';
+
 type Props = {
   onEnter: () => void;
 };
@@ -45,31 +48,28 @@ const FEATURES = [
 ];
 
 export default function SplashScreen({ onEnter }: Props) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [muted, setMuted] = useState(true);
+
+  const toggleMute = () => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (v.muted) { v.muted = false; v.volume = 1; v.play().catch(() => {}); }
+    else { v.muted = true; }
+    setMuted(v.muted);
+  };
+
   return (
     <div className="relative isolate flex min-h-screen w-full flex-col items-start justify-end overflow-hidden bg-[#0b0d12] px-5 pb-8 sm:px-8 sm:pb-10">
-      {/* Arka plan video */}
-      {process.env.NEXT_PUBLIC_WELCOME_VIDEO_URL && (
-        <>
-          <video
-            src={process.env.NEXT_PUBLIC_WELCOME_VIDEO_URL}
-            autoPlay
-            loop
-            muted
-            playsInline
-            disablePictureInPicture
-            className="pointer-events-none absolute inset-0 h-full w-full object-cover"
-          />
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/10" />
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-        </>
-      )}
-      {!process.env.NEXT_PUBLIC_WELCOME_VIDEO_URL && (
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,#5865F255_0%,transparent_45%),radial-gradient(circle_at_bottom_right,#3a9cff33_0%,transparent_40%)]" />
-      )}
+      <VideoBackground videoRef={videoRef} />
+
+      {/* Ses butonu */}
+      <div className="absolute right-4 top-4 z-20">
+        <MuteButton muted={muted} onToggle={toggleMute} />
+      </div>
 
       {/* Sol alt — içerik */}
       <div className="relative z-10 flex w-full max-w-lg flex-col gap-6">
-        {/* Başlık */}
         <div className="flex flex-col gap-2">
           <h1
             className="text-5xl font-black leading-tight tracking-tight text-white"
@@ -82,7 +82,6 @@ export default function SplashScreen({ onEnter }: Props) {
           </p>
         </div>
 
-        {/* Özellik kartları */}
         <div className="grid grid-cols-2 gap-2">
           {FEATURES.map((f) => (
             <div
@@ -96,7 +95,6 @@ export default function SplashScreen({ onEnter }: Props) {
           ))}
         </div>
 
-        {/* CTA */}
         <button
           type="button"
           onClick={onEnter}
