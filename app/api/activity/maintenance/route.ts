@@ -23,19 +23,33 @@ async function isDeveloper(userId: string): Promise<boolean> {
   }
 }
 
+// server_id: web projesindeki servers tablosundan DEV_GUILD_ID'ye karşılık gelen id
+// Basit çözüm: servers tablosundan discord_id ile çek
+async function getServerId(supabase: ReturnType<typeof getSupabaseServiceClient>): Promise<string | null> {
+  if (!supabase || !DEV_GUILD_ID) return null;
+  const { data } = await supabase
+    .from('servers')
+    .select('id')
+    .eq('discord_id', DEV_GUILD_ID)
+    .single();
+  return data?.id ?? null;
+}
+
 export async function GET() {
   const supabase = getSupabaseServiceClient();
-  if (!supabase) {
-    return NextResponse.json({ maintenance: false });
-  }
+  if (!supabase) return NextResponse.json({ maintenance: false });
+
+  const serverId = await getServerId(supabase);
+  if (!serverId) return NextResponse.json({ maintenance: false });
 
   const { data } = await supabase
     .from('maintenance_flags')
-    .select('is_enabled')
+    .select('is_active')
+    .eq('server_id', serverId)
     .eq('key', 'activity')
     .single();
 
-  return NextResponse.json({ maintenance: data?.is_enabled === true });
+  return NextResponse.json({ maintenance: data?.is_active === true });
 }
 
 export async function PATCH(request: Request) {
@@ -50,9 +64,12 @@ export async function PATCH(request: Request) {
   const supabase = getSupabaseServiceClient();
   if (!supabase) return NextResponse.json({ error: 'db_unavailable' }, { status: 500 });
 
+  const serverId = await getServerId(supabase);
+  if (!serverId) return NextResponse.json({ error: 'server_not_found' }, { status: 500 });
+
   const { error } = await supabase
     .from('maintenance_flags')
-    .upsert({ key: 'activity', is_enabled: enabled }, { onConflict: 'key' });
+    .upsert({ server_id: serverId, key: 'activity', is_active: enabled, reason: null }, { onConflict: 'server_id,key' });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
