@@ -264,9 +264,9 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
       {/* Alt gradient — okunabilirlik */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
 
-      <main className="relative z-10 flex min-h-screen w-full items-end justify-between gap-4 px-6 pb-10">
+      <main className="relative z-10 flex min-h-screen w-full flex-col items-start justify-end gap-6 px-5 pb-8 sm:flex-row sm:items-end sm:justify-between sm:px-6 sm:pb-10">
         {/* Sol alt — durum metni */}
-        <div className="flex flex-col gap-3 max-w-sm">
+        <div className="flex flex-col gap-3 max-w-sm w-full sm:w-auto">
           {readiness.guildName && (
             <p className="inline-flex w-fit rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-white/70 backdrop-blur-md">
               {readiness.guildName}
@@ -301,7 +301,7 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
         </div>
 
         {/* Sağ alt — butonlar */}
-        <div className="flex shrink-0 flex-col items-end gap-2">
+        <div className="flex w-full shrink-0 flex-col items-start gap-2 sm:w-auto sm:items-end">
           {/* Ses butonu */}
           {videoUrl && (
             <button

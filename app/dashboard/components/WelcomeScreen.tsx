@@ -84,7 +84,7 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,#5865F255_0%,transparent_45%),radial-gradient(circle_at_bottom_right,#3a9cff33_0%,transparent_40%)]" />
       )}
 
-      <main className="relative z-10 flex min-h-screen w-full items-end justify-between gap-4 px-6 pb-10">
+      <main className="relative z-10 flex min-h-screen w-full flex-col items-start justify-end gap-6 px-5 pb-8 sm:flex-row sm:items-end sm:justify-between sm:px-6 sm:pb-10">
         {phase === 'success' ? (
           <div className="flex w-full justify-center pb-6">
             <SuccessState />
@@ -92,7 +92,7 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
         ) : (
           <>
             {/* Sol alt — metinler */}
-            <div className="flex flex-col gap-2 max-w-[55%]">
+            <div className="flex flex-col gap-2 w-full sm:max-w-[55%]">
               {readiness.guildName && (
                 <p className="w-fit rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-white/60 backdrop-blur-md">
                   {readiness.guildName}
@@ -115,7 +115,7 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
             </div>
 
             {/* Sağ alt — butonlar */}
-            <div className="flex shrink-0 items-center gap-2">
+            <div className="flex w-full shrink-0 items-center gap-2 sm:w-auto sm:justify-end">
               {videoUrl && (
                 <button
                   type="button"
