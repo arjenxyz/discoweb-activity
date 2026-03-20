@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import type { ActivityReadiness } from './ActivityReadinessGate';
 import fetchWithCreds from '@/lib/fetchWithCreds';
-import YoutubeBackground from './YoutubeBackground';
 
 type Props = {
   readiness: ActivityReadiness;
@@ -15,7 +14,7 @@ type Phase = 'intro' | 'loading' | 'success';
 export default function WelcomeScreen({ readiness, onRetry }: Props) {
   const [phase, setPhase] = useState<Phase>('intro');
   const [error, setError] = useState<string | null>(null);
-  const youtubeId = process.env.NEXT_PUBLIC_WELCOME_YOUTUBE_ID ?? null;
+  const videoUrl = process.env.NEXT_PUBLIC_WELCOME_VIDEO_URL ?? null;
 
   useEffect(() => {
     if (phase === 'success') {
@@ -51,8 +50,19 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
 
   return (
     <div className="relative isolate min-h-screen overflow-hidden bg-[#0b0d12] text-white">
-      {youtubeId ? (
-        <YoutubeBackground videoId={youtubeId} />
+      {videoUrl ? (
+        <>
+          <video
+            src={videoUrl}
+            autoPlay
+            loop
+            muted
+            playsInline
+            disablePictureInPicture
+            className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+          />
+          <div className="pointer-events-none absolute inset-0 bg-black/55 backdrop-blur-[2px]" />
+        </>
       ) : (
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,#5865F255_0%,transparent_45%),radial-gradient(circle_at_bottom_right,#3a9cff33_0%,transparent_40%)]" />
       )}
