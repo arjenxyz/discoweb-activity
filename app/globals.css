@@ -3,6 +3,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Metin seçimi rengi */
+::selection {
+  background: transparent;
+}
+
 /* Discord Activity Specific Styles */
 html, body {
   height: 100%;
