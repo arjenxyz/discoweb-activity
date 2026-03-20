@@ -272,9 +272,20 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
         // Auth hazır flag'ini localStorage'a koy (CartProvider vs. için)
         try { localStorage.setItem('auth_ready', 'true'); } catch {}
 
+        // Guild cookie'yi her girişte güncelle (stale data önlemek için)
+        if (resolvedGuildId) {
+          localStorage.setItem('selectedGuildId', resolvedGuildId);
+          const sameSite = window.location.protocol === 'https:' ? 'None' : 'Lax';
+          const secure = window.location.protocol === 'https:' ? '; Secure' : '';
+          document.cookie = `selected_guild_id=${resolvedGuildId}; Path=/; Max-Age=604800; SameSite=${sameSite}${secure}`;
+        }
+
+        // frame_id & instance_id her girişte URL'den taze al
+        if (frameIdFromUrl) localStorage.setItem('discord_frame_id', frameIdFromUrl);
+        if (instanceIdFromUrl) localStorage.setItem('discord_instance_id', instanceIdFromUrl);
+
         setIsAuthenticated(true);
         setIsLoading(false);
-        localStorage.setItem('selectedGuildId', resolvedGuildId);
         return;
       } else {
         addLog(`STEP 2: existingUser yok, SDK auth devam`);
