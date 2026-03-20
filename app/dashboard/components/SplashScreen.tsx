@@ -7,41 +7,6 @@ type Props = {
   onEnter: () => void;
 };
 
-const FEATURES = [
-  {
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-4 w-4">
-        <circle cx="12" cy="12" r="10" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l4 2" />
-      </svg>
-    ),
-    label: 'Aktif ol, kazan',
-  },
-  {
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-4 w-4">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h18v14H3zM8 21h8M12 17v4" />
-      </svg>
-    ),
-    label: 'Mağaza & Roller',
-  },
-  {
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-4 w-4">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-      </svg>
-    ),
-    label: 'Liderlik Tablosu',
-  },
-  {
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-4 w-4">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-      </svg>
-    ),
-    label: 'Sunucu Postası',
-  },
-];
 
 export default function SplashScreen({ onEnter }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -104,21 +69,10 @@ export default function SplashScreen({ onEnter }: Props) {
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            {FEATURES.map((f) => (
-              <div
-                key={f.label}
-                className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 backdrop-blur-md"
-              >
-                <span className="text-white/40">{f.icon}</span>
-                <span className="text-xs font-medium text-white/70">{f.label}</span>
-              </div>
-            ))}
-          </div>
         </div>
 
-        {/* Sağ — buton + link */}
-        <div className="flex shrink-0 flex-col items-end gap-3">
+        {/* Sağ — buton + link, sol içerikle alt hizalı */}
+        <div className="flex shrink-0 flex-col items-end justify-end gap-3">
           <button
             type="button"
             onClick={onEnter}
