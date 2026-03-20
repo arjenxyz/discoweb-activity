@@ -15,6 +15,7 @@ export default function VerifyRoleScreen({ readiness, onRetry }: Props) {
   const [phase, setPhase] = useState<Phase>('idle');
   const [error, setError] = useState<string | null>(null);
   const videoUrl = process.env.NEXT_PUBLIC_WELCOME_VIDEO_URL ?? null;
+  const imageUrl = process.env.NEXT_PUBLIC_WELCOME_IMAGE_URL ?? null;
 
   useEffect(() => {
     if (phase === 'success') {
@@ -56,8 +57,16 @@ export default function VerifyRoleScreen({ readiness, onRetry }: Props) {
           style={{ WebkitObjectFit: 'cover' } as React.CSSProperties}
         />
       )}
+      {!videoUrl && imageUrl && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={imageUrl}
+          alt=""
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+        />
+      )}
       <div className="pointer-events-none absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      {!videoUrl && (
+      {!videoUrl && !imageUrl && (
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,#5865F255_0%,transparent_45%),radial-gradient(circle_at_bottom_right,#3a9cff33_0%,transparent_40%)]" />
       )}
 
