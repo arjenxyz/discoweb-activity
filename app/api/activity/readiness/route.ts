@@ -215,20 +215,24 @@ export async function GET(request: Request) {
     NextResponse.json(buildResponse(payload), { status: 200 });
 
   if (!server) {
-    const adminFromOAuth = await resolveGuildAdminFromOAuth(supabase, session.userId, guildId);
+    // Bot varsa owner kontrolü bot üzerinden yap (OAuth token olmasa bile)
+    const bt = process.env.DISCORD_BOT_TOKEN;
     let botInGuild = false;
-    if (adminFromOAuth) {
-      const botToken = process.env.DISCORD_BOT_TOKEN;
-      if (botToken) {
-        try {
-          const r = await fetch(`https://discord.com/api/guilds/${guildId}`, {
-            headers: { Authorization: `Bot ${botToken}` },
-            cache: 'no-store',
-          });
-          botInGuild = r.ok;
-        } catch { /* ignore */ }
-      }
+    let isOwnerViaBot = false;
+    if (bt) {
+      try {
+        const r = await fetch(`https://discord.com/api/guilds/${guildId}`, {
+          headers: { Authorization: `Bot ${bt}` },
+          cache: 'no-store',
+        });
+        if (r.ok) {
+          botInGuild = true;
+          const g = (await r.json()) as { owner_id?: string };
+          isOwnerViaBot = g.owner_id === session.userId;
+        }
+      } catch { /* ignore */ }
     }
+    const adminFromOAuth = isOwnerViaBot || await resolveGuildAdminFromOAuth(supabase, session.userId, guildId);
     return nonOkStatus({
       status: 'server_not_registered',
       guildId,
@@ -239,20 +243,23 @@ export async function GET(request: Request) {
   }
 
   if (!server.is_setup) {
-    const adminFromOAuth = await resolveGuildAdminFromOAuth(supabase, session.userId, guildId);
+    const bt = process.env.DISCORD_BOT_TOKEN;
     let botInGuild = false;
-    if (adminFromOAuth) {
-      const botToken = process.env.DISCORD_BOT_TOKEN;
-      if (botToken) {
-        try {
-          const r = await fetch(`https://discord.com/api/guilds/${guildId}`, {
-            headers: { Authorization: `Bot ${botToken}` },
-            cache: 'no-store',
-          });
-          botInGuild = r.ok;
-        } catch { /* ignore */ }
-      }
+    let isOwnerViaBot = false;
+    if (bt) {
+      try {
+        const r = await fetch(`https://discord.com/api/guilds/${guildId}`, {
+          headers: { Authorization: `Bot ${bt}` },
+          cache: 'no-store',
+        });
+        if (r.ok) {
+          botInGuild = true;
+          const g = (await r.json()) as { owner_id?: string };
+          isOwnerViaBot = g.owner_id === session.userId;
+        }
+      } catch { /* ignore */ }
     }
+    const adminFromOAuth = isOwnerViaBot || await resolveGuildAdminFromOAuth(supabase, session.userId, guildId);
     return nonOkStatus({
       status: 'server_setup_required',
       guildId,
