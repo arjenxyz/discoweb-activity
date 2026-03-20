@@ -19,10 +19,16 @@ export default function VerifyRoleScreen({ readiness, onRetry }: Props) {
   const videoUrl = process.env.NEXT_PUBLIC_WELCOME_VIDEO_URL ?? null;
 
   const toggleMute = () => {
-    if (videoRef.current) {
-      videoRef.current.muted = !videoRef.current.muted;
-      setMuted(videoRef.current.muted);
+    const v = videoRef.current;
+    if (!v) return;
+    if (v.muted) {
+      v.muted = false;
+      v.volume = 1;
+      v.play().catch(() => {});
+    } else {
+      v.muted = true;
     }
+    setMuted(v.muted);
   };
 
   useEffect(() => {
@@ -66,25 +72,6 @@ export default function VerifyRoleScreen({ readiness, onRetry }: Props) {
             className="pointer-events-none absolute inset-0 h-full w-full object-cover"
           />
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/10" />
-          <button
-            type="button"
-            onClick={toggleMute}
-            className="absolute right-4 top-4 z-50 flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/50 text-white backdrop-blur-md transition hover:bg-black/70"
-            aria-label={muted ? 'Sesi aç' : 'Sesi kapat'}
-          >
-            {muted ? (
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
-                <path d="M13 3.586L7.707 8.879A1 1 0 017 9H4a1 1 0 00-1 1v4a1 1 0 001 1h3a1 1 0 01.707.293L13 20.414V3.586z" />
-                <line x1="18" y1="9" x2="23" y2="14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                <line x1="23" y1="9" x2="18" y2="14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-              </svg>
-            ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
-                <path d="M13 3.586L7.707 8.879A1 1 0 017 9H4a1 1 0 00-1 1v4a1 1 0 001 1h3a1 1 0 01.707.293L13 20.414V3.586z" />
-                <path d="M17.5 7.5a7 7 0 010 9M20 5a10 10 0 010 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
-              </svg>
-            )}
-          </button>
         </>
       ) : (
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,#5865F255_0%,transparent_45%),radial-gradient(circle_at_bottom_right,#3a9cff33_0%,transparent_40%)]" />
@@ -138,21 +125,44 @@ export default function VerifyRoleScreen({ readiness, onRetry }: Props) {
             )}
 
             <div className="rounded-2xl border border-white/10 bg-white/5 px-8 py-6 backdrop-blur-md">
-              <button
-                type="button"
-                onClick={handleVerify}
-                disabled={phase === 'loading'}
-                className="rounded-full border border-white/30 bg-white/10 px-10 py-3 text-sm font-bold text-white backdrop-blur-md transition hover:bg-white/20 hover:border-white/50 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {phase === 'loading' ? (
-                  <span className="flex items-center gap-2">
-                    <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                    Rol atanıyor...
-                  </span>
-                ) : (
-                  'Doğrulanmış Rolü Al'
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleVerify}
+                  disabled={phase === 'loading'}
+                  className="rounded-full border border-white/30 bg-white/10 px-10 py-3 text-sm font-bold text-white backdrop-blur-md transition hover:bg-white/20 hover:border-white/50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {phase === 'loading' ? (
+                    <span className="flex items-center gap-2">
+                      <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                      Rol atanıyor...
+                    </span>
+                  ) : (
+                    'Doğrulanmış Rolü Al'
+                  )}
+                </button>
+                {videoUrl && (
+                  <button
+                    type="button"
+                    onClick={toggleMute}
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white backdrop-blur-md transition hover:bg-white/20"
+                    aria-label={muted ? 'Sesi aç' : 'Sesi kapat'}
+                  >
+                    {muted ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                        <path d="M13 3.586L7.707 8.879A1 1 0 017 9H4a1 1 0 00-1 1v4a1 1 0 001 1h3a1 1 0 01.707.293L13 20.414V3.586z" />
+                        <line x1="18" y1="9" x2="23" y2="14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                        <line x1="23" y1="9" x2="18" y2="14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                      </svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                        <path d="M13 3.586L7.707 8.879A1 1 0 017 9H4a1 1 0 00-1 1v4a1 1 0 001 1h3a1 1 0 01.707.293L13 20.414V3.586z" />
+                        <path d="M17.5 7.5a7 7 0 010 9M20 5a10 10 0 010 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+                      </svg>
+                    )}
+                  </button>
                 )}
-              </button>
+              </div>
             </div>
           </div>
         )}
