@@ -183,11 +183,38 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
 
   const copyToClipboard = async (text: string) => {
     try {
-      await navigator.clipboard.writeText(text);
+      // Discord Activity'de clipboard API çalışmaz, execCommand fallback
+      const el = document.createElement('textarea');
+      el.value = text;
+      el.style.cssText = 'position:fixed;opacity:0;pointer-events:none';
+      document.body.appendChild(el);
+      el.focus();
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
       setCopied(true);
       setTimeout(() => setCopied(false), 1600);
     } catch {
-      setCopied(false);
+      try {
+        await navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1600);
+      } catch {
+        setCopied(false);
+      }
+    }
+  };
+
+  const openBotInvite = async (url: string) => {
+    try {
+      const { DiscordSDK } = await import('@discord/embedded-app-sdk');
+      const clientId = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!;
+      const sdk = new DiscordSDK(clientId);
+      await sdk.ready();
+      await sdk.commands.openExternalLink({ url });
+    } catch {
+      // fallback: window.open
+      window.open(url, '_blank');
     }
   };
 
@@ -307,10 +334,10 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
             {isBotMissing && isAdmin && readiness.inviteUrl && (
               <button
                 type="button"
-                onClick={() => copyToClipboard(readiness.inviteUrl as string)}
+                onClick={() => openBotInvite(readiness.inviteUrl as string)}
                 className="rounded-full border border-emerald-400/30 bg-emerald-500/20 px-5 py-2.5 text-sm font-semibold text-emerald-100 backdrop-blur-md transition hover:bg-emerald-500/30"
               >
-                Bot davet linki
+                Botu Sunucuya Ekle
               </button>
             )}
 
