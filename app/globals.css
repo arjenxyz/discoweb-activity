@@ -190,7 +190,7 @@ img {
 
 /* Sayfayı Zorla Siyah Yap */
 html, body {
-  background-color: transparent !important; /* Video layout'tan geliyor */
+  background-color: #0a0a0c !important; /* Simsiyah */
   color: white !important;
   margin: 0;
   padding: 0;

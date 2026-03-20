@@ -209,8 +209,9 @@ export default function DashboardPage() {
   }, [unauthorized]);
 
   useEffect(() => {
+    if (!splashDone) return;
     void checkActivityReadiness();
-  }, [checkActivityReadiness]);
+  }, [checkActivityReadiness, splashDone]);
 
   useEffect(() => {
     if (activityReadinessLoading || isBlockedByReadiness) {
@@ -844,9 +845,18 @@ export default function DashboardPage() {
         : 'md:pt-20 pb-28 sm:pb-10 gap-0 sm:gap-6 md:pb-0'
       : 'md:pt-24 pb-28 md:pt-24 md:pb-0 gap-6';
 
+  // Splash — readiness sorgulanmadan önce gösterilir
+  if (!splashDone) {
+    return (
+      <SplashScreen
+        onEnter={() => setSplashDone(true)}
+      />
+    );
+  }
+
   if (activityReadinessLoading) {
     return (
-      <div className="min-h-screen text-white">
+      <div className="relative isolate min-h-screen overflow-hidden bg-[#0b0d12] text-white">
         <div className="mx-auto flex min-h-screen w-full max-w-5xl flex-col items-center justify-center gap-4 px-6 text-center">
           <Image src="/gif/indir2.gif" alt="loading" width={220} height={220} unoptimized className="h-40 w-40 rounded-2xl object-cover" />
           <p className="text-sm text-white/70">Sunucu durumu kontrol ediliyor...</p>
@@ -863,15 +873,6 @@ export default function DashboardPage() {
         onRetry={() => {
           void checkActivityReadiness();
         }}
-      />
-    );
-  }
-
-  if (!splashDone) {
-    return (
-      <SplashScreen
-        guildName={activityReadiness?.guildName}
-        onEnter={() => setSplashDone(true)}
       />
     );
   }

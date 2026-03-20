@@ -2,7 +2,6 @@
 
 type Props = {
   onEnter: () => void;
-  guildName?: string | null;
 };
 
 const FEATURES = [
@@ -45,18 +44,31 @@ const FEATURES = [
   },
 ];
 
-export default function SplashScreen({ onEnter, guildName }: Props) {
+export default function SplashScreen({ onEnter }: Props) {
   return (
-    <div className="flex min-h-screen w-full flex-col items-start justify-end px-5 pb-8 sm:px-8 sm:pb-10">
-      {/* Sol alt — içerik */}
-      <div className="flex w-full max-w-lg flex-col gap-6">
-        {/* Sunucu etiketi */}
-        {guildName && (
-          <p className="w-fit rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-white/60 backdrop-blur-md">
-            {guildName}
-          </p>
-        )}
+    <div className="relative isolate flex min-h-screen w-full flex-col items-start justify-end overflow-hidden bg-[#0b0d12] px-5 pb-8 sm:px-8 sm:pb-10">
+      {/* Arka plan video */}
+      {process.env.NEXT_PUBLIC_WELCOME_VIDEO_URL && (
+        <>
+          <video
+            src={process.env.NEXT_PUBLIC_WELCOME_VIDEO_URL}
+            autoPlay
+            loop
+            muted
+            playsInline
+            disablePictureInPicture
+            className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+          />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/10" />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+        </>
+      )}
+      {!process.env.NEXT_PUBLIC_WELCOME_VIDEO_URL && (
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,#5865F255_0%,transparent_45%),radial-gradient(circle_at_bottom_right,#3a9cff33_0%,transparent_40%)]" />
+      )}
 
+      {/* Sol alt — içerik */}
+      <div className="relative z-10 flex w-full max-w-lg flex-col gap-6">
         {/* Başlık */}
         <div className="flex flex-col gap-2">
           <h1
