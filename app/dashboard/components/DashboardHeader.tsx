@@ -53,6 +53,7 @@ type DashboardHeaderProps = {
     onOpenPromotions: () => void;
     onOpenDiscounts: () => void;
     onOpenReferral?: () => void;
+    onOpenEarnings?: () => void;
     logoutHref: string;
     menuRef: RefObject<HTMLDivElement | null>;
   };
@@ -461,6 +462,9 @@ export default function DashboardHeader({
                                        </button>
                                        <button onClick={settings.onOpenPromotions} className="p-2 bg-white/5 hover:bg-white/10 rounded-lg text-xs text-center text-white/70 hover:text-white transition-colors">
                                           Promosyonlar
+                                       </button>
+                                       <button onClick={() => { setIsProfileOpen(false); settings.onOpenEarnings?.(); }} className="col-span-2 p-2 bg-emerald-500/10 hover:bg-emerald-500/20 rounded-lg text-xs text-center text-emerald-300 hover:text-emerald-200 transition-colors font-medium">
+                                          Kazanç Bilgileri
                                        </button>
                                     </div>
 

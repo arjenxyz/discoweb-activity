@@ -19,6 +19,7 @@ import NotificationsModal from './components/NotificationsModal';
 import TransferModal from './components/TransferModal';
 import PromotionsModal from './components/PromotionsModal';
 import DiscountsModal from './components/DiscountsModal';
+import EarningsModal from './components/EarningsModal';
 import ActivityReadinessGate, { type ActivityReadiness } from './components/ActivityReadinessGate';
 import { sanitizeHtml } from '@/lib/sanitizeHtml';
 import type {
@@ -91,6 +92,7 @@ export default function DashboardPage() {
   const [maintenanceUpdaters, setMaintenanceUpdaters] = useState<Record<string, { id: string; name: string; avatarUrl: string }>>({});
   const [promotionsModalOpen, setPromotionsModalOpen] = useState(false);
   const [discountsModalOpen, setDiscountsModalOpen] = useState(false);
+  const [earningsModalOpen, setEarningsModalOpen] = useState(false);
   const [headerServer, setHeaderServer] = useState({
     data: null as { id: string; name: string; iconUrl: string | null } | null,
     loading: true,
@@ -909,6 +911,7 @@ export default function DashboardPage() {
             onOpenTransfer: handleOpenTransfer,
             onOpenPromotions: openPromotionsModal,
             onOpenDiscounts: openDiscountsModal,
+            onOpenEarnings: () => setEarningsModalOpen(true),
             logoutHref: '/api/auth/logout',
             menuRef: settingsMenuRef,
           }}
@@ -1085,6 +1088,11 @@ export default function DashboardPage() {
         loading={false}
         error={null}
         success={null}
+      />
+
+      <EarningsModal
+        open={earningsModalOpen}
+        onClose={() => setEarningsModalOpen(false)}
       />
 
       <DiscountsModal
