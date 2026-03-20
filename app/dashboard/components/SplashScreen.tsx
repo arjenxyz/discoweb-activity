@@ -73,67 +73,58 @@ export default function SplashScreen({ onEnter }: Props) {
 
       {/* İçerik — ekranın altına hizalı */}
       <div
-        className="relative z-10 mt-auto flex w-full flex-col gap-8 px-6 pb-10 pt-16 sm:px-10 sm:pb-12"
+        className="relative z-10 mt-auto flex w-full flex-row items-end justify-between gap-6 px-6 pb-10 pt-16 sm:px-10 sm:pb-12"
         style={{
           opacity: visible ? 1 : 0,
           transform: visible ? 'translateY(0)' : 'translateY(18px)',
           transition: 'opacity 0.7s ease, transform 0.7s ease',
         }}
       >
-        {/* Üst etiket */}
-        <div className="flex items-center gap-2">
-          <span className="h-px w-6 bg-white/30" />
-          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-white/40">
-            Discord Economy Platform
-          </span>
-        </div>
-
-        {/* Ana başlık */}
-        <div className="flex flex-col gap-3 max-w-lg">
-          <h1
-            className="text-6xl font-black leading-none tracking-tight text-white sm:text-7xl"
-            style={{
-              textShadow: '0 0 80px rgba(88,101,242,0.4), 0 2px 20px rgba(0,0,0,1)',
-            }}
-          >
-            Disco
-            <span
-              className="text-[#5865F2]"
-              style={{ textShadow: '0 0 40px rgba(88,101,242,0.8)' }}
-            >
-              Web
+        {/* Sol — başlık + pilleri */}
+        <div className="flex flex-col gap-6">
+          <div className="flex items-center gap-2">
+            <span className="h-px w-6 bg-white/30" />
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-white/40">
+              Discord Economy Platform
             </span>
-          </h1>
-          <p
-            className="text-base text-white/60 leading-relaxed max-w-sm"
-            style={{ textShadow: '0 1px 8px rgba(0,0,0,1)' }}
-          >
-            Sunucundaki her adımın bir değeri var. Kazan, harca, öne çık.
-          </p>
-        </div>
+          </div>
 
-        {/* Özellik pilleri */}
-        <div className="flex flex-wrap gap-2">
-          {FEATURES.map((f) => (
-            <div
-              key={f.label}
-              className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 backdrop-blur-md"
+          <div className="flex flex-col gap-3 max-w-lg">
+            <h1
+              className="text-6xl font-black leading-none tracking-tight text-white sm:text-7xl"
+              style={{ textShadow: '0 0 80px rgba(88,101,242,0.4), 0 2px 20px rgba(0,0,0,1)' }}
             >
-              <span className="text-white/40">{f.icon}</span>
-              <span className="text-xs font-medium text-white/70">{f.label}</span>
-            </div>
-          ))}
+              Disco
+              <span className="text-[#5865F2]" style={{ textShadow: '0 0 40px rgba(88,101,242,0.8)' }}>
+                Web
+              </span>
+            </h1>
+            <p className="text-base text-white/60 leading-relaxed max-w-sm" style={{ textShadow: '0 1px 8px rgba(0,0,0,1)' }}>
+              Sunucundaki her adımın bir değeri var. Kazan, harca, öne çık.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {FEATURES.map((f) => (
+              <div
+                key={f.label}
+                className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 backdrop-blur-md"
+              >
+                <span className="text-white/40">{f.icon}</span>
+                <span className="text-xs font-medium text-white/70">{f.label}</span>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* CTA satırı */}
-        <div className="flex items-center gap-4">
+        {/* Sağ — buton + link */}
+        <div className="flex shrink-0 flex-col items-end gap-3">
           <button
             type="button"
             onClick={onEnter}
             className="group relative overflow-hidden rounded-full bg-[#5865F2] px-8 py-3.5 text-sm font-bold text-white transition-all duration-300 hover:bg-[#4752C4] active:scale-95"
             style={{ boxShadow: '0 0 32px rgba(88,101,242,0.5), 0 4px 16px rgba(0,0,0,0.5)' }}
           >
-            {/* Shine effect */}
             <span className="pointer-events-none absolute inset-0 -translate-x-full skew-x-12 bg-white/20 transition-transform duration-500 group-hover:translate-x-full" />
             <span className="relative flex items-center gap-2">
               Keşfet
@@ -143,9 +134,23 @@ export default function SplashScreen({ onEnter }: Props) {
             </span>
           </button>
 
-          <span className="text-xs text-white/25">
-            discoweb.tech
-          </span>
+          <button
+            type="button"
+            onClick={async () => {
+              const url = 'https://discoweb.tech';
+              try {
+                const { DiscordSDK } = await import('@discord/embedded-app-sdk');
+                const sdk = new DiscordSDK(process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!);
+                await sdk.ready();
+                await sdk.commands.openExternalLink({ url });
+              } catch {
+                window.open(url, '_blank');
+              }
+            }}
+            className="text-xs text-white/30 transition hover:text-white/60"
+          >
+            discoweb.tech ↗
+          </button>
         </div>
       </div>
     </div>
