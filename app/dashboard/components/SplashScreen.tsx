@@ -64,9 +64,17 @@ export default function SplashScreen({ onEnter }: Props) {
                 Web
               </span>
             </h1>
-            <p className="text-base text-white/60 leading-relaxed max-w-sm" style={{ textShadow: '0 1px 8px rgba(0,0,0,1)' }}>
-              Sunucundaki her adımın bir değeri var. Kazan, harca, öne çık.
-            </p>
+            {/* Created by */}
+            <div className="flex items-center gap-2 mt-1">
+              <img
+                src="https://cdn.discordapp.com/avatars/1163500308270436442/8c2eeba5e9c137e4f9375bccb0f0bf40.png?size=128"
+                alt="thearjen"
+                className="h-6 w-6 rounded-full border border-white/20"
+              />
+              <span className="text-xs text-white/40">
+                Created by <span className="text-white/60 font-medium">thearjen</span> · Tüm hakları saklıdır
+              </span>
+            </div>
           </div>
 
         </div>
