@@ -26,6 +26,7 @@ type ReadinessResponse = {
   isAdmin: boolean;
   canInviteBot: boolean;
   inviteUrl: string | null;
+  botInGuild?: boolean;
   debug?: {
     discordStatus?: number;
     reason?: string;
@@ -215,22 +216,50 @@ export async function GET(request: Request) {
 
   if (!server) {
     const adminFromOAuth = await resolveGuildAdminFromOAuth(supabase, session.userId, guildId);
+    let botInGuild = false;
+    if (adminFromOAuth) {
+      const botToken = process.env.DISCORD_BOT_TOKEN;
+      if (botToken) {
+        try {
+          const r = await fetch(`https://discord.com/api/guilds/${guildId}`, {
+            headers: { Authorization: `Bot ${botToken}` },
+            cache: 'no-store',
+          });
+          botInGuild = r.ok;
+        } catch { /* ignore */ }
+      }
+    }
     return nonOkStatus({
       status: 'server_not_registered',
       guildId,
       isAdmin: adminFromOAuth,
       canInviteBot: adminFromOAuth,
+      botInGuild,
     });
   }
 
   if (!server.is_setup) {
     const adminFromOAuth = await resolveGuildAdminFromOAuth(supabase, session.userId, guildId);
+    let botInGuild = false;
+    if (adminFromOAuth) {
+      const botToken = process.env.DISCORD_BOT_TOKEN;
+      if (botToken) {
+        try {
+          const r = await fetch(`https://discord.com/api/guilds/${guildId}`, {
+            headers: { Authorization: `Bot ${botToken}` },
+            cache: 'no-store',
+          });
+          botInGuild = r.ok;
+        } catch { /* ignore */ }
+      }
+    }
     return nonOkStatus({
       status: 'server_setup_required',
       guildId,
       guildName: server.name ?? null,
       isAdmin: adminFromOAuth,
       canInviteBot: adminFromOAuth,
+      botInGuild,
     });
   }
 

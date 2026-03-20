@@ -3,6 +3,7 @@
 import { useMemo, useRef, useState } from 'react';
 import WelcomeScreen from './WelcomeScreen';
 import VerifyRoleScreen from './VerifyRoleScreen';
+import fetchWithCreds from '@/lib/fetchWithCreds';
 
 export type ActivityReadinessStatus =
   | 'ready'
@@ -26,6 +27,7 @@ export type ActivityReadiness = {
   isAdmin: boolean;
   canInviteBot: boolean;
   inviteUrl: string | null;
+  botInGuild?: boolean;
   debug?: Record<string, unknown>;
 };
 
@@ -105,6 +107,13 @@ const COPY_BY_STATUS: Record<ActivityReadinessStatus, GateCopy> = {
 };
 
 export default function ActivityReadinessGate({ readiness, loading, onRetry }: GateProps) {
+  const [copied, setCopied] = useState(false);
+  const [muted, setMuted] = useState(true);
+  const [adminPhase, setAdminPhase] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
+  const [adminError, setAdminError] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const videoUrl = process.env.NEXT_PUBLIC_WELCOME_VIDEO_URL ?? null;
+
   if (readiness.status === 'missing_user_profile') {
     return <WelcomeScreen readiness={readiness} onRetry={onRetry} />;
   }
@@ -113,10 +122,41 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
     return <VerifyRoleScreen readiness={readiness} onRetry={onRetry} />;
   }
 
-  const [copied, setCopied] = useState(false);
-  const [muted, setMuted] = useState(true);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const videoUrl = process.env.NEXT_PUBLIC_WELCOME_VIDEO_URL ?? null;
+  const handleRegister = async () => {
+    if (!readiness.guildId) return;
+    setAdminPhase('loading');
+    setAdminError(null);
+    try {
+      const res = await fetchWithCreds('/api/admin/register', { method: 'POST' });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error ?? `HTTP ${res.status}`);
+      }
+      setAdminPhase('done');
+      setTimeout(() => onRetry(), 1000);
+    } catch (err) {
+      setAdminError(err instanceof Error ? err.message : 'Bilinmeyen hata');
+      setAdminPhase('error');
+    }
+  };
+
+  const handleSetup = async () => {
+    if (!readiness.guildId) return;
+    setAdminPhase('loading');
+    setAdminError(null);
+    try {
+      const res = await fetchWithCreds('/api/admin/setup', { method: 'POST' });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error ?? `HTTP ${res.status}`);
+      }
+      setAdminPhase('done');
+      setTimeout(() => onRetry(), 1000);
+    } catch (err) {
+      setAdminError(err instanceof Error ? err.message : 'Bilinmeyen hata');
+      setAdminPhase('error');
+    }
+  };
 
   const toggleMute = () => {
     const v = videoRef.current;
@@ -212,6 +252,14 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
             </p>
           )}
           {copied && <p className="text-xs font-semibold text-emerald-400">Kopyalandı.</p>}
+          {adminError && (
+            <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-300 backdrop-blur-md">
+              {adminError}
+            </p>
+          )}
+          {adminPhase === 'done' && (
+            <p className="text-xs font-semibold text-emerald-400">Tamamlandı, yenileniyor...</p>
+          )}
         </div>
 
         {/* Sağ alt — butonlar */}
@@ -274,6 +322,51 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
               >
                 {isAdmin ? 'Yetkili notunu kopyala' : 'Yetkiliye mesaj kopyala'}
               </button>
+            )}
+
+            {/* Admin: sunucu kayıt ve kurulum butonları */}
+            {readiness.status === 'server_not_registered' && readiness.isAdmin && (
+              readiness.botInGuild ? (
+                <button
+                  type="button"
+                  onClick={handleRegister}
+                  disabled={adminPhase === 'loading' || adminPhase === 'done'}
+                  className="rounded-full border border-[#5865F2]/50 bg-[#5865F2]/30 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur-md transition hover:bg-[#5865F2]/50 disabled:opacity-50"
+                >
+                  {adminPhase === 'loading' ? (
+                    <span className="flex items-center gap-2">
+                      <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                      Kaydediliyor...
+                    </span>
+                  ) : 'Sunucuyu Kaydet'}
+                </button>
+              ) : (
+                <p className="rounded-full border border-red-400/30 bg-red-500/20 px-5 py-2.5 text-sm font-semibold text-red-200 backdrop-blur-md">
+                  Önce botu sunucuya ekle
+                </p>
+              )
+            )}
+
+            {readiness.status === 'server_setup_required' && readiness.isAdmin && (
+              readiness.botInGuild ? (
+                <button
+                  type="button"
+                  onClick={handleSetup}
+                  disabled={adminPhase === 'loading' || adminPhase === 'done'}
+                  className="rounded-full border border-[#5865F2]/50 bg-[#5865F2]/30 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur-md transition hover:bg-[#5865F2]/50 disabled:opacity-50"
+                >
+                  {adminPhase === 'loading' ? (
+                    <span className="flex items-center gap-2">
+                      <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                      Kurulum yapılıyor...
+                    </span>
+                  ) : 'Otomatik Kurulum Başlat'}
+                </button>
+              ) : (
+                <p className="rounded-full border border-red-400/30 bg-red-500/20 px-5 py-2.5 text-sm font-semibold text-red-200 backdrop-blur-md">
+                  Önce botu sunucuya ekle
+                </p>
+              )
             )}
           </div>
         </div>
