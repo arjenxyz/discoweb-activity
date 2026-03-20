@@ -265,7 +265,7 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
           <p className="text-xs text-white/45 leading-relaxed" style={{ textShadow: '0 1px 6px rgba(0,0,0,1)' }}>
             {copy.helper}
           </p>
-          {readiness.status === 'discord_api_error' && readiness.debug && (
+          {(readiness.status === 'discord_api_error' || readiness.status === 'bot_not_in_guild') && readiness.debug && (
             <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs font-mono text-red-300 backdrop-blur-md">
               debug: {JSON.stringify(readiness.debug)}
             </p>

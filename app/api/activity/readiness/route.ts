@@ -221,8 +221,8 @@ export async function GET(request: Request) {
   });
 
   if (!guildResponse.ok) {
+    console.error('[readiness] guild fetch failed', { guildId, status: guildResponse.status });
     if (guildResponse.status === 403 || guildResponse.status === 404) {
-      // Admin kontrolü OAuth ile
       const adminFromOAuth = await resolveGuildAdminFromOAuth(supabase, session.userId, guildId);
       return nonOkStatus({
         status: 'bot_not_in_guild',
@@ -230,7 +230,7 @@ export async function GET(request: Request) {
         isAdmin: adminFromOAuth,
         canInviteBot: adminFromOAuth,
         botInGuild: false,
-        debug: { discordStatus: guildResponse.status },
+        debug: { discordStatus: guildResponse.status, reason: 'guild_fetch_failed' },
       });
     }
 
