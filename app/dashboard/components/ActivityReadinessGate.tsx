@@ -66,13 +66,13 @@ const COPY_BY_STATUS: Record<ActivityReadinessStatus, GateCopy> = {
   },
   server_not_registered: {
     title: 'Sunucu kayıtlı değil',
-    description: 'Bu sunucu için aktivite ayarları henüz oluşturulmamış.',
-    helper: 'Yönetici setup işlemini tamamladıktan sonra tekrar dene.',
+    description: 'Bu sunucu sisteme henüz kaydedilmemiş.',
+    helper: 'Sunucu sahibiysen "Sunucuyu Kaydet" butonuna tıkla.',
   },
   server_setup_required: {
-    title: 'Sunucu kurulumu eksik',
-    description: 'Ekonomi ve rol sistemi için zorunlu ayarlar eksik.',
-    helper: 'Sunucu yöneticisinin setup komutunu tamamlaması gerekiyor.',
+    title: 'Kurulum tamamlanmamış',
+    description: 'Sunucu kayıtlı ama roller henüz oluşturulmamış.',
+    helper: 'Sunucu sahibiysen "Otomatik Kurulum Başlat" butonuna tıkla.',
   },
   missing_bot_token: {
     title: 'Bot token\'i eksik',
@@ -368,47 +368,35 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
 
             {/* Admin: sunucu kayıt ve kurulum butonları */}
             {readiness.status === 'server_not_registered' && readiness.isAdmin && (
-              readiness.botInGuild ? (
-                <button
-                  type="button"
-                  onClick={handleRegister}
-                  disabled={adminPhase === 'loading' || adminPhase === 'done'}
-                  className="rounded-full border border-[#5865F2]/50 bg-[#5865F2]/30 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur-md transition hover:bg-[#5865F2]/50 disabled:opacity-50"
-                >
-                  {adminPhase === 'loading' ? (
-                    <span className="flex items-center gap-2">
-                      <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                      Kaydediliyor...
-                    </span>
-                  ) : 'Sunucuyu Kaydet'}
-                </button>
-              ) : (
-                <p className="rounded-full border border-red-400/30 bg-red-500/20 px-5 py-2.5 text-sm font-semibold text-red-200 backdrop-blur-md">
-                  Önce botu sunucuya ekle
-                </p>
-              )
+              <button
+                type="button"
+                onClick={handleRegister}
+                disabled={adminPhase === 'loading' || adminPhase === 'done'}
+                className="rounded-full border border-[#5865F2]/50 bg-[#5865F2]/30 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur-md transition hover:bg-[#5865F2]/50 disabled:opacity-50"
+              >
+                {adminPhase === 'loading' ? (
+                  <span className="flex items-center gap-2">
+                    <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                    Kaydediliyor...
+                  </span>
+                ) : 'Sunucuyu Kaydet'}
+              </button>
             )}
 
             {readiness.status === 'server_setup_required' && readiness.isAdmin && (
-              readiness.botInGuild ? (
-                <button
-                  type="button"
-                  onClick={handleSetup}
-                  disabled={adminPhase === 'loading' || adminPhase === 'done'}
-                  className="rounded-full border border-[#5865F2]/50 bg-[#5865F2]/30 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur-md transition hover:bg-[#5865F2]/50 disabled:opacity-50"
-                >
-                  {adminPhase === 'loading' ? (
-                    <span className="flex items-center gap-2">
-                      <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                      Kurulum yapılıyor...
-                    </span>
-                  ) : 'Otomatik Kurulum Başlat'}
-                </button>
-              ) : (
-                <p className="rounded-full border border-red-400/30 bg-red-500/20 px-5 py-2.5 text-sm font-semibold text-red-200 backdrop-blur-md">
-                  Önce botu sunucuya ekle
-                </p>
-              )
+              <button
+                type="button"
+                onClick={handleSetup}
+                disabled={adminPhase === 'loading' || adminPhase === 'done'}
+                className="rounded-full border border-[#5865F2]/50 bg-[#5865F2]/30 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur-md transition hover:bg-[#5865F2]/50 disabled:opacity-50"
+              >
+                {adminPhase === 'loading' ? (
+                  <span className="flex items-center gap-2">
+                    <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                    Kurulum yapılıyor...
+                  </span>
+                ) : 'Otomatik Kurulum Başlat'}
+              </button>
             )}
           </div>
         </div>
