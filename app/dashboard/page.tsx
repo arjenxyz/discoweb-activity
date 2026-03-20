@@ -856,10 +856,23 @@ export default function DashboardPage() {
 
   if (activityReadinessLoading) {
     return (
-      <div className="relative isolate min-h-screen overflow-hidden bg-[#0b0d12] text-white">
-        <div className="mx-auto flex min-h-screen w-full max-w-5xl flex-col items-center justify-center gap-4 px-6 text-center">
-          <Image src="/gif/indir2.gif" alt="loading" width={220} height={220} unoptimized className="h-40 w-40 rounded-2xl object-cover" />
-          <p className="text-sm text-white/70">Sunucu durumu kontrol ediliyor...</p>
+      <div className="relative isolate flex min-h-screen w-full flex-col items-start justify-end overflow-hidden bg-[#0b0d12] px-6 pb-10 sm:px-10 sm:pb-12">
+        {process.env.NEXT_PUBLIC_WELCOME_VIDEO_URL && (
+          <>
+            <video
+              src={process.env.NEXT_PUBLIC_WELCOME_VIDEO_URL}
+              autoPlay loop muted playsInline disablePictureInPicture
+              className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+            />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/10" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+          </>
+        )}
+        <div className="relative z-10 flex flex-col gap-4">
+          <div className="flex items-center gap-3">
+            <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white/80" />
+            <p className="text-sm text-white/50">Sunucu durumu kontrol ediliyor...</p>
+          </div>
         </div>
       </div>
     );
