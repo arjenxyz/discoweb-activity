@@ -218,15 +218,6 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
     }
   };
 
-  const clearAndReload = () => {
-    localStorage.removeItem('selectedGuildId');
-    localStorage.removeItem('discord_bearer_token');
-    localStorage.removeItem('discord_frame_id');
-    localStorage.removeItem('discordUser');
-    document.cookie = 'discord_session=; Max-Age=0; path=/;';
-    document.cookie = 'selected_guild_id=; Max-Age=0; path=/;';
-    window.location.reload();
-  };
 
   return (
     <div className="relative isolate min-h-screen overflow-hidden bg-[#0b0d12] text-white">
@@ -323,14 +314,6 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
             >
               {loading ? 'Kontrol ediliyor...' : 'Tekrar dene'}
             </button>
-            <button
-              type="button"
-              onClick={clearAndReload}
-              className="rounded-full border border-orange-400/30 bg-orange-500/20 px-5 py-2.5 text-sm font-semibold text-orange-100 backdrop-blur-md transition hover:bg-orange-500/30"
-            >
-              Sıfırla
-            </button>
-
             {isBotMissing && isAdmin && readiness.inviteUrl && (
               <button
                 type="button"

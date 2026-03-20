@@ -67,6 +67,7 @@ const buildResponse = (params: Partial<ReadinessResponse> & Pick<ReadinessRespon
     isAdmin: params.isAdmin ?? false,
     canInviteBot: params.canInviteBot ?? false,
     inviteUrl: params.inviteUrl ?? inviteUrl,
+    botInGuild: params.botInGuild ?? false,
     debug: params.debug,
   };
 };
