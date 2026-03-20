@@ -36,8 +36,8 @@ export default function SplashScreen({ onEnter }: Props) {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     })
       .then(r => r.json())
-      .then(d => { if (d.isDeveloper) setIsDeveloper(true); })
-      .catch(() => {});
+      .then(d => { console.log('[DevCheck]', d); if (d.isDeveloper) setIsDeveloper(true); })
+      .catch((e) => console.error('[DevCheck] hata:', e));
 
     return () => { clearTimeout(t); clearInterval(interval); };
   }, []);
