@@ -178,7 +178,7 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
       )}
 
       {/* Overlay */}
-      <div className="pointer-events-none absolute inset-0 bg-black/60 backdrop-blur-[2px]" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/10" />
       {!videoUrl && (
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,#5865F255_0%,transparent_45%),radial-gradient(circle_at_bottom_right,#3a9cff33_0%,transparent_40%)]" />
       )}
