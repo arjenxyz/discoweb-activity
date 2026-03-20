@@ -17,8 +17,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   };
 
   return (
-    <div className="relative min-h-screen text-white">
-      {/* Arka plan — fixed, hiç unmount olmaz, içerik boyutundan etkilenmez */}
+    <div className="relative isolate min-h-screen text-white">
+      {/* Arka plan — fixed, z-0, html/body'nin önünde */}
       {videoUrl ? (
         <video
           ref={videoRef}
@@ -28,17 +28,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           muted
           playsInline
           disablePictureInPicture
-          className="pointer-events-none fixed inset-0 -z-10 h-full w-full object-cover"
+          style={{ zIndex: 0 }}
+          className="pointer-events-none fixed inset-0 h-full w-full object-cover"
         />
       ) : (
-        <div className="pointer-events-none fixed inset-0 -z-10 bg-[#0b0d12] bg-[radial-gradient(circle_at_top_left,#5865F255_0%,transparent_45%),radial-gradient(circle_at_bottom_right,#3a9cff33_0%,transparent_40%)]" />
+        <div
+          style={{ zIndex: 0 }}
+          className="pointer-events-none fixed inset-0 bg-[#0b0d12] bg-[radial-gradient(circle_at_top_left,#5865F255_0%,transparent_45%),radial-gradient(circle_at_bottom_right,#3a9cff33_0%,transparent_40%)]"
+        />
       )}
 
-      {/* Overlay — fixed */}
-      <div className="pointer-events-none fixed inset-0 -z-10 bg-gradient-to-t from-black/90 via-black/40 to-black/10" />
-      <div className="pointer-events-none fixed inset-x-0 bottom-0 -z-10 h-2/3 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+      {/* Overlay — z-[1] */}
+      <div style={{ zIndex: 1 }} className="pointer-events-none fixed inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/10" />
+      <div style={{ zIndex: 1 }} className="pointer-events-none fixed inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
 
-      {/* Ses butonu */}
+      {/* Ses butonu — z-50 */}
       {videoUrl && (
         <button
           type="button"
@@ -61,8 +65,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </button>
       )}
 
-      {/* İçerik */}
-      {children}
+      {/* İçerik — z-[2]'nin üstünde */}
+      <div className="relative" style={{ zIndex: 2 }}>
+        {children}
+      </div>
     </div>
   );
 }
