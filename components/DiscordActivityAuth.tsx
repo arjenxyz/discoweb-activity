@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { apiUrl } from '@/lib/api';
+import { setDiscordSdk } from '@/lib/discordSdk';
 
 interface DiscordActivityAuthProps {
   children: React.ReactNode;
@@ -328,6 +329,7 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
           );
           if (signal.aborted) return;
           addLog('STEP 4b: sdk.ready() BAŞARILI!');
+          setDiscordSdk(sdk);
 
           addLog('STEP 5: authorize() çağrılıyor...');
           const auth = await authorizeWithFallback(sdk, clientId);

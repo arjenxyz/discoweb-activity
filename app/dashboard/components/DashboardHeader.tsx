@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiUrl } from '@/lib/api';
+import { closeDiscordActivity } from '@/lib/discordSdk';
 
 import { LuHouse, LuMail, LuStore, LuLogOut, LuSettings, LuChevronRight, LuChartBar } from 'react-icons/lu';
 import Image from 'next/image';
@@ -98,29 +99,11 @@ const handleLogout = async () => {
     // Oturum kapat / backend'de temizle
     await fetch(apiUrl('/api/auth/logout'), { method: 'POST', credentials: 'include' });
 
-    try {
-      const discordSdkModule = await import('@discord/embedded-app-sdk');
-      const DiscordSDK = discordSdkModule?.DiscordSDK;
-      if (DiscordSDK) {
-        const sdk = new DiscordSDK(process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!);
-        await sdk.ready();
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const commands: any = sdk.commands;
-        if (commands?.closeActivity) {
-          await commands.closeActivity();
-          return;
-        }
-        if (commands?.close) {
-          await commands.close();
-          return;
-        }
-      }
-    } catch {
-      // ignore - SDK yüklenemezse normal logout davranışı devam etsin
+    // Zaten hazır olan SDK instance üzerinden Activity'yi kapat
+    const closed = await closeDiscordActivity();
+    if (!closed) {
+      window.location.href = '/';
     }
-
-    window.location.href = '/';
   } catch {
     cleanup();
     window.location.href = '/';
