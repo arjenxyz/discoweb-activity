@@ -22,6 +22,7 @@ import DiscountsModal from './components/DiscountsModal';
 import EarningsModal from './components/EarningsModal';
 import MailDetailModal from './components/MailDetailModal';
 import ActivityReadinessGate, { type ActivityReadiness } from './components/ActivityReadinessGate';
+import SplashScreen from './components/SplashScreen';
 import { sanitizeHtml } from '@/lib/sanitizeHtml';
 import type {
   MemberProfile,
@@ -37,6 +38,7 @@ import type {
 export default function DashboardPage() {
   const cart = useCart();
   const router = useRouter();
+  const [splashDone, setSplashDone] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<MemberProfile | null>(null);
@@ -861,6 +863,15 @@ export default function DashboardPage() {
         onRetry={() => {
           void checkActivityReadiness();
         }}
+      />
+    );
+  }
+
+  if (!splashDone) {
+    return (
+      <SplashScreen
+        guildName={activityReadiness?.guildName}
+        onEnter={() => setSplashDone(true)}
       />
     );
   }
