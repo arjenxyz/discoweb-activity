@@ -55,28 +55,41 @@ export default function SplashScreen({ onEnter }: Props) {
           </div>
 
           <div className="flex flex-col gap-3 max-w-lg">
-            <h1
-              className="group relative inline-block cursor-pointer overflow-hidden text-6xl font-black leading-none tracking-tight text-white sm:text-7xl"
-              style={{ textShadow: '0 0 80px rgba(88,101,242,0.4), 0 2px 20px rgba(0,0,0,1)' }}
-              onClick={async () => {
-                const url = 'https://discoweb.tech';
-                try {
-                  const { DiscordSDK } = await import('@discord/embedded-app-sdk');
-                  const sdk = new DiscordSDK(process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!);
-                  await sdk.ready();
-                  await sdk.commands.openExternalLink({ url });
-                } catch {
-                  window.open(url, '_blank');
-                }
-              }}
-            >
-              {/* Shine effect */}
-              <span className="pointer-events-none absolute inset-0 -translate-x-full skew-x-12 bg-white/10 transition-transform duration-700 group-hover:translate-x-full" />
-              Disco
-              <span className="text-[#5865F2]" style={{ textShadow: '0 0 40px rgba(88,101,242,0.8)' }}>
-                Web
+            <div className="relative inline-block">
+              {/* Shine — clips sadece bu div içinde, h1 dışında */}
+              <span
+                className="pointer-events-none absolute inset-0 overflow-hidden rounded-sm"
+                aria-hidden
+              >
+                <span className="absolute inset-0 -translate-x-full skew-x-12 bg-white/10" style={{ animation: 'titleShine 4s ease-in-out infinite' }} />
               </span>
-            </h1>
+              <h1
+                className="cursor-pointer text-6xl font-black leading-none tracking-tight text-white sm:text-7xl"
+                style={{ textShadow: '0 0 80px rgba(88,101,242,0.4), 0 2px 20px rgba(0,0,0,1)' }}
+                onClick={async () => {
+                  const url = 'https://discoweb.tech';
+                  try {
+                    const { DiscordSDK } = await import('@discord/embedded-app-sdk');
+                    const sdk = new DiscordSDK(process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!);
+                    await sdk.ready();
+                    await sdk.commands.openExternalLink({ url });
+                  } catch {
+                    window.open(url, '_blank');
+                  }
+                }}
+              >
+                Disco
+                <span className="text-[#5865F2]" style={{ textShadow: '0 0 40px rgba(88,101,242,0.8)' }}>
+                  Web
+                </span>
+              </h1>
+              <style>{`
+                @keyframes titleShine {
+                  0%, 70%  { transform: translateX(-120%) skewX(12deg); }
+                  100%     { transform: translateX(220%) skewX(12deg); }
+                }
+              `}</style>
+            </div>
             {/* Created by */}
             <div className="flex items-center gap-2 mt-1">
               <img
