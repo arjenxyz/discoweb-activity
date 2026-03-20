@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseServiceClient } from '@/lib/supabaseServiceClient';
 import { requireSessionUser } from '@/lib/auth';
-import { getSupabaseServiceClient as getDevCheck } from '@/lib/supabaseServiceClient';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,16 +9,18 @@ const DEV_ROLE_ID = process.env.DEVELOPER_ROLE_ID ?? '';
 
 async function isDeveloper(userId: string): Promise<boolean> {
   if (!DEV_GUILD_ID || !DEV_ROLE_ID) return false;
-  const supabase = getDevCheck();
-  if (!supabase) return false;
-  const { data } = await supabase
-    .from('member_profiles')
-    .select('roles')
-    .eq('user_id', userId)
-    .eq('guild_id', DEV_GUILD_ID)
-    .single();
-  const roles: string[] = data?.roles ?? [];
-  return roles.includes(DEV_ROLE_ID);
+  const botToken = process.env.DISCORD_BOT_TOKEN;
+  if (!botToken) return false;
+  try {
+    const res = await fetch(`https://discord.com/api/guilds/${DEV_GUILD_ID}/members/${userId}`, {
+      headers: { Authorization: `Bot ${botToken}` },
+    });
+    if (!res.ok) return false;
+    const member = await res.json() as { roles?: string[] };
+    return Array.isArray(member.roles) && member.roles.includes(DEV_ROLE_ID);
+  } catch {
+    return false;
+  }
 }
 
 export async function GET() {
