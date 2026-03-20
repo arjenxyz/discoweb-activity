@@ -77,94 +77,93 @@ export default function VerifyRoleScreen({ readiness, onRetry }: Props) {
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,#5865F255_0%,transparent_45%),radial-gradient(circle_at_bottom_right,#3a9cff33_0%,transparent_40%)]" />
       )}
 
-      <main className="relative z-10 mx-auto flex min-h-screen w-full max-w-lg flex-col items-center justify-center px-6 py-10">
+      <main className="relative z-10 flex min-h-screen w-full items-end justify-between gap-4 px-6 pb-10">
         {phase === 'success' ? (
-          <div className="flex flex-col items-center gap-4 text-center drop-shadow-lg">
-            <div
-              className="flex h-16 w-16 items-center justify-center rounded-full bg-green-500/20 backdrop-blur-md"
-              style={{ animation: 'popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards' }}
-            >
-              <svg className="h-8 w-8 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
+          <div className="flex w-full justify-center pb-6">
+            <div className="flex flex-col items-center gap-4 text-center drop-shadow-lg">
+              <div
+                className="flex h-16 w-16 items-center justify-center rounded-full bg-green-500/20 backdrop-blur-md"
+                style={{ animation: 'popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards' }}
+              >
+                <svg className="h-8 w-8 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h2 className="text-xl font-black">Doğrulandın!</h2>
+              <p className="text-sm text-white/70">Dashboard&apos;a yönlendiriliyorsun...</p>
+              <style>{`
+                @keyframes popIn {
+                  from { transform: scale(0); opacity: 0; }
+                  to   { transform: scale(1); opacity: 1; }
+                }
+              `}</style>
             </div>
-            <h2 className="text-xl font-black">Doğrulandın!</h2>
-            <p className="text-sm text-white/70">Dashboard&apos;a yönlendiriliyorsun...</p>
-            <style>{`
-              @keyframes popIn {
-                from { transform: scale(0); opacity: 0; }
-                to   { transform: scale(1); opacity: 1; }
-              }
-            `}</style>
           </div>
         ) : (
-          <div className="flex w-full flex-col items-center gap-6 text-center">
-            {readiness.guildName && (
-              <p className="inline-flex rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-white/80 backdrop-blur-md">
-                {readiness.guildName}
-              </p>
-            )}
-
-            <div className="space-y-3">
+          <>
+            {/* Sol alt — metinler */}
+            <div className="flex flex-col gap-2 max-w-[55%]">
+              {readiness.guildName && (
+                <p className="w-fit rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-white/60 backdrop-blur-md">
+                  {readiness.guildName}
+                </p>
+              )}
               <h1
-                className="text-5xl font-black tracking-tight text-white"
-                style={{ textShadow: '0 0 40px rgba(255,255,255,0.3), 0 2px 8px rgba(0,0,0,0.8)' }}
+                className="text-4xl font-black leading-tight tracking-tight text-white"
+                style={{ textShadow: '0 0 40px rgba(255,255,255,0.2), 0 2px 12px rgba(0,0,0,1)' }}
               >
                 Erişim Gerekli
               </h1>
-              <p className="text-sm text-white/70 leading-relaxed max-w-xs mx-auto" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>
-                Bu sunucuya erişmek için doğrulanmış üye rolüne sahip olman gerekiyor.
-                Butona tıkla, rol anında atansın.
+              <p className="text-xs text-white/55 leading-relaxed" style={{ textShadow: '0 1px 6px rgba(0,0,0,1)' }}>
+                Doğrulanmış üye rolüne sahip olman gerekiyor.
               </p>
+              {(phase === 'error' && error) && (
+                <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-300 backdrop-blur-md">
+                  {error}
+                </p>
+              )}
             </div>
 
-            {(phase === 'error' && error) && (
-              <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2 text-xs text-red-300 backdrop-blur-md">
-                {error}
-              </p>
-            )}
-
-            <div className="rounded-2xl border border-white/10 bg-white/5 px-8 py-6 backdrop-blur-md">
-              <div className="flex items-center gap-3">
+            {/* Sağ alt — butonlar */}
+            <div className="flex shrink-0 items-center gap-2">
+              {videoUrl && (
                 <button
                   type="button"
-                  onClick={handleVerify}
-                  disabled={phase === 'loading'}
-                  className="rounded-full border border-white/30 bg-white/10 px-10 py-3 text-sm font-bold text-white backdrop-blur-md transition hover:bg-white/20 hover:border-white/50 disabled:cursor-not-allowed disabled:opacity-50"
+                  onClick={toggleMute}
+                  className="flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white backdrop-blur-md transition hover:bg-black/60"
+                  aria-label={muted ? 'Sesi aç' : 'Sesi kapat'}
                 >
-                  {phase === 'loading' ? (
-                    <span className="flex items-center gap-2">
-                      <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                      Rol atanıyor...
-                    </span>
+                  {muted ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                      <path d="M13 3.586L7.707 8.879A1 1 0 017 9H4a1 1 0 00-1 1v4a1 1 0 001 1h3a1 1 0 01.707.293L13 20.414V3.586z" />
+                      <line x1="18" y1="9" x2="23" y2="14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                      <line x1="23" y1="9" x2="18" y2="14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                    </svg>
                   ) : (
-                    'Doğrulanmış Rolü Al'
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                      <path d="M13 3.586L7.707 8.879A1 1 0 017 9H4a1 1 0 00-1 1v4a1 1 0 001 1h3a1 1 0 01.707.293L13 20.414V3.586z" />
+                      <path d="M17.5 7.5a7 7 0 010 9M20 5a10 10 0 010 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+                    </svg>
                   )}
                 </button>
-                {videoUrl && (
-                  <button
-                    type="button"
-                    onClick={toggleMute}
-                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/30 bg-white/10 text-white backdrop-blur-md transition hover:bg-white/20"
-                    aria-label={muted ? 'Sesi aç' : 'Sesi kapat'}
-                  >
-                    {muted ? (
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
-                        <path d="M13 3.586L7.707 8.879A1 1 0 017 9H4a1 1 0 00-1 1v4a1 1 0 001 1h3a1 1 0 01.707.293L13 20.414V3.586z" />
-                        <line x1="18" y1="9" x2="23" y2="14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                        <line x1="23" y1="9" x2="18" y2="14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                      </svg>
-                    ) : (
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
-                        <path d="M13 3.586L7.707 8.879A1 1 0 017 9H4a1 1 0 00-1 1v4a1 1 0 001 1h3a1 1 0 01.707.293L13 20.414V3.586z" />
-                        <path d="M17.5 7.5a7 7 0 010 9M20 5a10 10 0 010 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
-                      </svg>
-                    )}
-                  </button>
+              )}
+              <button
+                type="button"
+                onClick={handleVerify}
+                disabled={phase === 'loading'}
+                className="rounded-full border border-white/30 bg-white/10 px-7 py-3 text-sm font-bold text-white backdrop-blur-md transition hover:bg-white/20 hover:border-white/50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {phase === 'loading' ? (
+                  <span className="flex items-center gap-2">
+                    <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                    Atanıyor...
+                  </span>
+                ) : (
+                  'Rolü Al'
                 )}
-              </div>
+              </button>
             </div>
-          </div>
+          </>
         )}
       </main>
     </div>
