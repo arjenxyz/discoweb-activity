@@ -67,12 +67,12 @@ const COPY_BY_STATUS: Record<ActivityReadinessStatus, GateCopy> = {
   server_not_registered: {
     title: 'Sunucu kayıtlı değil',
     description: 'Bu sunucu sisteme henüz kaydedilmemiş.',
-    helper: 'Sunucu sahibiysen "Sunucuyu Kaydet" butonuna tıkla.',
+    helper: 'Sunucu sahibiysen discoweb.tech üzerinden kurulumu tamamla.',
   },
   server_setup_required: {
     title: 'Kurulum tamamlanmamış',
-    description: 'Sunucu kayıtlı ama roller henüz oluşturulmamış.',
-    helper: 'Sunucu sahibiysen "Otomatik Kurulum Başlat" butonuna tıkla.',
+    description: 'Sunucu kayıtlı ama kurulum henüz tamamlanmamış.',
+    helper: 'Sunucu sahibiysen discoweb.tech üzerinden kurulumu tamamla.',
   },
   missing_bot_token: {
     title: 'Bot token\'i eksik',
@@ -109,8 +109,6 @@ const COPY_BY_STATUS: Record<ActivityReadinessStatus, GateCopy> = {
 export default function ActivityReadinessGate({ readiness, loading, onRetry }: GateProps) {
   const [copied, setCopied] = useState(false);
   const [muted, setMuted] = useState(true);
-  const [adminPhase, setAdminPhase] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
-  const [adminError, setAdminError] = useState<string | null>(null);
   const [reportedStatus, setReportedStatus] = useState<string | null>(null);
 
   const REPORTABLE = new Set(['discord_api_error', 'missing_service_role', 'missing_bot_token', 'server_not_registered', 'server_setup_required']);
@@ -142,39 +140,15 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
     return <VerifyRoleScreen readiness={readiness} onRetry={onRetry} />;
   }
 
-  const handleRegister = async () => {
-    if (!readiness.guildId) return;
-    setAdminPhase('loading');
-    setAdminError(null);
+  const openSetupSite = async () => {
+    const url = 'https://discoweb.tech/setup';
     try {
-      const res = await fetchWithCreds('/api/admin/register', { method: 'POST' });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error ?? `HTTP ${res.status}`);
-      }
-      setAdminPhase('done');
-      setTimeout(() => onRetry(), 1000);
-    } catch (err) {
-      setAdminError(err instanceof Error ? err.message : 'Bilinmeyen hata');
-      setAdminPhase('error');
-    }
-  };
-
-  const handleSetup = async () => {
-    if (!readiness.guildId) return;
-    setAdminPhase('loading');
-    setAdminError(null);
-    try {
-      const res = await fetchWithCreds('/api/admin/setup', { method: 'POST' });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error ?? `HTTP ${res.status}`);
-      }
-      setAdminPhase('done');
-      setTimeout(() => onRetry(), 1000);
-    } catch (err) {
-      setAdminError(err instanceof Error ? err.message : 'Bilinmeyen hata');
-      setAdminPhase('error');
+      const { DiscordSDK } = await import('@discord/embedded-app-sdk');
+      const sdk = new DiscordSDK(process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!);
+      await sdk.ready();
+      await sdk.commands.openExternalLink({ url });
+    } catch {
+      window.open(url, '_blank');
     }
   };
 
@@ -291,14 +265,6 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
             </p>
           )}
           {copied && <p className="text-xs font-semibold text-emerald-400">Kopyalandı.</p>}
-          {adminError && (
-            <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-300 backdrop-blur-md">
-              {adminError}
-            </p>
-          )}
-          {adminPhase === 'done' && (
-            <p className="text-xs font-semibold text-emerald-400">Tamamlandı, yenileniyor...</p>
-          )}
         </div>
 
         {/* Sağ alt — butonlar */}
@@ -366,36 +332,14 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
               </button>
             )}
 
-            {/* Admin: sunucu kayıt ve kurulum butonları */}
-            {readiness.status === 'server_not_registered' && readiness.isAdmin && (
+            {/* Admin: siteye yönlendir */}
+            {(readiness.status === 'server_not_registered' || readiness.status === 'server_setup_required') && readiness.isAdmin && (
               <button
                 type="button"
-                onClick={handleRegister}
-                disabled={adminPhase === 'loading' || adminPhase === 'done'}
-                className="rounded-full border border-[#5865F2]/50 bg-[#5865F2]/30 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur-md transition hover:bg-[#5865F2]/50 disabled:opacity-50"
+                onClick={openSetupSite}
+                className="rounded-full border border-[#5865F2]/50 bg-[#5865F2]/30 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur-md transition hover:bg-[#5865F2]/50"
               >
-                {adminPhase === 'loading' ? (
-                  <span className="flex items-center gap-2">
-                    <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                    Kaydediliyor...
-                  </span>
-                ) : 'Sunucuyu Kaydet'}
-              </button>
-            )}
-
-            {readiness.status === 'server_setup_required' && readiness.isAdmin && (
-              <button
-                type="button"
-                onClick={handleSetup}
-                disabled={adminPhase === 'loading' || adminPhase === 'done'}
-                className="rounded-full border border-[#5865F2]/50 bg-[#5865F2]/30 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur-md transition hover:bg-[#5865F2]/50 disabled:opacity-50"
-              >
-                {adminPhase === 'loading' ? (
-                  <span className="flex items-center gap-2">
-                    <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                    Kurulum yapılıyor...
-                  </span>
-                ) : 'Otomatik Kurulum Başlat'}
+                discoweb.tech'te Kur
               </button>
             )}
           </div>
