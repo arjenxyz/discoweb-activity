@@ -878,7 +878,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen text-white overflow-auto">
+    <div className="min-h-screen bg-[#0b0d12] text-white overflow-auto">
       <div className="flex flex-col min-h-0 h-full">
         {effectiveSection !== 'mail' && (
         <DashboardHeader
