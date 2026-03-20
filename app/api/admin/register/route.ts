@@ -54,6 +54,8 @@ export async function POST(request: Request) {
 
   const guild = (await guildRes.json()) as { name?: string; owner_id?: string };
 
+  console.log('[admin/register] owner_id:', guild.owner_id, 'userId:', session.userId);
+
   // Kullanıcı sunucu sahibi veya admin mi?
   const isOwner = guild.owner_id === session.userId;
   if (!isOwner) {
@@ -63,6 +65,8 @@ export async function POST(request: Request) {
       .select('oauth_access_token')
       .eq('discord_id', session.userId)
       .maybeSingle();
+
+    console.log('[admin/register] oauth_token exists:', !!userRow?.oauth_access_token);
 
     if (userRow?.oauth_access_token) {
       const guildsRes = await fetch('https://discord.com/api/users/@me/guilds', {
@@ -75,12 +79,13 @@ export async function POST(request: Request) {
         const ADMIN = BigInt(0x8);
         const MANAGE = BigInt(0x20);
         const isAdmin = g ? (g.owner || (g.permissions ? ((BigInt(g.permissions) & ADMIN) === ADMIN || (BigInt(g.permissions) & MANAGE) === MANAGE) : false)) : false;
+        console.log('[admin/register] OAuth isAdmin:', isAdmin, 'guild found:', !!g);
         if (!isAdmin) {
-          return NextResponse.json({ error: 'forbidden' }, { status: 403 });
+          return NextResponse.json({ error: 'forbidden', debug: 'oauth_not_admin' }, { status: 403 });
         }
       }
     } else {
-      return NextResponse.json({ error: 'forbidden' }, { status: 403 });
+      return NextResponse.json({ error: 'forbidden', debug: 'no_oauth_token' }, { status: 403 });
     }
   }
 
