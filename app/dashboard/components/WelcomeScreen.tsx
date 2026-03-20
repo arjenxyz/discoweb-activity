@@ -71,7 +71,7 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
             disablePictureInPicture
             className="pointer-events-none absolute inset-0 h-full w-full object-cover"
           />
-          <div className="pointer-events-none absolute inset-0 bg-black/55 backdrop-blur-[2px]" />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/10" />
           <button
             type="button"
             onClick={toggleMute}
@@ -102,14 +102,19 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
         ) : (
           <div className="flex w-full flex-col items-center gap-6 text-center">
             {readiness.guildName && (
-              <p className="inline-flex rounded-full border border-[#5865F2]/40 bg-[#5865F2]/15 px-3 py-1 text-xs font-semibold text-[#c7ceff] backdrop-blur-md">
+              <p className="inline-flex rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-white/80 backdrop-blur-md">
                 {readiness.guildName}
               </p>
             )}
 
-            <div className="space-y-2 drop-shadow-lg">
-              <h1 className="text-3xl font-black tracking-tight">Hoş geldin!</h1>
-              <p className="text-sm text-white/80">
+            <div className="space-y-3">
+              <h1
+                className="text-5xl font-black tracking-tight text-white"
+                style={{ textShadow: '0 0 40px rgba(255,255,255,0.3), 0 2px 8px rgba(0,0,0,0.8)' }}
+              >
+                Hoş geldin!
+              </h1>
+              <p className="text-sm text-white/70 leading-relaxed max-w-xs mx-auto" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>
                 Bu sunucunun Activity platformuna katılmak için bir profil oluşturman gerekiyor.
                 Tek tıkla hazır olacaksın.
               </p>
@@ -121,21 +126,23 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
               </p>
             )}
 
-            <button
-              type="button"
-              onClick={handleStart}
-              disabled={phase === 'loading'}
-              className="rounded-full bg-[#5865F2] px-8 py-3 text-sm font-bold text-white shadow-2xl transition hover:bg-[#4752c4] disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {phase === 'loading' ? (
-                <span className="flex items-center gap-2">
-                  <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                  Profil oluşturuluyor...
-                </span>
-              ) : (
-                'Profil Oluştur ve Başla'
-              )}
-            </button>
+            <div className="rounded-2xl border border-white/10 bg-white/5 px-8 py-6 backdrop-blur-md">
+              <button
+                type="button"
+                onClick={handleStart}
+                disabled={phase === 'loading'}
+                className="rounded-full border border-white/30 bg-white/10 px-10 py-3 text-sm font-bold text-white backdrop-blur-md transition hover:bg-white/20 hover:border-white/50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {phase === 'loading' ? (
+                  <span className="flex items-center gap-2">
+                    <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                    Profil oluşturuluyor...
+                  </span>
+                ) : (
+                  'Profil Oluştur ve Başla'
+                )}
+              </button>
+            </div>
           </div>
         )}
       </main>
