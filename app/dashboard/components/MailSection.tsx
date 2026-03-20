@@ -502,9 +502,11 @@ export default function MailSection({
                   }`}
                   onClick={(e) => {
                     if ((e.target as HTMLElement).closest('.mail-action-btn')) return;
-                    setSelectedMail(mail);
-                    if (onOpenMail) onOpenMail(mail);
-                    try { router.push(`/dashboard/mail?id=${encodeURIComponent(String(mail.id))}`); } catch {}
+                    if (onOpenMail) {
+                      onOpenMail(mail);
+                    } else {
+                      setSelectedMail(mail);
+                    }
                   }}
                 >
                   {/* Desktop layout */}

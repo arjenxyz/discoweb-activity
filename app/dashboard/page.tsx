@@ -20,6 +20,7 @@ import TransferModal from './components/TransferModal';
 import PromotionsModal from './components/PromotionsModal';
 import DiscountsModal from './components/DiscountsModal';
 import EarningsModal from './components/EarningsModal';
+import MailDetailModal from './components/MailDetailModal';
 import ActivityReadinessGate, { type ActivityReadiness } from './components/ActivityReadinessGate';
 import { sanitizeHtml } from '@/lib/sanitizeHtml';
 import type {
@@ -103,6 +104,7 @@ export default function DashboardPage() {
   const [mailItems, setMailItems] = useState<MailItem[]>([]);
   const [mailLoading, setMailLoading] = useState(true);
   const [mailError, setMailError] = useState<string | null>(null);
+  const [activeMail, setActiveMail] = useState<MailItem | null>(null);
   const activeServerName = headerServer.data?.name ?? 'Sunucu bilinmiyor';
   const [activityReadiness, setActivityReadiness] = useState<ActivityReadiness | null>(null);
   const [activityReadinessLoading, setActivityReadinessLoading] = useState(true);
@@ -286,7 +288,7 @@ export default function DashboardPage() {
     const refreshMail = async () => {
       setMailLoading(true);
       try {
-        const response = await fetch(apiUrl('/api/mail'));
+        const response = await fetchWithCreds(apiUrl('/api/mail'));
         if (response.ok) {
           const data = (await response.json()) as MailItem[];
           setMailItems(data);
@@ -1049,7 +1051,19 @@ export default function DashboardPage() {
                 error={mailError}
                 items={mailItems}
                 serverName={activeServerName}
-                onOpenMail={(mail) => router.push(`/dashboard/mail/${mail.id}`)}
+                onOpenMail={async (mail) => {
+                  setActiveMail(mail);
+                  if (!mail.is_read) {
+                    try {
+                      await fetchWithCreds(apiUrl('/api/mail'), {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id: mail.id }),
+                      });
+                      setMailItems(prev => prev.map(m => String(m.id) === String(mail.id) ? { ...m, is_read: true } : m));
+                    } catch {}
+                  }
+                }}
                 onBack={() => setActiveSection('overview')}
               />
             )}
@@ -1089,6 +1103,37 @@ export default function DashboardPage() {
         error={null}
         success={null}
       />
+
+      {activeMail && (
+        <MailDetailModal
+          mail={activeMail}
+          onClose={() => setActiveMail(null)}
+          onDelete={async (id) => {
+            try {
+              await fetchWithCreds(apiUrl('/api/mail'), {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ids: [id] }),
+              });
+              setMailItems(prev => prev.filter(m => String(m.id) !== String(id)));
+              setActiveMail(null);
+            } catch {}
+          }}
+          onStar={async (id) => {
+            try {
+              const mail = mailItems.find(m => String(m.id) === String(id));
+              const method = mail?.is_starred ? 'DELETE' : 'POST';
+              await fetchWithCreds(apiUrl('/api/mail/star'), {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: String(id) }),
+              });
+              setMailItems(prev => prev.map(m => String(m.id) === String(id) ? { ...m, is_starred: !m.is_starred } : m));
+              setActiveMail(prev => prev && String(prev.id) === String(id) ? { ...prev, is_starred: !prev.is_starred } : prev);
+            } catch {}
+          }}
+        />
+      )}
 
       <EarningsModal
         open={earningsModalOpen}

@@ -291,7 +291,6 @@ export default function DashboardHeader({
 
                       if (item.key === 'mail') {
                         navigation.onNavigate('mail');
-                        try { router.push(`/dashboard/mail?${props.toString()}`); } catch { navigation.onNavigate('mail'); }
                         return;
                       }
                       if (item.key === 'leaderboard') {
