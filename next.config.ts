@@ -33,6 +33,11 @@ const nextConfig: NextConfig = {
         source: '/activity/api/:path*',
         destination: '/api/:path*',
       },
+      // Supabase storage assets → same-origin (Discord CSP için)
+      {
+        source: '/cdn/:path*',
+        destination: 'https://dotmvirtfyepdpcvgucc.supabase.co/storage/v1/object/public/:path*',
+      },
     ];
   },
   serverExternalPackages: [
