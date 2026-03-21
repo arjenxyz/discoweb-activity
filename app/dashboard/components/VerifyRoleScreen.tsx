@@ -12,9 +12,17 @@ type Props = {
 
 type Phase = 'idle' | 'loading' | 'success' | 'error';
 
+const ERROR_MESSAGES: Record<string, string> = {
+  role_assign_failed: 'Rol ataması başarısız oldu. Bot sunucuda aktif olmayabilir veya rolün bot hiyerarşisinin üstünde olabilir. Sunucu ayarlarından bot rolünün, doğrulanmış üye rolünün üstünde olduğunu kontrol et.',
+  bot_missing_manage_roles: 'Botun "Rolleri Yönet" yetkisi yok. Sunucu ayarlarından bota bu yetkiyi ver.',
+  bot_role_hierarchy: 'Bot kendi rolünden yüksek bir rol atayamaz. Sunucu Ayarları → Roller bölümünden bot rolünü doğrulanmış üye rolünün üstüne taşı.',
+};
+
 export default function VerifyRoleScreen({ readiness, onRetry }: Props) {
   const [phase, setPhase] = useState<Phase>('idle');
   const [error, setError] = useState<string | null>(null);
+  const [errorCode, setErrorCode] = useState<string | null>(null);
+  const [reported, setReported] = useState(false);
   const [muted, setMuted] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -36,12 +44,15 @@ export default function VerifyRoleScreen({ readiness, onRetry }: Props) {
   const handleVerify = async () => {
     setPhase('loading');
     setError(null);
+    setErrorCode(null);
     try {
       const guildParam = readiness.guildId ? `?guild_id=${encodeURIComponent(readiness.guildId)}` : '';
       const res = await fetchWithCreds(`/api/member/verify-role${guildParam}`, { method: 'POST' });
       if (!res.ok) {
         const json = await res.json().catch(() => null);
-        setError(json?.error || 'Rol ataması başarısız oldu.');
+        const code = json?.error ?? null;
+        setErrorCode(code);
+        setError(code ? (ERROR_MESSAGES[code] ?? `Bilinmeyen hata: ${code}`) : 'Rol ataması başarısız oldu.');
         setPhase('error');
         return;
       }
@@ -85,9 +96,36 @@ export default function VerifyRoleScreen({ readiness, onRetry }: Props) {
               </p>
             </div>
             {phase === 'error' && error && (
-              <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300 backdrop-blur-md">
-                {error}
-              </p>
+              <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 backdrop-blur-md flex flex-col gap-2">
+                {errorCode && (
+                  <p className="text-xs font-mono text-red-400">hata: <span className="font-bold">{errorCode}</span></p>
+                )}
+                <p className="text-sm text-red-300 leading-relaxed">{error}</p>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      await fetchWithCreds('/api/admin/report-error', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          status: errorCode ?? 'verify_role_error',
+                          guildId: readiness.guildId,
+                          guildName: readiness.guildName,
+                          userAgent: navigator.userAgent,
+                          timestamp: new Date().toISOString(),
+                          url: window.location.href,
+                        }),
+                      });
+                      setReported(true);
+                    } catch { /* sessizce geç */ }
+                  }}
+                  disabled={reported}
+                  className="self-start flex items-center gap-1.5 rounded-full border border-red-400/40 bg-red-500/25 px-4 py-1.5 text-xs font-semibold text-red-200 backdrop-blur-md transition hover:bg-red-500/40 disabled:opacity-50"
+                >
+                  {reported ? '✓ Bildirildi' : 'Bildir'}
+                </button>
+              </div>
             )}
             <div className="flex items-center gap-3 pt-2">
               <button
