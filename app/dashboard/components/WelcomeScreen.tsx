@@ -101,7 +101,7 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
                 onClick={handleStart}
                 disabled={phase === 'loading'}
                 className="rounded-full border border-white/30 bg-white/10 px-8 py-3.5 text-sm font-bold text-white backdrop-blur-md transition hover:bg-white/20 hover:border-white/50 disabled:cursor-not-allowed disabled:opacity-50"
-                style={{ boxShadow: '0 0 28px rgba(88,101,242,0.35), 0 4px 16px rgba(0,0,0,0.4)' }}
+                style={{}}
               >
                 {phase === 'loading' ? (
                   <span className="flex items-center gap-2">
