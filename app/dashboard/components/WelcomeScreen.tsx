@@ -84,10 +84,10 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
                 className="text-6xl font-black leading-none tracking-tight text-white"
                 style={{ textShadow: '0 0 60px rgba(255,255,255,0.15), 0 2px 20px rgba(0,0,0,1)' }}
               >
-                Hoş geldin!
+                Seni aramızda görmek harika olacak.
               </h1>
               <p className="text-sm text-white/70 leading-relaxed max-w-sm" style={{ textShadow: '0 1px 8px rgba(0,0,0,1)' }}>
-                Platformumuza katılmak için bir profil oluşturman gerekiyor.
+                Birkaç saniye içinde hazır olacaksın. Seni içeride karşılamak için sabırsızlanıyoruz.
               </p>
             </div>
             {error && (
@@ -109,7 +109,7 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
                     Yükleniyor...
                   </span>
                 ) : (
-                  'Profil Oluştur'
+                  'Hazırlıklar Başlasın!'
                 )}
               </button>
             </div>
