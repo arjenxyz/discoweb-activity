@@ -76,7 +76,7 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
                 </p>
               )}
               <h1
-                className="text-4xl font-black leading-tight tracking-tight text-white"
+                className="text-6xl font-black leading-tight tracking-tight text-white"
                 style={{ textShadow: '0 0 40px rgba(255,255,255,0.2), 0 2px 12px rgba(0,0,0,1)' }}
               >
                 Hoş geldin!
