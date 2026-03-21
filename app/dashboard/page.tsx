@@ -33,6 +33,7 @@ import type {
   MailItem,
   PurchaseFeedback,
   Section,
+  BadgeInfo,
 } from './types';
 
 export default function DashboardPage() {
@@ -51,6 +52,7 @@ export default function DashboardPage() {
   const [walletLoading, setWalletLoading] = useState(true);
   const [overviewStats, setOverviewStats] = useState<OverviewStats | OverviewStatsExpanded | null>(null);
   const [overviewLoading, setOverviewLoading] = useState(true);
+  const [badgeInfo, setBadgeInfo] = useState<BadgeInfo | null>(null);
   const [storeItems, setStoreItems] = useState<StoreItem[]>([]);
   const [storeItemsLoading, setStoreItemsLoading] = useState(true);
   const [storePage, setStorePage] = useState(1);
@@ -478,12 +480,25 @@ export default function DashboardPage() {
           await sleep(1000 * attempt);
           return loadOverview(attempt + 1);
         }
-        console.warn('Overview yÃ¼klenemedi (tÃ¼m denemeler baÅŸarÄ±sÄ±z)');
+        console.warn('Overview yüklenemedi (tüm denemeler başarısız)');
       }
       setOverviewLoading(false);
     };
 
+    const loadBadges = async () => {
+      try {
+        const response = await fetchWithCreds('/api/member/badges');
+        if (response.ok) {
+          const data = (await response.json()) as BadgeInfo;
+          setBadgeInfo(data);
+        }
+      } catch {
+        // badge bilgisi yüklenemezse sessizce geç
+      }
+    };
+
     loadOverview();
+    loadBadges();
   }, [activityReadinessLoading, isBlockedByReadiness]);
 
   const refreshStoreItems = useCallback(async (page = 1, append = false) => {
@@ -990,6 +1005,7 @@ export default function DashboardPage() {
                   profile={profile}
                   renderPapelAmount={renderPapelAmount}
                   formatRoleColor={formatRoleColor}
+                  badgeInfo={badgeInfo}
                 />
                 {/* Chat is now a separate page at /chat */}
               </>

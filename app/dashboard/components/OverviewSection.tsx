@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import type { MemberProfile, OverviewStats, OrderStats, OverviewStatsExpanded } from '../types';
+import type { MemberProfile, OverviewStats, OrderStats, OverviewStatsExpanded, BadgeInfo } from '../types';
 
 type OverviewSectionProps = {
   overviewLoading: boolean;
@@ -13,6 +13,7 @@ type OverviewSectionProps = {
   orderStats?: OrderStats | null;
   renderPapelAmount: (value: number) => React.ReactNode;
   formatRoleColor: (color: number) => string;
+  badgeInfo?: BadgeInfo | null;
 };
 
 export default function OverviewSection({
@@ -24,6 +25,7 @@ export default function OverviewSection({
   profile,
   renderPapelAmount,
   formatRoleColor,
+  badgeInfo,
 }: OverviewSectionProps) {
   // Move papelLeaderboard and related variables here
   type LeaderboardMember = NonNullable<OverviewStatsExpanded['papelLeaderboard']>[number] & {
@@ -166,6 +168,94 @@ export default function OverviewSection({
               <p className="mt-2 text-sm text-white/60">Menüden Sıralama’ya tıklayarak açabilirsiniz.</p>
             </div>
           </div>
+
+          {/* Tag Rozeti & Çekiliş Kartı */}
+          {badgeInfo !== undefined && (
+            <div className="rounded-2xl border border-white/10 bg-[#0b0d12]/60 p-5 overview-fade overview-delay-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-indigo-300">🏅 Tag Rozeti</p>
+              {!badgeInfo || !badgeInfo.hasTag ? (
+                <p className="mt-3 text-sm text-white/40">Şu an sunucu tag&apos;ini taşımıyorsunuz.</p>
+              ) : (
+                <div className="mt-4 space-y-4">
+                  {/* Mevcut rozet & gün bilgisi */}
+                  <div className="flex items-center gap-3">
+                    {badgeInfo.currentBadge ? (
+                      <span
+                        className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 text-xl"
+                        style={{ backgroundColor: badgeInfo.currentBadge.color ? `${badgeInfo.currentBadge.color}22` : 'rgba(255,255,255,0.05)', borderColor: badgeInfo.currentBadge.color ? `${badgeInfo.currentBadge.color}44` : undefined }}
+                      >
+                        {badgeInfo.currentBadge.emoji ?? '🏅'}
+                      </span>
+                    ) : (
+                      <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-xl">🏅</span>
+                    )}
+                    <div>
+                      <p className="text-sm font-semibold text-white">
+                        {badgeInfo.currentBadge ? badgeInfo.currentBadge.name : 'Rozet Yok'}
+                      </p>
+                      <p className="text-xs text-white/50">{badgeInfo.tagDays} gün tag taşıyorsunuz</p>
+                    </div>
+                  </div>
+
+                  {/* Sonraki rozete ilerleme */}
+                  {badgeInfo.nextBadge && badgeInfo.daysToNext !== null && (
+                    <div>
+                      <div className="mb-1 flex justify-between text-xs text-white/40">
+                        <span>{badgeInfo.currentBadge?.name ?? 'Başlangıç'}</span>
+                        <span>{badgeInfo.daysToNext} gün → {badgeInfo.nextBadge.emoji ?? ''} {badgeInfo.nextBadge.name}</span>
+                      </div>
+                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+                        <div
+                          className="h-full rounded-full bg-indigo-400 transition-all"
+                          style={{
+                            width: `${Math.min(100, Math.round((badgeInfo.tagDays / badgeInfo.nextBadge.days_required) * 100))}%`,
+                            backgroundColor: badgeInfo.nextBadge.color ?? undefined,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {!badgeInfo.nextBadge && badgeInfo.currentBadge && (
+                    <p className="text-xs text-white/40">En yüksek rozete ulaştınız! 🎉</p>
+                  )}
+                </div>
+              )}
+
+              {/* Aktif Çekilişler */}
+              {(badgeInfo?.activeRaffles?.length ?? 0) > 0 && (
+                <div className="mt-5">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-300/70">🎁 Aktif Çekilişler</p>
+                  <div className="mt-3 space-y-2">
+                    {badgeInfo!.activeRaffles.map((raffle) => {
+                      const eligible = badgeInfo!.eligibleRaffles.includes(raffle.id);
+                      return (
+                        <div
+                          key={raffle.id}
+                          className={`rounded-xl border p-3 ${eligible ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-white/10 bg-white/5'}`}
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-sm font-medium text-white">{raffle.title}</p>
+                            <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${eligible ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/10 text-white/40'}`}>
+                              {eligible ? '✅ Uygunsun' : `${raffle.min_tag_days}g gerekli`}
+                            </span>
+                          </div>
+                          {raffle.prizes && raffle.prizes.length > 0 && (
+                            <p className="mt-1 text-xs text-white/50">{raffle.prizes.join(' · ')}</p>
+                          )}
+                          {raffle.end_date && (
+                            <p className="mt-1 text-xs text-white/30">
+                              Bitiş: {new Date(raffle.end_date).toLocaleDateString('tr-TR')}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
         </div>
       )}

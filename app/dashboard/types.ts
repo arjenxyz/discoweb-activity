@@ -151,3 +151,33 @@ export type PurchaseFeedback = Record<
   string,
   { status: 'success' | 'error'; message: string } | undefined
 >;
+
+export type BadgeTier = {
+  id: string;
+  name: string;
+  emoji: string | null;
+  days_required: number;
+  color: string | null;
+  description: string | null;
+  sort_order: number;
+};
+
+export type Raffle = {
+  id: string;
+  title: string;
+  description: string | null;
+  prizes: string[] | null;
+  start_date: string | null;
+  end_date: string | null;
+  min_tag_days: number;
+};
+
+export type BadgeInfo = {
+  currentBadge: BadgeTier | null;
+  nextBadge: BadgeTier | null;
+  tagDays: number;
+  daysToNext: number | null;
+  hasTag: boolean;
+  activeRaffles: Raffle[];
+  eligibleRaffles: string[];
+};

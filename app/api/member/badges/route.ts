@@ -1,0 +1,80 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { getSessionUserId } from '@/lib/auth';
+import { getSupabaseServiceClient } from '@/lib/supabaseServiceClient';
+import { getSelectedGuildId } from '@/lib/guild';
+import { checkMaintenance } from '@/lib/maintenance';
+
+export async function GET(request: NextRequest) {
+  const selectedGuildId = await getSelectedGuildId(request);
+  if (!selectedGuildId) {
+    return NextResponse.json({ error: 'no_guild_selected' }, { status: 400 });
+  }
+
+  const maintenance = await checkMaintenance(['site']);
+  if (maintenance.blocked) {
+    return NextResponse.json(
+      { error: 'maintenance', key: maintenance.key, reason: maintenance.reason },
+      { status: 503 },
+    );
+  }
+
+  const supabase = getSupabaseServiceClient();
+  if (!supabase) {
+    return NextResponse.json({ error: 'missing_service_role' }, { status: 500 });
+  }
+
+  const userId = await getSessionUserId();
+  if (!userId) {
+    return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+  }
+
+  const [{ data: tiers }, { data: profile }, { data: raffles }] = await Promise.all([
+    supabase
+      .from('badge_tiers')
+      .select('id,name,emoji,days_required,color,description,sort_order')
+      .eq('guild_id', selectedGuildId)
+      .order('sort_order', { ascending: true }),
+    supabase
+      .from('member_profiles')
+      .select('has_tag,tag_granted_at')
+      .eq('guild_id', selectedGuildId)
+      .eq('user_id', userId)
+      .single(),
+    supabase
+      .from('raffles')
+      .select('id,title,description,prizes,start_date,end_date,min_tag_days')
+      .eq('guild_id', selectedGuildId)
+      .eq('is_active', true)
+      .or('end_date.is.null,end_date.gt.' + new Date().toISOString()),
+  ]);
+
+  const hasTag = profile?.has_tag ?? false;
+  const tagGrantedAt = profile?.tag_granted_at ?? null;
+
+  let tagDays = 0;
+  if (hasTag && tagGrantedAt) {
+    const grantedDate = new Date(tagGrantedAt);
+    const now = new Date();
+    tagDays = Math.floor((now.getTime() - grantedDate.getTime()) / (1000 * 60 * 60 * 24));
+  }
+
+  const sortedTiers = tiers ?? [];
+  const currentBadge = [...sortedTiers].reverse().find((t) => t.days_required <= tagDays) ?? null;
+  const nextBadge = sortedTiers.find((t) => t.days_required > tagDays) ?? null;
+  const daysToNext = nextBadge ? nextBadge.days_required - tagDays : null;
+
+  const activeRaffles = raffles ?? [];
+  const eligibleRaffles = activeRaffles
+    .filter((r) => tagDays >= r.min_tag_days)
+    .map((r) => r.id);
+
+  return NextResponse.json({
+    currentBadge,
+    nextBadge,
+    tagDays,
+    daysToNext,
+    hasTag,
+    activeRaffles,
+    eligibleRaffles,
+  });
+}
