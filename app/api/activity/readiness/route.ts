@@ -213,6 +213,7 @@ export async function GET(request: Request) {
       buildResponse({
         status: 'missing_service_role',
         guildId,
+        debug: { missingVars: ['SUPABASE_SERVICE_ROLE_KEY'], env: process.env.NODE_ENV },
       }),
       { status: 500 },
     );
@@ -224,7 +225,7 @@ export async function GET(request: Request) {
   // Bot kontrolü her şeyden önce
   const botToken = process.env.DISCORD_BOT_TOKEN;
   if (!botToken) {
-    return nonOkStatus({ status: 'missing_bot_token', guildId });
+    return nonOkStatus({ status: 'missing_bot_token', guildId, debug: { missingVars: ['DISCORD_BOT_TOKEN'], env: process.env.NODE_ENV } });
   }
 
   const guildResponse = await fetchWithRetry(`https://discord.com/api/guilds/${guildId}`, {
@@ -242,7 +243,7 @@ export async function GET(request: Request) {
         isAdmin: adminFromOAuth,
         canInviteBot: adminFromOAuth,
         botInGuild: false,
-        debug: { discordStatus: guildResponse.status, reason: 'guild_fetch_failed' },
+        debug: { discordStatus: guildResponse.status, reason: 'guild_fetch_failed', endpoint: 'GET /guilds/:id', retried: true },
       });
     }
 
@@ -251,7 +252,7 @@ export async function GET(request: Request) {
       guildId,
       isAdmin: false,
       canInviteBot: false,
-      debug: { discordStatus: guildResponse.status, reason: 'guild_fetch_failed' },
+      debug: { discordStatus: guildResponse.status, reason: 'guild_fetch_failed', endpoint: 'GET /guilds/:id', retried: true },
     });
   }
 
@@ -275,11 +276,16 @@ export async function GET(request: Request) {
       isAdmin: adminFromOAuth,
       canInviteBot: adminFromOAuth,
       botInGuild: true,
+      debug: { guildOwner: guild.owner_id, guildName: guild.name },
     });
   }
 
   if (!server.is_setup) {
     const adminFromOAuth = isOwnerViaBot || await resolveGuildAdminFromOAuth(supabase, session.userId, guildId, requestBearerToken);
+    const missingFields = [
+      !server.admin_role_id && 'admin_role_id',
+      !server.verify_role_id && 'verify_role_id',
+    ].filter(Boolean);
     return nonOkStatus({
       status: 'server_setup_required',
       guildId,
@@ -287,6 +293,7 @@ export async function GET(request: Request) {
       isAdmin: adminFromOAuth,
       canInviteBot: adminFromOAuth,
       botInGuild: true,
+      debug: { isSetup: false, missingFields },
     });
   }
 
@@ -303,7 +310,7 @@ export async function GET(request: Request) {
         guildName: guild.name ?? server.name ?? null,
         isAdmin: false,
         canInviteBot: false,
-        debug: { discordStatus: memberResponse.status },
+        debug: { discordStatus: memberResponse.status, endpoint: 'GET /guilds/:id/members/:userId' },
       });
     }
 
@@ -313,7 +320,7 @@ export async function GET(request: Request) {
       guildName: guild.name ?? server.name ?? null,
       isAdmin: false,
       canInviteBot: false,
-      debug: { discordStatus: memberResponse.status, reason: 'member_fetch_failed' },
+      debug: { discordStatus: memberResponse.status, reason: 'member_fetch_failed', endpoint: 'GET /guilds/:id/members/:userId', retried: true },
     });
   }
 

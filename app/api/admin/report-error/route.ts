@@ -9,6 +9,14 @@ const REPORTABLE_STATUSES = new Set([
   'server_setup_required',
 ]);
 
+const STATUS_DESCRIPTIONS: Record<string, string> = {
+  discord_api_error: 'Discord API geçici hata verdi — retry sonrası da başarısız.',
+  missing_service_role: 'SUPABASE_SERVICE_ROLE_KEY env değişkeni eksik veya hatalı.',
+  missing_bot_token: 'DISCORD_BOT_TOKEN env değişkeni eksik.',
+  server_not_registered: "Guild Supabase'de kayıtlı değil.",
+  server_setup_required: 'Guild kayıtlı ama kurulum tamamlanmamış (is_setup=false).',
+};
+
 export async function POST(request: Request) {
   const session = await requireSessionUser(request);
   if (!session.ok) {
@@ -20,7 +28,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'webhook_not_configured' }, { status: 500 });
   }
 
-  let body: { status?: string; guildId?: string; guildName?: string; debug?: unknown };
+  let body: { status?: string; guildId?: string; guildName?: string; debug?: unknown; userAgent?: string; timestamp?: string; url?: string };
   try {
     body = await request.json();
   } catch {
@@ -31,6 +39,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'not_reportable' }, { status: 400 });
   }
 
+  const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? 'Bilinmiyor';
+  const serverUserAgent = request.headers.get('user-agent') ?? 'Bilinmiyor';
+
   const embed = {
     title: '⚠️ Activity Hata Bildirimi',
     color: 0xff4444,
@@ -39,6 +50,11 @@ export async function POST(request: Request) {
       { name: 'Sunucu', value: body.guildName ?? body.guildId ?? 'Bilinmiyor', inline: true },
       { name: 'Sunucu ID', value: body.guildId ?? 'Bilinmiyor', inline: true },
       { name: 'Kullanıcı ID', value: session.userId, inline: true },
+      { name: 'IP', value: ip, inline: true },
+      { name: 'İstemci Zamanı', value: body.timestamp ?? 'Bilinmiyor', inline: true },
+      { name: 'Hata Açıklaması', value: STATUS_DESCRIPTIONS[body.status] ?? 'Bilinmiyor', inline: false },
+      { name: 'User Agent', value: `\`${body.userAgent ?? serverUserAgent}\``, inline: false },
+      ...(body.url ? [{ name: 'URL', value: body.url, inline: false }] : []),
       ...(body.debug ? [{ name: 'Debug', value: `\`\`\`json\n${JSON.stringify(body.debug, null, 2)}\n\`\`\`` }] : []),
     ],
     timestamp: new Date().toISOString(),

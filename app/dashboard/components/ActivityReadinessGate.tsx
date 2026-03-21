@@ -134,6 +134,9 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
           guildId: readiness.guildId,
           guildName: readiness.guildName,
           debug: readiness.debug,
+          userAgent: navigator.userAgent,
+          timestamp: new Date().toISOString(),
+          url: window.location.href,
         }),
       });
       setReportedStatus(readiness.status);
@@ -236,10 +239,32 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
           <p className="text-xs text-white/45 leading-relaxed" style={{ textShadow: '0 1px 6px rgba(0,0,0,1)' }}>
             {copy.helper}
           </p>
-          {(readiness.status === 'discord_api_error' || readiness.status === 'bot_not_in_guild') && readiness.debug && (
-            <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs font-mono text-red-300 backdrop-blur-md">
-              debug: {JSON.stringify(readiness.debug)}
-            </p>
+          {REPORTABLE.has(readiness.status) && (
+            <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-3 backdrop-blur-md flex flex-col gap-2">
+              <p className="text-xs font-mono text-red-300">
+                hata: <span className="font-bold">{readiness.status}</span>
+                {readiness.debug && (
+                  <> · {JSON.stringify(readiness.debug)}</>
+                )}
+              </p>
+              <button
+                type="button"
+                onClick={handleReport}
+                disabled={alreadyReported}
+                className="self-start flex items-center gap-1.5 rounded-full border border-red-400/40 bg-red-500/25 px-4 py-1.5 text-xs font-semibold text-red-200 backdrop-blur-md transition hover:bg-red-500/40 disabled:opacity-50"
+              >
+                {alreadyReported ? (
+                  '✓ Bildirildi'
+                ) : (
+                  <>
+                    <svg viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3">
+                      <path d="M3.5 2a.5.5 0 01.5-.5h8a.5.5 0 01.354.854L9.207 5.5l3.147 3.146A.5.5 0 0112 9.5H4.5V14a.5.5 0 01-1 0V2z" />
+                    </svg>
+                    Bildir
+                  </>
+                )}
+              </button>
+            </div>
           )}
           {copied && <p className="text-xs font-semibold text-emerald-400">Kopyalandı.</p>}
         </div>
@@ -257,16 +282,6 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
               {loading ? 'Kontrol ediliyor...' : 'Tekrar dene'}
             </button>
 
-            {REPORTABLE.has(readiness.status) && (
-              <button
-                type="button"
-                onClick={handleReport}
-                disabled={alreadyReported}
-                className="rounded-full border border-red-400/30 bg-red-500/20 px-5 py-2.5 text-sm font-semibold text-red-200 backdrop-blur-md transition hover:bg-red-500/30 disabled:opacity-50"
-              >
-                {alreadyReported ? '✓ Bildirildi' : 'Bildir'}
-              </button>
-            )}
             {isBotMissing && isAdmin && readiness.inviteUrl && (
               <button
                 type="button"
