@@ -102,7 +102,7 @@ export default function VerifyRoleScreen({ readiness, onRetry }: Props) {
                     Atanıyor...
                   </span>
                 ) : (
-                  'Rolü Al'
+                  'İlerlemeye Devam Et'
                 )}
               </button>
               {/* Mobilde ses butonu butonun sağında */}
