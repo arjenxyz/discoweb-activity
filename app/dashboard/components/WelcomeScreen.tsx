@@ -60,7 +60,7 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
 
   return (
     <div className="relative isolate min-h-screen overflow-hidden bg-[#0b0d12] text-white">
-      <VideoBackground videoRef={videoRef} src={process.env.NEXT_PUBLIC_WELCOME_CREATE_VIDEO_URL ?? null} />
+      <VideoBackground videoRef={videoRef} src="/cdn/Storage/Test1.mp4" />
 
       <main className="relative z-10 flex min-h-screen w-full flex-col items-start justify-end gap-6 px-5 pb-8 sm:flex-row sm:items-end sm:justify-between sm:px-6 sm:pb-10">
         {phase === 'success' ? (
@@ -92,7 +92,7 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
             </div>
 
             <div className="flex w-full shrink-0 items-center gap-2 sm:w-auto sm:justify-end">
-              <MuteButton muted={muted} onToggle={toggleMute} src={process.env.NEXT_PUBLIC_WELCOME_CREATE_VIDEO_URL ?? null} />
+              <MuteButton muted={muted} onToggle={toggleMute} src="/cdn/Storage/Test1.mp4" />
               <button
                 type="button"
                 onClick={handleStart}
