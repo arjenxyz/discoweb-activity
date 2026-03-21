@@ -47,7 +47,12 @@ export default function SplashScreen({ onEnter }: Props) {
     const t = setTimeout(() => setVisible(true), 80);
 
     // Oturum açıksa kullanıcı bilgisini çek
-    fetch(apiUrl('/api/auth/me'), { credentials: 'include' })
+    // Activity iframe cookie gönderemez — bearer token ile auth yap
+    const bearerToken = (() => { try { return localStorage.getItem('discord_bearer_token'); } catch { return null; } })();
+    fetch(apiUrl('/api/auth/me'), {
+      credentials: 'include',
+      headers: bearerToken ? { Authorization: `Bearer ${bearerToken}` } : {},
+    })
       .then(r => r.ok ? r.json() : null)
       .then((d: { username?: string; avatar?: string } | null) => {
         if (d?.username) {
@@ -120,14 +125,6 @@ export default function SplashScreen({ onEnter }: Props) {
       <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/30">
         Discord Economy Platform
       </span>
-      {user && (
-        <div className="flex items-center gap-1.5 mt-0.5">
-          {user.avatarUrl && <img src={user.avatarUrl} alt={user.username} className="h-3.5 w-3.5 rounded-full opacity-45" />}
-          <span className="text-[10px] text-white/25">
-            Hoş geldin, <span className="text-white/40 font-medium">{user.username}</span>
-          </span>
-        </div>
-      )}
     </div>
   );
 
@@ -225,12 +222,22 @@ export default function SplashScreen({ onEnter }: Props) {
           </div>
 
           {/* Sağ */}
-          <div className="flex items-center gap-3 shrink-0">
-            <div className="lg:hidden">
-              <MuteButton muted={muted} onToggle={toggleMute} />
+          <div className="flex flex-col items-end gap-2 shrink-0">
+            {user && (
+              <div className="flex items-center gap-1.5">
+                {user.avatarUrl && <img src={user.avatarUrl} alt={user.username} className="h-3.5 w-3.5 rounded-full opacity-45" />}
+                <span className="text-[10px] text-white/25">
+                  Hoş geldin, <span className="text-white/40 font-medium">{user.username}</span>
+                </span>
+              </div>
+            )}
+            <div className="flex items-center gap-3">
+              <div className="lg:hidden">
+                <MuteButton muted={muted} onToggle={toggleMute} />
+              </div>
+              {isDeveloper && <DevButton />}
+              <EnterButton />
             </div>
-            {isDeveloper && <DevButton />}
-            <EnterButton />
           </div>
         </div>
       </div>
