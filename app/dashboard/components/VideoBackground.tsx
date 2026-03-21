@@ -1,13 +1,15 @@
 import type { RefObject } from 'react';
 
-const videoUrl = process.env.NEXT_PUBLIC_WELCOME_VIDEO_URL ?? null;
+const DEFAULT_VIDEO_URL = process.env.NEXT_PUBLIC_WELCOME_VIDEO_URL ?? null;
 
 type VideoBackgroundProps = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   videoRef: RefObject<any>;
+  src?: string | null;
 };
 
-export function VideoBackground({ videoRef }: VideoBackgroundProps) {
+export function VideoBackground({ videoRef, src }: VideoBackgroundProps) {
+  const videoUrl = src !== undefined ? src : DEFAULT_VIDEO_URL;
   return (
     <>
       {videoUrl ? (
@@ -35,7 +37,8 @@ type MuteButtonProps = {
   onToggle: () => void;
 };
 
-export function MuteButton({ muted, onToggle }: MuteButtonProps) {
+export function MuteButton({ muted, onToggle, src }: MuteButtonProps & { src?: string | null }) {
+  const videoUrl = src !== undefined ? src : DEFAULT_VIDEO_URL;
   if (!videoUrl) return null;
   return (
     <button
