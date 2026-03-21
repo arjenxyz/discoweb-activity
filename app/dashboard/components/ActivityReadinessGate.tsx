@@ -148,7 +148,7 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
   }
 
   const openSetupSite = async () => {
-    const url = 'https://discoweb.tech/setup';
+    const url = 'https://discoweb.tech';
     try {
       const { DiscordSDK } = await import('@discord/embedded-app-sdk');
       const sdk = new DiscordSDK(process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!);
