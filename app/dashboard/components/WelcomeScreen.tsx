@@ -131,8 +131,8 @@ function SuccessState() {
           <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
         </svg>
       </div>
-      <h2 className="text-xl font-black">Hazırsın!</h2>
-      <p className="text-sm text-white/70">Dashboard&apos;a yönlendiriliyorsun...</p>
+      <h2 className="text-xl font-black">Artık birlikteyiz!</h2>
+      <p className="text-sm text-white/70">DiscoWeb dünyasına giriş yapılıyor...</p>
       <style>{`
         @keyframes popIn {
           from { transform: scale(0); opacity: 0; }
