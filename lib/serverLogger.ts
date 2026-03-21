@@ -676,3 +676,50 @@ export const logWebEvent = async (request: Request, payload: LogPayload) => {
     // Loglar uygulama akışını bozmasın
   }
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HATA LOGU — Bot aracılığıyla sabit kanala gönderir
+// ─────────────────────────────────────────────────────────────────────────────
+
+const ERROR_CHANNEL_ID = process.env.ERROR_LOG_CHANNEL_ID ?? '1484952999515394200';
+
+export async function logError(
+  error: unknown,
+  context: { route?: string; userId?: string; guildId?: string; extra?: Record<string, unknown> } = {}
+): Promise<void> {
+  const botToken = process.env.DISCORD_BOT_TOKEN;
+  if (!botToken) return;
+
+  try {
+    const message = error instanceof Error ? error.message : String(error);
+    const stack = error instanceof Error && error.stack
+      ? error.stack.split('\n').slice(0, 5).join('\n')
+      : null;
+
+    const timestamp = Math.floor(Date.now() / 1000);
+
+    const fields: { name: string; value: string; inline?: boolean }[] = [];
+    if (context.route) fields.push({ name: 'Route', value: `\`${context.route}\``, inline: true });
+    if (context.userId) fields.push({ name: 'User', value: `\`${context.userId}\``, inline: true });
+    if (context.guildId) fields.push({ name: 'Guild', value: `\`${context.guildId}\``, inline: true });
+    if (context.extra) fields.push({ name: 'Extra', value: `\`\`\`json\n${JSON.stringify(context.extra, null, 2).slice(0, 800)}\`\`\`` });
+    if (stack) fields.push({ name: 'Stack', value: `\`\`\`\n${stack.slice(0, 800)}\`\`\`` });
+
+    await fetch(`https://discord.com/api/channels/${ERROR_CHANNEL_ID}/messages`, {
+      method: 'POST',
+      headers: { Authorization: `Bot ${botToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        embeds: [{
+          title: '⚠️ Sunucu Hatası',
+          description: `\`\`\`\n${message.slice(0, 1000)}\`\`\``,
+          color: 0xef4444,
+          fields,
+          footer: { text: `<t:${timestamp}:F>` },
+          timestamp: new Date().toISOString(),
+        }],
+      }),
+    });
+  } catch {
+    // sessizce geç
+  }
+}

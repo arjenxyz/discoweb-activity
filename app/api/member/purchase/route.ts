@@ -2,7 +2,7 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { checkMaintenance } from '@/lib/maintenance';
-import { logWebEvent } from '@/lib/serverLogger';
+import { logWebEvent, logError } from '@/lib/serverLogger';
 import { logBotError } from '@/lib/activityLogger';
 import { discordFetch } from '@/lib/discordRest';
 import { requireSessionUser } from '@/lib/auth';
@@ -300,6 +300,7 @@ export async function POST(request: Request) {
     }
   } catch (err) {
     console.error('Role pre-check error:', err);
+    void logError(err, { route: 'POST /api/member/purchase', extra: { reason: 'role_precheck_error' } });
     await supabase.from('store_orders').update({ status: 'failed', failure_reason: 'role_precheck_error' }).eq('id', order?.id);
     return NextResponse.json({ error: 'role_precheck_error' }, { status: 500 });
   }

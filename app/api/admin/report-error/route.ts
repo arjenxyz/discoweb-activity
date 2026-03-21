@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireSessionUser } from '@/lib/auth';
+import { logError } from '@/lib/serverLogger';
 
 const REPORTABLE_STATUSES = new Set([
   'discord_api_error',
@@ -24,9 +25,6 @@ export async function POST(request: Request) {
   }
 
   const webhookUrl = process.env.DISCORD_ERROR_WEBHOOK_URL;
-  if (!webhookUrl) {
-    return NextResponse.json({ error: 'webhook_not_configured' }, { status: 500 });
-  }
 
   let body: { status?: string; guildId?: string; guildName?: string; debug?: unknown; userAgent?: string; timestamp?: string; url?: string };
   try {
@@ -37,6 +35,17 @@ export async function POST(request: Request) {
 
   if (!body.status || !REPORTABLE_STATUSES.has(body.status)) {
     return NextResponse.json({ error: 'not_reportable' }, { status: 400 });
+  }
+
+  // Webhook yoksa doğrudan bot kanalına gönder
+  if (!webhookUrl) {
+    await logError(new Error(`[Kullanıcı Bildirimi] ${body.status}`), {
+      route: 'report-error',
+      userId: session.userId,
+      guildId: body.guildId,
+      extra: { status: body.status, guildName: body.guildName, debug: body.debug },
+    });
+    return NextResponse.json({ ok: true });
   }
 
   const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? 'Bilinmiyor';
