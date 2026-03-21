@@ -5,8 +5,10 @@
 
 const DISCORD_API = 'https://discord.com/api/v10';
 
-const LOGIN_CHANNEL_ID  = '1484938345770651861';
-const LOGOUT_CHANNEL_ID = '1484938399965122691';
+const LOGIN_CHANNEL_ID     = '1484938345770651861';
+const LOGOUT_CHANNEL_ID    = '1484938399965122691';
+const NEW_USER_CHANNEL_ID  = '1484940513822904350';
+const NEW_SERVER_CHANNEL_ID = '1484940664818110544';
 
 type LoginLogPayload = {
   userId: string;
@@ -104,6 +106,68 @@ export async function logActivityLogout(data: LogoutLogPayload): Promise<void> {
   };
 
   await postToChannel(LOGOUT_CHANNEL_ID, { embeds: [embed] });
+}
+
+type NewUserPayload = {
+  userId: string;
+  username: string;
+  discriminator?: string;
+  avatar: string | null;
+  guildId: string | null;
+  guildName: string | null;
+  ip: string | null;
+  userAgent: string | null;
+};
+
+type NewServerPayload = {
+  guildId: string;
+  guildName: string;
+  ownerId: string;
+  registeredBy: string; // userId
+  isSetup: boolean;     // false = sadece kayıt, true = kurulum tamamlandı
+  adminRoleId?: string | null;
+  verifyRoleId?: string | null;
+};
+
+export async function logNewUser(data: NewUserPayload): Promise<void> {
+  const embed = {
+    author: {
+      name: `${data.username}${data.discriminator && data.discriminator !== '0' ? `#${data.discriminator}` : ''}`,
+      icon_url: avatarUrl(data.userId, data.avatar),
+    },
+    title: '🎉 Yeni Kullanıcı',
+    color: 0x57F287,
+    fields: [
+      { name: '👤 Kullanıcı', value: `<@${data.userId}> \`${data.userId}\``, inline: false },
+      { name: '🏠 İlk Sunucu', value: data.guildName ? `${data.guildName} \`${data.guildId}\`` : (data.guildId ?? '—'), inline: false },
+      { name: '🌐 IP', value: data.ip ? `\`${data.ip}\`` : '—', inline: true },
+      { name: '🖥️ User Agent', value: data.userAgent ? `\`${data.userAgent.slice(0, 200)}\`` : '—', inline: false },
+    ],
+    timestamp: new Date().toISOString(),
+    footer: { text: 'Activity · Yeni Kullanıcı' },
+  };
+
+  await postToChannel(NEW_USER_CHANNEL_ID, { embeds: [embed] });
+}
+
+export async function logNewServer(data: NewServerPayload): Promise<void> {
+  const embed = {
+    title: data.isSetup ? '✅ Yeni Sunucu Kurulumu Tamamlandı' : '📋 Yeni Sunucu Kaydedildi',
+    color: data.isSetup ? 0x5865F2 : 0xF1C40F,
+    fields: [
+      { name: '🏠 Sunucu', value: `${data.guildName} \`${data.guildId}\``, inline: false },
+      { name: '👑 Sunucu Sahibi', value: `<@${data.ownerId}>`, inline: true },
+      { name: '🔧 Kaydeden', value: `<@${data.registeredBy}>`, inline: true },
+      ...(data.isSetup ? [
+        { name: '🎭 Admin Rolü', value: data.adminRoleId ? `<@&${data.adminRoleId}>` : '—', inline: true },
+        { name: '✅ Verify Rolü', value: data.verifyRoleId ? `<@&${data.verifyRoleId}>` : '—', inline: true },
+      ] : []),
+    ],
+    timestamp: new Date().toISOString(),
+    footer: { text: `Activity · ${data.isSetup ? 'Kurulum Tamamlandı' : 'Sunucu Kaydı'}` },
+  };
+
+  await postToChannel(NEW_SERVER_CHANNEL_ID, { embeds: [embed] });
 }
 
 export async function logActivityAuthError(data: ErrorLogPayload): Promise<void> {

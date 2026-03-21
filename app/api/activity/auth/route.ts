@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { logWebEvent } from '@/lib/serverLogger';
-import { logActivityLogin, logActivityAuthError } from '@/lib/activityLogger';
+import { logActivityLogin, logActivityAuthError, logNewUser } from '@/lib/activityLogger';
 import { createClient } from '@supabase/supabase-js';
 import { createSessionToken } from '@/lib/auth';
 
@@ -265,7 +265,7 @@ const envFlags = {
     }
 
     // Activity için sadece kullanıcı bilgilerini döndür, sunucu seçimi olmadan direkt dashboard'a yönlendir
-    const responseBody: any = {
+    const responseBody: Record<string, unknown> = {
       status: 'ok',
       user: {
         id: user.id,
@@ -302,6 +302,8 @@ const envFlags = {
       : null;
     const activeGuildName = guildId ? guilds.find((g) => g.id === guildId)?.name ?? null : null;
 
+    const isNewUser = !existingUserForLog;
+
     await logActivityLogin({
       userId: user.id,
       username: user.username,
@@ -309,11 +311,24 @@ const envFlags = {
       avatar: user.avatar,
       guildId: guildId ?? null,
       guildName: activeGuildName,
-      isNewUser: !existingUserForLog,
+      isNewUser,
       ip,
       userAgent: ua,
       tokenExpiresAt: loginExpiresAt,
     });
+
+    if (isNewUser) {
+      await logNewUser({
+        userId: user.id,
+        username: user.username,
+        discriminator: user.discriminator,
+        avatar: user.avatar,
+        guildId: guildId ?? null,
+        guildName: activeGuildName,
+        ip,
+        userAgent: ua,
+      });
+    }
 
     const response = NextResponse.json({
       ...responseBody,

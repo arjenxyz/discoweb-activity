@@ -2,6 +2,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { getSessionUserId, requireSessionUser } from '@/lib/auth';
+import { logNewServer } from '@/lib/activityLogger';
 
 const getSupabase = () => {
   const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -270,6 +271,16 @@ export async function POST(request: Request) {
       serverId = newServer.id;
       console.log('Server created:', newServer);
     }
+
+    await logNewServer({
+      guildId,
+      guildName: guild.name ?? guildId,
+      ownerId: guild.owner_id ?? userId,
+      registeredBy: userId,
+      isSetup: true,
+      adminRoleId,
+      verifyRoleId,
+    });
 
     // Double-check roles stored in DB for debugging
     console.log('Storing roles (payload):', { adminRoleId, verifyRoleId });

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { requireSessionUser } from '@/lib/auth';
 import { getSelectedGuildId } from '@/lib/guild';
+import { logNewServer } from '@/lib/activityLogger';
 
 const getSupabase = () => {
   const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -114,6 +115,14 @@ export async function POST(request: Request) {
     console.error('[admin/register] insert error', error);
     return NextResponse.json({ error: 'db_error', detail: error.message }, { status: 500 });
   }
+
+  await logNewServer({
+    guildId,
+    guildName: name,
+    ownerId: guild.owner_id ?? 'unknown',
+    registeredBy: session.userId,
+    isSetup: false,
+  });
 
   return NextResponse.json({ ok: true, guildId, name });
 }
