@@ -14,30 +14,32 @@ export default function SplashScreen({ onEnter }: Props) {
   const [muted, setMuted] = useState(true);
   const [visible, setVisible] = useState(false);
   const [maintenance, setMaintenance] = useState(false);
+  const [maintenanceChecked, setMaintenanceChecked] = useState(false);
   const [isDeveloper, setIsDeveloper] = useState(false);
+  const [isDeveloperChecked, setIsDeveloperChecked] = useState(false);
   const [devPanelOpen, setDevPanelOpen] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), 80);
 
-    const checkMaintenance = () => {
+    const checkMaintenance = (initial = false) => {
       fetch(apiUrl('/api/activity/maintenance'))
         .then(r => r.json())
-        .then(d => setMaintenance(d.maintenance === true))
-        .catch(() => {});
+        .then(d => { setMaintenance(d.maintenance === true); if (initial) setMaintenanceChecked(true); })
+        .catch(() => { if (initial) setMaintenanceChecked(true); });
     };
 
-    checkMaintenance();
-    const interval = setInterval(checkMaintenance, 30000);
-
-    // Developer rol kontrolü (tek seferlik)
+    // Developer rol kontrolü ve maintenance paralel başlat
     const token = (() => { try { return localStorage.getItem('discord_bearer_token'); } catch { return null; } })();
     fetch(apiUrl('/api/activity/is-developer'), {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     })
       .then(r => r.json())
-      .then(d => { console.log('[DevCheck]', d); if (d.isDeveloper) setIsDeveloper(true); })
-      .catch((e) => console.error('[DevCheck] hata:', e));
+      .then(d => { if (d.isDeveloper) setIsDeveloper(true); setIsDeveloperChecked(true); })
+      .catch(() => { setIsDeveloperChecked(true); });
+
+    checkMaintenance(true);
+    const interval = setInterval(() => checkMaintenance(false), 30000);
 
     return () => { clearTimeout(t); clearInterval(interval); };
   }, []);
@@ -148,23 +150,49 @@ export default function SplashScreen({ onEnter }: Props) {
               </button>
             )}
 
-            <button
-              type="button"
-              onClick={maintenance ? undefined : onEnter}
-              disabled={maintenance}
-              className={`group relative overflow-hidden rounded-full px-8 py-3.5 text-sm font-bold text-white transition-all duration-300 active:scale-95 ${maintenance ? 'cursor-not-allowed bg-white/10' : 'bg-[#5865F2] hover:bg-[#4752C4]'}`}
-              style={maintenance ? {} : { boxShadow: '0 0 32px rgba(88,101,242,0.5), 0 4px 16px rgba(0,0,0,0.5)' }}
-            >
-              {!maintenance && <span className="pointer-events-none absolute inset-0 -translate-x-full skew-x-12 bg-white/20 transition-transform duration-500 group-hover:translate-x-full" />}
-              <span className="relative flex items-center gap-2">
-                {maintenance ? 'Activity Bakımda' : 'Keşfet'}
-                {!maintenance && (
-                  <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-0.5">
-                    <path d="M3.75 7.25a.75.75 0 000 1.5h6.19l-2.72 2.72a.75.75 0 001.06 1.06l4-4a.75.75 0 000-1.06l-4-4a.75.75 0 00-1.06 1.06l2.72 2.72H3.75z" />
-                  </svg>
-                )}
-              </span>
-            </button>
+            {(() => {
+              // Hem bakım hem developer kontrolü tamamlanana kadar kilitle
+              // (bakım kapalıysa developer kontrolü beklemeye gerek yok)
+              const stillLoading = !maintenanceChecked || (maintenance && !isDeveloperChecked);
+              if (stillLoading) {
+                return (
+                  <button
+                    type="button"
+                    disabled
+                    className="group relative overflow-hidden rounded-full px-8 py-3.5 text-sm font-bold text-white transition-all duration-300 cursor-not-allowed bg-white/10"
+                  >
+                    <span className="relative flex items-center gap-2">
+                      <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 16 16" fill="none">
+                        <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="2" strokeOpacity="0.3" />
+                        <path d="M8 2a6 6 0 016 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                      </svg>
+                      Yükleniyor
+                    </span>
+                  </button>
+                );
+              }
+              // Bakım aktif ve developer değil — engelle
+              const blocked = maintenance && !isDeveloper;
+              return (
+                <button
+                  type="button"
+                  onClick={blocked ? undefined : onEnter}
+                  disabled={blocked}
+                  className={`group relative overflow-hidden rounded-full px-8 py-3.5 text-sm font-bold text-white transition-all duration-300 active:scale-95 ${blocked ? 'cursor-not-allowed bg-white/10' : maintenance ? 'bg-amber-600 hover:bg-amber-500' : 'bg-[#5865F2] hover:bg-[#4752C4]'}`}
+                  style={blocked ? {} : { boxShadow: maintenance ? '0 0 32px rgba(180,100,0,0.4), 0 4px 16px rgba(0,0,0,0.5)' : '0 0 32px rgba(88,101,242,0.5), 0 4px 16px rgba(0,0,0,0.5)' }}
+                >
+                  {!blocked && <span className="pointer-events-none absolute inset-0 -translate-x-full skew-x-12 bg-white/20 transition-transform duration-500 group-hover:translate-x-full" />}
+                  <span className="relative flex items-center gap-2">
+                    {blocked ? 'Activity Bakımda' : 'Keşfet'}
+                    {!blocked && (
+                      <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-0.5">
+                        <path d="M3.75 7.25a.75.75 0 000 1.5h6.19l-2.72 2.72a.75.75 0 001.06 1.06l4-4a.75.75 0 000-1.06l-4-4a.75.75 0 00-1.06 1.06l2.72 2.72H3.75z" />
+                      </svg>
+                    )}
+                  </span>
+                </button>
+              );
+            })()}
           </div>
 
         </div>

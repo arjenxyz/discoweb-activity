@@ -96,6 +96,7 @@ export default function DashboardPage() {
   const [maintenanceFlags, setMaintenanceFlags] = useState<Record<string, { is_active: boolean; reason: string | null; updated_by?: string | null }> | null>(null);
   const [maintenanceLoading, setMaintenanceLoading] = useState(true);
   const [maintenanceUpdaters, setMaintenanceUpdaters] = useState<Record<string, { id: string; name: string; avatarUrl: string }>>({});
+  const [isDeveloper, setIsDeveloper] = useState(false);
   const [promotionsModalOpen, setPromotionsModalOpen] = useState(false);
   const [discountsModalOpen, setDiscountsModalOpen] = useState(false);
   const [earningsModalOpen, setEarningsModalOpen] = useState(false);
@@ -251,6 +252,15 @@ export default function DashboardPage() {
 
     loadMaintenance();
 
+    // Developer rol kontrolü
+    const token = (() => { try { return localStorage.getItem('discord_bearer_token'); } catch { return null; } })();
+    fetch(apiUrl('/api/activity/is-developer'), {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+      .then(r => r.json())
+      .then((d: { isDeveloper?: boolean }) => { if (isMounted && d.isDeveloper) setIsDeveloper(true); })
+      .catch(() => {});
+
     return () => {
       isMounted = false;
     };
@@ -276,10 +286,10 @@ export default function DashboardPage() {
       : null;
 
   useEffect(() => {
-    if (!maintenanceLoading && isSiteMaintenance) {
+    if (!maintenanceLoading && isSiteMaintenance && !isDeveloper) {
       router.replace('/maintenance');
     }
-  }, [isSiteMaintenance, maintenanceLoading, router]);
+  }, [isSiteMaintenance, maintenanceLoading, isDeveloper, router]);
 
   const refreshMailRef = useRef<() => Promise<void>>();
   const refreshWalletRef = useRef<() => Promise<void>>();
