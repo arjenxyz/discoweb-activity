@@ -6,6 +6,7 @@ import { discordFetch } from '@/lib/discordRest';
 import { getSessionUserId, requireSessionUser } from '@/lib/auth';
 import { logWebEvent } from '@/lib/serverLogger';
 import { cleanupExpiredRolesForUser } from '@/lib/roleCleanup';
+import { getSelectedGuildId } from '@/lib/guild';
 
 const GUILD_ID = process.env.DISCORD_GUILD_ID ?? null;
 
@@ -18,12 +19,6 @@ const getSupabase = (): SupabaseClient | null => {
   return createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
 };
 
-
-const getSelectedGuildId = async (): Promise<string | null> => {
-  const cookieStore = await cookies();
-  const selectedGuildId = cookieStore.get('selected_guild_id')?.value;
-  return selectedGuildId || GUILD_ID;
-};
 
 export async function GET(request: Request) {
   // Development mode bypass for Activity
@@ -75,7 +70,7 @@ export async function GET(request: Request) {
   }
   const supabaseClient = supabase as SupabaseClient;
 
-  const selectedGuildId = await getSelectedGuildId();
+  const selectedGuildId = await getSelectedGuildId(request);
 
   const { data: server, error: serverError } = await supabase
     .from('servers')
@@ -151,7 +146,7 @@ export async function POST(request: Request) {
     return session.response;
   }
   const userId = session.userId;
-  const selectedGuildId = await getSelectedGuildId();
+  const selectedGuildId = await getSelectedGuildId(request);
 
   console.log('Checkout request:', { userId, selectedGuildId });
 

@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { createClient } from '@supabase/supabase-js';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { requireSessionUser } from '@/lib/auth';
+import { getSelectedGuildId } from '@/lib/guild';
 
 type Database = {
   public: {
@@ -19,12 +20,6 @@ type Database = {
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };
-};
-
-const getSelectedGuildId = async (): Promise<string | null> => {
-  const cookieStore = await cookies();
-  const selectedGuildId = cookieStore.get('selected_guild_id')?.value;
-  return selectedGuildId || process.env.DISCORD_GUILD_ID || null;
 };
 
 const getSupabase = (): SupabaseClient<Database> | null => {
@@ -57,7 +52,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'invalid_payload' }, { status: 400 });
   }
 
-  const selectedGuildId = await getSelectedGuildId();
+  const selectedGuildId = await getSelectedGuildId(request);
+  if (!selectedGuildId) {
+    return NextResponse.json({ error: 'server_not_found' }, { status: 404 });
+  }
 
   const { error } = await supabase
     .from('system_mail_contacts')

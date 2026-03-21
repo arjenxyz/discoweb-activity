@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { checkMaintenance } from '@/lib/maintenance';
 import { getSessionUserId } from '@/lib/auth';
+import { getSelectedGuildId } from '@/lib/guild';
 
 const DEFAULT_SLUG = 'default';
 const GUILD_ID = process.env.DISCORD_GUILD_ID ?? null;
@@ -16,19 +17,13 @@ const getSupabase = () => {
   return createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
 };
 
-const getSelectedGuildId = async (): Promise<string | null> => {
-  const cookieStore = await cookies();
-  const selectedGuildId = cookieStore.get('selected_guild_id')?.value;
-  return selectedGuildId || GUILD_ID;
-};
-
 const getTodayStartIso = (): string => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   return today.toISOString();
 };
 
-export async function GET() {
+export async function GET(request: Request) {
   // Development mode bypass for Activity
   if (process.env.NODE_ENV === 'development') {
     return NextResponse.json({
@@ -60,7 +55,7 @@ export async function GET() {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
 
-  const selectedGuildId = await getSelectedGuildId();
+  const selectedGuildId = await getSelectedGuildId(request);
   if (!selectedGuildId) {
     return NextResponse.json({ error: 'no_guild_specified' }, { status: 400 });
   }
