@@ -221,7 +221,7 @@ export default function SplashScreen({ onEnter }: Props) {
         <div className="hidden lg:flex items-end justify-between gap-4">
           <FooterLine />
           <div className="flex items-center gap-4 shrink-0">
-            {user && !blocked && (
+            {user && !(maintenance && !isDeveloper) && (
               <div className="flex items-center gap-2">
                 {user.avatarUrl && <img src={user.avatarUrl} alt={user.username} className="h-6 w-6 rounded-full opacity-70" />}
                 <span className="text-sm text-white/50">
