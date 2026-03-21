@@ -9,7 +9,6 @@ import DiscordAgreementButton from '@/components/DiscordAgreementButton';
 import type { Notification, Section } from '../types';
 import type { JSX, RefObject } from 'react';
 
-
 type DashboardHeaderProps = {
   unauthorized: boolean;
   walletLoading: boolean;
@@ -62,15 +61,13 @@ type DashboardHeaderProps = {
   mailUnreadCount?: number;
 };
 
-// Rastgele GIF Listesi
 const RANDOM_GIFS = [
   '/gif/image.gif',
   '/gif/indir2.gif',
   '/gif/sungerbubi.gif',
   '/gif/Patickstar.gif',
-  '/gif/cat.gif'
+  '/gif/cat.gif',
 ];
-
 
 export default function DashboardHeader({
   unauthorized,
@@ -85,31 +82,13 @@ export default function DashboardHeader({
   settings,
 }: DashboardHeaderProps) {
   const router = useRouter();
-  
+
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [currentGif, setCurrentGif] = useState(RANDOM_GIFS[0]);
-  const [isLogoHovered, setIsLogoHovered] = useState(false);
   const [fetchedIcons, setFetchedIcons] = useState<Record<string, string | null>>({});
   const fetchedIconsSeenRef = useRef<Set<string>>(new Set());
 
-  const buildDashboardPath = (path: string) => {
-    if (typeof window === 'undefined') return path;
-    const current = new URL(window.location.href);
-    const params = new URLSearchParams(current.search);
-    const target = new URL(path, window.location.origin);
-
-    ['activity', 'frame_id', 'instance_id', 'guild_id'].forEach((key) => {
-      const value = params.get(key);
-      if (value) {
-        target.searchParams.set(key, value);
-      }
-    });
-
-    return `${target.pathname}${target.search}`;
-  };
-
-  // Mobile menu body overflow lock
   useEffect(() => {
     if (mobileMenuOpen) {
       document.body.style.overflow = 'hidden';
@@ -119,29 +98,21 @@ export default function DashboardHeader({
     return () => { document.body.style.overflow = ''; };
   }, [mobileMenuOpen]);
 
-  // Menü açıldığında GIF seç
   useEffect(() => {
     if (isProfileOpen) {
-      const randomIndex = Math.floor(Math.random() * RANDOM_GIFS.length);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setCurrentGif(RANDOM_GIFS[randomIndex]);
+      setCurrentGif(RANDOM_GIFS[Math.floor(Math.random() * RANDOM_GIFS.length)]);
     }
   }, [isProfileOpen]);
 
-  // Fetch missing guild icons from server-side Discord route when available
   useEffect(() => {
     if (!server?.guilds || server.guilds.length === 0) return;
-
     server.guilds.forEach((g) => {
-      if (g.iconUrl || fetchedIconsSeenRef.current.has(g.id)) return; // already fetched or provided
+      if (g.iconUrl || fetchedIconsSeenRef.current.has(g.id)) return;
       fetchedIconsSeenRef.current.add(g.id);
       void (async () => {
         try {
           const res = await fetch(`/api/discord/guild/${g.id}`);
-          if (!res.ok) {
-            setFetchedIcons(prev => ({ ...prev, [g.id]: null }));
-            return;
-          }
+          if (!res.ok) { setFetchedIcons(prev => ({ ...prev, [g.id]: null })); return; }
           const data = await res.json();
           setFetchedIcons(prev => ({ ...prev, [g.id]: data.icon ?? null }));
         } catch {
@@ -152,387 +123,263 @@ export default function DashboardHeader({
   }, [server?.guilds]);
 
   const navItems: Array<{ key: Section; label: string; requiresAuth?: boolean; icon: JSX.Element }> = [
-    { key: 'overview', label: 'Genel', icon: <LuHouse className="h-4 w-4" /> },
-    { key: 'store', label: 'Mağaza', icon: <LuStore className="h-4 w-4" /> },
-    { key: 'raffles', label: 'Çekilişler', requiresAuth: true, icon: <LuTicket className="h-4 w-4" /> },
-    { key: 'mail', label: 'Mail', requiresAuth: true, icon: <LuMail className="h-4 w-4" /> },
-    { key: 'leaderboard', label: 'Sıralama', requiresAuth: true, icon: <LuChartBar className="h-4 w-4" /> },
+    { key: 'overview', label: 'Genel', icon: <LuHouse className="h-3.5 w-3.5" /> },
+    { key: 'store', label: 'Mağaza', icon: <LuStore className="h-3.5 w-3.5" /> },
+    { key: 'raffles', label: 'Çekilişler', requiresAuth: true, icon: <LuTicket className="h-3.5 w-3.5" /> },
+    { key: 'mail', label: 'Mesajlar', requiresAuth: true, icon: <LuMail className="h-3.5 w-3.5" /> },
+    { key: 'leaderboard', label: 'Sıralama', requiresAuth: true, icon: <LuChartBar className="h-3.5 w-3.5" /> },
   ];
+
+  const handleNavClick = (key: Section) => {
+    if (key === 'mail') { navigation.onNavigate('mail'); return; }
+    if (key === 'leaderboard') { onOpenLeaderboard?.(); return; }
+    navigation.onNavigate(key);
+  };
 
   return (
     <>
-      {/* --- FOCUS OVERLAY --- */}
-      <div 
-        onClick={() => {
-          setIsProfileOpen(false);
-        }}
-        className={`fixed inset-0 bg-black/60 backdrop-blur-[12px] transition-all duration-500 z-[9990] ${
-          isProfileOpen ? 'opacity-100 visible cursor-pointer' : 'opacity-0 invisible pointer-events-none'
+      {/* Focus overlay */}
+      <div
+        onClick={() => setIsProfileOpen(false)}
+        className={`fixed inset-0 z-[9990] bg-black/50 backdrop-blur-sm transition-all duration-300 ${
+          isProfileOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'
         }`}
       />
 
-      {/* --- HEADER --- */}
-      <header className={`md:fixed inset-x-0 top-0 flex h-20 items-center gap-4 bg-[#0b0d12]/90 px-3 sm:px-6 backdrop-blur border-b border-white/5 shadow-lg overflow-visible transition-all duration-200 ${
+      {/* Header */}
+      <header className={`md:fixed inset-x-0 top-0 flex h-16 items-center bg-[#0b0d12]/90 backdrop-blur-xl border-b border-white/[0.06] px-4 sm:px-6 transition-all duration-200 ${
         isProfileOpen ? 'z-[9991]' : 'z-30'
       }`}>
-        
-        {/* --- SOL TARAF --- */}
+
+        {/* Sol — logo */}
         <div className="flex items-center gap-3 min-w-fit">
-            <div className="w-10 h-10 rounded-xl bg-[#5865F2] p-0.5 shadow-lg shadow-[#5865F2]/20 group cursor-pointer transition-transform hover:scale-110 relative z-50">
-              <div className="w-full h-full bg-[#1e1f22] rounded-[10px] overflow-hidden">
-                <Image src="/gif/cat.gif" alt="avatar" className="w-full h-full object-cover" width={500} height={500} />
-              </div>
-            </div>
-
-            <div
-              className="relative flex flex-col items-start gap-1 cursor-pointer lg:cursor-default h-full group"
-              onMouseEnter={() => setIsLogoHovered(true)}
-              onMouseLeave={() => setIsLogoHovered(false)}
-              onClick={() => { if (typeof window !== 'undefined' && window.innerWidth < 1024) setMobileMenuOpen(open => !open); }}
-            >
-              <div className="text-white font-black text-xl tracking-tight z-50 relative">DiscoWeb</div>
-              <span className="text-[10px] text-white/50 lg:hidden">Tıklayın</span>
-
-              {/* Sarkan Penguen */}
-              <div className={`absolute top-[60%] left-1/2 -translate-x-1/2 z-0 transition-all duration-500 cubic-bezier(0.34, 1.56, 0.64, 1) ${
-                isLogoHovered 
-                  ? 'opacity-100 translate-y-0 rotate-0' 
-                  : 'opacity-0 -translate-y-12 -rotate-12 pointer-events-none'
-              }`}>
-                <div className="w-[200px] md:w-[280px] drop-shadow-2xl filter brightness-110">
-                  <Image src="/gif/asılıpengu.gif" alt="Hanging Penguin" className="w-full h-full object-contain" width={500} height={500} />
-                </div>
-              </div>
-            </div>
-
-            {/* Panel geçişi profil dropdown'unda */}
+          <div className="h-9 w-9 overflow-hidden rounded-xl border border-white/10 bg-white/5">
+            <Image src="/gif/cat.gif" alt="logo" className="h-full w-full object-cover" width={36} height={36} />
+          </div>
+          <button
+            type="button"
+            className="text-white font-black text-lg tracking-tight lg:cursor-default"
+            onClick={() => { if (typeof window !== 'undefined' && window.innerWidth < 1024) setMobileMenuOpen(o => !o); }}
+          >
+            DiscoWeb
+          </button>
         </div>
 
-        {/* --- ORTA MENÜ --- */}
+        {/* Orta — nav */}
         <div className="flex-1 flex items-center justify-center">
-            <nav className="hidden lg:flex items-center gap-1">
-                {navItems
-                .filter((item) => (!item.requiresAuth || !unauthorized))
-                .map((item) => (
-                    <button
-                    key={item.key}
-                    type="button"
-                    onClick={() => {
-                      const current = typeof window !== 'undefined' ? new URL(window.location.href) : null;
-                      const props = new URLSearchParams(current?.search || '');
-                      const guildId = server.data?.id;
-
-                      if (guildId) {
-                        props.set('guild_id', guildId);
-                      }
-                      if (current?.searchParams.get('activity')) {
-                        props.set('activity', current.searchParams.get('activity') || '1');
-                      }
-                      if (current?.searchParams.get('frame_id')) {
-                        props.set('frame_id', current.searchParams.get('frame_id') || '');
-                      }
-                      if (current?.searchParams.get('instance_id')) {
-                        props.set('instance_id', current.searchParams.get('instance_id') || '');
-                      }
-
-                      if (item.key === 'mail') {
-                        navigation.onNavigate('mail');
-                        return;
-                      }
-                      if (item.key === 'leaderboard') {
-                        onOpenLeaderboard?.();
-                        return;
-                      }
-                      if ((item.key as string) === 'referral') {
-                        try { router.push(`/dashboard/referral?${props.toString()}`); } catch {
-                          // fallback if router fails
-                        }
-                        return;
-                      }
-
-                      navigation.onNavigate(item.key);
-                    }}
-                    className={`group relative px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-                        (item.key === 'leaderboard'
-                          ? navigation.activeSection === 'overview'
-                          : navigation.activeSection === item.key)
-                        ? 'bg-white/10 text-white shadow-inner'
-                        : 'text-white/60 hover:text-white hover:bg-white/5'
-                    }`}
-                    >
-                    <span className="flex items-center gap-2 relative z-10">
-                        {item.icon}
-                        {item.label}
+          <nav className="hidden lg:flex items-center gap-0.5">
+            {navItems.filter(item => !item.requiresAuth || !unauthorized).map((item) => {
+              const isActive = item.key === 'leaderboard'
+                ? false
+                : navigation.activeSection === item.key;
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => handleNavClick(item.key)}
+                  className={`group relative flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-medium transition-all duration-200 ${
+                    isActive
+                      ? 'bg-white/10 text-white'
+                      : 'text-white/50 hover:bg-white/[0.06] hover:text-white/80'
+                  }`}
+                >
+                  {item.icon}
+                  {item.label}
+                  {item.key === 'mail' && mailUnreadCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white ring-1 ring-[#0b0d12]">
+                      {mailUnreadCount > 9 ? '9+' : mailUnreadCount}
                     </span>
-                    {item.key === 'mail' && mailUnreadCount > 0 && (
-                      <span
-                        title={`${mailUnreadCount} okunmamış mesaj`}
-                        aria-label={`${mailUnreadCount} unread mails`}
-                        className={`absolute -top-1 -right-2 flex items-center justify-center rounded-full bg-rose-500 text-white text-[10px] font-bold ring-1 ring-white/10 shadow-sm select-none ${
-                          mailUnreadCount > 99 ? 'px-2 h-5 min-w-[26px]' : mailUnreadCount > 9 ? 'px-2 h-5 min-w-[22px]' : 'w-5 h-5'
-                        }`}
-                      >
-                        {mailUnreadCount > 99 ? '99+' : mailUnreadCount}
-                      </span>
-                    )}
-                    </button>
-                ))}
-            </nav>
+                  )}
+                </button>
+              );
+            })}
+          </nav>
         </div>
 
-        {/* --- SAĞ TARAF --- */}
-        <div className="flex items-center gap-2 sm:gap-3">
-
-            {!unauthorized && (
-            <div className="flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 shadow-sm gap-2 text-xs sm:text-sm transition-transform hover:scale-105">
-                <Image src="/papel.gif" alt="Papel" width={20} height={20} className="h-5 w-5" />
-                <span className="font-bold text-emerald-400">
-                    {walletLoading ? '...' : walletBalance.toFixed(2)}
-                </span>
+        {/* Sağ — bakiye + profil */}
+        <div className="flex items-center gap-2">
+          {!unauthorized && (
+            <div className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm">
+              <Image src="/papel.gif" alt="Papel" width={16} height={16} className="h-4 w-4" />
+              <span className="font-bold text-white tabular-nums">
+                {walletLoading ? '—' : walletBalance.toFixed(2)}
+              </span>
             </div>
-            )}
+          )}
 
-            {/* Sunucu seçimi navbar'dan kaldırıldı, sadece profil dropdown'da mevcut */}
+          {!unauthorized && (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsProfileOpen(!isProfileOpen)}
+                className={`flex items-center gap-2 rounded-full border p-1 pr-3 transition-all ${
+                  isProfileOpen ? 'border-white/20 bg-white/10' : 'border-transparent hover:border-white/10 hover:bg-white/5'
+                }`}
+              >
+                <div className="h-8 w-8 overflow-hidden rounded-full border border-white/10">
+                  <Image
+                    src={profile?.avatarUrl || '/gif/cat.gif'}
+                    alt="avatar"
+                    width={32}
+                    height={32}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <div className="hidden text-left sm:block">
+                  <p className="text-sm font-semibold text-white leading-tight">{profile?.username || 'Kullanıcı'}</p>
+                  <p className="text-[10px] text-white/40 leading-tight">{server.data?.name || '—'}</p>
+                </div>
+              </button>
 
-            {/* --- PROFİL ALANI (GELİŞMİŞ MENÜ) --- */}
-            {!unauthorized && (
-                <div className="relative">
-                    
-                    {/* Profil Tetikleyici */}
-                    <button 
-                        onClick={() => setIsProfileOpen(!isProfileOpen)}
-                        className={`flex items-center gap-3 cursor-pointer p-1 rounded-full border transition-all outline-none ${
-                            isProfileOpen 
-                                ? 'bg-white/10 border-white/20' 
-                                : 'border-transparent hover:border-white/10'
-                        }`}
+              {/* Profil dropdown */}
+              <div
+                onClick={e => e.stopPropagation()}
+                className={`absolute right-0 top-14 w-[calc(100vw-24px)] sm:w-[320px] transition-all duration-300 origin-top-right ${
+                  isProfileOpen ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible'
+                }`}
+              >
+                <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#0f1116] shadow-2xl">
+                  {/* GIF header */}
+                  <div className="relative h-24 overflow-hidden bg-[#5865F2]/15">
+                    <Image src={currentGif} alt="" fill className="object-contain scale-110 opacity-50" unoptimized />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0f1116] via-[#0f1116]/40 to-transparent" />
+                    <div className="absolute bottom-3 left-4">
+                      <p className="text-lg font-black text-white">Merhaba, {profile?.username}!</p>
+                    </div>
+                  </div>
+
+                  <div className="p-3 space-y-1.5">
+                    {/* Aktif sunucu */}
+                    {server.data && (
+                      <div className="flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.03] px-3 py-2.5">
+                        {server.data.iconUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={server.data.iconUrl} width={32} height={32} className="h-8 w-8 rounded-lg object-cover" alt="" />
+                        ) : (
+                          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-xs font-bold text-white">{server.data.name?.charAt(0)}</div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[10px] text-white/35 uppercase tracking-wider">Aktif Sunucu</p>
+                          <p className="text-sm font-semibold text-white truncate">{server.data.name}</p>
+                        </div>
+                        <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                      </div>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={settings.onOpenSettings}
+                      className="flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-white/70 transition hover:bg-white/5 hover:text-white"
                     >
-                        <div className="text-right hidden lg:block">
-                            <div className="text-sm font-bold text-white">{profile?.username || 'Kullanıcı'}</div>
-                            <div className="text-[10px] text-white/50">{server.data?.name || 'Sunucu Seçilmedi'}</div>
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/8">
+                          <LuSettings className="h-3.5 w-3.5" />
                         </div>
-                        <div className="w-10 h-10 rounded-full border-2 border-[#5865F2] overflow-hidden shadow-[0_0_15px_rgba(88,101,242,0.4)]">
-                            <Image 
-                                src={profile?.avatarUrl || '/gif/cat.gif'} 
-                                alt="Profile" 
-                                width={40} 
-                                height={40}
-                                className="w-full h-full object-cover" 
-                            />
-                        </div>
+                        <span className="text-sm font-medium">Hesap Ayarları</span>
+                      </div>
+                      <LuChevronRight className="h-3.5 w-3.5 text-white/30" />
                     </button>
 
-                    {/* --- SAĞA AÇILAN KUTU (ANA KAPLAYICI) --- */}
-                    <div 
-                        onClick={(e) => e.stopPropagation()}
-                        className={`absolute top-20 right-0 w-[calc(100vw-24px)] sm:w-[340px] transition-all duration-300 origin-right ${
-                            isProfileOpen 
-                                ? 'opacity-100 translate-x-0 scale-100 visible' 
-                                : 'opacity-0 translate-x-10 scale-95 invisible'
-                    }`}>
-                        <div className="bg-[#1e1f22] border border-white/10 rounded-[24px] shadow-2xl overflow-hidden relative min-h-[400px]">
-                            
-                            {/* --- HEADER (GIF & BAŞLIK) --- */}
-                            <div className="relative h-28 bg-[#5865F2]/20 w-full overflow-hidden flex items-center justify-center">
-                                <div className="absolute inset-0 opacity-60">
-                                    <Image 
-                                        src={currentGif} 
-                                        alt="Random Fun" 
-                                        fill 
-                                        className="object-contain scale-125"
-                                        unoptimized
-                                    />
-                                </div>
-                                <div className="absolute inset-0 bg-gradient-to-t from-[#1e1f22] via-[#1e1f22]/50 to-transparent"></div>
-                                
-                                <div className="absolute bottom-3 left-4 right-4 z-10 flex items-end justify-between">
-                                    <div>
-                                      <p className="text-white font-bold text-xl drop-shadow-md">Merhaba, {profile?.username}!</p>
-                                    </div>
-                                </div>
-                            </div>
+                    <button
+                      type="button"
+                      onClick={settings.onOpenReferral}
+                      className="flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-white/70 transition hover:bg-white/5 hover:text-white"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/8 text-sm">🎁</div>
+                        <span className="text-sm font-medium">Davet Et & Kazan</span>
+                      </div>
+                      <LuChevronRight className="h-3.5 w-3.5 text-white/30" />
+                    </button>
 
-                            {/* --- İÇERİK DEĞİŞİM ALANI --- */}
-                            <div className="p-3">
-                                
-                                {/* 1. GÖRÜNÜM: ANA MENÜ */}
-                                <div className="space-y-2 transition-all duration-300">
-                                    
-                                    {/* Mevcut Sunucu Bilgisi */}
-                                    <div className="bg-white/5 rounded-xl p-3 border border-white/5 flex items-center gap-3">
-                                        {server.data?.iconUrl ? (
-                                        // eslint-disable-next-line @next/next/no-img-element
-                                        <img src={server.data.iconUrl} width={40} height={40} className="rounded-lg object-cover" alt="Server" loading="lazy" />
-                                      ) : (
-                                          <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center font-bold">{server.data?.name?.charAt(0)}</div>
-                                       )}
-                                       <div className="flex-1 overflow-hidden">
-                                          <p className="text-xs text-white/40 font-medium uppercase tracking-wider">Aktif Sunucu</p>
-                                          <p className="text-white font-semibold truncate">{server.data?.name || 'Seçilmedi'}</p>
-                                       </div>
-                                    </div>
-
-                                    {/* Menü Linkleri */}
-
-                                    <button
-                                        onClick={settings.onOpenSettings}
-                                        className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-white/5 transition-colors group"
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
-                                                <LuSettings className="w-4 h-4" />
-                                            </div>
-                                            <span className="text-sm font-medium text-white/80 group-hover:text-white">Hesap Ayarları</span>
-                                        </div>
-                                        <LuChevronRight className="text-white/40" />
-                                    </button>
-
-                                    <button
-                                        onClick={settings.onOpenReferral}
-                                        className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-white/5 transition-colors group"
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-300 flex items-center justify-center">
-                                                <span className="text-sm">🎁</span>
-                                            </div>
-                                            <span className="text-sm font-medium text-white/80 group-hover:text-white">Davet Et & Kazan</span>
-                                        </div>
-                                        <LuChevronRight className="text-white/40" />
-                                    </button>
-
-                                    {/* Diğer Kısayollar */}
-                                    <div className="grid grid-cols-2 gap-2 mt-2">
-                                       <button onClick={settings.onOpenTransfer} className="p-2 bg-white/5 hover:bg-white/10 rounded-lg text-xs text-center text-white/70 hover:text-white transition-colors">
-                                          Papel Transfer
-                                       </button>
-                                       <button onClick={settings.onOpenPromotions} className="p-2 bg-white/5 hover:bg-white/10 rounded-lg text-xs text-center text-white/70 hover:text-white transition-colors">
-                                          Promosyonlar
-                                       </button>
-                                       <button onClick={() => { setIsProfileOpen(false); settings.onOpenEarnings?.(); }} className="col-span-2 p-2 bg-emerald-500/10 hover:bg-emerald-500/20 rounded-lg text-xs text-center text-emerald-300 hover:text-emerald-200 transition-colors font-medium">
-                                          Kazanç Bilgileri
-                                       </button>
-                                    </div>
-
-                                </div>
-
-
-                            </div>
-
-
-                        </div>
+                    <div className="grid grid-cols-3 gap-1.5 pt-1">
+                      <button
+                        type="button"
+                        onClick={settings.onOpenTransfer}
+                        className="rounded-xl border border-white/[0.06] bg-white/[0.03] py-2 text-center text-xs text-white/60 transition hover:bg-white/[0.07] hover:text-white"
+                      >
+                        Transfer
+                      </button>
+                      <button
+                        type="button"
+                        onClick={settings.onOpenPromotions}
+                        className="rounded-xl border border-white/[0.06] bg-white/[0.03] py-2 text-center text-xs text-white/60 transition hover:bg-white/[0.07] hover:text-white"
+                      >
+                        Promosyon
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setIsProfileOpen(false); settings.onOpenEarnings?.(); }}
+                        className="rounded-xl border border-emerald-500/20 bg-emerald-500/8 py-2 text-center text-xs text-emerald-400 transition hover:bg-emerald-500/15"
+                      >
+                        Kazanç
+                      </button>
                     </div>
+                  </div>
                 </div>
-            )}
+              </div>
+            </div>
+          )}
 
-            {unauthorized ? (
+          {unauthorized && (
             <DiscordAgreementButton
-                href={loginUrl}
-                className="rounded-full bg-[#5865F2] hover:bg-[#4752C4] px-6 py-2 text-sm font-bold text-white transition-all shadow-lg hover:shadow-[#5865F2]/40"
-                targetBlank={false}
+              href={loginUrl}
+              className="rounded-full bg-[#5865F2] hover:bg-[#4752C4] px-5 py-2 text-sm font-bold text-white transition-all"
+              targetBlank={false}
             >
-                Giriş Yap
+              Giriş Yap
             </DiscordAgreementButton>
-            ) : null}
-
+          )}
         </div>
       </header>
 
-      {/* Mobile Navigation Overlay */}
+      {/* Mobil menü */}
       {mobileMenuOpen && (
         <div className="lg:hidden fixed inset-0 z-[9992]">
           <div className="absolute inset-0 bg-black/70 backdrop-blur-md" onClick={() => setMobileMenuOpen(false)} />
-          <div className="absolute top-20 left-3 right-3 bg-[#13151a]/98 border border-white/10 rounded-3xl shadow-2xl backdrop-blur-xl overflow-hidden">
-
-            {/* Profil & Sunucu Bilgi Alanı */}
-            {!unauthorized && (
-              <div className="px-4 pt-4 pb-2 space-y-3">
-                {/* Profil Kartı */}
-                {profile && (
-                  <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#5865F2]/10 via-white/[0.03] to-transparent border border-white/[0.06] p-3.5">
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-[#5865F2]/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-                    <div className="relative flex items-center gap-3">
-                      <div className="relative">
-                        <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-[#5865F2]/30 ring-offset-2 ring-offset-[#13151a]">
-                          <Image src={profile.avatarUrl || '/gif/cat.gif'} alt="Profile" width={40} height={40} className="w-full h-full object-cover" />
-                        </div>
-                        <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-[#13151a]" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-white font-semibold text-[13px] truncate leading-tight">{profile.name}</p>
-                        <p className="text-white/35 text-[11px] truncate">@{profile.username}</p>
-                      </div>
-                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/15">
-                        <Image src="/papel.gif" alt="Papel" width={14} height={14} className="h-3.5 w-3.5" />
-                        <span className="text-[11px] font-bold text-emerald-400 tabular-nums">
-                          {walletLoading ? '...' : walletBalance.toFixed(2)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Aktif Sunucu */}
-                {server.data && (
-                  <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.05]">
-                    {server.data.iconUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={server.data.iconUrl} width={28} height={28} className="rounded-lg object-cover" alt="Server" loading="lazy" />
-                    ) : (
-                      <div className="w-7 h-7 rounded-lg bg-[#5865F2]/15 flex items-center justify-center font-bold text-xs text-white/80">{server.data.name?.charAt(0)}</div>
-                    )}
-                    <p className="text-white/60 text-xs font-medium truncate flex-1">{server.data.name}</p>
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <div className="absolute top-[72px] left-3 right-3 overflow-hidden rounded-2xl border border-white/10 bg-[#0f1116] shadow-2xl">
+            {!unauthorized && profile && (
+              <div className="flex items-center gap-3 border-b border-white/[0.06] px-4 py-3">
+                <div className="h-9 w-9 overflow-hidden rounded-full border border-white/10">
+                  <Image src={profile.avatarUrl || '/gif/cat.gif'} alt="avatar" width={36} height={36} className="h-full w-full object-cover" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-white truncate">{profile.name}</p>
+                  <p className="text-[11px] text-white/35">@{profile.username}</p>
+                </div>
+                {!unauthorized && (
+                  <div className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs">
+                    <Image src="/papel.gif" alt="" width={14} height={14} className="h-3.5 w-3.5" />
+                    <span className="font-bold text-white tabular-nums">{walletLoading ? '—' : walletBalance.toFixed(2)}</span>
                   </div>
                 )}
               </div>
             )}
-
-            {/* Ayırıcı */}
-            {!unauthorized && <div className="mx-4 border-t border-white/[0.06]" />}
-
-            {/* Navigasyon */}
-            <nav className="px-4 py-3 space-y-1">
-              {navItems
-                .filter((item) => (!item.requiresAuth || !unauthorized))
-                .map((item) => (
+            <nav className="px-3 py-3 space-y-0.5">
+              {navItems.filter(item => !item.requiresAuth || !unauthorized).map((item) => {
+                const isActive = navigation.activeSection === item.key;
+                return (
                   <button
                     key={item.key}
                     type="button"
-                    onClick={() => {
-                      const currentGuildId = server.data?.id || '';
-                      const guildQuery = currentGuildId ? `?guild_id=${encodeURIComponent(currentGuildId)}` : '';
-
-                      if (item.key === 'mail') {
-                        navigation.onNavigate('mail');
-                        try { router.push(`/dashboard/mail${guildQuery}`); } catch { navigation.onNavigate('mail'); }
-                      } else if (item.key === 'leaderboard') {
-                        onOpenLeaderboard?.();
-                      } else {
-                        navigation.onNavigate(item.key);
-                      }
-                      setMobileMenuOpen(false);
-                    }}
-                    className={`flex w-full items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${
-                      navigation.activeSection === item.key
-                        ? 'bg-[#5865F2]/15 text-white border border-[#5865F2]/30'
-                        : 'text-white/60 hover:text-white hover:bg-white/5 border border-transparent'
+                    onClick={() => { handleNavClick(item.key); setMobileMenuOpen(false); }}
+                    className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
+                      isActive ? 'bg-white/10 text-white' : 'text-white/50 hover:bg-white/[0.06] hover:text-white/80'
                     }`}
                   >
-                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${
-                      navigation.activeSection === item.key ? 'bg-[#5865F2]/20 text-[#5865F2]' : 'bg-white/5 text-white/50'
-                    }`}>
+                    <span className={`flex h-7 w-7 items-center justify-center rounded-lg ${isActive ? 'bg-white/12 text-white' : 'bg-white/5 text-white/40'}`}>
                       {item.icon}
-                    </div>
+                    </span>
                     {item.label}
                     {item.key === 'mail' && mailUnreadCount > 0 && (
-                      <span className="ml-auto bg-rose-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                      <span className="ml-auto rounded-full bg-rose-500 px-2 py-0.5 text-[10px] font-bold text-white">
                         {mailUnreadCount > 99 ? '99+' : mailUnreadCount}
                       </span>
                     )}
                   </button>
-                ))}
+                );
+              })}
             </nav>
-
           </div>
         </div>
       )}
