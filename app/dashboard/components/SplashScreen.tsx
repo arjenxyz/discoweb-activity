@@ -120,9 +120,6 @@ export default function SplashScreen({ onEnter }: Props) {
               Discord Economy Platform
             </span>
           </div>
-          <p className="text-sm text-white/55 leading-relaxed max-w-xs">
-            Sunucun ekonomisini yönet, mağazadan alışveriş yap ve ödülleri keşfet.
-          </p>
         </div>
 
         {/* Alt satır: sol created-by, sağ butonlar — mobilde alt alta */}
