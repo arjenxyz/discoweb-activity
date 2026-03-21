@@ -40,6 +40,21 @@ export default async function fetchWithCreds(input: RequestInfo, init: RequestIn
   const bearerTokenFromCookie = typeof window !== 'undefined' ? getCookie('discord_session') : null;
   const bearerToken = bearerTokenFromLocalStorage || bearerTokenFromCookie;
 
+  // Extra fallback rewrite for Activity iframe environment: must use /activity/api/
+  if (typeof window !== 'undefined' && typeof finalInput === 'string') {
+    const isDiscordsays = window.location.hostname.includes('discordsays.com');
+    if (isDiscordsays && finalInput.startsWith('/api/')) {
+      finalInput = `/activity${finalInput}`;
+    }
+  }
+
+  if (typeof window !== 'undefined' && typeof finalInput === 'string') {
+    // Debug: confirm API URL rewriting in Activity usage
+    if (window.location.hostname.includes('discordsays.com')) {
+      console.log('[fetchWithCreds] finalInput=', finalInput);
+    }
+  }
+
   const merged: RequestInit = {
     ...init,
     credentials: 'include',
