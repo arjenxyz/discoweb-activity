@@ -10,8 +10,6 @@ type SettingsSectionProps = {
 };
 
 export default function SettingsSection({
-  onOpenPromotionsModal,
-  onOpenDiscountsModal,
   currentGuildName,
 }: SettingsSectionProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -19,6 +17,8 @@ export default function SettingsSection({
   const [isDeleting, setIsDeleting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  return (
     <section className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-6">
       <h2 className="text-lg font-semibold">Ayarlar</h2>
       <div className="mt-4 grid gap-4 lg:grid-cols-[1.4fr_1fr]">
@@ -114,8 +114,8 @@ export default function SettingsSection({
                     }
                     setMessage('Veriler başarıyla silindi.');
                     setIsModalOpen(false);
-                  } catch (err: any) {
-                    setError(err?.message || 'Silme işlemi başarısız.');
+                  } catch (err: unknown) {
+                    setError(err instanceof Error ? err.message : 'Silme işlemi başarısız.');
                   } finally {
                     setIsDeleting(false);
                   }
