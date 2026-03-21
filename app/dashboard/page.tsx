@@ -496,6 +496,14 @@ export default function DashboardPage() {
       setOverviewLoading(false);
     };
 
+    const loadAccrued = async () => {
+      try {
+        await fetchWithCreds('/api/member/load-accrued', { method: 'POST' });
+      } catch (err) {
+        console.warn('Accrued earnings sync failed:', err);
+      }
+    };
+
     const loadBadges = async () => {
       try {
         const response = await fetchWithCreds('/api/member/badges');
@@ -508,8 +516,13 @@ export default function DashboardPage() {
       }
     };
 
-    loadOverview();
-    loadBadges();
+    const run = async () => {
+      await loadAccrued();
+      await loadOverview();
+      await loadBadges();
+    };
+
+    run();
   }, [activityReadinessLoading, isBlockedByReadiness]);
 
   const refreshStoreItems = useCallback(async (page = 1, append = false) => {
