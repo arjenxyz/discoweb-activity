@@ -198,7 +198,7 @@ export default function SplashScreen({ onEnter }: Props) {
         className="relative z-10 hidden lg:flex items-start justify-between px-10 pt-8"
         style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.7s ease' }}
       >
-        <LogoBlock size="lg" />
+        <div className="scale-125 origin-top-left"><LogoBlock size="md" /></div>
         <MuteButton muted={muted} onToggle={toggleMute} />
       </div>
 
