@@ -198,7 +198,7 @@ export default function SplashScreen({ onEnter }: Props) {
         className="relative z-10 hidden lg:flex items-start justify-between px-10 pt-8"
         style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.7s ease' }}
       >
-        <LogoBlock size="md" />
+        <LogoBlock size="lg" />
         <MuteButton muted={muted} onToggle={toggleMute} />
       </div>
 
@@ -212,29 +212,40 @@ export default function SplashScreen({ onEnter }: Props) {
         </div>
       </div>
 
-      {/* ── ALT ALAN — hem mobil hem masaüstü ── */}
+      {/* ── FOOTER — absolute alta sabitli, bağımsız katman ── */}
+      <div
+        className="hidden lg:block absolute z-10 bottom-8 left-10"
+        style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.7s ease' }}
+      >
+        <FooterLine />
+      </div>
+
+      {/* ── SAĞ ALTA — hoş geldin + buton, bağımsız ── */}
+      <div
+        className="hidden lg:flex absolute z-10 bottom-8 right-12 items-center gap-3"
+        style={{ opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(18px)', transition: 'opacity 0.7s ease, transform 0.7s ease' }}
+      >
+        {user && !(maintenance && !isDeveloper) && (
+          <div className="flex items-center gap-2">
+            {user.avatarUrl && <img src={user.avatarUrl} alt={user.username} className="h-6 w-6 rounded-full opacity-70" />}
+            <span className="text-sm text-white/50">
+              Hoş geldin, <span className="text-white font-semibold">{user.username}</span>
+            </span>
+          </div>
+        )}
+        <div className="flex items-center gap-3">
+          {isDeveloper && <DevButton />}
+          <EnterButton />
+        </div>
+      </div>
+
+      {/* ── ALT ALAN — mobil ── */}
       <div
         className="relative z-10 mt-auto w-full flex flex-col gap-3 px-6 pb-8 sm:px-10 sm:pb-10"
         style={{ opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(18px)', transition: 'opacity 0.7s ease, transform 0.7s ease' }}
       >
-        {/* Masaüstü: tek satır sol=footer, sağ=mute+dev+Keşfet */}
-        <div className="hidden lg:flex items-center justify-between gap-4">
-          <FooterLine />
-          <div className="flex items-center gap-2 shrink-0">
-            {user && !(maintenance && !isDeveloper) && (
-              <div className="flex items-center gap-2">
-                {user.avatarUrl && <img src={user.avatarUrl} alt={user.username} className="h-6 w-6 rounded-full opacity-70" />}
-                <span className="text-sm text-white/50">
-                  Hoş geldin, <span className="text-white font-semibold">{user.username}</span>
-                </span>
-              </div>
-            )}
-            <div className="flex items-center gap-3">
-              {isDeveloper && <DevButton />}
-              <EnterButton />
-            </div>
-          </div>
-        </div>
+        {/* Masaüstü placeholder — boş, gerçek içerik absolute'ta */}
+        <div className="hidden lg:block" />
 
         {/* Mobil: dikey, ortada */}
         <div className="lg:hidden flex flex-col items-center gap-3">
