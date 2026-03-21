@@ -4,6 +4,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { MuteButton, VideoBackground } from './VideoBackground';
 import DeveloperPanel from './DeveloperPanel';
 import { apiUrl } from '@/lib/api';
+import { getDiscordSdk } from '@/lib/discordSdk';
 
 type Props = {
   onEnter: () => void;
@@ -22,10 +23,13 @@ export default function SplashScreen({ onEnter }: Props) {
 
   const openLink = async (url: string) => {
     try {
-      const { DiscordSDK } = await import('@discord/embedded-app-sdk');
-      const sdk = new DiscordSDK(process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!);
-      await sdk.ready();
-      await sdk.commands.openExternalLink({ url });
+      const existing = getDiscordSdk();
+      if (existing) {
+        await existing.commands.openExternalLink({ url });
+        return;
+      }
+      // SDK henüz set edilmemişse (splash'ta auth öncesi) fallback
+      window.open(url, '_blank');
     } catch {
       window.open(url, '_blank');
     }
@@ -92,13 +96,7 @@ export default function SplashScreen({ onEnter }: Props) {
   };
 
   const openDiscoWeb = async () => {
-    const url = 'https://discoweb.tech';
-    try {
-      const { DiscordSDK } = await import('@discord/embedded-app-sdk');
-      const sdk = new DiscordSDK(process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!);
-      await sdk.ready();
-      await sdk.commands.openExternalLink({ url });
-    } catch { window.open(url, '_blank'); }
+    await openLink('https://discoweb.tech');
   };
 
   const LogoBlock = ({ size = 'md' }: { size?: 'sm' | 'md' }) => (
