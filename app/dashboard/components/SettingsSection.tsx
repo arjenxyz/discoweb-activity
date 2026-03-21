@@ -112,8 +112,19 @@ export default function SettingsSection({
                       const data = await response.json().catch(() => ({}));
                       throw new Error(data.error || 'Silme işlemi başarısız.');
                     }
-                    setMessage('Veriler başarıyla silindi.');
+                    setMessage('Veriler başarıyla silindi. Yönlendiriliyorsunuz...');
                     setIsModalOpen(false);
+
+                    // Temizle
+                    try { localStorage.removeItem('selectedGuildId'); } catch {};
+                    try { localStorage.removeItem('discord_bearer_token'); } catch {};
+                    document.cookie = 'selected_guild_id=; Max-Age=0; path=/';
+                    document.cookie = 'discord_session=; Max-Age=0; path=/';
+                    document.cookie = 'discord_activity_session=; Max-Age=0; path=/';
+
+                    // Redirect to welcome/activity page
+                    window.location.assign('/activity');
+                    return;
                   } catch (err: unknown) {
                     setError(err instanceof Error ? err.message : 'Silme işlemi başarısız.');
                   } finally {
