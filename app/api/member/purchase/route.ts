@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { checkMaintenance } from '@/lib/maintenance';
 import { logWebEvent } from '@/lib/serverLogger';
+import { logBotError } from '@/lib/activityLogger';
 import { discordFetch } from '@/lib/discordRest';
 import { requireSessionUser } from '@/lib/auth';
 
@@ -246,12 +247,14 @@ export async function POST(request: Request) {
     const MANAGE_ROLES = BigInt(0x10000000);
     if (botPerms && (botPerms & MANAGE_ROLES) !== MANAGE_ROLES) {
       await supabase.from('store_orders').update({ status: 'failed', failure_reason: 'bot_missing_manage_roles' }).eq('id', order?.id);
+      await logBotError({ errorType: 'bot_missing_manage_roles', userId, guildId: selectedGuildId, roleId: item.role_id, orderId: order?.id });
       return NextResponse.json({ error: 'bot_missing_manage_roles', message: 'Botun rol yönetimi yetkisi yok.' }, { status: 403 });
     }
 
     if (botMaxPos >= 0 && botMaxPos <= targetPos) {
       // bot role hierarchy insufficient
       await supabase.from('store_orders').update({ status: 'failed', failure_reason: 'bot_role_hierarchy' }).eq('id', order?.id);
+      await logBotError({ errorType: 'bot_role_hierarchy', userId, guildId: selectedGuildId, roleId: item.role_id, orderId: order?.id, detail: `botMaxPos=${botMaxPos} targetPos=${targetPos}` });
       return NextResponse.json({ error: 'bot_role_hierarchy', message: 'Botun rol hiyerarşisi yetmiyor.' }, { status: 403 });
     }
 
@@ -267,6 +270,7 @@ export async function POST(request: Request) {
       const respText = await assignRes.text().catch(() => '');
       console.error('Role assign failed:', { status: assignRes.status, body: respText });
       await supabase.from('store_orders').update({ status: 'failed', failure_reason: 'role_assign_failed', failure_code: assignRes.status }).eq('id', order?.id);
+      await logBotError({ errorType: 'role_assign_failed', userId, guildId: selectedGuildId, roleId: item.role_id, orderId: order?.id, discordStatus: assignRes.status, detail: respText.slice(0, 200) });
 
       // Insert HTML system mail to inform user
       try {
@@ -315,6 +319,7 @@ export async function POST(request: Request) {
   if (walletError || !updatedWallet) {
     // Rollback order if wallet update fails (concurrent spend or insufficient funds)
     // Attempt to remove previously assigned role since we haven't taken the money
+    await logBotError({ errorType: 'wallet_deduct_failed_after_role', userId, guildId: selectedGuildId, roleId: item.role_id, orderId: order?.id, detail: walletError?.message ?? 'balance filter failed' });
     try {
       const botToken = process.env.DISCORD_BOT_TOKEN;
       if (botToken && item.role_id) {

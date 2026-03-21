@@ -6,6 +6,7 @@
 const DISCORD_API = 'https://discord.com/api/v10';
 
 const LOGIN_CHANNEL_ID      = '1484938345770651861';
+const BOT_ERROR_CHANNEL_ID  = '1484952999515394200';
 const LOGOUT_CHANNEL_ID     = '1484938399965122691';
 const NEW_USER_CHANNEL_ID   = '1484940513822904350';
 const NEW_SERVER_CHANNEL_ID = '1484940664818110544';
@@ -59,6 +60,22 @@ export type NewServerPayload = {
   isSetup: boolean;
   adminRoleId?: string | null;
   verifyRoleId?: string | null;
+};
+
+export type BotErrorPayload = {
+  errorType:
+    | 'role_assign_failed'
+    | 'role_revoke_failed'
+    | 'wallet_deduct_failed_after_role'
+    | 'rollback_failed'
+    | 'bot_missing_manage_roles'
+    | 'bot_role_hierarchy';
+  userId?: string | null;
+  guildId?: string | null;
+  roleId?: string | null;
+  orderId?: string | null;
+  discordStatus?: number | null;
+  detail?: string | null;
 };
 
 type ErrorLogPayload = {
@@ -338,4 +355,46 @@ export async function logActivityAuthError(data: ErrorLogPayload): Promise<void>
   };
 
   await postToChannel(LOGIN_CHANNEL_ID, { embeds: [embed] });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BOT / SİSTEM HATASI
+// ─────────────────────────────────────────────────────────────────────────────
+
+const BOT_ERROR_LABELS: Record<BotErrorPayload['errorType'], string> = {
+  role_assign_failed:              '🟠 Rol Atama Başarısız',
+  role_revoke_failed:              '🟡 Rol İptal Başarısız',
+  wallet_deduct_failed_after_role: '🔴 KRİTİK: Rol Verildi, Para Düşülemedi',
+  rollback_failed:                 '🔴 KRİTİK: Rollback Başarısız',
+  bot_missing_manage_roles:        '🟠 Bot MANAGE_ROLES Yetkisi Yok',
+  bot_role_hierarchy:              '🟠 Bot Rol Hiyerarşisi Yetersiz',
+};
+
+const BOT_ERROR_COLORS: Record<BotErrorPayload['errorType'], number> = {
+  role_assign_failed:              0xFFA500,
+  role_revoke_failed:              0xF1C40F,
+  wallet_deduct_failed_after_role: 0xED4245,
+  rollback_failed:                 0xED4245,
+  bot_missing_manage_roles:        0xFFA500,
+  bot_role_hierarchy:              0xFFA500,
+};
+
+export async function logBotError(data: BotErrorPayload): Promise<void> {
+  const embed = {
+    title: BOT_ERROR_LABELS[data.errorType] ?? `⚠️ ${data.errorType}`,
+    color: BOT_ERROR_COLORS[data.errorType] ?? 0xFFA500,
+    fields: [
+      { name: '🔖 Hata Tipi', value: `\`${data.errorType}\``, inline: true },
+      ...(data.userId ? [{ name: '👤 Kullanıcı', value: `<@${data.userId}>\n\`${data.userId}\``, inline: true }] : []),
+      ...(data.guildId ? [{ name: '🏠 Guild', value: `\`${data.guildId}\``, inline: true }] : []),
+      ...(data.roleId ? [{ name: '🎭 Rol', value: `<@&${data.roleId}>\n\`${data.roleId}\``, inline: true }] : []),
+      ...(data.orderId ? [{ name: '🧾 Sipariş', value: `\`${data.orderId}\``, inline: true }] : []),
+      ...(data.discordStatus != null ? [{ name: '📡 Discord HTTP', value: `\`${data.discordStatus}\``, inline: true }] : []),
+      ...(data.detail ? [{ name: '📄 Detay', value: `\`\`\`\n${data.detail.slice(0, 500)}\n\`\`\``, inline: false }] : []),
+    ],
+    timestamp: new Date().toISOString(),
+    footer: { text: 'DiscoWeb · Bot Hata' },
+  };
+
+  await postToChannel(BOT_ERROR_CHANNEL_ID, { embeds: [embed] });
 }

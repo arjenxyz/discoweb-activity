@@ -3,6 +3,7 @@ import { requireSessionUser } from '@/lib/auth';
 import { getSelectedGuildId } from '@/lib/guild';
 import { createClient } from '@supabase/supabase-js';
 import { discordFetch } from '@/lib/discordRest';
+import { logBotError } from '@/lib/activityLogger';
 
 export async function POST(request: Request) {
   const session = await requireSessionUser(request);
@@ -47,6 +48,7 @@ export async function POST(request: Request) {
   if (!res.ok && res.status !== 204) {
     const body = await res.text().catch(() => '');
     console.error('[verify-role] Discord role assign failed', { status: res.status, body });
+    await logBotError({ errorType: 'role_assign_failed', userId: session.userId, guildId, roleId: server.verify_role_id, discordStatus: res.status, detail: body.slice(0, 200) });
     return NextResponse.json({ error: 'role_assign_failed' }, { status: 502 });
   }
 

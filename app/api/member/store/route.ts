@@ -5,6 +5,7 @@ import { checkMaintenance } from '@/lib/maintenance';
 import { discordFetch } from '@/lib/discordRest';
 import { getSessionUserId, requireSessionUser } from '@/lib/auth';
 import { logWebEvent } from '@/lib/serverLogger';
+import { logBotError } from '@/lib/activityLogger';
 import { cleanupExpiredRolesForUser } from '@/lib/roleCleanup';
 import { getSelectedGuildId } from '@/lib/guild';
 
@@ -313,6 +314,7 @@ export async function POST(request: Request) {
         const respText = await assignRes.text().catch(() => '');
         console.error('Role assign failed:', { status: assignRes.status, body: respText, roleId: it.role_id });
         await supabaseClient.from('store_orders').update({ status: 'failed', failure_reason: 'role_assign_failed' }).eq('id', order?.id);
+        await logBotError({ errorType: 'role_assign_failed', userId, guildId: selectedGuildId, roleId: it.role_id, orderId: order?.id, discordStatus: assignRes.status, detail: respText.slice(0, 200) });
 
         // Send failure notification mail
         try {
@@ -372,6 +374,7 @@ export async function POST(request: Request) {
     if (rollbackFailed.length > 0) {
       // Rollback başarısız — order'ı silme, kayıt tut
       console.error('Role rollback failed for roles:', rollbackFailed);
+      await logBotError({ errorType: 'rollback_failed', userId, guildId: selectedGuildId, roleId: rollbackFailed.join(', '), orderId: order?.id, detail: `Rollback edilemeyen roller: ${rollbackFailed.join(', ')}` });
       await supabaseClient
         .from('store_orders')
         .update({ status: 'rollback_failed', failure_reason: `role_rollback_failed: ${rollbackFailed.join(',')}` })

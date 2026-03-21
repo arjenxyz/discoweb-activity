@@ -1,5 +1,6 @@
 import { type SupabaseClient } from '@supabase/supabase-js';
 import { discordFetch } from './discordRest';
+import { logBotError } from './activityLogger';
 
 /**
  * Süresi dolmuş rolleri Discord'dan kaldırır ve DB'de revoked olarak işaretler.
@@ -45,6 +46,7 @@ export async function cleanupExpiredRolesForUser(
       }
     } catch (err) {
       console.warn('cleanupExpiredRolesForUser failed', { userId, guildId, roleId: order.role_id, err });
+      await logBotError({ errorType: 'role_revoke_failed', userId, guildId, roleId: order.role_id, orderId: order.id, detail: String(err).slice(0, 200) });
     }
   }
 }
