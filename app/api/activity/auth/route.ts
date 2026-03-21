@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { logWebEvent } from '@/lib/serverLogger';
+import { logActivityLogin, logActivityAuthError } from '@/lib/activityLogger';
 import { createClient } from '@supabase/supabase-js';
 import { createSessionToken } from '@/lib/auth';
 
@@ -168,6 +169,7 @@ const envFlags = {
     }>;
 
     const supabase = getSupabase();
+    let existingUserForLog: boolean | null = null;
 
     if (supabase) {
       const expiresAt = tokenData.expires_in
@@ -180,6 +182,8 @@ const envFlags = {
         .select('*')
         .eq('discord_id', user.id)
         .maybeSingle();
+
+      existingUserForLog = !!existingUser;
 
       if (existingUser) {
         console.log('✅ Existing user found, updating tokens:', existingUser.username);
@@ -289,6 +293,28 @@ const envFlags = {
       },
     });
 
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      ?? request.headers.get('x-real-ip')
+      ?? null;
+    const ua = request.headers.get('user-agent') ?? null;
+    const loginExpiresAt = tokenData.expires_in
+      ? new Date(Date.now() + tokenData.expires_in * 1000).toISOString()
+      : null;
+    const activeGuildName = guildId ? guilds.find((g) => g.id === guildId)?.name ?? null : null;
+
+    await logActivityLogin({
+      userId: user.id,
+      username: user.username,
+      discriminator: user.discriminator,
+      avatar: user.avatar,
+      guildId: guildId ?? null,
+      guildName: activeGuildName,
+      isNewUser: !existingUserForLog,
+      ip,
+      userAgent: ua,
+      tokenExpiresAt: loginExpiresAt,
+    });
+
     const response = NextResponse.json({
       ...responseBody,
       bearerToken: sessionToken,
@@ -341,6 +367,12 @@ const envFlags = {
         error: String(err),
         stack: err instanceof Error ? err.stack : undefined,
       },
+    });
+    await logActivityAuthError({
+      reason: 'unhandled_exception',
+      ip: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? request.headers.get('x-real-ip') ?? null,
+      userAgent: request.headers.get('user-agent') ?? null,
+      metadata: { error: String(err), stack: err instanceof Error ? err.stack : undefined },
     });
 
     const envFlags = {

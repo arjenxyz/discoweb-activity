@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { clearSessionCookies } from '@/lib/auth';
+import { clearSessionCookies, requireSessionUser } from '@/lib/auth';
+import { logActivityLogout } from '@/lib/activityLogger';
 
 // Çıkış işlemini yapan ana fonksiyon
 function handleLogout(request: NextRequest) {
@@ -41,6 +42,19 @@ function handleLogout(request: NextRequest) {
 
 // POST isteği — JSON kabul ediyorsa redirect yerine 200 JSON döndür (Activity iframe / fetch desteği)
 export async function POST(request: NextRequest) {
+  const session = await requireSessionUser(request);
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    ?? request.headers.get('x-real-ip') ?? null;
+  const ua = request.headers.get('user-agent') ?? null;
+  const guildId = request.cookies.get('selected_guild_id')?.value ?? null;
+
+  await logActivityLogout({
+    userId: session.ok ? session.userId : null,
+    guildId,
+    ip,
+    userAgent: ua,
+  });
+
   const accept = request.headers.get('accept') ?? '';
   if (accept.includes('application/json')) {
     const response = NextResponse.json({ ok: true });
