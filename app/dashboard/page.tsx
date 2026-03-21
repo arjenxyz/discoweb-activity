@@ -1007,7 +1007,7 @@ export default function DashboardPage() {
                   formatRoleColor={formatRoleColor}
                   badgeInfo={badgeInfo}
                 />
-                {/* Chat is now a separate page at /chat */}
+                
               </>
             )}
 
