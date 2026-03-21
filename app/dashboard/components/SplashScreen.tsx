@@ -180,7 +180,7 @@ export default function SplashScreen({ onEnter }: Props) {
         <img src="https://cdn.discordapp.com/avatars/1163500308270436442/8c2eeba5e9c137e4f9375bccb0f0bf40.png?size=128" alt="thearjen" className="h-5 w-5 rounded-full opacity-70" />
         <span className="text-xs text-white/60">Created by <span className="text-white/90 font-semibold">thearjen</span> · All rights reserved</span>
       </div>
-      <div className="flex items-center gap-2 pl-6">
+      <div className="flex items-center gap-2 pl-[26px]">
         <button type="button" onClick={() => openLink('https://discoweb.tech/terms')} className="text-xs text-white/50 hover:text-white/75 transition-colors">Kullanım Şartları</button>
         <span className="text-white/30 text-xs">·</span>
         <button type="button" onClick={() => openLink('https://discoweb.tech/privacy')} className="text-xs text-white/50 hover:text-white/75 transition-colors">Gizlilik Politikası</button>
@@ -197,7 +197,7 @@ export default function SplashScreen({ onEnter }: Props) {
         className="relative z-10 hidden lg:flex items-start justify-between px-10 pt-8"
         style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.7s ease' }}
       >
-        <div className="scale-125 origin-top-left"><LogoBlock size="md" /></div>
+        <LogoBlock size="md" />
         <MuteButton muted={muted} onToggle={toggleMute} />
       </div>
 
@@ -213,7 +213,7 @@ export default function SplashScreen({ onEnter }: Props) {
 
       {/* ── FOOTER — absolute alta sabitli, bağımsız katman ── */}
       <div
-        className="hidden lg:block absolute z-10 bottom-8 left-10"
+        className="hidden lg:block absolute z-10 bottom-10 left-10"
         style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.7s ease' }}
       >
         <FooterLine />
@@ -221,7 +221,7 @@ export default function SplashScreen({ onEnter }: Props) {
 
       {/* ── SAĞ ALTA — hoş geldin + buton, bağımsız ── */}
       <div
-        className="hidden lg:flex absolute z-10 bottom-8 right-12 items-center gap-3"
+        className="hidden lg:flex absolute z-10 bottom-10 right-14 items-center gap-3"
         style={{ opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(18px)', transition: 'opacity 0.7s ease, transform 0.7s ease' }}
       >
         {user && !(maintenance && !isDeveloper) && (
