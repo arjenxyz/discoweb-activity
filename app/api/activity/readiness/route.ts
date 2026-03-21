@@ -381,7 +381,7 @@ export async function GET(request: Request) {
 
   // Verify rolü kontrolü: profil var ama verify rolü yoksa
   const verifyRoleId = (server as { verify_role_id?: string | null }).verify_role_id;
-  if (verifyRoleId && !roleIds.includes(verifyRoleId) && !isAdmin) {
+  if (verifyRoleId && !roleIds.includes(verifyRoleId)) {
     return nonOkStatus({
       status: 'missing_verify_role',
       guildId,

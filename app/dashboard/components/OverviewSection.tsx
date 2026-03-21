@@ -321,7 +321,7 @@ export default function OverviewSection({
                           <div className="flex items-start justify-between gap-2">
                             <div className="min-w-0 flex-1">
                               <p className="text-sm font-semibold text-white truncate">{raffle.title}</p>
-                              {raffle.prizes?.length > 0 && (
+                              {(raffle.prizes?.length ?? 0) > 0 && (
                                 <p className="mt-0.5 text-[11px] text-white/35 truncate">{raffle.prizes.join(' · ')}</p>
                               )}
                               {raffle.end_date && (
