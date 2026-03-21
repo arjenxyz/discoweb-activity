@@ -56,6 +56,30 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
   }, []);
 
   useEffect(() => {
+    const clearActivitySessionData = () => {
+      try {
+        localStorage.removeItem('selectedGuildId');
+        localStorage.removeItem('discord_frame_id');
+        localStorage.removeItem('discord_instance_id');
+        localStorage.removeItem('discord_bearer_token');
+        localStorage.removeItem('auth_ready');
+      } catch {
+        // ignore
+      }
+      document.cookie = 'selected_guild_id=; Path=/; Max-Age=0';
+      document.cookie = 'discord_session=; Path=/; Max-Age=0';
+    };
+
+    window.addEventListener('beforeunload', clearActivitySessionData);
+    window.addEventListener('pagehide', clearActivitySessionData);
+
+    return () => {
+      window.removeEventListener('beforeunload', clearActivitySessionData);
+      window.removeEventListener('pagehide', clearActivitySessionData);
+    };
+  }, []);
+
+  useEffect(() => {
     const abortController = new AbortController();
     const { signal } = abortController;
 
