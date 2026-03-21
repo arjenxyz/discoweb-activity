@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { getSessionUserIdFromRequest, requireSessionUser } from '@/lib/auth';
 import { checkMaintenance } from '@/lib/maintenance';
 import { getSelectedGuildId } from '@/lib/guild';
+import { logNewUser } from '@/lib/activityLogger';
 
 const getSupabase = () => {
   const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -276,6 +277,20 @@ export async function GET(request: Request) {
     };
 
     const insertedCode = await ensureReferralCode();
+
+    // Yeni profil oluşturuldu — new-user logu at
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      ?? request.headers.get('x-real-ip') ?? null;
+    const ua = request.headers.get('user-agent') ?? null;
+    await logNewUser({
+      userId,
+      username: user?.username ?? 'bilinmiyor',
+      avatar: user?.avatar ?? null,
+      guildId: selectedGuildId,
+      guildName: null,
+      ip,
+      userAgent: ua,
+    });
 
     // Eğer referral_code eklenemedi ise, en azından boş bir profil yaratmayı tekrar dene.
     if (!insertedCode) {
