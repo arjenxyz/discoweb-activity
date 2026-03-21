@@ -18,9 +18,34 @@ export default function SplashScreen({ onEnter }: Props) {
   const [isDeveloper, setIsDeveloper] = useState(false);
   const [isDeveloperChecked, setIsDeveloperChecked] = useState(false);
   const [devPanelOpen, setDevPanelOpen] = useState(false);
+  const [user, setUser] = useState<{ username: string; avatarUrl: string } | null>(null);
+
+  const openLink = async (url: string) => {
+    try {
+      const { DiscordSDK } = await import('@discord/embedded-app-sdk');
+      const sdk = new DiscordSDK(process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!);
+      await sdk.ready();
+      await sdk.commands.openExternalLink({ url });
+    } catch {
+      window.open(url, '_blank');
+    }
+  };
 
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), 80);
+
+    // Oturum açıksa kullanıcı bilgisini çek
+    fetch(apiUrl('/api/auth/me'), { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null)
+      .then((d: { username?: string; avatar?: string; id?: string } | null) => {
+        if (d?.username) {
+          const avatarUrl = d.avatar && d.id
+            ? `https://cdn.discordapp.com/avatars/${d.id}/${d.avatar}.png?size=64`
+            : `https://cdn.discordapp.com/embed/avatars/${Math.floor(Math.random() * 5)}.png`;
+          setUser({ username: d.username, avatarUrl });
+        }
+      })
+      .catch(() => {});
 
     const checkMaintenance = (initial = false) => {
       fetch(apiUrl('/api/activity/maintenance'))
@@ -120,22 +145,51 @@ export default function SplashScreen({ onEnter }: Props) {
               Discord Economy Platform
             </span>
           </div>
+          {user && (
+            <div className="flex items-center gap-2">
+              <img
+                src={user.avatarUrl}
+                alt={user.username}
+                className="h-5 w-5 rounded-full opacity-60"
+              />
+              <span className="text-xs text-white/35 tracking-wide">
+                Hoş geldin, <span className="text-white/55 font-medium">{user.username}</span>
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Alt satır: sol created-by, sağ butonlar — mobilde alt alta */}
         <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
 
-          {/* Created by */}
-          <div className="flex flex-col gap-3">
+          {/* Created by + links */}
+          <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2">
               <img
                 src="https://cdn.discordapp.com/avatars/1163500308270436442/8c2eeba5e9c137e4f9375bccb0f0bf40.png?size=128"
                 alt="thearjen"
-                className="h-6 w-6 rounded-full border border-white/20"
+                className="h-5 w-5 rounded-full opacity-60"
               />
-              <span className="text-xs text-white/40">
-                Created by <span className="text-white/60 font-medium">thearjen</span> · All rights reserved
+              <span className="text-xs text-white/35">
+                Created by <span className="text-white/50 font-medium">thearjen</span> · All rights reserved
               </span>
+            </div>
+            <div className="flex items-center gap-3 pl-7">
+              <button
+                type="button"
+                onClick={() => openLink('https://discoweb.tech/terms')}
+                className="text-[11px] text-white/25 hover:text-white/50 transition-colors"
+              >
+                Kullanım Şartları
+              </button>
+              <span className="text-white/15 text-[11px]">·</span>
+              <button
+                type="button"
+                onClick={() => openLink('https://discoweb.tech/privacy')}
+                className="text-[11px] text-white/25 hover:text-white/50 transition-colors"
+              >
+                Gizlilik Politikası
+              </button>
             </div>
           </div>
 
