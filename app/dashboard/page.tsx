@@ -1107,6 +1107,7 @@ export default function DashboardPage() {
               <SettingsSection
                 onOpenPromotionsModal={openPromotionsModal}
                 onOpenDiscountsModal={openDiscountsModal}
+                currentGuildName={headerServer.data?.name ?? null}
               />
             )}
 
