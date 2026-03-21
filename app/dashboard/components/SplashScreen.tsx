@@ -4,6 +4,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { MuteButton, VideoBackground } from './VideoBackground';
 import DeveloperPanel from './DeveloperPanel';
 import { apiUrl } from '@/lib/api';
+import fetchWithCreds from '@/lib/fetchWithCreds';
 import { getDiscordSdk } from '@/lib/discordSdk';
 
 type Props = {
@@ -47,12 +48,7 @@ export default function SplashScreen({ onEnter }: Props) {
     const t = setTimeout(() => setVisible(true), 80);
 
     // Oturum açıksa kullanıcı bilgisini çek
-    // Activity iframe cookie gönderemez — bearer token ile auth yap
-    const bearerToken = (() => { try { return localStorage.getItem('discord_bearer_token'); } catch { return null; } })();
-    fetch(apiUrl('/api/auth/me'), {
-      credentials: 'include',
-      headers: bearerToken ? { Authorization: `Bearer ${bearerToken}` } : {},
-    })
+    fetchWithCreds(apiUrl('/api/auth/me'))
       .then(r => r.ok ? r.json() : null)
       .then((d: { username?: string; avatar?: string } | null) => {
         if (d?.username) {
