@@ -21,6 +21,7 @@ export type LoginLogPayload = {
   avatar: string | null;
   guildId: string | null;
   guildName?: string | null;
+  guildIcon?: string | null;
   isNewUser: boolean;
   ip: string | null;
   userAgent: string | null;
@@ -31,6 +32,8 @@ export type LogoutLogPayload = {
   userId: string | null;
   username?: string | null;
   guildId: string | null;
+  guildName?: string | null;
+  guildIcon?: string | null;
   ip: string | null;
   userAgent: string | null;
 };
@@ -42,6 +45,7 @@ export type NewUserPayload = {
   avatar: string | null;
   guildId: string | null;
   guildName: string | null;
+  guildIcon?: string | null;
   ip: string | null;
   userAgent: string | null;
 };
@@ -49,6 +53,7 @@ export type NewUserPayload = {
 export type NewServerPayload = {
   guildId: string;
   guildName: string;
+  guildIcon?: string | null;
   ownerId: string;
   registeredBy: string;
   isSetup: boolean;
@@ -74,6 +79,11 @@ const cdnAvatar = (userId: string, avatarHash: string | null) =>
     ? `https://cdn.discordapp.com/avatars/${userId}/${avatarHash}.png?size=128`
     : `https://cdn.discordapp.com/embed/avatars/${Number(BigInt(userId) >> BigInt(22)) % 6}.png`;
 
+const cdnGuildIcon = (guildId: string, iconHash: string | null | undefined) =>
+  iconHash
+    ? `https://cdn.discordapp.com/icons/${guildId}/${iconHash}.png?size=64`
+    : null;
+
 const ts = (date: Date = new Date()) =>
   `<t:${Math.floor(date.getTime() / 1000)}:F>`;
 
@@ -86,7 +96,6 @@ function parseUA(ua: string | null): string {
   const u = ua.toLowerCase();
   const parts: string[] = [];
 
-  // Platform
   if (u.includes('discord')) parts.push('Discord İstemcisi');
   else if (u.includes('android')) parts.push('Android');
   else if (u.includes('iphone') || u.includes('ipad')) parts.push('iOS');
@@ -95,7 +104,6 @@ function parseUA(ua: string | null): string {
   else if (u.includes('linux')) parts.push('Linux');
   else parts.push('Bilinmeyen OS');
 
-  // Tarayıcı
   if (!u.includes('discord')) {
     if (u.includes('edg/')) parts.push('Edge');
     else if (u.includes('chrome') && !u.includes('chromium')) parts.push('Chrome');
@@ -105,6 +113,15 @@ function parseUA(ua: string | null): string {
   }
 
   return parts.join(' · ');
+}
+
+/** Sunucu bilgisini footer için hazırla */
+function guildFooter(guildId: string | null, guildName: string | null | undefined, guildIcon: string | null | undefined, suffix: string) {
+  const iconUrl = guildId ? cdnGuildIcon(guildId, guildIcon) : null;
+  const name = guildName ? `${guildName} · ${suffix}` : suffix;
+  return iconUrl
+    ? { text: name, icon_url: iconUrl }
+    : { text: name };
 }
 
 async function postToChannel(channelId: string, payload: Record<string, unknown>): Promise<void> {
@@ -128,6 +145,8 @@ export async function logActivityLogin(data: LoginLogPayload): Promise<void> {
     ? `${data.username}#${data.discriminator}`
     : data.username;
 
+  const guildIconUrl = data.guildId ? cdnGuildIcon(data.guildId, data.guildIcon) : null;
+
   const embed = {
     author: {
       name: tag,
@@ -138,13 +157,13 @@ export async function logActivityLogin(data: LoginLogPayload): Promise<void> {
       ? `**${data.username}** sisteme ilk kez giriş yaptı.`
       : `**${data.username}** Activity'yi açtı.`,
     color: data.isNewUser ? 0x57F287 : 0x1ABC9C,
-    thumbnail: { url: cdnAvatar(data.userId, data.avatar) },
+    thumbnail: { url: guildIconUrl ?? cdnAvatar(data.userId, data.avatar) },
     fields: [
       { name: '👤 Kullanıcı', value: `<@${data.userId}>\n\`${data.userId}\``, inline: true },
       {
         name: '🏠 Sunucu',
         value: data.guildName
-          ? `${data.guildName}\n\`${data.guildId}\``
+          ? `**${data.guildName}**\n\`${data.guildId}\``
           : (data.guildId ? `\`${data.guildId}\`` : '—'),
         inline: true,
       },
@@ -161,7 +180,7 @@ export async function logActivityLogin(data: LoginLogPayload): Promise<void> {
       ...(data.userAgent ? [{ name: '📋 User Agent', value: `\`\`\`\n${data.userAgent.slice(0, 300)}\n\`\`\``, inline: false }] : []),
     ],
     timestamp: new Date().toISOString(),
-    footer: { text: 'DiscoWeb · Activity Giriş' },
+    footer: guildFooter(data.guildId, data.guildName, data.guildIcon, 'Activity Giriş'),
   };
 
   await postToChannel(LOGIN_CHANNEL_ID, { embeds: [embed] });
@@ -190,7 +209,9 @@ export async function logActivityLogout(data: LogoutLogPayload): Promise<void> {
       },
       {
         name: '🏠 Sunucu',
-        value: data.guildId ? `\`${data.guildId}\`` : '—',
+        value: data.guildName
+          ? `**${data.guildName}**\n\`${data.guildId}\``
+          : (data.guildId ? `\`${data.guildId}\`` : '—'),
         inline: true,
       },
       { name: '📅 Zaman', value: ts(), inline: true },
@@ -198,7 +219,7 @@ export async function logActivityLogout(data: LogoutLogPayload): Promise<void> {
       { name: '🖥️ Platform', value: parseUA(data.userAgent), inline: true },
     ],
     timestamp: new Date().toISOString(),
-    footer: { text: 'DiscoWeb · Activity Çıkış' },
+    footer: guildFooter(data.guildId, data.guildName, data.guildIcon, 'Activity Çıkış'),
   };
 
   await postToChannel(LOGOUT_CHANNEL_ID, { embeds: [embed] });
@@ -213,6 +234,8 @@ export async function logNewUser(data: NewUserPayload): Promise<void> {
     ? `${data.username}#${data.discriminator}`
     : data.username;
 
+  const guildIconUrl = data.guildId ? cdnGuildIcon(data.guildId, data.guildIcon) : null;
+
   const embed = {
     author: {
       name: tag,
@@ -221,13 +244,13 @@ export async function logNewUser(data: NewUserPayload): Promise<void> {
     title: '🎉 Yeni Kullanıcı Katıldı!',
     description: `**${data.username}** sisteme ilk kez kayıt oldu.\nHoş geldin! 👋`,
     color: 0x5865F2,
-    thumbnail: { url: cdnAvatar(data.userId, data.avatar) },
+    thumbnail: { url: guildIconUrl ?? cdnAvatar(data.userId, data.avatar) },
     fields: [
       { name: '👤 Kullanıcı', value: `<@${data.userId}>\n\`${data.userId}\``, inline: true },
       {
         name: '🏠 İlk Sunucu',
         value: data.guildName
-          ? `${data.guildName}\n\`${data.guildId}\``
+          ? `**${data.guildName}**\n\`${data.guildId}\``
           : (data.guildId ? `\`${data.guildId}\`` : '—'),
         inline: true,
       },
@@ -237,7 +260,7 @@ export async function logNewUser(data: NewUserPayload): Promise<void> {
       ...(data.userAgent ? [{ name: '📋 User Agent', value: `\`\`\`\n${data.userAgent.slice(0, 300)}\n\`\`\``, inline: false }] : []),
     ],
     timestamp: new Date().toISOString(),
-    footer: { text: 'DiscoWeb · Yeni Kullanıcı' },
+    footer: guildFooter(data.guildId, data.guildName, data.guildIcon, 'Yeni Kullanıcı'),
   };
 
   await postToChannel(NEW_USER_CHANNEL_ID, { embeds: [embed] });
@@ -248,14 +271,18 @@ export async function logNewUser(data: NewUserPayload): Promise<void> {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export async function logNewServer(data: NewServerPayload): Promise<void> {
-  const isNew = !data.isSetup || data.ownerId === data.registeredBy;
+  const guildIconUrl = cdnGuildIcon(data.guildId, data.guildIcon);
 
   const embed = {
+    author: guildIconUrl
+      ? { name: data.guildName, icon_url: guildIconUrl }
+      : { name: data.guildName },
     title: data.isSetup ? '🚀 Yeni Sunucu Kurulumu Tamamlandı' : '📋 Yeni Sunucu Sisteme Eklendi',
     description: data.isSetup
       ? `**${data.guildName}** sunucusu kurulumunu tamamladı ve sisteme dahil oldu.`
       : `**${data.guildName}** sunucusu sisteme kaydedildi, kurulum bekleniyor.`,
     color: data.isSetup ? 0x57F287 : 0xF1C40F,
+    thumbnail: guildIconUrl ? { url: guildIconUrl } : undefined,
     fields: [
       { name: '🏠 Sunucu', value: `**${data.guildName}**\n\`${data.guildId}\``, inline: true },
       { name: '👑 Sunucu Sahibi', value: `<@${data.ownerId}>\n\`${data.ownerId}\``, inline: true },
@@ -282,14 +309,16 @@ export async function logNewServer(data: NewServerPayload): Promise<void> {
       { name: '📅 Zaman', value: ts(), inline: true },
     ],
     timestamp: new Date().toISOString(),
-    footer: { text: `DiscoWeb · ${data.isSetup ? 'Sunucu Kurulumu' : 'Sunucu Kaydı'}` },
+    footer: guildIconUrl
+      ? { text: `${data.guildName} · ${data.isSetup ? 'Sunucu Kurulumu' : 'Sunucu Kaydı'}`, icon_url: guildIconUrl }
+      : { text: `DiscoWeb · ${data.isSetup ? 'Sunucu Kurulumu' : 'Sunucu Kaydı'}` },
   };
 
   await postToChannel(NEW_SERVER_CHANNEL_ID, { embeds: [embed] });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// AUTH ERROR (basit seviye — kullanıcı isteği)
+// AUTH ERROR
 // ─────────────────────────────────────────────────────────────────────────────
 
 export async function logActivityAuthError(data: ErrorLogPayload): Promise<void> {

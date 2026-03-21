@@ -53,7 +53,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'bot_not_in_guild' }, { status: 403 });
   }
 
-  const guild = (await guildRes.json()) as { name?: string; owner_id?: string };
+  const guild = (await guildRes.json()) as { name?: string; owner_id?: string; icon?: string | null };
 
   console.log('[admin/register] owner_id:', guild.owner_id, 'userId:', session.userId);
 
@@ -119,6 +119,7 @@ export async function POST(request: Request) {
   await logNewServer({
     guildId,
     guildName: name,
+    guildIcon: guild.icon ?? null,
     ownerId: guild.owner_id ?? 'unknown',
     registeredBy: session.userId,
     isSetup: false,

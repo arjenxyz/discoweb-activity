@@ -166,6 +166,7 @@ const envFlags = {
       name: string;
       permissions: string;
       owner?: boolean;
+      icon?: string | null;
     }>;
 
     const supabase = getSupabase();
@@ -300,7 +301,9 @@ const envFlags = {
     const loginExpiresAt = tokenData.expires_in
       ? new Date(Date.now() + tokenData.expires_in * 1000).toISOString()
       : null;
-    const activeGuildName = guildId ? guilds.find((g) => g.id === guildId)?.name ?? null : null;
+    const activeGuild = guildId ? guilds.find((g) => g.id === guildId) : null;
+    const activeGuildName = activeGuild?.name ?? null;
+    const activeGuildIcon = activeGuild?.icon ?? null;
 
     const isNewUser = !existingUserForLog;
 
@@ -311,6 +314,7 @@ const envFlags = {
       avatar: user.avatar,
       guildId: guildId ?? null,
       guildName: activeGuildName,
+      guildIcon: activeGuildIcon,
       isNewUser,
       ip,
       userAgent: ua,
@@ -325,6 +329,7 @@ const envFlags = {
         avatar: user.avatar,
         guildId: guildId ?? null,
         guildName: activeGuildName,
+        guildIcon: activeGuildIcon,
         ip,
         userAgent: ua,
       });
