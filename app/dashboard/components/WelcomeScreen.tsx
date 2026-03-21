@@ -62,8 +62,8 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
     <div className="relative isolate min-h-screen overflow-hidden bg-[#0b0d12] text-white">
       <VideoBackground videoRef={videoRef} src="/cdn/Storage/Test1.mp4" />
 
-      {/* Ses butonu — sağ üst köşe */}
-      <div className="absolute z-20 top-6 right-6">
+      {/* Ses butonu — masaüstünde sağ üst */}
+      <div className="hidden sm:block absolute z-20 top-6 right-6">
         <MuteButton muted={muted} onToggle={toggleMute} src="/cdn/Storage/Test1.mp4" />
       </div>
 
@@ -96,6 +96,10 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
               </p>
             )}
             <div className="flex items-center gap-3 pt-2">
+              {/* Mobilde ses butonu butonun yanında */}
+              <div className="sm:hidden">
+                <MuteButton muted={muted} onToggle={toggleMute} src="/cdn/Storage/Test1.mp4" />
+              </div>
               <button
                 type="button"
                 onClick={handleStart}
