@@ -31,7 +31,15 @@ export async function GET(request: Request) {
     .eq('discord_id', userId)
     .maybeSingle();
 
-  const avatar = user?.avatar ?? null;
+  // Supabase'de kayıt yoksa token geçersiz say — yeniden auth tetiklensin
+  if (!user) {
+    const res = NextResponse.json({ error: 'user_not_found' }, { status: 401 });
+    res.cookies.set('discord_session', '', { maxAge: 0, path: '/' });
+    res.cookies.set('csrf_token', '', { maxAge: 0, path: '/' });
+    return res;
+  }
+
+  const avatar = user.avatar ?? null;
   const avatarUrl = avatar
     ? (avatar.startsWith('http')
         ? avatar
@@ -40,7 +48,7 @@ export async function GET(request: Request) {
 
   return NextResponse.json({
     id: userId,
-    username: user?.username ?? null,
+    username: user.username ?? null,
     avatar: avatarUrl,
   });
 }

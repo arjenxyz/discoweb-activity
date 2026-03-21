@@ -92,6 +92,13 @@ export default async function fetchWithCreds(input: RequestInfo, init: RequestIn
           return retryResponse;
         }
       }
+
+      // Refresh başarısız → stale token'ı temizle
+      try {
+        localStorage.removeItem('discord_bearer_token');
+        localStorage.removeItem('discordUser');
+        localStorage.removeItem('auth_ready');
+      } catch {}
     } catch {}
   }
 

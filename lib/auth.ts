@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server';
 
 const SESSION_COOKIE = 'discord_session';
 const CSRF_COOKIE = 'csrf_token';
-const SESSION_MAX_AGE_SEC = 60 * 60 * 24 * 7;
+const SESSION_MAX_AGE_SEC = 60 * 60 * 24; // 24 saat
 
 type SessionPayload = {
   sub: string;
