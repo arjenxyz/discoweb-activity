@@ -238,6 +238,14 @@ export default function SplashScreen({ onEnter }: Props) {
 
         {/* Mobil: dikey, ortada */}
         <div className="lg:hidden flex flex-col items-center gap-3">
+          {user && !(maintenance && !isDeveloper) && (
+            <div className="flex items-center gap-2">
+              {user.avatarUrl && <img src={user.avatarUrl} alt={user.username} className="h-6 w-6 rounded-full opacity-70" />}
+              <span className="text-sm text-white/50">
+                Hoş geldin, <span className="text-white font-semibold">{user.username}</span>
+              </span>
+            </div>
+          )}
           <div className="flex items-center gap-3">
             <MuteButton muted={muted} onToggle={toggleMute} />
             {isDeveloper && <DevButton />}
