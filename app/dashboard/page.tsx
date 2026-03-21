@@ -899,10 +899,10 @@ export default function DashboardPage() {
   if (activityReadinessLoading) {
     return (
       <div className="relative isolate flex min-h-screen w-full flex-col items-start justify-end overflow-hidden bg-[#0b0d12] px-6 pb-10 sm:px-10 sm:pb-12">
-        {process.env.NEXT_PUBLIC_WELCOME_VIDEO_URL && (
+        {true && (
           <>
             <video
-              src={process.env.NEXT_PUBLIC_WELCOME_VIDEO_URL}
+              src="/cdn/Storage/test.mp4"
               autoPlay loop muted playsInline disablePictureInPicture
               className="pointer-events-none absolute inset-0 h-full w-full object-cover"
             />
