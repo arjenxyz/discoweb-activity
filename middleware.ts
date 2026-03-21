@@ -7,7 +7,7 @@ const IGNORED_PREFIXES = ['/api', '/_next'];
 const IGNORED_PATHS = ['/favicon.ico', '/robots.txt', '/sitemap.xml', '/sw.js', '/manifest.json'];
 const LEGACY_PUBLIC_PREFIXES = ['/docs', '/contact', '/privacy', '/important', '/thank-you'];
 
-const roleCheckCache = new Map<string, { roles: string[]; expires: number }>();
+const roleCheckCache = new Map<string, { member: boolean; roles: string[]; expires: number }>();
 const CACHE_DURATION_MS = 2 * 60 * 1000;
 const CACHE_GRACE_MS = 30 * 1000;
 
@@ -104,7 +104,7 @@ const getSessionUserId = async (request: NextRequest) => {
 
 const isStaticAsset = (pathname: string) => /\.[a-zA-Z0-9]+$/.test(pathname);
 
-async function checkUserRoles(userId: string, guildId: string): Promise<string[] | null> {
+async function checkUserRoles(userId: string, guildId: string): Promise<{ member: boolean; roles: string[] } | null> {
   const botToken = process.env.DISCORD_BOT_TOKEN;
   if (!botToken) {
     return null;
@@ -115,7 +115,7 @@ async function checkUserRoles(userId: string, guildId: string): Promise<string[]
   const cached = roleCheckCache.get(cacheKey);
 
   if (cached && cached.expires > now) {
-    return cached.roles;
+    return { member: true, roles: cached.roles };
   }
 
   try {
@@ -124,32 +124,33 @@ async function checkUserRoles(userId: string, guildId: string): Promise<string[]
     });
 
     if (!memberResponse.ok) {
-      // User was kicked/left — evict cache immediately
+      // User not found in guild
       if (memberResponse.status === 404) {
         roleCheckCache.delete(cacheKey);
-        return [];
+        return { member: false, roles: [] };
       }
 
       // Transient Discord API error — serve stale cache within grace period
       if (cached && now < cached.expires + CACHE_GRACE_MS) {
-        return cached.roles;
+        return { member: true, roles: cached.roles };
       }
 
       return null;
     }
 
-    const member = (await memberResponse.json()) as { roles: string[] };
+    const member = (await memberResponse.json()) as { roles?: string[] };
     const roles = Array.isArray(member.roles) ? member.roles : [];
 
     roleCheckCache.set(cacheKey, {
+      member: true,
       roles,
       expires: now + CACHE_DURATION_MS,
     });
 
-    return roles;
+    return { member: true, roles };
   } catch {
     if (cached) {
-      return cached.roles;
+      return { member: true, roles: cached.roles };
     }
 
     return null;
@@ -232,8 +233,8 @@ export async function middleware(request: NextRequest) {
     const selectedGuildId = requestedGuildId || request.cookies.get('selected_guild_id')?.value;
 
     if (selectedGuildId) {
-      const userRoles = await checkUserRoles(userId, selectedGuildId);
-      if (Array.isArray(userRoles) && userRoles.length === 0) {
+      const userStatus = await checkUserRoles(userId, selectedGuildId);
+      if (userStatus && userStatus.member === false) {
         return NextResponse.redirect(new URL('/server-left', request.url));
       }
     }
