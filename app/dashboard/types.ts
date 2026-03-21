@@ -170,6 +170,12 @@ export type Raffle = {
   start_date: string | null;
   end_date: string | null;
   min_tag_days: number;
+  winner_count: number;
+  prize_type: 'papel' | 'role' | 'custom';
+  prize_papel_amount: number | null;
+  prize_role_id: string | null;
+  drawn_at: string | null;
+  entry_count?: number;
 };
 
 export type BadgeInfo = {

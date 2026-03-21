@@ -124,7 +124,21 @@ export async function GET(request: Request) {
 
   const hasMore = (items?.length ?? 0) >= limit;
 
-  return NextResponse.json({ promotions: promotions ?? [], items: items ?? [], hasMore, page, limit });
+  // Kullanıcının sahip olduğu süresiz rol ID'lerini döndür
+  let ownedRoleIds: string[] = [];
+  if (sessionUserId) {
+    const { data: ownedOrders } = await supabase
+      .from('store_orders')
+      .select('role_id')
+      .eq('user_id', sessionUserId)
+      .eq('server_id', server.id)
+      .eq('status', 'paid')
+      .is('expires_at', null)
+      .is('revoked_at', null);
+    ownedRoleIds = (ownedOrders ?? []).map((o: { role_id: string | null }) => o.role_id).filter((id): id is string => !!id);
+  }
+
+  return NextResponse.json({ promotions: promotions ?? [], items: items ?? [], hasMore, page, limit, ownedRoleIds });
 }
 
 export async function POST(request: Request) {

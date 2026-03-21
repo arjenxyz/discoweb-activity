@@ -42,9 +42,10 @@ export async function GET(request: NextRequest) {
       .single(),
     supabase
       .from('raffles')
-      .select('id,title,description,prizes,start_date,end_date,min_tag_days')
+      .select('id,title,description,prizes,start_date,end_date,min_tag_days,winner_count,prize_type,prize_papel_amount,prize_role_id,drawn_at')
       .eq('guild_id', selectedGuildId)
       .eq('is_active', true)
+      .is('drawn_at', null)
       .or('end_date.is.null,end_date.gt.' + new Date().toISOString()),
   ]);
 
@@ -69,17 +70,32 @@ export async function GET(request: NextRequest) {
     .filter((r) => tagDays >= r.min_tag_days)
     .map((r) => r.id);
 
-  // Fetch which raffles the user has already joined
+  // Katılım sayıları ve kullanıcının katıldığı çekilişler
   let joinedRaffles: string[] = [];
+  const entryCounts: Record<string, number> = {};
   if (activeRaffles.length > 0) {
-    const raffleIds = activeRaffles.map((r) => r.id);
-    const { data: entries } = await supabase
-      .from('raffle_entries')
-      .select('raffle_id')
-      .eq('user_id', userId)
-      .in('raffle_id', raffleIds);
-    joinedRaffles = (entries ?? []).map((e) => e.raffle_id);
+    const raffleIds = activeRaffles.map((r: { id: string }) => r.id);
+    const [{ data: entries }, { data: allEntries }] = await Promise.all([
+      supabase
+        .from('raffle_entries')
+        .select('raffle_id')
+        .eq('user_id', userId)
+        .in('raffle_id', raffleIds),
+      supabase
+        .from('raffle_entries')
+        .select('raffle_id')
+        .in('raffle_id', raffleIds),
+    ]);
+    joinedRaffles = (entries ?? []).map((e: { raffle_id: string }) => e.raffle_id);
+    for (const e of allEntries ?? []) {
+      entryCounts[e.raffle_id] = (entryCounts[e.raffle_id] ?? 0) + 1;
+    }
   }
+
+  const activeRafflesWithCount = activeRaffles.map((r: any) => ({
+    ...r,
+    entry_count: entryCounts[r.id] ?? 0,
+  }));
 
   return NextResponse.json({
     currentBadge,
@@ -87,7 +103,7 @@ export async function GET(request: NextRequest) {
     tagDays,
     daysToNext,
     hasTag,
-    activeRaffles,
+    activeRaffles: activeRafflesWithCount,
     eligibleRaffles,
     joinedRaffles,
   });

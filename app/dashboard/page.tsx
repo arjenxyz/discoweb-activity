@@ -56,6 +56,7 @@ export default function DashboardPage() {
   const [badgeInfo, setBadgeInfo] = useState<BadgeInfo | null>(null);
   const [storeItems, setStoreItems] = useState<StoreItem[]>([]);
   const [storeItemsLoading, setStoreItemsLoading] = useState(true);
+  const [ownedRoleIds, setOwnedRoleIds] = useState<string[]>([]);
   const [storePage, setStorePage] = useState(1);
   const [storeHasMore, setStoreHasMore] = useState(true);
   const [storeLoadingMore, setStoreLoadingMore] = useState(false);
@@ -538,6 +539,7 @@ export default function DashboardPage() {
         const data = (await response.json()) as {
           items: StoreItem[];
           hasMore?: boolean;
+          ownedRoleIds?: string[];
         };
 
         setStoreItems((prev) =>
@@ -545,6 +547,7 @@ export default function DashboardPage() {
         );
         setStorePage(page);
         setStoreHasMore(data.hasMore ?? ((data.items?.length ?? 0) >= 20));
+        if (!append && data.ownedRoleIds) setOwnedRoleIds(data.ownedRoleIds);
       }
     } catch (err) {
       console.warn('MaÄŸaza Ã¼rÃ¼nleri yÃ¼klenemedi:', err);
@@ -1083,6 +1086,7 @@ export default function DashboardPage() {
                 onPurchase={handlePurchase}
                 onAddToCart={handleAddToCart}
                 renderPapelAmount={renderPapelAmount}
+                ownedRoleIds={ownedRoleIds}
               />
             )}
 

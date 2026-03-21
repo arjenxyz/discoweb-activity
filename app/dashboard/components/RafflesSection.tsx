@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import {
   LuGift, LuClock, LuTag, LuCalendar, LuLock,
   LuLoader, LuTicket, LuCheck, LuChevronDown, LuChevronUp, LuInfo,
+  LuTrophy, LuUsers, LuCoins, LuShield,
 } from 'react-icons/lu';
 import Image from 'next/image';
 import type { BadgeInfo } from '../types';
@@ -142,7 +143,15 @@ export default function RafflesSection({ badgeInfo, loading, onJoinRaffle }: Raf
                     {/* Ödüller + durum badge */}
                     <div className="flex items-start justify-between gap-2 mb-3">
                       <div className="flex flex-wrap gap-1">
-                        {raffle.prizes && raffle.prizes.length > 0 ? (
+                        {raffle.prize_type === 'papel' && raffle.prize_papel_amount ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-yellow-500/20 border border-yellow-500/30 backdrop-blur-md shadow-lg text-[10px] text-yellow-300 font-bold">
+                            <LuCoins className="w-3 h-3" /> {raffle.prize_papel_amount.toLocaleString('tr-TR')} Papel
+                          </span>
+                        ) : raffle.prize_type === 'role' ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-violet-500/20 border border-violet-500/30 backdrop-blur-md shadow-lg text-[10px] text-violet-300 font-bold">
+                            <LuShield className="w-3 h-3" /> Özel Rol
+                          </span>
+                        ) : raffle.prizes && raffle.prizes.length > 0 ? (
                           raffle.prizes.slice(0, 2).map((prize, i) => (
                             <span key={i} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/60 border border-white/10 backdrop-blur-md shadow-lg text-[10px] text-white/70">
                               🎁 {prize}
@@ -181,6 +190,18 @@ export default function RafflesSection({ badgeInfo, loading, onJoinRaffle }: Raf
                         <LuTag className="w-3 h-3" />
                         Min. {raffle.min_tag_days}g tag
                       </span>
+                      {(raffle.winner_count ?? 1) > 1 && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide border backdrop-blur-sm bg-amber-500/10 text-amber-400 border-amber-500/20">
+                          <LuTrophy className="w-3 h-3" />
+                          {raffle.winner_count} kazanan
+                        </span>
+                      )}
+                      {(raffle.entry_count ?? 0) > 0 && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide border backdrop-blur-sm bg-white/5 text-white/40 border-white/10">
+                          <LuUsers className="w-3 h-3" />
+                          {raffle.entry_count} katılımcı
+                        </span>
+                      )}
                       {raffle.end_date && (
                         <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide border backdrop-blur-sm ${
                           isExpiringSoon
@@ -280,9 +301,27 @@ export default function RafflesSection({ badgeInfo, loading, onJoinRaffle }: Raf
 
                       {/* Ödüller + etiketler */}
                       <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                        {raffle.prizes && raffle.prizes[0] && (
+                        {raffle.prize_type === 'papel' && raffle.prize_papel_amount ? (
+                          <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-yellow-400">
+                            <LuCoins className="w-2.5 h-2.5" /> {raffle.prize_papel_amount.toLocaleString('tr-TR')}p
+                          </span>
+                        ) : raffle.prize_type === 'role' ? (
+                          <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-violet-400">
+                            <LuShield className="w-2.5 h-2.5" /> Rol
+                          </span>
+                        ) : raffle.prizes && raffle.prizes[0] ? (
                           <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-amber-400">
                             🎁 {raffle.prizes[0]}
+                          </span>
+                        ) : null}
+                        {(raffle.winner_count ?? 1) > 1 && (
+                          <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-amber-400">
+                            <LuTrophy className="w-2.5 h-2.5" /> {raffle.winner_count}
+                          </span>
+                        )}
+                        {(raffle.entry_count ?? 0) > 0 && (
+                          <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-white/30">
+                            <LuUsers className="w-2.5 h-2.5" /> {raffle.entry_count}
                           </span>
                         )}
                         <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-indigo-400">

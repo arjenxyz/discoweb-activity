@@ -33,8 +33,9 @@ type StoreSectionProps = {
   purchaseLoadingId: string | null;
   purchaseFeedback: PurchaseFeedback;
   onPurchase: (itemId: string) => void;
-  onAddToCart: (item: StoreItem) => void; 
+  onAddToCart: (item: StoreItem) => void;
   renderPapelAmount: (value: number) => React.ReactNode;
+  ownedRoleIds?: string[];
 };
 
 export default function StoreSection({
@@ -48,6 +49,7 @@ export default function StoreSection({
   onPurchase,
   onAddToCart,
   renderPapelAmount,
+  ownedRoleIds = [],
 }: StoreSectionProps) {
   const cart = useCart();
   const [infoOpen, setInfoOpen] = useState(false);
@@ -203,54 +205,72 @@ export default function StoreSection({
                               Rol
                             </span>
                           )}
+
+                          {item.role_id && ownedRoleIds.includes(item.role_id) && (item.duration_days ?? 0) === 0 && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide bg-teal-500/20 text-teal-300 border border-teal-500/30 backdrop-blur-sm">
+                              <LuBadgeCheck className="w-3 h-3" />
+                              Mevcut
+                            </span>
+                          )}
                         </div>
                       </div>
 
                       {/* --- GİZLİ AKSİYON ALANI (SÜRPRİZ EFEKTİ) --- */}
-                      <div className={`relative z-10 grid grid-cols-[auto_1fr] gap-2 mt-4 transition-all duration-300 ease-out overflow-hidden ${purchaseLoadingId === item.id || purchaseFeedback[item.id] ? 'max-h-[60px] opacity-100' : 'max-h-0 opacity-0 group-hover:max-h-[60px] group-hover:opacity-100'}`}>
-
-                        {/* Sepet Butonu */}
-                        {(() => {
-                          const isInCart = cart?.items.some(it => it.itemId === item.id);
+                      {(() => {
+                        const isOwned = item.role_id ? ownedRoleIds.includes(item.role_id) && (item.duration_days ?? 0) === 0 : false;
+                        if (isOwned) {
                           return (
+                            <div className="relative z-10 mt-4">
+                              <div className="flex items-center justify-center gap-2 rounded-xl px-4 h-10 text-xs font-bold text-teal-300 bg-teal-500/10 border border-teal-500/20">
+                                <LuBadgeCheck className="w-4 h-4" />
+                                <span>Zaten Sahipsiniz</span>
+                              </div>
+                            </div>
+                          );
+                        }
+                        return (
+                          <div className={`relative z-10 grid grid-cols-[auto_1fr] gap-2 mt-4 transition-all duration-300 ease-out overflow-hidden ${purchaseLoadingId === item.id || purchaseFeedback[item.id] ? 'max-h-[60px] opacity-100' : 'max-h-0 opacity-0 group-hover:max-h-[60px] group-hover:opacity-100'}`}>
+                            {(() => {
+                              const isInCart = cart?.items.some(it => it.itemId === item.id);
+                              return (
+                                <button
+                                  type="button"
+                                  onClick={() => onAddToCart(item)}
+                                  title={isInCart ? "Sepette Var" : "Sepete Ekle"}
+                                  className={`flex items-center justify-center w-10 h-10 rounded-xl border backdrop-blur-md transition-all active:scale-95 ${
+                                    isInCart
+                                      ? 'border-emerald-500/30 bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30'
+                                      : 'border-white/10 bg-white/10 text-white/80 hover:bg-white/20 hover:text-white'
+                                  }`}
+                                >
+                                  <LuShoppingCart className="w-4 h-4" />
+                                </button>
+                              );
+                            })()}
                             <button
                               type="button"
-                              onClick={() => onAddToCart(item)}
-                              title={isInCart ? "Sepette Var" : "Sepete Ekle"}
-                              className={`flex items-center justify-center w-10 h-10 rounded-xl border backdrop-blur-md transition-all active:scale-95 ${
-                                isInCart
-                                  ? 'border-emerald-500/30 bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30'
-                                  : 'border-white/10 bg-white/10 text-white/80 hover:bg-white/20 hover:text-white'
+                              onClick={() => onPurchase(item.id)}
+                              disabled={purchaseLoadingId === item.id}
+                              className={`flex items-center justify-center gap-2 rounded-xl px-4 h-10 text-xs font-bold text-white transition-all shadow-lg active:scale-95 disabled:cursor-not-allowed disabled:opacity-70 backdrop-blur-md ${
+                                purchaseFeedback[item.id]?.status === 'success'
+                                  ? 'bg-emerald-500 hover:bg-emerald-400'
+                                  : purchaseFeedback[item.id]?.status === 'error'
+                                    ? 'bg-rose-500 hover:bg-rose-400'
+                                    : 'bg-[#5865F2] hover:bg-[#4752C4]'
                               }`}
                             >
-                              <LuShoppingCart className="w-4 h-4" />
+                              {purchaseLoadingId === item.id ? (
+                                <LuLoader className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <>
+                                  <LuBadgeCheck className="w-4 h-4" />
+                                  <span>{purchaseFeedback[item.id]?.message ?? 'Hemen Al'}</span>
+                                </>
+                              )}
                             </button>
-                          );
-                        })()}
-
-                        {/* Satın Al Butonu */}
-                        <button
-                          type="button"
-                          onClick={() => onPurchase(item.id)}
-                          disabled={purchaseLoadingId === item.id}
-                          className={`flex items-center justify-center gap-2 rounded-xl px-4 h-10 text-xs font-bold text-white transition-all shadow-lg active:scale-95 disabled:cursor-not-allowed disabled:opacity-70 backdrop-blur-md ${
-                            purchaseFeedback[item.id]?.status === 'success'
-                              ? 'bg-emerald-500 hover:bg-emerald-400'
-                              : purchaseFeedback[item.id]?.status === 'error'
-                                ? 'bg-rose-500 hover:bg-rose-400'
-                                : 'bg-[#5865F2] hover:bg-[#4752C4]'
-                          }`}
-                        >
-                          {purchaseLoadingId === item.id ? (
-                            <LuLoader className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <>
-                              <LuBadgeCheck className="w-4 h-4" />
-                              <span>{purchaseFeedback[item.id]?.message ?? 'Hemen Al'}</span>
-                            </>
-                          )}
-                        </button>
-                      </div>
+                          </div>
+                        );
+                      })()}
 
                     </div>
                   ))}
@@ -262,6 +282,7 @@ export default function StoreSection({
                     const isInCart = cart?.items.some(it => it.itemId === item.id);
                     const feedback = purchaseFeedback[item.id];
                     const isLoading = purchaseLoadingId === item.id;
+                    const isOwned = item.role_id ? ownedRoleIds.includes(item.role_id) && (item.duration_days ?? 0) === 0 : false;
                     return (
                       <div
                         key={item.id}
@@ -310,38 +331,47 @@ export default function StoreSection({
 
                           {/* Action buttons */}
                           <div className="flex items-center gap-2 mt-2.5">
-                            <button
-                              type="button"
-                              onClick={() => onAddToCart(item)}
-                              className={`flex items-center justify-center w-8 h-8 rounded-lg border transition-all active:scale-90 ${
-                                isInCart
-                                  ? 'border-emerald-500/30 bg-emerald-500/20 text-emerald-400'
-                                  : 'border-white/10 bg-white/5 text-white/50'
-                              }`}
-                            >
-                              <LuShoppingCart className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => onPurchase(item.id)}
-                              disabled={isLoading}
-                              className={`flex-1 flex items-center justify-center gap-1.5 h-8 rounded-lg text-[11px] font-bold text-white transition-all active:scale-95 disabled:opacity-70 ${
-                                feedback?.status === 'success'
-                                  ? 'bg-emerald-500'
-                                  : feedback?.status === 'error'
-                                    ? 'bg-rose-500'
-                                    : 'bg-[#5865F2]'
-                              }`}
-                            >
-                              {isLoading ? (
-                                <LuLoader className="w-3 h-3 animate-spin" />
-                              ) : (
-                                <>
-                                  <LuBadgeCheck className="w-3.5 h-3.5" />
-                                  <span>{feedback?.message ?? 'Satın Al'}</span>
-                                </>
-                              )}
-                            </button>
+                            {isOwned ? (
+                              <div className="flex-1 flex items-center justify-center gap-1.5 h-8 rounded-lg text-[11px] font-bold text-teal-300 bg-teal-500/10 border border-teal-500/20">
+                                <LuBadgeCheck className="w-3.5 h-3.5" />
+                                <span>Mevcut</span>
+                              </div>
+                            ) : (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => onAddToCart(item)}
+                                  className={`flex items-center justify-center w-8 h-8 rounded-lg border transition-all active:scale-90 ${
+                                    isInCart
+                                      ? 'border-emerald-500/30 bg-emerald-500/20 text-emerald-400'
+                                      : 'border-white/10 bg-white/5 text-white/50'
+                                  }`}
+                                >
+                                  <LuShoppingCart className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => onPurchase(item.id)}
+                                  disabled={isLoading}
+                                  className={`flex-1 flex items-center justify-center gap-1.5 h-8 rounded-lg text-[11px] font-bold text-white transition-all active:scale-95 disabled:opacity-70 ${
+                                    feedback?.status === 'success'
+                                      ? 'bg-emerald-500'
+                                      : feedback?.status === 'error'
+                                        ? 'bg-rose-500'
+                                        : 'bg-[#5865F2]'
+                                  }`}
+                                >
+                                  {isLoading ? (
+                                    <LuLoader className="w-3 h-3 animate-spin" />
+                                  ) : (
+                                    <>
+                                      <LuBadgeCheck className="w-3.5 h-3.5" />
+                                      <span>{feedback?.message ?? 'Satın Al'}</span>
+                                    </>
+                                  )}
+                                </button>
+                              </>
+                            )}
                           </div>
                         </div>
                       </div>
