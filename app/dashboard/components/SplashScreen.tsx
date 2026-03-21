@@ -230,8 +230,8 @@ export default function SplashScreen({ onEnter }: Props) {
                   type="button"
                   onClick={blocked ? undefined : onEnter}
                   disabled={blocked}
-                  className={`group relative overflow-hidden rounded-full px-8 py-3.5 text-sm font-bold text-white transition-all duration-300 active:scale-95 ${blocked ? 'cursor-not-allowed bg-white/10' : maintenance ? 'bg-amber-600 hover:bg-amber-500' : 'bg-[#5865F2] hover:bg-[#4752C4]'}`}
-                  style={blocked ? {} : { boxShadow: maintenance ? '0 0 32px rgba(180,100,0,0.4), 0 4px 16px rgba(0,0,0,0.5)' : '0 0 32px rgba(88,101,242,0.5), 0 4px 16px rgba(0,0,0,0.5)' }}
+                  className={`group relative overflow-hidden rounded-full px-8 py-3.5 text-sm font-bold text-white transition-all duration-300 active:scale-95 backdrop-blur-md ${blocked ? 'cursor-not-allowed bg-white/10' : maintenance ? 'bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/30' : 'bg-white/10 hover:bg-white/15 border border-white/20'}`}
+                  style={blocked ? {} : { boxShadow: maintenance ? '0 0 32px rgba(180,100,0,0.35), 0 4px 16px rgba(0,0,0,0.4)' : '0 0 28px rgba(88,101,242,0.4), 0 4px 16px rgba(0,0,0,0.4)' }}
                 >
                   {!blocked && <span className="pointer-events-none absolute inset-0 -translate-x-full skew-x-12 bg-white/20 transition-transform duration-500 group-hover:translate-x-full" />}
                   <span className="relative flex items-center gap-2">
