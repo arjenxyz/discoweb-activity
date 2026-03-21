@@ -158,10 +158,13 @@ export default function DashboardHeader({
           </div>
           <button
             type="button"
-            className="text-white font-black text-lg tracking-tight lg:cursor-default"
+            className="relative text-white font-black text-lg tracking-tight lg:cursor-default group/logo"
             onClick={() => { if (typeof window !== 'undefined' && window.innerWidth < 1024) setMobileMenuOpen(o => !o); }}
           >
             DiscoWeb
+            <span className="pointer-events-none absolute -top-14 left-1/2 -translate-x-1/2 z-50 h-12 w-12 overflow-hidden rounded-xl border border-white/20 shadow-2xl opacity-0 group-hover/logo:opacity-100 transition-opacity duration-150">
+              <Image src="/gif/asılıpengu.gif" alt="gif" width={48} height={48} className="h-full w-full object-cover" unoptimized />
+            </span>
           </button>
         </div>
 
