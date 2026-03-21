@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { apiUrl } from '@/lib/api';
 import { closeDiscordActivity } from '@/lib/discordSdk';
 
-import { LuHouse, LuMail, LuStore, LuLogOut, LuSettings, LuChevronRight, LuChartBar } from 'react-icons/lu';
+import { LuHouse, LuMail, LuStore, LuLogOut, LuSettings, LuChevronRight, LuChartBar, LuTicket } from 'react-icons/lu';
 import Image from 'next/image';
 import DiscordAgreementButton from '@/components/DiscordAgreementButton';
 import type { Notification, Section } from '../types';
@@ -192,6 +192,7 @@ export default function DashboardHeader({
   const navItems: Array<{ key: Section; label: string; requiresAuth?: boolean; icon: JSX.Element }> = [
     { key: 'overview', label: 'Genel', icon: <LuHouse className="h-4 w-4" /> },
     { key: 'store', label: 'Mağaza', icon: <LuStore className="h-4 w-4" /> },
+    { key: 'raffles', label: 'Çekilişler', requiresAuth: true, icon: <LuTicket className="h-4 w-4" /> },
     { key: 'mail', label: 'Mail', requiresAuth: true, icon: <LuMail className="h-4 w-4" /> },
     { key: 'leaderboard', label: 'Sıralama', requiresAuth: true, icon: <LuChartBar className="h-4 w-4" /> },
   ];
