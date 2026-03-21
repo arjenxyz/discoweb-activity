@@ -162,21 +162,13 @@ export default function SplashScreen({ onEnter }: Props) {
         style={blocked ? {} : { boxShadow: maintenance ? '0 0 32px rgba(180,100,0,0.35),0 4px 16px rgba(0,0,0,0.4)' : '0 0 28px rgba(88,101,242,0.4),0 4px 16px rgba(0,0,0,0.4)' }}
       >
         {!blocked && <span className="pointer-events-none absolute inset-0 -translate-x-full skew-x-12 bg-white/20 transition-transform duration-500 group-hover:translate-x-full" />}
-        <span className="relative flex flex-col items-center gap-0.5">
-          {!blocked && user && (
-            <span className="flex items-center gap-1.5 text-xs font-normal text-white/60 leading-none">
-              {user.avatarUrl && <img src={user.avatarUrl} alt={user.username} className="h-3.5 w-3.5 rounded-full opacity-70" />}
-              Hoş geldin, <span className="text-white/90 font-semibold">{user.username}</span>
-            </span>
+        <span className="relative flex items-center gap-2">
+          {blocked ? 'Activity Bakımda' : 'Hadi Başlayalım'}
+          {!blocked && (
+            <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-0.5">
+              <path d="M3.75 7.25a.75.75 0 000 1.5h6.19l-2.72 2.72a.75.75 0 001.06 1.06l4-4a.75.75 0 000-1.06l-4-4a.75.75 0 00-1.06 1.06l2.72 2.72H3.75z" />
+            </svg>
           )}
-          <span className="flex items-center gap-2">
-            {blocked ? 'Activity Bakımda' : 'Hadi Başlayalım'}
-            {!blocked && (
-              <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-0.5">
-                <path d="M3.75 7.25a.75.75 0 000 1.5h6.19l-2.72 2.72a.75.75 0 001.06 1.06l4-4a.75.75 0 000-1.06l-4-4a.75.75 0 00-1.06 1.06l2.72 2.72H3.75z" />
-              </svg>
-            )}
-          </span>
         </span>
       </button>
     );
@@ -228,7 +220,15 @@ export default function SplashScreen({ onEnter }: Props) {
         {/* Masaüstü: tek satır sol=footer, sağ=mute+dev+Keşfet */}
         <div className="hidden lg:flex items-end justify-between gap-4">
           <FooterLine />
-          <div className="flex flex-col items-end gap-2 shrink-0">
+          <div className="flex items-center gap-4 shrink-0">
+            {user && !blocked && (
+              <div className="flex items-center gap-2">
+                {user.avatarUrl && <img src={user.avatarUrl} alt={user.username} className="h-6 w-6 rounded-full opacity-70" />}
+                <span className="text-sm text-white/50">
+                  Hoş geldin, <span className="text-white font-semibold">{user.username}</span>
+                </span>
+              </div>
+            )}
             <div className="flex items-center gap-3">
               {isDeveloper && <DevButton />}
               <EnterButton />
