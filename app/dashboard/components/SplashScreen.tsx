@@ -56,6 +56,53 @@ export default function SplashScreen({ onEnter }: Props) {
     <div className="relative isolate flex min-h-screen w-full flex-col overflow-hidden bg-[#0b0d12]">
       <VideoBackground videoRef={videoRef} />
 
+      {/* Sol üst — DiscoWeb logosu */}
+      <div
+        className="relative z-10 px-6 pt-6 sm:px-10 sm:pt-8"
+        style={{
+          opacity: visible ? 1 : 0,
+          transition: 'opacity 0.7s ease',
+        }}
+      >
+        <span
+          className="cursor-pointer text-2xl font-black tracking-tight select-none"
+          onClick={async () => {
+            const url = 'https://discoweb.tech';
+            try {
+              const { DiscordSDK } = await import('@discord/embedded-app-sdk');
+              const sdk = new DiscordSDK(process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!);
+              await sdk.ready();
+              await sdk.commands.openExternalLink({ url });
+            } catch {
+              window.open(url, '_blank');
+            }
+          }}
+          style={{
+            backgroundImage: 'linear-gradient(105deg, #fff 0%, #fff 35%, rgba(255,255,255,0.95) 45%, #fff 55%, #fff 100%)',
+            backgroundSize: '300% 100%',
+            WebkitBackgroundClip: 'text',
+            backgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            animation: 'titleShine 4s ease-in-out infinite',
+          }}
+        >
+          Disco<span style={{
+            backgroundImage: 'linear-gradient(105deg, #5865F2 0%, #5865F2 35%, #a5b4ff 45%, #5865F2 55%, #5865F2 100%)',
+            backgroundSize: '300% 100%',
+            WebkitBackgroundClip: 'text',
+            backgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            animation: 'titleShine 4s ease-in-out infinite',
+          }}>Web</span>
+          <style>{`
+            @keyframes titleShine {
+              0%, 60%  { background-position: 100% 0; }
+              100%     { background-position: -100% 0; }
+            }
+          `}</style>
+        </span>
+      </div>
+
       {/* İçerik — alt hizalı, tüm genişlik */}
       <div
         className="relative z-10 mt-auto flex w-full flex-col gap-6 px-6 pb-8 pt-16 sm:px-10 sm:pb-12"
@@ -65,61 +112,24 @@ export default function SplashScreen({ onEnter }: Props) {
           transition: 'opacity 0.7s ease, transform 0.7s ease',
         }}
       >
-        {/* Üst etiket */}
-        <div className="flex items-center gap-2">
-          <span className="h-px w-6 bg-white/30" />
-          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-white/40">
-            Discord Economy Platform
-          </span>
+        {/* Üst etiket + karşılama */}
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <span className="h-px w-6 bg-white/30" />
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-white/40">
+              Discord Economy Platform
+            </span>
+          </div>
+          <p className="text-sm text-white/55 leading-relaxed max-w-xs">
+            Sunucun ekonomisini yönet, mağazadan alışveriş yap ve ödülleri keşfet.
+          </p>
         </div>
 
-        {/* Alt satır: sol başlık, sağ butonlar — mobilde alt alta */}
+        {/* Alt satır: sol created-by, sağ butonlar — mobilde alt alta */}
         <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
 
-          {/* Başlık + created by */}
+          {/* Created by */}
           <div className="flex flex-col gap-3">
-            <h1
-              className="cursor-pointer text-6xl font-black leading-none tracking-tight sm:text-7xl"
-              onClick={async () => {
-                const url = 'https://discoweb.tech';
-                try {
-                  const { DiscordSDK } = await import('@discord/embedded-app-sdk');
-                  const sdk = new DiscordSDK(process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!);
-                  await sdk.ready();
-                  await sdk.commands.openExternalLink({ url });
-                } catch {
-                  window.open(url, '_blank');
-                }
-              }}
-              style={{
-                backgroundImage: 'linear-gradient(105deg, #fff 0%, #fff 35%, rgba(255,255,255,0.95) 45%, #fff 55%, #fff 100%)',
-                backgroundSize: '300% 100%',
-                WebkitBackgroundClip: 'text',
-                backgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                animation: 'titleShine 4s ease-in-out infinite',
-                textShadow: 'none',
-              }}
-            >
-              Disco
-              <span style={{
-                backgroundImage: 'linear-gradient(105deg, #5865F2 0%, #5865F2 35%, #a5b4ff 45%, #5865F2 55%, #5865F2 100%)',
-                backgroundSize: '300% 100%',
-                WebkitBackgroundClip: 'text',
-                backgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                animation: 'titleShine 4s ease-in-out infinite',
-              }}>
-                Web
-              </span>
-              <style>{`
-                @keyframes titleShine {
-                  0%, 60%  { background-position: 100% 0; }
-                  100%     { background-position: -100% 0; }
-                }
-              `}</style>
-            </h1>
-
             <div className="flex items-center gap-2">
               <img
                 src="https://cdn.discordapp.com/avatars/1163500308270436442/8c2eeba5e9c137e4f9375bccb0f0bf40.png?size=128"
