@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { apiUrl } from '@/lib/api';
 import { setDiscordSdk } from '@/lib/discordSdk';
@@ -49,6 +49,7 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [debugLogs, setDebugLogs] = useState<string[]>([]);
+  const userInfoRef = useRef<{ username: string; avatar: string | null } | null>(null);
 
   const addLog = useCallback((msg: string) => {
     console.log('[DiscordAuth]', msg);
@@ -70,12 +71,26 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
       document.cookie = 'discord_session=; Path=/; Max-Age=0';
     };
 
+    const sendLeaveBeacon = () => {
+      const info = userInfoRef.current;
+      const blob = new Blob(
+        [JSON.stringify(info ? { username: info.username } : {})],
+        { type: 'application/json' },
+      );
+      navigator.sendBeacon(apiUrl('/api/activity/leave'), blob);
+    };
+
+    const onPageHide = () => {
+      sendLeaveBeacon();
+      clearActivitySessionData();
+    };
+
     window.addEventListener('beforeunload', clearActivitySessionData);
-    window.addEventListener('pagehide', clearActivitySessionData);
+    window.addEventListener('pagehide', onPageHide);
 
     return () => {
       window.removeEventListener('beforeunload', clearActivitySessionData);
-      window.removeEventListener('pagehide', clearActivitySessionData);
+      window.removeEventListener('pagehide', onPageHide);
     };
   }, []);
 
@@ -177,7 +192,31 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
         try { localStorage.setItem('discord_bearer_token', result.bearerToken); } catch {}
       }
 
+      if (result.user) {
+        userInfoRef.current = { username: result.user.username, avatar: null };
+      }
       addLog(`SDK auth tamamlandı, kullanıcı: ${result.user?.username}`);
+
+      // ACTIVITY_INSTANCE_PARTICIPANTS_UPDATE — kendi userId'si listeden çıkınca beacon at
+      if (result.user?.id) {
+        const currentUserId = result.user.id;
+        try {
+          await sdk.subscribe('ACTIVITY_INSTANCE_PARTICIPANTS_UPDATE', ({ participants }) => {
+            const stillHere = participants.some((p: { id: string }) => p.id === currentUserId);
+            if (!stillHere) {
+              const info = userInfoRef.current;
+              const blob = new Blob(
+                [JSON.stringify(info ? { username: info.username } : {})],
+                { type: 'application/json' },
+              );
+              navigator.sendBeacon(apiUrl('/api/activity/leave'), blob);
+            }
+          });
+          addLog('ACTIVITY_INSTANCE_PARTICIPANTS_UPDATE subscribe edildi');
+        } catch {
+          addLog('Participants subscribe başarısız (fallback: pagehide beacon aktif)');
+        }
+      }
     }
 
     async function authenticate() {
@@ -223,6 +262,18 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
 
           if (meRes.ok) {
             addLog('Mevcut session geçerli → hızlı geç');
+            // Mevcut session varsa da login logu at (Activity yeniden açıldı)
+            try {
+              const meData = await meRes.clone().json() as { username?: string; avatar?: string };
+              if (meData?.username) {
+                userInfoRef.current = { username: meData.username, avatar: meData.avatar ?? null };
+              }
+              fetchWithCreds(apiUrl('/api/activity/ping'), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: meData?.username, avatar: meData?.avatar }),
+              }).catch(() => {});
+            } catch { /* ping opsiyonel */ }
             setIsLoading(false);
             return;
           }
