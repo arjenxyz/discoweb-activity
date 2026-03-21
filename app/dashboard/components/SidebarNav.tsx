@@ -2,10 +2,10 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { LuChevronRight, LuClock, LuHouse, LuMail, LuReceipt, LuStore } from 'react-icons/lu';
+import { LuChevronRight, LuClock, LuGift, LuHouse, LuMail, LuReceipt, LuStore } from 'react-icons/lu';
 import type { MemberProfile } from '../types';
 
-type Section = 'overview' | 'store' | 'transactions' | 'tracking' | 'notifications' | 'profile' | 'settings' | 'mail';
+type Section = 'overview' | 'store' | 'raffles' | 'transactions' | 'tracking' | 'notifications' | 'profile' | 'settings' | 'mail';
 
 type SidebarNavProps = {
   effectiveSection: Section;
@@ -143,6 +143,16 @@ export default function SidebarNav({
                 <LuStore className="h-5 w-5" />
               </span>
               {!collapsed && <span>Mağaza</span>}
+            </button>
+            <button
+              type="button"
+              onClick={() => onNavigate('raffles')}
+              className={menuItemClass(effectiveSection === 'raffles', collapsed)}
+            >
+              <span className={iconWrapClass(effectiveSection === 'raffles', collapsed)}>
+                <LuGift className="h-5 w-5" />
+              </span>
+              {!collapsed && <span>Çekilişler</span>}
             </button>
           </div>
 

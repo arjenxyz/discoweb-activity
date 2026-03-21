@@ -14,6 +14,7 @@ import ProfileSection from './components/ProfileSection';
 import StoreSection from './components/StoreSection';
 import SettingsSection from './components/SettingsSection';
 import MailSection from './components/MailSection';
+import RafflesSection from './components/RafflesSection';
 import NotificationDetailModal from './components/NotificationDetailModal';
 import NotificationsModal from './components/NotificationsModal';
 import TransferModal from './components/TransferModal';
@@ -1083,6 +1084,13 @@ export default function DashboardPage() {
               <SettingsSection
                 onOpenPromotionsModal={openPromotionsModal}
                 onOpenDiscountsModal={openDiscountsModal}
+              />
+            )}
+
+            {effectiveSection === 'raffles' && !isSiteMaintenance && (
+              <RafflesSection
+                badgeInfo={badgeInfo}
+                loading={!badgeInfo && !unauthorized}
               />
             )}
 
