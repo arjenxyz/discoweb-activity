@@ -204,7 +204,7 @@ export default function SplashScreen({ onEnter }: Props) {
 
       {/* ── MOBİL: merkez logo ── */}
       <div
-        className="lg:hidden relative z-10 flex flex-col items-center justify-center flex-1 gap-1 pointer-events-none"
+        className="lg:hidden relative z-10 flex flex-col items-center justify-start flex-1 gap-1 pointer-events-none pt-6"
         style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.7s ease' }}
       >
         <div className="pointer-events-auto">
