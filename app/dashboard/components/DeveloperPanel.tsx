@@ -28,16 +28,11 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
   // Reklam state'leri
   const [ads, setAds] = useState<Ad[]>([]);
   const [adLoading, setAdLoading] = useState(false);
+  const [adFetching, setAdFetching] = useState(false);
   const [adError, setAdError] = useState<string | null>(null);
   const [adSuccess, setAdSuccess] = useState(false);
-  const [adForm, setAdForm] = useState({
-    invite_url: '',
-    server_name: '',
-    server_description: '',
-    server_icon: '',
-    member_count: '',
-    online_count: '',
-  });
+  const [inviteUrl, setInviteUrl] = useState('');
+  const [preview, setPreview] = useState<Omit<Ad, 'id' | 'active'> | null>(null);
 
   useEffect(() => {
     fetch(apiUrl('/api/admin/ads'), { credentials: 'include' })
@@ -46,7 +41,42 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
       .catch(() => {});
   }, []);
 
+  const fetchInviteInfo = async (url: string) => {
+    const match = url.match(/discord(?:\.gg|app\.com\/invite|\.com\/invite)\/([A-Za-z0-9-]+)/);
+    if (!match) { setPreview(null); return; }
+    const code = match[1];
+    setAdFetching(true);
+    setAdError(null);
+    try {
+      const res = await fetch(`https://discord.com/api/v10/invites/${code}?with_counts=true`);
+      if (!res.ok) throw new Error('Geçersiz davet linki');
+      const data = await res.json() as {
+        guild?: { name?: string; description?: string | null; icon?: string | null; id?: string };
+        approximate_member_count?: number;
+        approximate_presence_count?: number;
+      };
+      const guild = data.guild;
+      if (!guild) throw new Error('Sunucu bilgisi alınamadı');
+      setPreview({
+        invite_url: url,
+        server_name: guild.name ?? '',
+        server_description: guild.description ?? null,
+        server_icon: guild.icon && guild.id
+          ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.${guild.icon.startsWith('a_') ? 'gif' : 'png'}?size=128`
+          : null,
+        member_count: data.approximate_member_count ?? null,
+        online_count: data.approximate_presence_count ?? null,
+      });
+    } catch (e) {
+      setAdError(e instanceof Error ? e.message : 'Davet bilgisi alınamadı');
+      setPreview(null);
+    } finally {
+      setAdFetching(false);
+    }
+  };
+
   const submitAd = async () => {
+    if (!preview) return;
     setAdLoading(true);
     setAdError(null);
     setAdSuccess(false);
@@ -55,19 +85,13 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({
-          invite_url: adForm.invite_url,
-          server_name: adForm.server_name,
-          server_description: adForm.server_description || undefined,
-          server_icon: adForm.server_icon || undefined,
-          member_count: adForm.member_count ? Number(adForm.member_count) : undefined,
-          online_count: adForm.online_count ? Number(adForm.online_count) : undefined,
-        }),
+        body: JSON.stringify(preview),
       });
       const data = await res.json() as { ad?: Ad; error?: string };
       if (!res.ok) throw new Error(data.error ?? `${res.status}`);
       setAdSuccess(true);
-      setAdForm({ invite_url: '', server_name: '', server_description: '', server_icon: '', member_count: '', online_count: '' });
+      setInviteUrl('');
+      setPreview(null);
       if (data.ad) setAds(prev => [data.ad!, ...prev.map(a => ({ ...a, active: false }))]);
     } catch (e) {
       setAdError(e instanceof Error ? e.message : String(e));
@@ -209,36 +233,68 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
           <div className="rounded-xl border border-white/10 bg-white/5 p-4">
             <p className="text-sm font-semibold text-white mb-3">Reklam Yönetimi</p>
 
-            <div className="flex flex-col gap-2">
-              {(['invite_url', 'server_name', 'server_description', 'server_icon', 'member_count', 'online_count'] as const).map((field) => (
-                <input
-                  key={field}
-                  type={field === 'member_count' || field === 'online_count' ? 'number' : 'text'}
-                  placeholder={{
-                    invite_url: 'Discord davet linki *',
-                    server_name: 'Sunucu adı *',
-                    server_description: 'Açıklama (opsiyonel)',
-                    server_icon: 'İkon URL (opsiyonel)',
-                    member_count: 'Toplam üye (opsiyonel)',
-                    online_count: 'Çevrimiçi sayısı (opsiyonel)',
-                  }[field]}
-                  value={adForm[field]}
-                  onChange={e => setAdForm(prev => ({ ...prev, [field]: e.target.value }))}
-                  className="w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-xs text-white placeholder-white/30 outline-none focus:border-[#5865F2]/50"
-                />
-              ))}
-
-              {adError && <p className="text-xs text-red-400">{adError}</p>}
-              {adSuccess && <p className="text-xs text-emerald-400">Reklam yayınlandı!</p>}
-
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="discord.gg/... davet linki"
+                value={inviteUrl}
+                onChange={e => {
+                  setInviteUrl(e.target.value);
+                  setAdSuccess(false);
+                  setAdError(null);
+                  setPreview(null);
+                }}
+                onBlur={e => { if (e.target.value) fetchInviteInfo(e.target.value); }}
+                className="flex-1 min-w-0 rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-xs text-white placeholder-white/30 outline-none focus:border-[#5865F2]/50"
+              />
               <button
-                onClick={submitAd}
-                disabled={adLoading || !adForm.invite_url || !adForm.server_name}
-                className="w-full rounded-lg bg-[#5865F2]/20 hover:bg-[#5865F2]/30 border border-[#5865F2]/30 px-3 py-2 text-xs font-semibold text-indigo-300 transition disabled:opacity-40"
+                onClick={() => fetchInviteInfo(inviteUrl)}
+                disabled={adFetching || !inviteUrl}
+                className="shrink-0 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/60 transition hover:text-white disabled:opacity-40"
               >
-                {adLoading ? 'Yükleniyor...' : 'Reklam Ver'}
+                {adFetching ? '...' : 'Getir'}
               </button>
             </div>
+
+            {/* Önizleme */}
+            {preview && (
+              <div className="mt-3 rounded-xl border border-[#5865F2]/20 bg-[#5865F2]/5 p-3">
+                <p className="text-[10px] text-white/30 uppercase tracking-wider mb-2">Önizleme</p>
+                <div className="flex items-center gap-3">
+                  {preview.server_icon ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={preview.server_icon} alt="" className="h-10 w-10 rounded-xl object-cover shrink-0" />
+                  ) : (
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#5865F2]/30 text-sm font-black text-white">
+                      {preview.server_name.charAt(0)}
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs font-bold text-white">{preview.server_name}</p>
+                    {preview.server_description && (
+                      <p className="text-[10px] text-white/40 truncate">{preview.server_description}</p>
+                    )}
+                    <div className="mt-0.5 flex items-center gap-2 text-[10px] text-white/30">
+                      {preview.online_count != null && <span>🟢 {preview.online_count.toLocaleString()} çevrimiçi</span>}
+                      {preview.member_count != null && <span>👥 {preview.member_count.toLocaleString()} üye</span>}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {adError && <p className="mt-2 text-xs text-red-400">{adError}</p>}
+            {adSuccess && <p className="mt-2 text-xs text-emerald-400">Reklam yayınlandı!</p>}
+
+            {preview && (
+              <button
+                onClick={submitAd}
+                disabled={adLoading}
+                className="mt-3 w-full rounded-lg bg-[#5865F2]/20 hover:bg-[#5865F2]/30 border border-[#5865F2]/30 px-3 py-2 text-xs font-semibold text-indigo-300 transition disabled:opacity-40"
+              >
+                {adLoading ? 'Yayınlanıyor...' : 'Reklam Ver'}
+              </button>
+            )}
 
             {ads.length > 0 && (
               <div className="mt-3 flex flex-col gap-1.5">
