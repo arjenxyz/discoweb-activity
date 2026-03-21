@@ -224,8 +224,8 @@ export default function SplashScreen({ onEnter }: Props) {
             {user && (
               <div className="flex items-center gap-1.5">
                 {user.avatarUrl && <img src={user.avatarUrl} alt={user.username} className="h-3.5 w-3.5 rounded-full opacity-45" />}
-                <span className="text-[10px] text-white/25">
-                  Hoş geldin, <span className="text-white/40 font-medium">{user.username}</span>
+                <span className="text-sm text-white/50">
+                  Hoş geldin, <span className="text-white font-semibold">{user.username}</span>
                 </span>
               </div>
             )}
