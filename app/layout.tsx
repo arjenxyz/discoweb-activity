@@ -7,6 +7,7 @@ import CartDrawer from "../components/CartDrawer";
 import FrameIdTracker from "./components/FrameIdTracker";
 import ThemeBootstrap from "./components/ThemeBootstrap";
 import DiscordUrlPatch from "../components/DiscordUrlPatch";
+import ErrorCollector from "./components/ErrorCollector";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -37,6 +38,7 @@ export default function RootLayout({
           to prevent React hydration mismatches. This may cause a very short FOUC but avoids warnings. */}
         <ThemeBootstrap />
         <DiscordUrlPatch />
+        <ErrorCollector />
         <CartProvider>
           <FrameIdTracker />
           {children}
