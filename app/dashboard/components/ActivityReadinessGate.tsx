@@ -219,33 +219,39 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
   return (
     <div className="relative isolate min-h-screen overflow-hidden bg-[#0b0d12] text-white">
       <VideoBackground videoRef={videoRef} src="/cdn/Storage/Test4.mp4" />
-      <main className="relative z-10 flex min-h-screen w-full flex-col items-start justify-end gap-6 px-5 pb-8 sm:flex-row sm:items-end sm:justify-between sm:px-6 sm:pb-10">
-        {/* Sol alt — durum metni */}
-        <div className="flex flex-col gap-3 max-w-sm w-full sm:w-auto">
+
+      {/* Ses butonu — masaüstünde sağ üst */}
+      <div className="hidden sm:block absolute z-20 top-6 right-6">
+        <MuteButton muted={muted} onToggle={toggleMute} src="/cdn/Storage/Test4.mp4" />
+      </div>
+
+      <main className="relative z-10 flex min-h-screen w-full flex-col items-start justify-center gap-0 px-8 sm:px-16">
+        <div className="flex flex-col gap-5 max-w-lg">
           {readiness.guildName && (
-            <p className="inline-flex w-fit rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-white/70 backdrop-blur-md">
+            <p className="w-fit rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-white/60 backdrop-blur-md">
               {readiness.guildName}
             </p>
           )}
-          <h1
-            className="text-4xl font-black leading-tight tracking-tight text-white"
-            style={{ textShadow: '0 0 40px rgba(255,255,255,0.2), 0 2px 12px rgba(0,0,0,1)' }}
-          >
-            {copy.title}
-          </h1>
-          <p className="text-sm text-white/60 leading-relaxed" style={{ textShadow: '0 1px 6px rgba(0,0,0,1)' }}>
-            {copy.description}
-          </p>
-          <p className="text-xs text-white/45 leading-relaxed" style={{ textShadow: '0 1px 6px rgba(0,0,0,1)' }}>
-            {copy.helper}
-          </p>
+          <div className="flex flex-col gap-3">
+            <h1
+              className="text-4xl font-black leading-tight tracking-tight text-white"
+              style={{ textShadow: '0 0 60px rgba(255,255,255,0.15), 0 2px 20px rgba(0,0,0,1)' }}
+            >
+              {copy.title}
+            </h1>
+            <p className="text-sm text-white/70 leading-relaxed max-w-sm" style={{ textShadow: '0 1px 8px rgba(0,0,0,1)' }}>
+              {copy.description}
+            </p>
+            <p className="text-xs text-white/45 leading-relaxed max-w-sm" style={{ textShadow: '0 1px 6px rgba(0,0,0,1)' }}>
+              {copy.helper}
+            </p>
+          </div>
+
           {REPORTABLE.has(readiness.status) && (
-            <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-3 backdrop-blur-md flex flex-col gap-2">
+            <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 backdrop-blur-md flex flex-col gap-2">
               <p className="text-xs font-mono text-red-300">
                 hata: <span className="font-bold">{readiness.status}</span>
-                {readiness.debug && (
-                  <> · {JSON.stringify(readiness.debug)}</>
-                )}
+                {readiness.debug && <> · {JSON.stringify(readiness.debug)}</>}
               </p>
               <button
                 type="button"
@@ -253,9 +259,7 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
                 disabled={alreadyReported}
                 className="self-start flex items-center gap-1.5 rounded-full border border-red-400/40 bg-red-500/25 px-4 py-1.5 text-xs font-semibold text-red-200 backdrop-blur-md transition hover:bg-red-500/40 disabled:opacity-50"
               >
-                {alreadyReported ? (
-                  '✓ Bildirildi'
-                ) : (
+                {alreadyReported ? '✓ Bildirildi' : (
                   <>
                     <svg viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3">
                       <path d="M3.5 2a.5.5 0 01.5-.5h8a.5.5 0 01.354.854L9.207 5.5l3.147 3.146A.5.5 0 0112 9.5H4.5V14a.5.5 0 01-1 0V2z" />
@@ -266,27 +270,34 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
               </button>
             </div>
           )}
-          {copied && <p className="text-xs font-semibold text-emerald-400">Kopyalandı.</p>}
-        </div>
 
-        {/* Sağ alt — butonlar */}
-        <div className="flex w-full shrink-0 flex-col items-start gap-2 sm:w-auto sm:items-end">
-          <MuteButton muted={muted} onToggle={toggleMute} src="/cdn/Storage/Test4.mp4" />
-          <div className="flex flex-wrap justify-end gap-2">
+          {copied && <p className="text-xs font-semibold text-emerald-400">Kopyalandı.</p>}
+
+          <div className="flex flex-wrap items-center gap-2 pt-2">
+            {/* Mobilde ses butonu */}
+            <div className="sm:hidden">
+              <MuteButton muted={muted} onToggle={toggleMute} src="/cdn/Storage/Test4.mp4" />
+            </div>
+
             <button
               type="button"
               onClick={onRetry}
               disabled={loading}
-              className="rounded-full border border-white/20 bg-white/10 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur-md transition hover:bg-white/20 disabled:opacity-50"
+              className="rounded-full border border-white/30 bg-white/10 px-8 py-3.5 text-sm font-bold text-white backdrop-blur-md transition hover:bg-white/20 hover:border-white/50 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {loading ? 'Kontrol ediliyor...' : 'Tekrar dene'}
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                  Kontrol ediliyor...
+                </span>
+              ) : 'Tekrar Dene'}
             </button>
 
             {isBotMissing && isAdmin && readiness.inviteUrl && (
               <button
                 type="button"
                 onClick={() => openBotInvite(readiness.inviteUrl as string)}
-                className="rounded-full border border-emerald-400/30 bg-emerald-500/20 px-5 py-2.5 text-sm font-semibold text-emerald-100 backdrop-blur-md transition hover:bg-emerald-500/30"
+                className="rounded-full border border-emerald-400/30 bg-emerald-500/20 px-6 py-3.5 text-sm font-bold text-emerald-100 backdrop-blur-md transition hover:bg-emerald-500/30"
               >
                 Botu Sunucuya Ekle
               </button>
@@ -296,20 +307,19 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
               <button
                 type="button"
                 onClick={() => copyToClipboard(supportMessage)}
-                className="rounded-full border border-yellow-400/30 bg-yellow-500/20 px-5 py-2.5 text-sm font-semibold text-yellow-100 backdrop-blur-md transition hover:bg-yellow-500/30"
+                className="rounded-full border border-yellow-400/30 bg-yellow-500/20 px-6 py-3.5 text-sm font-bold text-yellow-100 backdrop-blur-md transition hover:bg-yellow-500/30"
               >
                 {isAdmin ? 'Yetkili notunu kopyala' : 'Yetkiliye mesaj kopyala'}
               </button>
             )}
 
-            {/* Admin: siteye yönlendir */}
             {(readiness.status === 'server_not_registered' || readiness.status === 'server_setup_required') && readiness.isAdmin && (
               <button
                 type="button"
                 onClick={openSetupSite}
-                className="rounded-full border border-[#5865F2]/50 bg-[#5865F2]/30 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur-md transition hover:bg-[#5865F2]/50"
+                className="rounded-full border border-[#5865F2]/50 bg-[#5865F2]/30 px-6 py-3.5 text-sm font-bold text-white backdrop-blur-md transition hover:bg-[#5865F2]/50"
               >
-                discoweb.tech'te Kur
+                discoweb.tech&apos;te Kur
               </button>
             )}
           </div>
