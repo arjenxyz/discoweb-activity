@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
       .order('sort_order', { ascending: true }),
     supabase
       .from('member_profiles')
-      .select('has_tag,tag_granted_at')
+      .select('has_tag,tag_granted_at,created_at')
       .eq('guild_id', selectedGuildId)
       .eq('user_id', userId)
       .single(),
@@ -49,7 +49,8 @@ export async function GET(request: NextRequest) {
   ]);
 
   const hasTag = profile?.has_tag ?? false;
-  const tagGrantedAt = profile?.tag_granted_at ?? null;
+  // Fallback: if tag_granted_at is null but has_tag is true, use profile created_at
+  const tagGrantedAt = profile?.tag_granted_at ?? (hasTag ? profile?.created_at : null) ?? null;
 
   let tagDays = 0;
   if (hasTag && tagGrantedAt) {
@@ -68,6 +69,18 @@ export async function GET(request: NextRequest) {
     .filter((r) => tagDays >= r.min_tag_days)
     .map((r) => r.id);
 
+  // Fetch which raffles the user has already joined
+  let joinedRaffles: string[] = [];
+  if (activeRaffles.length > 0) {
+    const raffleIds = activeRaffles.map((r) => r.id);
+    const { data: entries } = await supabase
+      .from('raffle_entries')
+      .select('raffle_id')
+      .eq('user_id', userId)
+      .in('raffle_id', raffleIds);
+    joinedRaffles = (entries ?? []).map((e) => e.raffle_id);
+  }
+
   return NextResponse.json({
     currentBadge,
     nextBadge,
@@ -76,5 +89,6 @@ export async function GET(request: NextRequest) {
     hasTag,
     activeRaffles,
     eligibleRaffles,
+    joinedRaffles,
   });
 }

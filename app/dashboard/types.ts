@@ -180,4 +180,5 @@ export type BadgeInfo = {
   hasTag: boolean;
   activeRaffles: Raffle[];
   eligibleRaffles: string[];
+  joinedRaffles: string[];
 };

@@ -1091,6 +1091,23 @@ export default function DashboardPage() {
               <RafflesSection
                 badgeInfo={badgeInfo}
                 loading={!badgeInfo && !unauthorized}
+                onJoinRaffle={async (raffleId) => {
+                  const response = await fetchWithCreds('/api/member/raffles/join', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ raffle_id: raffleId }),
+                  });
+                  if (!response.ok) {
+                    const data = (await response.json().catch(() => ({}))) as { error?: string };
+                    throw new Error(data.error ?? 'join_failed');
+                  }
+                  // Refresh badge info to reflect joined state
+                  const refreshed = await fetchWithCreds('/api/member/badges');
+                  if (refreshed.ok) {
+                    const data = (await refreshed.json()) as typeof badgeInfo;
+                    setBadgeInfo(data);
+                  }
+                }}
               />
             )}
 
