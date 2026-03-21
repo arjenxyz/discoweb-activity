@@ -81,7 +81,7 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
             )}
             <div className="flex flex-col gap-3">
               <h1
-                className="text-6xl font-black leading-none tracking-tight text-white"
+                className="text-4xl font-black leading-tight tracking-tight text-white"
                 style={{ textShadow: '0 0 60px rgba(255,255,255,0.15), 0 2px 20px rgba(0,0,0,1)' }}
               >
                 Seni aramızda görmek harika olacak.
