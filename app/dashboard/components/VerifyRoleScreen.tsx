@@ -28,7 +28,7 @@ export default function VerifyRoleScreen({ readiness, onRetry }: Props) {
 
   useEffect(() => {
     if (phase === 'success') {
-      const timer = setTimeout(() => onRetry(), 1500);
+      const timer = setTimeout(() => onRetry(), 3000);
       return () => clearTimeout(timer);
     }
   }, [phase, onRetry]);
@@ -56,59 +56,45 @@ export default function VerifyRoleScreen({ readiness, onRetry }: Props) {
     <div className="relative isolate min-h-screen overflow-hidden bg-[#0b0d12] text-white">
       <VideoBackground videoRef={videoRef} src="/cdn/Storage/Test3.mp4" />
 
-      <main className="relative z-10 flex min-h-screen w-full flex-col items-start justify-end gap-6 px-5 pb-8 sm:flex-row sm:items-end sm:justify-between sm:px-6 sm:pb-10">
+      {/* Ses butonu — masaüstünde sağ üst */}
+      <div className="hidden sm:block absolute z-20 top-6 right-6">
+        <MuteButton muted={muted} onToggle={toggleMute} src="/cdn/Storage/Test3.mp4" />
+      </div>
+
+      <main className="relative z-10 flex min-h-screen w-full flex-col items-start justify-center gap-0 px-8 sm:px-16">
         {phase === 'success' ? (
-          <div className="flex w-full justify-center pb-6">
-            <div className="flex flex-col items-center gap-4 text-center drop-shadow-lg">
-              <div
-                className="flex h-16 w-16 items-center justify-center rounded-full bg-green-500/20 backdrop-blur-md"
-                style={{ animation: 'popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards' }}
-              >
-                <svg className="h-8 w-8 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <h2 className="text-xl font-black">Doğrulandın!</h2>
-              <p className="text-sm text-white/70">Dashboard&apos;a yönlendiriliyorsun...</p>
-              <style>{`
-                @keyframes popIn {
-                  from { transform: scale(0); opacity: 0; }
-                  to   { transform: scale(1); opacity: 1; }
-                }
-              `}</style>
-            </div>
+          <div className="flex w-full justify-center">
+            <SuccessState />
           </div>
         ) : (
-          <>
-            <div className="flex flex-col gap-2 w-full sm:max-w-[55%]">
-              {readiness.guildName && (
-                <p className="w-fit rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-white/60 backdrop-blur-md">
-                  {readiness.guildName}
-                </p>
-              )}
+          <div className="flex flex-col gap-5 max-w-lg">
+            {readiness.guildName && (
+              <p className="w-fit rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-white/60 backdrop-blur-md">
+                {readiness.guildName}
+              </p>
+            )}
+            <div className="flex flex-col gap-3">
               <h1
                 className="text-4xl font-black leading-tight tracking-tight text-white"
-                style={{ textShadow: '0 0 40px rgba(255,255,255,0.2), 0 2px 12px rgba(0,0,0,1)' }}
+                style={{ textShadow: '0 0 60px rgba(255,255,255,0.15), 0 2px 20px rgba(0,0,0,1)' }}
               >
-                Erişim Gerekli
+                Bu kapıyı açmak için bir anahtara ihtiyacın var.
               </h1>
-              <p className="text-xs text-white/55 leading-relaxed" style={{ textShadow: '0 1px 6px rgba(0,0,0,1)' }}>
-                Doğrulanmış üye rolüne sahip olman gerekiyor.
+              <p className="text-sm text-white/70 leading-relaxed max-w-sm" style={{ textShadow: '0 1px 8px rgba(0,0,0,1)' }}>
+                Doğrulanmış üye rolü alman yeterli. Tek tıkla seni içeri alalım.
               </p>
-              {phase === 'error' && error && (
-                <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-300 backdrop-blur-md">
-                  {error}
-                </p>
-              )}
             </div>
-
-            <div className="flex w-full shrink-0 items-center gap-2 sm:w-auto sm:justify-end">
-              <MuteButton muted={muted} onToggle={toggleMute} src="/cdn/Storage/Test3.mp4" />
+            {phase === 'error' && error && (
+              <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300 backdrop-blur-md">
+                {error}
+              </p>
+            )}
+            <div className="flex items-center gap-3 pt-2">
               <button
                 type="button"
                 onClick={handleVerify}
                 disabled={phase === 'loading'}
-                className="rounded-full border border-white/30 bg-white/10 px-7 py-3 text-sm font-bold text-white backdrop-blur-md transition hover:bg-white/20 hover:border-white/50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-full border border-white/30 bg-white/10 px-8 py-3.5 text-sm font-bold text-white backdrop-blur-md transition hover:bg-white/20 hover:border-white/50 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {phase === 'loading' ? (
                   <span className="flex items-center gap-2">
@@ -119,10 +105,37 @@ export default function VerifyRoleScreen({ readiness, onRetry }: Props) {
                   'Rolü Al'
                 )}
               </button>
+              {/* Mobilde ses butonu butonun sağında */}
+              <div className="sm:hidden">
+                <MuteButton muted={muted} onToggle={toggleMute} src="/cdn/Storage/Test3.mp4" />
+              </div>
             </div>
-          </>
+          </div>
         )}
       </main>
+    </div>
+  );
+}
+
+function SuccessState() {
+  return (
+    <div className="flex flex-col items-center gap-4 text-center drop-shadow-lg">
+      <div
+        className="flex h-16 w-16 items-center justify-center rounded-full bg-green-500/20 backdrop-blur-md"
+        style={{ animation: 'popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards' }}
+      >
+        <svg className="h-8 w-8 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+        </svg>
+      </div>
+      <h2 className="text-xl font-black">Kapı açıldı!</h2>
+      <p className="text-sm text-white/70">DiscoWeb dünyasına giriş yapıyorsun...</p>
+      <style>{`
+        @keyframes popIn {
+          from { transform: scale(0); opacity: 0; }
+          to   { transform: scale(1); opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 }
