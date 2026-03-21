@@ -37,12 +37,9 @@ export default function SplashScreen({ onEnter }: Props) {
     // Oturum açıksa kullanıcı bilgisini çek
     fetch(apiUrl('/api/auth/me'), { credentials: 'include' })
       .then(r => r.ok ? r.json() : null)
-      .then((d: { username?: string; avatar?: string; id?: string } | null) => {
+      .then((d: { username?: string; avatar?: string } | null) => {
         if (d?.username) {
-          const avatarUrl = d.avatar && d.id
-            ? `https://cdn.discordapp.com/avatars/${d.id}/${d.avatar}.png?size=64`
-            : `https://cdn.discordapp.com/embed/avatars/${Math.floor(Math.random() * 5)}.png`;
-          setUser({ username: d.username, avatarUrl });
+          setUser({ username: d.username, avatarUrl: d.avatar ?? '' });
         }
       })
       .catch(() => {});
@@ -81,9 +78,9 @@ export default function SplashScreen({ onEnter }: Props) {
     <div className="relative isolate flex min-h-screen w-full flex-col overflow-hidden bg-[#0b0d12]">
       <VideoBackground videoRef={videoRef} />
 
-      {/* Sol üst — DiscoWeb logosu */}
+      {/* Sol üst — DiscoWeb logosu + hoş geldin */}
       <div
-        className="relative z-10 px-6 pt-6 sm:px-10 sm:pt-8"
+        className="relative z-10 px-6 pt-6 sm:px-10 sm:pt-8 flex flex-col gap-1.5"
         style={{
           opacity: visible ? 1 : 0,
           transition: 'opacity 0.7s ease',
@@ -126,6 +123,14 @@ export default function SplashScreen({ onEnter }: Props) {
             }
           `}</style>
         </span>
+        {user && (
+          <div className="flex items-center gap-1.5">
+            <img src={user.avatarUrl} alt={user.username} className="h-4 w-4 rounded-full opacity-50" />
+            <span className="text-[11px] text-white/30 tracking-wide">
+              Hoş geldin, <span className="text-white/45 font-medium">{user.username}</span>
+            </span>
+          </div>
+        )}
       </div>
 
       {/* İçerik — alt hizalı, tüm genişlik */}
@@ -137,26 +142,12 @@ export default function SplashScreen({ onEnter }: Props) {
           transition: 'opacity 0.7s ease, transform 0.7s ease',
         }}
       >
-        {/* Üst etiket + karşılama */}
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-2">
-            <span className="h-px w-6 bg-white/30" />
-            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-white/40">
-              Discord Economy Platform
-            </span>
-          </div>
-          {user && (
-            <div className="flex items-center gap-2">
-              <img
-                src={user.avatarUrl}
-                alt={user.username}
-                className="h-5 w-5 rounded-full opacity-60"
-              />
-              <span className="text-xs text-white/35 tracking-wide">
-                Hoş geldin, <span className="text-white/55 font-medium">{user.username}</span>
-              </span>
-            </div>
-          )}
+        {/* Üst etiket */}
+        <div className="flex items-center gap-2">
+          <span className="h-px w-6 bg-white/30" />
+          <span className="text-xs font-semibold uppercase tracking-[0.2em] text-white/40">
+            Discord Economy Platform
+          </span>
         </div>
 
         {/* Alt satır: sol created-by, sağ butonlar — mobilde alt alta */}
