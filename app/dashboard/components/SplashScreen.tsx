@@ -164,9 +164,9 @@ export default function SplashScreen({ onEnter }: Props) {
         {!blocked && <span className="pointer-events-none absolute inset-0 -translate-x-full skew-x-12 bg-white/20 transition-transform duration-500 group-hover:translate-x-full" />}
         <span className="relative flex flex-col items-center gap-0.5">
           {!blocked && user && (
-            <span className="flex items-center gap-1 text-[10px] font-normal text-white/50 leading-none">
-              {user.avatarUrl && <img src={user.avatarUrl} alt={user.username} className="h-3 w-3 rounded-full opacity-60" />}
-              Hoş geldin, <span className="text-white/70 font-medium">{user.username}</span>
+            <span className="flex items-center gap-1.5 text-xs font-normal text-white/60 leading-none">
+              {user.avatarUrl && <img src={user.avatarUrl} alt={user.username} className="h-3.5 w-3.5 rounded-full opacity-70" />}
+              Hoş geldin, <span className="text-white/90 font-semibold">{user.username}</span>
             </span>
           )}
           <span className="flex items-center gap-2">
