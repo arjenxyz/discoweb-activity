@@ -218,7 +218,7 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
 
   return (
     <div className="relative isolate min-h-screen overflow-hidden bg-[#0b0d12] text-white">
-      <VideoBackground videoRef={videoRef} />
+      <VideoBackground videoRef={videoRef} src="/cdn/Storage/Test4.mp4" />
       <main className="relative z-10 flex min-h-screen w-full flex-col items-start justify-end gap-6 px-5 pb-8 sm:flex-row sm:items-end sm:justify-between sm:px-6 sm:pb-10">
         {/* Sol alt — durum metni */}
         <div className="flex flex-col gap-3 max-w-sm w-full sm:w-auto">
@@ -271,7 +271,7 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
 
         {/* Sağ alt — butonlar */}
         <div className="flex w-full shrink-0 flex-col items-start gap-2 sm:w-auto sm:items-end">
-          <MuteButton muted={muted} onToggle={toggleMute} />
+          <MuteButton muted={muted} onToggle={toggleMute} src="/cdn/Storage/Test4.mp4" />
           <div className="flex flex-wrap justify-end gap-2">
             <button
               type="button"
