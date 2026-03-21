@@ -32,7 +32,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="tr">
-      <body className={inter.className}>
+      <body className={`${inter.className} bg-[#0b0d12]`}>
         {/* ThemeBootstrap applies persisted theme on client mount; removed pre-hydration inline script
           to prevent React hydration mismatches. This may cause a very short FOUC but avoids warnings. */}
         <ThemeBootstrap />

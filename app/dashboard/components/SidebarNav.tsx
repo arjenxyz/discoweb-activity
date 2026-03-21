@@ -3,9 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { LuChevronRight, LuClock, LuGift, LuHouse, LuMail, LuReceipt, LuStore } from 'react-icons/lu';
-import type { MemberProfile } from '../types';
-
-type Section = 'overview' | 'store' | 'raffles' | 'transactions' | 'tracking' | 'notifications' | 'profile' | 'settings' | 'mail';
+import type { MemberProfile, Section } from '../types';
 
 type SidebarNavProps = {
   effectiveSection: Section;

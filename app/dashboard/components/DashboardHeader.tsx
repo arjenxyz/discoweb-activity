@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
-import { LuHouse, LuMail, LuStore, LuSettings, LuChevronRight, LuChartBar, LuTicket } from 'react-icons/lu';
+import { LuHouse, LuMail, LuStore, LuSettings, LuChevronRight, LuChartBar, LuTicket, LuSend, LuTag, LuTrendingUp } from 'react-icons/lu';
 import Image from 'next/image';
 import DiscordAgreementButton from '@/components/DiscordAgreementButton';
 import type { Notification, Section } from '../types';
@@ -296,22 +296,25 @@ export default function DashboardHeader({
                       <button
                         type="button"
                         onClick={settings.onOpenTransfer}
-                        className="rounded-xl border border-white/[0.06] bg-white/[0.03] py-2 text-center text-xs text-white/60 transition hover:bg-white/[0.07] hover:text-white"
+                        className="flex flex-col items-center gap-1 rounded-xl border border-white/[0.06] bg-white/[0.03] py-2.5 text-xs text-white/60 transition hover:bg-white/[0.07] hover:text-white"
                       >
+                        <LuSend className="h-3.5 w-3.5" />
                         Transfer
                       </button>
                       <button
                         type="button"
                         onClick={settings.onOpenPromotions}
-                        className="rounded-xl border border-white/[0.06] bg-white/[0.03] py-2 text-center text-xs text-white/60 transition hover:bg-white/[0.07] hover:text-white"
+                        className="flex flex-col items-center gap-1 rounded-xl border border-white/[0.06] bg-white/[0.03] py-2.5 text-xs text-white/60 transition hover:bg-white/[0.07] hover:text-white"
                       >
+                        <LuTag className="h-3.5 w-3.5" />
                         Promosyon
                       </button>
                       <button
                         type="button"
                         onClick={() => { setIsProfileOpen(false); settings.onOpenEarnings?.(); }}
-                        className="rounded-xl border border-emerald-500/20 bg-emerald-500/8 py-2 text-center text-xs text-emerald-400 transition hover:bg-emerald-500/15"
+                        className="flex flex-col items-center gap-1 rounded-xl border border-emerald-500/20 bg-emerald-500/[0.08] py-2.5 text-xs text-emerald-400 transition hover:bg-emerald-500/15"
                       >
+                        <LuTrendingUp className="h-3.5 w-3.5" />
                         Kazanç
                       </button>
                     </div>

@@ -24,6 +24,7 @@ import EarningsModal from './components/EarningsModal';
 import MailDetailModal from './components/MailDetailModal';
 import ActivityReadinessGate, { type ActivityReadiness } from './components/ActivityReadinessGate';
 import SplashScreen from './components/SplashScreen';
+import SidebarNav from './components/SidebarNav';
 import { sanitizeHtml } from '@/lib/sanitizeHtml';
 import type {
   MemberProfile,
@@ -877,15 +878,15 @@ export default function DashboardPage() {
     : effectiveSection === 'store'
       ? isActivityEmbed
         ? 'mx-0 w-full max-w-full px-0'
-        : 'mx-auto max-w-6xl px-0 sm:px-6'
-      : 'mx-auto max-w-6xl px-3 sm:px-6';
+        : 'w-full px-0 sm:px-6'
+      : 'w-full px-4 sm:px-6';
   const mainSpacingClass = effectiveSection === 'mail'
     ? 'py-0 gap-0'
     : effectiveSection === 'store'
       ? isActivityEmbed
         ? 'md:pt-20 pb-28 gap-0 md:pb-0'
         : 'md:pt-20 pb-28 sm:pb-10 gap-0 sm:gap-6 md:pb-0'
-      : 'md:pt-24 pb-28 md:pt-24 md:pb-0 gap-6';
+      : 'md:pt-24 pb-6 gap-6';
 
   // Splash — readiness sorgulanmadan önce gösterilir
   if (!splashDone) {
@@ -934,7 +935,19 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-[#0b0d12] text-white overflow-auto">
-      <div className="flex flex-col min-h-0 h-full">
+      <div className="flex h-screen min-h-0">
+        {/* Sidebar */}
+        {effectiveSection !== 'mail' && !unauthorized && (
+          <SidebarNav
+            effectiveSection={effectiveSection}
+            unauthorized={unauthorized}
+            onNavigate={setActiveSection}
+            profile={profile}
+          />
+        )}
+
+        {/* Sağ taraf: header + main */}
+        <div className="flex flex-1 flex-col min-w-0 min-h-0 h-full">
         {effectiveSection !== 'mail' && (
         <DashboardHeader
           unauthorized={unauthorized}
@@ -1250,6 +1263,7 @@ export default function DashboardPage() {
           setDiscountsModalOpen(false);
         }}
       />
+      </div>
     </div>
   );
 }
