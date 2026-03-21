@@ -23,15 +23,18 @@ export default function SplashScreen({ onEnter }: Props) {
   const [user, setUser] = useState<{ username: string; avatarUrl: string } | null>(null);
   const linkSdkRef = useRef<InstanceType<Awaited<typeof import('@discord/embedded-app-sdk')>['DiscordSDK']> | null>(null);
 
+  // Chat state
+  const [chatStep, setChatStep] = useState(0);
+  const [userReplied1, setUserReplied1] = useState(false);
+  const [userReplied2, setUserReplied2] = useState(false);
+
   const openLink = async (url: string) => {
     try {
-      // Önce auth sırasında set edilen singleton'ı dene
       const existing = getDiscordSdk();
       if (existing) {
         await existing.commands.openExternalLink({ url });
         return;
       }
-      // Yoksa kendi SDK instance'ımızı bir kez oluştur, ref'te sakla
       if (!linkSdkRef.current) {
         const { DiscordSDK } = await import('@discord/embedded-app-sdk');
         const sdk = new DiscordSDK(process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!);
@@ -47,7 +50,6 @@ export default function SplashScreen({ onEnter }: Props) {
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), 80);
 
-    // Oturum açıksa kullanıcı bilgisini çek
     fetchWithCreds(apiUrl('/api/auth/me'))
       .then(r => r.ok ? r.json() : null)
       .then((d: { username?: string; avatar?: string } | null) => {
@@ -64,7 +66,6 @@ export default function SplashScreen({ onEnter }: Props) {
         .catch(() => { if (initial) setMaintenanceChecked(true); });
     };
 
-    // Developer rol kontrolü ve maintenance paralel başlat
     const token = (() => { try { return localStorage.getItem('discord_bearer_token'); } catch { return null; } })();
     fetch(apiUrl('/api/activity/is-developer'), {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -78,6 +79,39 @@ export default function SplashScreen({ onEnter }: Props) {
 
     return () => { clearTimeout(t); clearInterval(interval); };
   }, []);
+
+  // Chat step progression
+  useEffect(() => {
+    if (!visible) return;
+    // Step 1: Arjen'in ilk mesajı
+    const t1 = setTimeout(() => setChatStep(1), 500);
+    return () => clearTimeout(t1);
+  }, [visible]);
+
+  useEffect(() => {
+    if (chatStep === 1) {
+      // Step 2: Kullanıcı balonu
+      const t = setTimeout(() => setChatStep(2), 800);
+      return () => clearTimeout(t);
+    }
+    if (chatStep === 3) {
+      // Step 4: İkinci kullanıcı balonu
+      const t = setTimeout(() => setChatStep(4), 800);
+      return () => clearTimeout(t);
+    }
+  }, [chatStep]);
+
+  const handleUserReply1 = () => {
+    if (userReplied1) return;
+    setUserReplied1(true);
+    setTimeout(() => setChatStep(3), 600);
+  };
+
+  const handleUserReply2 = () => {
+    if (userReplied2) return;
+    setUserReplied2(true);
+    setTimeout(() => setChatStep(5), 600);
+  };
 
   const toggleMute = () => {
     const v = videoRef.current;
@@ -188,6 +222,80 @@ export default function SplashScreen({ onEnter }: Props) {
     </div>
   );
 
+  // Chat bubble fade-in style helper
+  const fadeIn = (show: boolean): React.CSSProperties => ({
+    opacity: show ? 1 : 0,
+    transform: show ? 'translateY(0)' : 'translateY(8px)',
+    transition: 'opacity 0.3s ease, transform 0.3s ease',
+    pointerEvents: show ? 'auto' : 'none',
+  });
+
+  const ChatConversation = () => (
+    <div className="flex flex-col gap-2 w-[280px]">
+      {/* Adım 1: Arjen mesajı */}
+      <div style={fadeIn(chatStep >= 1)} className="flex flex-col gap-0.5">
+        <span className="text-[10px] text-white/40 pl-1">Arjen</span>
+        <div className="self-start bg-white/10 backdrop-blur-md rounded-2xl rounded-tl-sm px-4 py-2 text-sm text-white">
+          Hey orada kim var? 👀
+        </div>
+      </div>
+
+      {/* Adım 2: Kullanıcı cevap balonu */}
+      <div style={fadeIn(chatStep >= 2)} className="self-end">
+        <button
+          type="button"
+          onClick={handleUserReply1}
+          disabled={userReplied1}
+          className={`rounded-2xl rounded-tr-sm px-4 py-2 text-sm font-medium text-white transition-all duration-200 border ${
+            userReplied1
+              ? 'bg-white/15 border-white/20 cursor-default'
+              : 'bg-transparent border-white/30 hover:bg-white/10 hover:border-white/50'
+          }`}
+        >
+          {user?.username ?? 'Benim!'}
+        </button>
+      </div>
+
+      {/* Adım 3: Arjen ikinci mesajı */}
+      <div style={fadeIn(chatStep >= 3)} className="flex flex-col gap-0.5">
+        <span className="text-[10px] text-white/40 pl-1">Arjen</span>
+        <div className="self-start bg-white/10 backdrop-blur-md rounded-2xl rounded-tl-sm px-4 py-2 text-sm text-white">
+          Merhaba, {user?.username ?? 'seni'}! 👋 Ben Arjen. Bu platformu baştan sona tek başıma inşa ettim.
+        </div>
+      </div>
+
+      {/* Adım 4: İkinci kullanıcı cevap balonu */}
+      <div style={fadeIn(chatStep >= 4)} className="self-end">
+        <button
+          type="button"
+          onClick={handleUserReply2}
+          disabled={userReplied2}
+          className={`rounded-2xl rounded-tr-sm px-4 py-2 text-sm font-medium text-white transition-all duration-200 border ${
+            userReplied2
+              ? 'bg-white/15 border-white/20 cursor-default'
+              : 'bg-transparent border-white/30 hover:bg-white/10 hover:border-white/50'
+          }`}
+        >
+          Buraya geldiğime sevindim
+        </button>
+      </div>
+
+      {/* Adım 5: Arjen son mesajı + buton */}
+      <div style={fadeIn(chatStep >= 5)} className="flex flex-col gap-3">
+        <div className="flex flex-col gap-0.5">
+          <span className="text-[10px] text-white/40 pl-1">Arjen</span>
+          <div className="self-start bg-white/10 backdrop-blur-md rounded-2xl rounded-tl-sm px-4 py-2 text-sm text-white">
+            Harika! İçeride seni bekleyen birçok şey var. Hazır mısın? 🚀
+          </div>
+        </div>
+        <div className="flex items-center gap-3 self-end">
+          {isDeveloper && <DevButton />}
+          <EnterButton />
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="relative isolate flex min-h-screen w-full flex-col overflow-hidden bg-[#0b0d12]">
       <VideoBackground videoRef={videoRef} />
@@ -219,23 +327,12 @@ export default function SplashScreen({ onEnter }: Props) {
         <FooterLine />
       </div>
 
-      {/* ── SAĞ ALTA — hoş geldin + buton, bağımsız ── */}
+      {/* ── SAĞ ALTA — sohbet + buton ── */}
       <div
-        className="hidden lg:flex absolute z-10 bottom-10 right-14 items-center gap-3"
+        className="hidden lg:flex absolute z-10 bottom-10 right-14 items-end"
         style={{ opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(18px)', transition: 'opacity 0.7s ease, transform 0.7s ease' }}
       >
-        {user && !(maintenance && !isDeveloper) && (
-          <div className="flex items-center gap-2">
-            {user.avatarUrl && <img src={user.avatarUrl} alt={user.username} className="h-6 w-6 rounded-full opacity-70" />}
-            <span className="text-sm text-white/50">
-              Hoş geldin, <span className="text-white font-semibold">{user.username}</span>
-            </span>
-          </div>
-        )}
-        <div className="flex items-center gap-3">
-          {isDeveloper && <DevButton />}
-          <EnterButton />
-        </div>
+        <ChatConversation />
       </div>
 
       {/* ── ALT ALAN — mobil ── */}
@@ -248,18 +345,10 @@ export default function SplashScreen({ onEnter }: Props) {
 
         {/* Mobil: dikey, ortada */}
         <div className="lg:hidden flex flex-col items-center gap-3">
-          {user && !(maintenance && !isDeveloper) && (
-            <div className="flex items-center gap-2">
-              {user.avatarUrl && <img src={user.avatarUrl} alt={user.username} className="h-6 w-6 rounded-full opacity-70" />}
-              <span className="text-sm text-white/50">
-                Hoş geldin, <span className="text-white font-semibold">{user.username}</span>
-              </span>
-            </div>
-          )}
+          <ChatConversation />
           <div className="flex items-center gap-3">
             <MuteButton muted={muted} onToggle={toggleMute} />
             {isDeveloper && <DevButton />}
-            <EnterButton />
           </div>
           <FooterLine centered />
         </div>
