@@ -62,42 +62,46 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
     <div className="relative isolate min-h-screen overflow-hidden bg-[#0b0d12] text-white">
       <VideoBackground videoRef={videoRef} src="/cdn/Storage/Test1.mp4" />
 
-      <main className="relative z-10 flex min-h-screen w-full flex-col items-start justify-end gap-6 px-5 pb-8 sm:flex-row sm:items-end sm:justify-between sm:px-6 sm:pb-10">
+      {/* Ses butonu — sağ üst köşe */}
+      <div className="absolute z-20 top-6 right-6">
+        <MuteButton muted={muted} onToggle={toggleMute} src="/cdn/Storage/Test1.mp4" />
+      </div>
+
+      <main className="relative z-10 flex min-h-screen w-full flex-col items-start justify-center gap-0 px-8 sm:px-16">
         {phase === 'success' ? (
-          <div className="flex w-full justify-center pb-6">
+          <div className="flex w-full justify-center">
             <SuccessState />
           </div>
         ) : (
-          <>
-            <div className="flex flex-col gap-2 w-full sm:max-w-[55%]">
-              {readiness.guildName && (
-                <p className="w-fit rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-white/60 backdrop-blur-md">
-                  {readiness.guildName}
-                </p>
-              )}
+          <div className="flex flex-col gap-5 max-w-lg">
+            {readiness.guildName && (
+              <p className="w-fit rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-white/60 backdrop-blur-md">
+                {readiness.guildName}
+              </p>
+            )}
+            <div className="flex flex-col gap-3">
               <h1
-                className="text-4xl font-black leading-tight tracking-tight text-white"
-                style={{ textShadow: '0 0 40px rgba(255,255,255,0.2), 0 2px 12px rgba(0,0,0,1)' }}
+                className="text-6xl font-black leading-none tracking-tight text-white"
+                style={{ textShadow: '0 0 60px rgba(255,255,255,0.15), 0 2px 20px rgba(0,0,0,1)' }}
               >
                 Hoş geldin!
               </h1>
-              <p className="text-xs text-white/55 leading-relaxed" style={{ textShadow: '0 1px 6px rgba(0,0,0,1)' }}>
+              <p className="text-sm text-white/70 leading-relaxed max-w-sm" style={{ textShadow: '0 1px 8px rgba(0,0,0,1)' }}>
                 Platformumuza katılmak için bir profil oluşturman gerekiyor.
               </p>
-              {error && (
-                <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-300 backdrop-blur-md">
-                  {error}
-                </p>
-              )}
             </div>
-
-            <div className="flex w-full shrink-0 items-center gap-2 sm:w-auto sm:justify-end">
-              <MuteButton muted={muted} onToggle={toggleMute} src="/cdn/Storage/Test1.mp4" />
+            {error && (
+              <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300 backdrop-blur-md">
+                {error}
+              </p>
+            )}
+            <div className="flex items-center gap-3 pt-2">
               <button
                 type="button"
                 onClick={handleStart}
                 disabled={phase === 'loading'}
-                className="rounded-full border border-white/30 bg-white/10 px-7 py-3 text-sm font-bold text-white backdrop-blur-md transition hover:bg-white/20 hover:border-white/50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-full border border-white/30 bg-white/10 px-8 py-3.5 text-sm font-bold text-white backdrop-blur-md transition hover:bg-white/20 hover:border-white/50 disabled:cursor-not-allowed disabled:opacity-50"
+                style={{ boxShadow: '0 0 28px rgba(88,101,242,0.35), 0 4px 16px rgba(0,0,0,0.4)' }}
               >
                 {phase === 'loading' ? (
                   <span className="flex items-center gap-2">
@@ -109,7 +113,7 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
                 )}
               </button>
             </div>
-          </>
+          </div>
         )}
       </main>
     </div>
