@@ -17,22 +17,43 @@ const deleteForUser = async (
   scope: 'current' | 'all',
   guildId: string | null,
 ) => {
-  const tables = [
+  // user_id + guild_id olan tablolar — current scope'da guild bazlı, all scope'da tümü silinir
+  const perGuildTables = [
     'member_wallets',
     'wallet_ledger',
     'member_overview_stats',
     'member_daily_stats',
     'member_profiles',
-    'member_transactions',
-    'member_raffles',
-    'member_referral',
-    'member_promotion_uses',
+    'raffle_entries',
+    'activity_participation',
+    'voice_participation',
+    'daily_earnings',
+    'user_guilds',
+    'system_mail_contacts',
+    'system_mails',
   ];
 
-  for (const table of tables) {
+  // Sadece user_id olan tablolar — yalnızca all scope'da silinir
+  const globalTables = [
+    'store_orders',
+    'discount_usages',
+    'promotion_usages',
+    'notification_reads',
+    'referral_milestone_claims',
+    'system_mail_reads',
+    'system_mail_stars',
+  ];
+
+  for (const table of perGuildTables) {
     if (scope === 'current' && guildId) {
       await supabase.from(table).delete().match({ user_id: userId, guild_id: guildId });
     } else {
+      await supabase.from(table).delete().match({ user_id: userId });
+    }
+  }
+
+  if (scope === 'all') {
+    for (const table of globalTables) {
       await supabase.from(table).delete().match({ user_id: userId });
     }
   }
