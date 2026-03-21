@@ -206,29 +206,25 @@ export default function SplashScreen({ onEnter }: Props) {
         className="relative z-10 mt-auto w-full flex flex-col gap-4 px-6 pb-8 sm:px-10 sm:pb-10"
         style={{ opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(18px)', transition: 'opacity 0.7s ease, transform 0.7s ease' }}
       >
-        {/* Mobil: logo bloğu burada görünür */}
-        <div className="lg:hidden">
-          <LogoBlock size="sm" />
-        </div>
-
-        {/* Aksiyon satırı */}
-        <div className="flex items-center justify-between gap-4">
-          {/* Mobil: mute sol */}
-          <div className="lg:hidden">
-            <MuteButton muted={muted} onToggle={toggleMute} />
+        {/* Tek satır: sol = logo(mobil)+footer, sağ = mute+dev+Keşfet */}
+        <div className="flex items-end justify-between gap-4">
+          {/* Sol */}
+          <div className="flex flex-col gap-2">
+            <div className="lg:hidden">
+              <LogoBlock size="sm" />
+            </div>
+            <FooterLine />
           </div>
-          {/* Desktop: boş spacer */}
-          <div className="hidden lg:block" />
 
-          {/* Sağ: dev butonu + Keşfet */}
-          <div className="flex items-center gap-3">
+          {/* Sağ */}
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="lg:hidden">
+              <MuteButton muted={muted} onToggle={toggleMute} />
+            </div>
             {isDeveloper && <DevButton />}
             <EnterButton />
           </div>
         </div>
-
-        {/* Footer */}
-        <FooterLine />
       </div>
 
       {devPanelOpen && (
