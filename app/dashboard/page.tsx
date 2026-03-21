@@ -15,6 +15,7 @@ import StoreSection from './components/StoreSection';
 import SettingsSection from './components/SettingsSection';
 import MailSection from './components/MailSection';
 import RafflesSection from './components/RafflesSection';
+import DiscoverSection from './components/DiscoverSection';
 import NotificationDetailModal from './components/NotificationDetailModal';
 import NotificationsModal from './components/NotificationsModal';
 import TransferModal from './components/TransferModal';
@@ -1172,6 +1173,10 @@ export default function DashboardPage() {
                 }}
                 onBack={() => setActiveSection('overview')}
               />
+            )}
+
+            {effectiveSection === 'discover' && (
+              <DiscoverSection />
             )}
           </main>
         </div>
