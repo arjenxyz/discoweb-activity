@@ -981,7 +981,6 @@ export default function DashboardPage() {
             onOpenPromotions: openPromotionsModal,
             onOpenDiscounts: openDiscountsModal,
             onOpenEarnings: () => setEarningsModalOpen(true),
-            logoutHref: '/api/auth/logout',
             menuRef: settingsMenuRef,
           }}
         />

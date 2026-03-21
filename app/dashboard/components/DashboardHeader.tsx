@@ -2,10 +2,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { apiUrl } from '@/lib/api';
-import { closeDiscordActivity } from '@/lib/discordSdk';
 
-import { LuHouse, LuMail, LuStore, LuLogOut, LuSettings, LuChevronRight, LuChartBar, LuTicket } from 'react-icons/lu';
+import { LuHouse, LuMail, LuStore, LuSettings, LuChevronRight, LuChartBar, LuTicket } from 'react-icons/lu';
 import Image from 'next/image';
 import DiscordAgreementButton from '@/components/DiscordAgreementButton';
 import type { Notification, Section } from '../types';
@@ -55,7 +53,6 @@ type DashboardHeaderProps = {
     onOpenDiscounts: () => void;
     onOpenReferral?: () => void;
     onOpenEarnings?: () => void;
-    logoutHref: string;
     menuRef: RefObject<HTMLDivElement | null>;
   };
   maintenance?: {
@@ -74,41 +71,6 @@ const RANDOM_GIFS = [
   '/gif/cat.gif'
 ];
 
-// Çıkış yapıldığında çerezleri ve localStorage'ı temizle
-// Eğer embed içindeysek Discord Activity'yi kapatmaya çalış
-const handleLogout = async () => {
-  const cleanup = () => {
-    if (typeof document !== 'undefined') {
-      document.cookie.split(';').forEach((cookie) => {
-        const eqPos = cookie.indexOf('=');
-        const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
-        try {
-          document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
-          document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${window.location.hostname}`;
-        } catch {
-          // ignore
-        }
-      });
-    }
-    localStorage.clear();
-  };
-
-  try {
-    cleanup();
-
-    // Oturum kapat / backend'de temizle
-    await fetch(apiUrl('/api/auth/logout'), { method: 'POST', credentials: 'include' });
-
-    // Zaten hazır olan SDK instance üzerinden Activity'yi kapat
-    const closed = await closeDiscordActivity();
-    if (!closed) {
-      window.location.href = '/';
-    }
-  } catch {
-    cleanup();
-    window.location.href = '/';
-  }
-};
 
 export default function DashboardHeader({
   unauthorized,
@@ -456,16 +418,6 @@ export default function DashboardHeader({
 
                             </div>
 
-                            {/* Footer */}
-                            <div className="bg-black/20 p-3 border-t border-white/5 mt-auto">
-                              <button
-                                onClick={() => { setIsProfileOpen(false); window.location.href = '/'; }}
-                                className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg bg-red-500/10 hover:bg-red-500/25 text-[11px] font-medium text-red-400 hover:text-red-300 transition-colors"
-                              >
-                                <LuLogOut className="w-3.5 h-3.5" />
-                                Çıkış Yap
-                              </button>
-                            </div>
 
                         </div>
                     </div>
