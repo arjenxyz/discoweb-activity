@@ -19,12 +19,12 @@ export default async function fetchWithCreds(input: RequestInfo, init: RequestIn
 
     if (selectedGuildId) {
       let url: URL | null = null;
-      if (resolvedInput.startsWith('/api/')) {
+      if (resolvedInput.startsWith('/api/') || resolvedInput.startsWith('/activity/api/')) {
         url = new URL(resolvedInput, window.location.origin);
       } else {
         try {
           const parsed = new URL(resolvedInput);
-          if (parsed.pathname.startsWith('/api/')) {
+          if (parsed.pathname.startsWith('/api/') || parsed.pathname.startsWith('/activity/api/')) {
             url = parsed;
           }
         } catch {}
