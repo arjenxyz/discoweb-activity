@@ -27,10 +27,7 @@ type ReadinessResponse = {
   canInviteBot: boolean;
   inviteUrl: string | null;
   botInGuild?: boolean;
-  debug?: {
-    discordStatus?: number;
-    reason?: string;
-  };
+  debug?: Record<string, unknown>;
 };
 
 const DISCORD_ADMINISTRATOR = BigInt(0x8);
