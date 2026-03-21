@@ -30,8 +30,14 @@ create table if not exists public.raffles (
 alter table public.badge_tiers enable row level security;
 alter table public.raffles enable row level security;
 
-create policy "badge_tiers_select" on public.badge_tiers
-  for select using (true);
+do $$ begin
+  create policy "badge_tiers_select" on public.badge_tiers
+    for select using (true);
+exception when duplicate_object then null;
+end $$;
 
-create policy "raffles_select" on public.raffles
-  for select using (true);
+do $$ begin
+  create policy "raffles_select" on public.raffles
+    for select using (true);
+exception when duplicate_object then null;
+end $$;

@@ -19,8 +19,8 @@ BEGIN
     EXECUTE format('ALTER TABLE public.system_mails DROP CONSTRAINT %I', cname);
   END IF;
 
-  -- add new check constraint allowing 'order'
-  EXECUTE $$ALTER TABLE public.system_mails
+  -- add new check constraint allowing 'order' (NOT VALID skips existing rows)
+  EXECUTE $inner$ALTER TABLE public.system_mails
     ADD CONSTRAINT system_mails_category_check
-    CHECK (category IN ('announcement','maintenance','sponsor','update','lottery','reward','order'));$$;
+    CHECK (category IN ('announcement','maintenance','sponsor','update','lottery','reward','order')) NOT VALID;$inner$;
 END$$;
