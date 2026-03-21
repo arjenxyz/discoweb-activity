@@ -163,7 +163,7 @@ export default function SplashScreen({ onEnter }: Props) {
       >
         {!blocked && <span className="pointer-events-none absolute inset-0 -translate-x-full skew-x-12 bg-white/20 transition-transform duration-500 group-hover:translate-x-full" />}
         <span className="relative flex items-center gap-2">
-          {blocked ? 'Activity Bakımda' : 'Keşfet'}
+          {blocked ? 'Activity Bakımda' : 'Hadi Başlayalım'}
           {!blocked && (
             <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-0.5">
               <path d="M3.75 7.25a.75.75 0 000 1.5h6.19l-2.72 2.72a.75.75 0 001.06 1.06l4-4a.75.75 0 000-1.06l-4-4a.75.75 0 00-1.06 1.06l2.72 2.72H3.75z" />
