@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
+import fetchWithCreds from '@/lib/fetchWithCreds';
 import type { MemberProfile, OverviewStats, OverviewStatsExpanded } from '../types';
 
 type LeaderboardDrawerProps = {
@@ -88,8 +89,8 @@ export default function LeaderboardDrawer({
 
       const offset = pageNumber * pageSize;
       try {
-        const res = await fetch(`/api/member/overview?offset=${offset}&limit=${pageSize}`, {
-          credentials: 'same-origin',
+        const res = await fetchWithCreds(`/api/member/overview?offset=${offset}&limit=${pageSize}`, {
+          cache: 'no-store',
         });
 
         if (!res.ok) {
