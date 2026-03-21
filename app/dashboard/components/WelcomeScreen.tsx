@@ -28,7 +28,7 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
 
   useEffect(() => {
     if (phase === 'success') {
-      const timer = setTimeout(() => onRetry(), 1500);
+      const timer = setTimeout(() => onRetry(), 3000);
       return () => clearTimeout(timer);
     }
   }, [phase, onRetry]);
@@ -96,10 +96,6 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
               </p>
             )}
             <div className="flex items-center gap-3 pt-2">
-              {/* Mobilde ses butonu butonun yanında */}
-              <div className="sm:hidden">
-                <MuteButton muted={muted} onToggle={toggleMute} src="/cdn/Storage/Test1.mp4" />
-              </div>
               <button
                 type="button"
                 onClick={handleStart}
@@ -116,6 +112,10 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
                   'Hazırlıklar Başlasın!'
                 )}
               </button>
+              {/* Mobilde ses butonu butonun sağında */}
+              <div className="sm:hidden">
+                <MuteButton muted={muted} onToggle={toggleMute} src="/cdn/Storage/Test1.mp4" />
+              </div>
             </div>
           </div>
         )}
