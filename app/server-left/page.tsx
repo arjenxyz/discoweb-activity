@@ -11,6 +11,17 @@ interface UserInfo {
   avatar: string | null;
 }
 
+function getActivityUrl(path: string) {
+  if (typeof window === 'undefined') return path;
+  const urlParams = new URLSearchParams(window.location.search);
+  const guildId = urlParams.get('guild_id') || localStorage.getItem('selectedGuildId') || '';
+  const frameId = urlParams.get('frame_id') || urlParams.get('instance_id') || localStorage.getItem('discord_frame_id') || '';
+  const url = new URL(path, window.location.origin);
+  if (guildId) url.searchParams.set('guild_id', guildId);
+  if (frameId) url.searchParams.set('frame_id', frameId);
+  return url.toString();
+}
+
 export default function ServerLeftPage() {
   const [user, setUser] = useState<UserInfo | null>(null);
   const [muted, setMuted] = useState(true);
@@ -66,18 +77,13 @@ export default function ServerLeftPage() {
             <div className="sm:hidden">
               <MuteButton muted={muted} onToggle={toggleMute} src="/cdn/Storage/Test4.mp4" />
             </div>
-            <Link
-              href="/auth/select-server"
+            <button
+              type="button"
+              onClick={() => { window.location.href = getActivityUrl('/activity'); }}
               className="rounded-full border border-white/30 bg-white/10 px-8 py-3.5 text-sm font-bold text-white backdrop-blur-md transition hover:bg-white/20 hover:border-white/50"
             >
-              Sunucu Seç
-            </Link>
-            <Link
-              href="/"
-              className="rounded-full border border-white/20 bg-transparent px-6 py-3.5 text-sm font-bold text-white/70 backdrop-blur-md transition hover:bg-white/10 hover:text-white"
-            >
-              Ana Sayfa
-            </Link>
+              Tekrar Dene
+            </button>
           </div>
         </div>
       </main>

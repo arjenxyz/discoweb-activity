@@ -38,6 +38,11 @@ export default function SettingsDropdown({
 
   const handleLogout = async () => {
     try {
+      // Discord Activity parametrelerini silmeden önce kaydet
+      const urlParams = new URLSearchParams(window.location.search);
+      const guildId = urlParams.get('guild_id') || localStorage.getItem('selectedGuildId') || '';
+      const frameId = urlParams.get('frame_id') || urlParams.get('instance_id') || localStorage.getItem('discord_frame_id') || '';
+
       if (typeof document !== 'undefined') {
         document.cookie.split(';').forEach((cookie) => {
           const eqPos = cookie.indexOf('=');
@@ -51,9 +56,18 @@ export default function SettingsDropdown({
         });
       }
 
-      localStorage.clear();
+      // Sadece auth token'larını temizle — guild_id ve frame_id'yi koru
+      localStorage.removeItem('discord_bearer_token');
+      localStorage.removeItem('auth_ready');
+      localStorage.removeItem('discordUser');
+
       await fetch(apiUrl('/api/auth/logout'), { method: 'POST', credentials: 'include' });
-      window.location.href = '/activity';
+
+      // Activity'ye guild_id ve frame_id parametreleriyle geri dön
+      const redirectUrl = new URL('/activity', window.location.origin);
+      if (guildId) redirectUrl.searchParams.set('guild_id', guildId);
+      if (frameId) redirectUrl.searchParams.set('frame_id', frameId);
+      window.location.href = redirectUrl.toString();
     } catch {
       window.location.href = '/activity';
     }

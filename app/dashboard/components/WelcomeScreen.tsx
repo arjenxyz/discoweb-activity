@@ -15,6 +15,8 @@ type Phase = 'intro' | 'loading' | 'success';
 export default function WelcomeScreen({ readiness, onRetry }: Props) {
   const [phase, setPhase] = useState<Phase>('intro');
   const [error, setError] = useState<string | null>(null);
+  const [errorCode, setErrorCode] = useState<string | null>(null);
+  const [reported, setReported] = useState(false);
   const [muted, setMuted] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -40,6 +42,7 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
     }
     setPhase('loading');
     setError(null);
+    setErrorCode(null);
     try {
       const response = await fetchWithCreds(`/api/member/profile?guild_id=${encodeURIComponent(readiness.guildId)}`, {
         method: 'GET',
@@ -47,7 +50,9 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
       });
       if (!response.ok) {
         const json = await response.json().catch(() => null);
-        setError(json?.error || response.statusText || 'Profil oluşturma başarısız.');
+        const code = json?.error ?? null;
+        setErrorCode(code);
+        setError(code ?? response.statusText ?? 'Profil oluşturma başarısız.');
         setPhase('intro');
         return;
       }
@@ -91,9 +96,36 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
               </p>
             </div>
             {error && (
-              <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300 backdrop-blur-md">
-                {error}
-              </p>
+              <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 backdrop-blur-md flex flex-col gap-2">
+                {errorCode && (
+                  <p className="text-xs font-mono text-red-400">hata: <span className="font-bold">{errorCode}</span></p>
+                )}
+                <p className="text-sm text-red-300 leading-relaxed">{error}</p>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      await fetchWithCreds('/api/admin/report-error', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          status: errorCode ?? 'profile_create_error',
+                          guildId: readiness.guildId,
+                          guildName: readiness.guildName,
+                          userAgent: navigator.userAgent,
+                          timestamp: new Date().toISOString(),
+                          url: window.location.href,
+                        }),
+                      });
+                      setReported(true);
+                    } catch { /* sessizce geç */ }
+                  }}
+                  disabled={reported}
+                  className="self-start flex items-center gap-1.5 rounded-full border border-red-400/40 bg-red-500/25 px-4 py-1.5 text-xs font-semibold text-red-200 backdrop-blur-md transition hover:bg-red-500/40 disabled:opacity-50"
+                >
+                  {reported ? '✓ Bildirildi' : 'Bildir'}
+                </button>
+              </div>
             )}
             <div className="flex items-center gap-3 pt-2">
               <button
