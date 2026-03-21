@@ -116,7 +116,7 @@ export default function SplashScreen({ onEnter }: Props) {
     <div className={`flex flex-col gap-1 ${centered ? 'items-center text-center' : ''}`}>
       <style>{`@keyframes titleShine{0%,60%{background-position:100% 0}100%{background-position:-100% 0}}`}</style>
       <span
-        className={`cursor-pointer font-black tracking-tight select-none ${size === 'sm' ? 'text-xl' : 'text-2xl'}`}
+        className={`cursor-pointer font-black tracking-tight select-none ${size === 'sm' ? 'text-3xl' : 'text-2xl'}`}
         onClick={openDiscoWeb}
         style={logoWhiteStyle}
       >
@@ -243,10 +243,10 @@ export default function SplashScreen({ onEnter }: Props) {
         {/* Mobil: dikey, ortada */}
         <div className="lg:hidden flex flex-col items-center gap-3">
           {user && (
-            <div className="flex items-center gap-1.5">
-              {user.avatarUrl && <img src={user.avatarUrl} alt={user.username} className="h-3.5 w-3.5 rounded-full opacity-45" />}
-              <span className="text-[10px] text-white/25">
-                Hoş geldin, <span className="text-white/40 font-medium">{user.username}</span>
+            <div className="flex items-center gap-2">
+              {user.avatarUrl && <img src={user.avatarUrl} alt={user.username} className="h-5 w-5 rounded-full opacity-50" />}
+              <span className="text-sm text-white/30">
+                Hoş geldin, <span className="text-white/50 font-medium">{user.username}</span>
               </span>
             </div>
           )}
