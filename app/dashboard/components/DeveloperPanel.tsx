@@ -11,7 +11,34 @@ type Props = {
 
 export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClose }: Props) {
   const [loading, setLoading] = useState(false);
+  const [clearLoading, setClearLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const clearSession = async () => {
+    setClearLoading(true);
+    try {
+      // httpOnly cookie'yi sunucu tarafından temizle
+      await fetch(apiUrl('/api/auth/logout'), {
+        method: 'POST',
+        headers: { Accept: 'application/json' },
+        credentials: 'include',
+      });
+    } catch {}
+    // localStorage'ı temizle
+    try {
+      localStorage.removeItem('discord_bearer_token');
+      localStorage.removeItem('discordUser');
+      localStorage.removeItem('auth_ready');
+      localStorage.removeItem('selectedGuildId');
+      localStorage.removeItem('discord_frame_id');
+      localStorage.removeItem('discord_instance_id');
+    } catch {}
+    // client-side erişilebilir cookie'leri temizle
+    ['discord_session', 'csrf_token', 'selected_guild_id'].forEach(name => {
+      document.cookie = `${name}=; Path=/; Max-Age=0`;
+    });
+    window.location.reload();
+  };
 
   const toggleMaintenance = async () => {
     setLoading(true);
@@ -92,6 +119,19 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
                 Kullanıcılar yalnızca karşılama ekranını görebilir.
               </p>
             )}
+          </div>
+
+          {/* Session Temizle */}
+          <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+            <p className="text-sm font-semibold text-white">Oturumu Temizle</p>
+            <p className="mt-0.5 text-xs text-white/40 mb-3">Cookie ve localStorage sıfırlanır, sayfa yenilenir.</p>
+            <button
+              onClick={clearSession}
+              disabled={clearLoading}
+              className="w-full rounded-lg bg-red-500/15 hover:bg-red-500/25 border border-red-500/20 px-3 py-2 text-xs font-semibold text-red-400 transition disabled:opacity-50"
+            >
+              {clearLoading ? 'Temizleniyor...' : 'Oturumu Sıfırla'}
+            </button>
           </div>
 
           {error && (

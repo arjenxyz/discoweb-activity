@@ -39,8 +39,17 @@ function handleLogout(request: NextRequest) {
   return response;
 }
 
-// POST isteği (Normal buton tıklaması)
+// POST isteği — JSON kabul ediyorsa redirect yerine 200 JSON döndür (Activity iframe / fetch desteği)
 export async function POST(request: NextRequest) {
+  const accept = request.headers.get('accept') ?? '';
+  if (accept.includes('application/json')) {
+    const response = NextResponse.json({ ok: true });
+    clearSessionCookies(response);
+    ['discord_user_id', 'discord_access_token', 'selected_guild_id', 'discord_activity_session'].forEach(name => {
+      response.cookies.set(name, '', { httpOnly: true, sameSite: 'lax', maxAge: 0, path: '/' });
+    });
+    return response;
+  }
   return handleLogout(request);
 }
 
