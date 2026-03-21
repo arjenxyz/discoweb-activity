@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { LuChevronRight, LuClock, LuGift, LuHouse, LuMail, LuReceipt, LuStore } from 'react-icons/lu';
+import { LuChevronRight, LuGift, LuHouse, LuMail, LuStore } from 'react-icons/lu';
 import type { MemberProfile, Section } from '../types';
 
 type SidebarNavProps = {
@@ -25,8 +25,6 @@ const NAV_GROUPS = [
     label: 'Hesabım',
     requiresAuth: true,
     items: [
-      { key: 'transactions' as Section, label: 'İşlemler', icon: LuReceipt },
-      { key: 'tracking' as Section, label: 'Takip', icon: LuClock },
       { key: 'mail' as Section, label: 'Mesajlar', icon: LuMail },
     ],
   },
