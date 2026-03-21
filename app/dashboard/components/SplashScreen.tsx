@@ -177,14 +177,14 @@ export default function SplashScreen({ onEnter }: Props) {
   const FooterLine = ({ centered = false }: { centered?: boolean }) => (
     <div className={`flex flex-wrap items-center gap-x-3 gap-y-1 ${centered ? 'justify-center' : ''}`}>
       <div className="flex items-center gap-1.5">
-        <img src="https://cdn.discordapp.com/avatars/1163500308270436442/8c2eeba5e9c137e4f9375bccb0f0bf40.png?size=128" alt="thearjen" className="h-4 w-4 rounded-full opacity-40" />
-        <span className="text-[10px] text-white/25">Created by <span className="text-white/40 font-medium">thearjen</span> · All rights reserved</span>
+        <img src="https://cdn.discordapp.com/avatars/1163500308270436442/8c2eeba5e9c137e4f9375bccb0f0bf40.png?size=128" alt="thearjen" className="h-5 w-5 rounded-full opacity-50" />
+        <span className="text-xs text-white/40">Created by <span className="text-white/60 font-semibold">thearjen</span> · All rights reserved</span>
       </div>
-      <span className="text-white/15 text-[10px] hidden sm:inline">·</span>
+      <span className="text-white/20 text-xs hidden sm:inline">·</span>
       <div className="flex items-center gap-2">
-        <button type="button" onClick={() => openLink('https://discoweb.tech/terms')} className="text-[10px] text-white/20 hover:text-white/45 transition-colors">Kullanım Şartları</button>
-        <span className="text-white/15 text-[10px]">·</span>
-        <button type="button" onClick={() => openLink('https://discoweb.tech/privacy')} className="text-[10px] text-white/20 hover:text-white/45 transition-colors">Gizlilik Politikası</button>
+        <button type="button" onClick={() => openLink('https://discoweb.tech/terms')} className="text-xs text-white/35 hover:text-white/60 transition-colors">Kullanım Şartları</button>
+        <span className="text-white/20 text-xs">·</span>
+        <button type="button" onClick={() => openLink('https://discoweb.tech/privacy')} className="text-xs text-white/35 hover:text-white/60 transition-colors">Gizlilik Politikası</button>
       </div>
     </div>
   );
