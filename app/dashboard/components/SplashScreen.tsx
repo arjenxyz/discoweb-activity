@@ -177,14 +177,14 @@ export default function SplashScreen({ onEnter }: Props) {
   const FooterLine = ({ centered = false }: { centered?: boolean }) => (
     <div className={`flex flex-wrap items-center gap-x-3 gap-y-1 ${centered ? 'justify-center' : ''}`}>
       <div className="flex items-center gap-1.5">
-        <img src="https://cdn.discordapp.com/avatars/1163500308270436442/8c2eeba5e9c137e4f9375bccb0f0bf40.png?size=128" alt="thearjen" className="h-5 w-5 rounded-full opacity-50" />
-        <span className="text-xs text-white/40">Created by <span className="text-white/60 font-semibold">thearjen</span> · All rights reserved</span>
+        <img src="https://cdn.discordapp.com/avatars/1163500308270436442/8c2eeba5e9c137e4f9375bccb0f0bf40.png?size=128" alt="thearjen" className="h-5 w-5 rounded-full opacity-70" />
+        <span className="text-xs text-white/60">Created by <span className="text-white/90 font-semibold">thearjen</span> · All rights reserved</span>
       </div>
-      <span className="text-white/20 text-xs hidden sm:inline">·</span>
+      <span className="text-white/30 text-xs hidden sm:inline">·</span>
       <div className="flex items-center gap-2">
-        <button type="button" onClick={() => openLink('https://discoweb.tech/terms')} className="text-xs text-white/35 hover:text-white/60 transition-colors">Kullanım Şartları</button>
-        <span className="text-white/20 text-xs">·</span>
-        <button type="button" onClick={() => openLink('https://discoweb.tech/privacy')} className="text-xs text-white/35 hover:text-white/60 transition-colors">Gizlilik Politikası</button>
+        <button type="button" onClick={() => openLink('https://discoweb.tech/terms')} className="text-xs text-white/50 hover:text-white/75 transition-colors">Kullanım Şartları</button>
+        <span className="text-white/30 text-xs">·</span>
+        <button type="button" onClick={() => openLink('https://discoweb.tech/privacy')} className="text-xs text-white/50 hover:text-white/75 transition-colors">Gizlilik Politikası</button>
       </div>
     </div>
   );
@@ -218,9 +218,9 @@ export default function SplashScreen({ onEnter }: Props) {
         style={{ opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(18px)', transition: 'opacity 0.7s ease, transform 0.7s ease' }}
       >
         {/* Masaüstü: tek satır sol=footer, sağ=mute+dev+Keşfet */}
-        <div className="hidden lg:flex items-end justify-between gap-4">
+        <div className="hidden lg:flex items-center justify-between gap-4">
           <FooterLine />
-          <div className="flex items-center gap-4 shrink-0">
+          <div className="flex items-center gap-2 shrink-0">
             {user && !(maintenance && !isDeveloper) && (
               <div className="flex items-center gap-2">
                 {user.avatarUrl && <img src={user.avatarUrl} alt={user.username} className="h-6 w-6 rounded-full opacity-70" />}
