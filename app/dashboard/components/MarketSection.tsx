@@ -100,7 +100,7 @@ function Ticker({ listings }: { listings: Listing[] }) {
   if (!listings.length) return null;
   const doubled = [...listings, ...listings, ...listings];
   return (
-    <div className="relative overflow-hidden py-2 border-y border-white/[0.06] bg-black/30 backdrop-blur-sm">
+    <div className="relative overflow-hidden py-2.5 border-y border-white/[0.08] bg-black/40 backdrop-blur-sm">
       <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-black/60 to-transparent z-10 pointer-events-none" />
       <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-black/60 to-transparent z-10 pointer-events-none" />
       <div className="flex gap-8 whitespace-nowrap" style={{ animation: 'tickerMove 40s linear infinite' }}>
@@ -109,9 +109,9 @@ function Ticker({ listings }: { listings: Listing[] }) {
           const up = pct >= 0;
           return (
             <span key={i} className="inline-flex items-center gap-2 text-[11px] shrink-0 font-mono">
-              <span className="text-white/40">{l.name}</span>
-              <span className="text-white/80 font-semibold">{l.market_price.toLocaleString()}</span>
-              <span className={`font-black ${up ? 'text-emerald-400' : 'text-red-400'}`}>
+              <span className="text-white/50 font-semibold">{l.name}</span>
+              <span className="text-white font-black tabular-nums">{l.market_price.toLocaleString()}<span className="text-white/30 text-[9px] ml-0.5">P</span></span>
+              <span className={`font-black text-[10px] px-1.5 py-0.5 rounded-full ${up ? 'text-emerald-300 bg-emerald-500/20' : 'text-red-300 bg-red-500/20'}`}>
                 {up ? '▲' : '▼'} {Math.abs(pct).toFixed(2)}%
               </span>
             </span>
@@ -520,9 +520,10 @@ export default function MarketSection({ userId }: { userId?: string | null }) {
       <style>{CSS}</style>
 
       {/* Background atmosphere */}
-      <div className="absolute top-0 right-0 w-96 h-80 rounded-full blur-[140px] pointer-events-none bg-indigo-600/10" style={{animation:'glowPulse 6s ease-in-out infinite'}} />
-      <div className="absolute bottom-0 left-0 w-64 h-64 rounded-full blur-[120px] pointer-events-none bg-purple-600/8" />
-      <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-indigo-500/30 to-transparent" />
+      <div className="absolute top-0 right-0 w-[500px] h-96 rounded-full blur-[160px] pointer-events-none bg-indigo-600/20" style={{animation:'glowPulse 6s ease-in-out infinite'}} />
+      <div className="absolute bottom-0 left-0 w-80 h-72 rounded-full blur-[130px] pointer-events-none bg-purple-600/15" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] rounded-full blur-[180px] pointer-events-none bg-violet-900/20" />
+      <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent" />
 
       {/* Header */}
       <div className="relative z-10 flex items-center justify-between px-5 sm:px-8 pt-7 pb-5">
@@ -637,51 +638,56 @@ export default function MarketSection({ userId }: { userId?: string | null }) {
                 const circuitBreaker = isCB(listing.circuit_breaker_until);
                 return (
                   <button key={listing.guild_id} onClick={() => openDetail(listing.guild_id)}
-                    className={`w-full group relative overflow-hidden rounded-3xl border transition-all duration-200 active:scale-[.99] text-left p-4 backdrop-blur-sm ${
+                    className={`w-full group relative overflow-hidden rounded-3xl transition-all duration-200 active:scale-[.99] text-left backdrop-blur-sm ${
                       up
-                        ? 'border-emerald-500/15 bg-emerald-500/5 hover:border-emerald-500/30 hover:bg-emerald-500/10'
-                        : 'border-red-500/15 bg-red-500/5 hover:border-red-500/30 hover:bg-red-500/10'
+                        ? 'border border-emerald-500/25 bg-gradient-to-r from-emerald-950/60 to-[#080a0f] hover:border-emerald-500/45 hover:from-emerald-950/80'
+                        : 'border border-red-500/25 bg-gradient-to-r from-red-950/60 to-[#080a0f] hover:border-red-500/45 hover:from-red-950/80'
                     }`}
                     style={{animation:`fadeUp ${.15+idx*.06}s ease-out both`}}>
 
-                    {/* shimmer hover */}
-                    <span className="absolute inset-0 translate-x-[-100%] bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" style={{animation:'shimmer 1.5s ease-in-out infinite'}}/>
+                    {/* left accent bar */}
+                    <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-3xl ${up ? 'bg-gradient-to-b from-emerald-400 to-emerald-600' : 'bg-gradient-to-b from-red-400 to-red-600'}`}/>
 
-                    <div className="relative flex items-center gap-4">
+                    {/* shimmer hover */}
+                    <span className="absolute inset-0 translate-x-[-100%] bg-gradient-to-r from-transparent via-white/[0.04] to-transparent opacity-0 group-hover:opacity-100" style={{animation:'shimmer 1.8s ease-in-out infinite'}}/>
+
+                    <div className="relative flex items-center gap-4 pl-5 pr-4 py-4">
                       {/* Rank + avatar */}
                       <div className="relative flex-shrink-0">
                         <Avatar name={listing.name} size="md"/>
                         {idx < 3 && (
-                          <div className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center shadow-lg shadow-yellow-500/30">
+                          <div className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center shadow-lg shadow-yellow-500/40">
                             <span className="text-[9px] font-black text-black">{idx+1}</span>
                           </div>
                         )}
                       </div>
 
                       {/* Info */}
-                      <div className="flex-1 min-w-0 space-y-1">
+                      <div className="flex-1 min-w-0 space-y-1.5">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-black text-sm text-white">{listing.name}</span>
                           <StatusBadge status={listing.status}/>
                           {listing.has_warning && <LuTriangleAlert className="w-3 h-3 text-yellow-400 flex-shrink-0"/>}
                           {circuitBreaker && <LuZap className="w-3 h-3 text-orange-400 flex-shrink-0"/>}
                         </div>
-                        {/* Price bar */}
+                        {/* Progress bar */}
                         <div className="flex items-center gap-2">
-                          <div className="flex-1 h-1 rounded-full bg-white/[0.07] overflow-hidden">
-                            <div className={`h-full rounded-full transition-all duration-700 ${up ? 'bg-emerald-500' : 'bg-red-500'}`}
-                              style={{width:`${Math.min(Math.abs(pct)*4,100)}%`}}/>
+                          <div className="flex-1 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                            <div className={`h-full rounded-full transition-all duration-700 ${up ? 'bg-gradient-to-r from-emerald-500 to-emerald-400' : 'bg-gradient-to-r from-red-500 to-red-400'}`}
+                              style={{width:`${Math.min(Math.abs(pct)*5+15,100)}%`}}/>
                           </div>
-                          <span className="text-[10px] text-white/25 font-mono tabular-nums flex-shrink-0">{listing.public_lots.toLocaleString()} lot</span>
+                          <span className="text-[10px] text-white/30 font-mono tabular-nums flex-shrink-0">{listing.public_lots.toLocaleString()} lot</span>
                         </div>
                       </div>
 
                       {/* Price */}
-                      <div className="text-right flex-shrink-0 space-y-1.5">
-                        <p className="text-lg font-black text-white tabular-nums leading-none">
-                          {listing.market_price.toLocaleString()}<span className="text-xs text-white/25 ml-0.5 font-bold">P</span>
+                      <div className="text-right flex-shrink-0 space-y-1.5 min-w-[90px]">
+                        <p className="text-xl font-black text-white tabular-nums leading-none tracking-tight">
+                          {listing.market_price.toLocaleString()}<span className="text-[11px] text-white/30 ml-0.5 font-bold">P</span>
                         </p>
-                        <span className={`inline-flex items-center gap-0.5 rounded-full px-2.5 py-1 text-xs font-black ${up ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}>
+                        <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-black border ${
+                          up ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/25' : 'bg-red-500/15 text-red-300 border-red-500/25'
+                        }`}>
                           {up?'▲':'▼'} {Math.abs(pct).toFixed(2)}%
                         </span>
                       </div>

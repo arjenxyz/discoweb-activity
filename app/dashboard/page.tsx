@@ -897,14 +897,15 @@ export default function DashboardPage() {
     await refreshStoreItems(storePage + 1, true);
   };
 
-  const mainWrapperClass = effectiveSection === 'mail'
+  const fullWidthSections = ['mail', 'market'];
+  const mainWrapperClass = fullWidthSections.includes(effectiveSection)
     ? 'mx-0 w-full max-w-full px-0'
     : effectiveSection === 'store'
       ? isActivityEmbed
         ? 'mx-0 w-full max-w-full px-0'
         : 'w-full max-w-4xl px-0 sm:px-6'
       : 'w-full max-w-4xl px-4 sm:px-6';
-  const mainSpacingClass = effectiveSection === 'mail'
+  const mainSpacingClass = fullWidthSections.includes(effectiveSection)
     ? 'py-0 gap-0'
     : effectiveSection === 'store'
       ? isActivityEmbed
