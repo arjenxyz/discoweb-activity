@@ -407,6 +407,114 @@ export async function POST(request: Request) {
       // Hazine hatası satın almayı durdurmaz — sessizce logla
       console.error('Treasury update failed:', e);
     }
+
+    // Referral pasif gelir: alıcının aktif referral'ı varsa işle
+    try {
+      const { data: usage } = await supabase
+        .from('referral_usages')
+        .select('id, code_id, activated_at, passive_income_until, passive_income_rate, pending_amount')
+        .eq('referred_user_id', userId)
+        .eq('guild_id', selectedGuildId)
+        .maybeSingle();
+
+      if (usage) {
+        const now = new Date();
+
+        // İlk harcama — aktivasyon
+        if (!usage.activated_at) {
+          const passiveUntil = new Date(now);
+          passiveUntil.setMonth(passiveUntil.getMonth() + 3);
+          await supabase
+            .from('referral_usages')
+            .update({
+              activated_at: now.toISOString(),
+              passive_income_until: passiveUntil.toISOString(),
+            })
+            .eq('id', usage.id);
+        }
+
+        // Aktif dönemdeyse pasif gelir öde
+        const incomeUntil = usage.passive_income_until
+          ? new Date(usage.passive_income_until)
+          : null;
+        const isActive = incomeUntil && now <= incomeUntil;
+
+        if (isActive) {
+          const rate = Number(usage.passive_income_rate ?? 0.10);
+          const bonus = Number((finalPrice * rate).toFixed(2));
+
+          // Kodu oluşturan (referrer) kullanıcıyı bul
+          const { data: codeRow } = await supabase
+            .from('referral_codes')
+            .select('user_id')
+            .eq('id', usage.code_id)
+            .maybeSingle();
+
+          if (codeRow?.user_id) {
+            const referrerId = codeRow.user_id;
+
+            // Hazineden ödeme dene
+            const { data: treasury } = await supabase
+              .from('server_treasury')
+              .select('balance')
+              .eq('guild_id', selectedGuildId)
+              .maybeSingle();
+
+            const treasuryBalance = Number(treasury?.balance ?? 0);
+
+            if (treasuryBalance >= bonus) {
+              // Hazineden düş + referrer'a öde
+              await supabase
+                .from('server_treasury')
+                .update({ balance: Number((treasuryBalance - bonus).toFixed(2)) })
+                .eq('guild_id', selectedGuildId);
+
+              // Referrer cüzdanını güncelle
+              const { data: refWallet } = await supabase
+                .from('member_wallets')
+                .select('balance')
+                .eq('guild_id', selectedGuildId)
+                .eq('user_id', referrerId)
+                .maybeSingle();
+
+              if (refWallet) {
+                await supabase
+                  .from('member_wallets')
+                  .update({
+                    balance: Number((Number(refWallet.balance) + bonus).toFixed(2)),
+                    updated_at: new Date().toISOString(),
+                  })
+                  .eq('guild_id', selectedGuildId)
+                  .eq('user_id', referrerId);
+              } else {
+                await supabase.from('member_wallets').insert({
+                  guild_id: selectedGuildId,
+                  user_id: referrerId,
+                  balance: bonus,
+                });
+              }
+
+              // Ledger kaydı
+              await supabase.from('wallet_ledger').insert({
+                guild_id: selectedGuildId,
+                user_id: referrerId,
+                amount: bonus,
+                type: 'referral_bonus',
+                metadata: { from_user_id: userId, usage_id: usage.id, order_id: order?.id },
+              });
+            } else {
+              // Hazine yetersiz — pending'e ekle
+              await supabase
+                .from('referral_usages')
+                .update({ pending_amount: Number((Number(usage.pending_amount ?? 0) + bonus).toFixed(2)) })
+                .eq('id', usage.id);
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Referral passive income failed:', e);
+    }
   }
 
   // Calculate expires_at for timed roles

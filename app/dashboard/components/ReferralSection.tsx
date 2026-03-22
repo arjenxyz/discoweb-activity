@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { siteConfig } from '@/config/site';
+import { apiUrl } from '@/lib/api';
 
 type ReferralStatus = {
   type: 'success' | 'error';
@@ -24,8 +25,59 @@ export default function ReferralSection() {
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [inviteFallbackUrl, setInviteFallbackUrl] = useState<string | null>(null);
 
+  // Yüksek Ekonomi pasif gelir referral state'leri
+  const [advancedCode, setAdvancedCode] = useState<string | null>(null);
+  const [advancedCodeUsage, setAdvancedCodeUsage] = useState(0);
+  const [advancedCodeCopied, setAdvancedCodeCopied] = useState(false);
+  const [advancedInput, setAdvancedInput] = useState('');
+  const [advancedSubmitting, setAdvancedSubmitting] = useState(false);
+  const [advancedStatus, setAdvancedStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
   const discordSdkRef = useRef<any | null>(null);
   const sdkReadyRef = useRef(false);
+
+  // Yüksek Ekonomi referral kodunu yükle
+  useEffect(() => {
+    fetch(apiUrl('/api/member/referral-code'))
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.economy_tier === 'advanced' && d.code) {
+          setAdvancedCode(d.code);
+          setAdvancedCodeUsage(d.usage_count ?? 0);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleAdvancedCodeSubmit = async () => {
+    const code = advancedInput.trim().toUpperCase();
+    if (!code) return;
+    setAdvancedSubmitting(true);
+    setAdvancedStatus(null);
+    try {
+      const res = await fetchWithCreds('/api/member/referral-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const msgs: Record<string, string> = {
+          invalid_code: 'Geçersiz kod.',
+          own_code: 'Kendi kodunu kullanamazsın.',
+          already_used: 'Bu sunucuda zaten bir davet kodu kullandın.',
+          not_advanced: 'Bu sunucu Yüksek Ekonomi kademesinde değil.',
+        };
+        throw new Error(msgs[data.error] ?? 'Kod kullanılamadı.');
+      }
+      setAdvancedStatus({ type: 'success', message: 'Kod kaydedildi! İlk harcamanızda aktif olacak.' });
+      setAdvancedInput('');
+    } catch (e: unknown) {
+      setAdvancedStatus({ type: 'error', message: e instanceof Error ? e.message : 'Bir hata oluştu.' });
+    } finally {
+      setAdvancedSubmitting(false);
+    }
+  };
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -355,6 +407,62 @@ export default function ReferralSection() {
           )}
         </div>
       </div>
+      {/* Yüksek Ekonomi Pasif Gelir Referral */}
+      {advancedCode !== null && (
+        <div className="rounded-3xl border border-blue-500/20 bg-blue-500/[0.04] p-6">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-blue-400 mb-1">Yüksek Ekonomi · Pasif Gelir</p>
+          <h2 className="text-lg font-black text-white">Davet Kodu</h2>
+          <p className="mt-1 text-sm text-white/40">
+            Arkadaşların bu kodu kullanırsa, ilk 3 ay boyunca yaptıkları harcamaların <span className="text-blue-300 font-semibold">%10'u</span> sunucu hazinesinden sana akar.
+          </p>
+
+          <div className="mt-4 flex items-center gap-3">
+            <div className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+              <p className="text-xl font-black tracking-widest text-white">{advancedCode}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                navigator.clipboard.writeText(advancedCode).catch(() => {});
+                setAdvancedCodeCopied(true);
+                setTimeout(() => setAdvancedCodeCopied(false), 2000);
+              }}
+              className="rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-blue-500"
+            >
+              {advancedCodeCopied ? '✓ Kopyalandı' : 'Kopyala'}
+            </button>
+          </div>
+
+          <p className="mt-2 text-xs text-white/25">{advancedCodeUsage} kişi bu kodu kullandı</p>
+
+          <div className="mt-4 border-t border-white/[0.06] pt-4">
+            <p className="text-sm font-semibold text-white mb-2">Davet Kodu Kullan</p>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={advancedInput}
+                onChange={(e) => setAdvancedInput(e.target.value.toUpperCase())}
+                placeholder="Kod girin"
+                maxLength={8}
+                className="flex-1 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/20 outline-none focus:border-blue-500/50 uppercase"
+              />
+              <button
+                type="button"
+                disabled={advancedSubmitting || !advancedInput}
+                onClick={handleAdvancedCodeSubmit}
+                className="rounded-xl bg-white/10 px-4 py-2 text-sm font-bold text-white transition hover:bg-white/15 disabled:opacity-40"
+              >
+                {advancedSubmitting ? '...' : 'Kullan'}
+              </button>
+            </div>
+            {advancedStatus && (
+              <p className={`mt-2 text-xs ${advancedStatus.type === 'success' ? 'text-emerald-400' : 'text-red-400'}`}>
+                {advancedStatus.message}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
     </section>
   );
 }
