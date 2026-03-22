@@ -24,6 +24,7 @@ import {
 } from 'react-icons/lu';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { apiUrl } from '@/lib/api';
+import { VideoBackground } from '@/app/dashboard/components/VideoBackground';
 
 /* ─── Types ─────────────────────────────────────────── */
 type Listing = {
@@ -152,6 +153,7 @@ const CSS = `
 
 /* ─── Main ───────────────────────────────────────────── */
 export default function MarketSection({ userId }: { userId?: string | null }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<SelectedListing | null>(null);
@@ -261,8 +263,8 @@ export default function MarketSection({ userId }: { userId?: string | null }) {
   if (loading) return (
     <section className="relative min-h-[400px] overflow-hidden bg-[#080a0f]">
       <style>{CSS}</style>
-      <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/20 via-transparent to-purple-900/15 pointer-events-none" />
-      <div className="p-5 sm:p-8 space-y-3">
+      <VideoBackground videoRef={videoRef} />
+      <div className="relative z-10 p-5 sm:p-8 space-y-3">
         <div className="h-6 w-44 rounded-xl bg-white/8 animate-pulse" />
         <SkeletonCard /><SkeletonCard /><SkeletonCard />
       </div>
@@ -274,7 +276,8 @@ export default function MarketSection({ userId }: { userId?: string | null }) {
     if (detailLoading && !selected) return (
       <section className="relative min-h-[400px] overflow-hidden bg-[#080a0f]">
         <style>{CSS}</style>
-        <div className="p-5 sm:p-8 space-y-3 mt-4"><SkeletonCard /><SkeletonCard /></div>
+        <VideoBackground videoRef={videoRef} />
+        <div className="relative z-10 p-5 sm:p-8 space-y-3 mt-4"><SkeletonCard /><SkeletonCard /></div>
       </section>
     );
     if (!selected) return null;
@@ -292,6 +295,7 @@ export default function MarketSection({ userId }: { userId?: string | null }) {
     return (
       <section className="relative overflow-hidden bg-[#080a0f]">
         <style>{CSS}</style>
+        <VideoBackground videoRef={videoRef} />
 
         {/* Hero glow */}
         <div className={`absolute top-0 inset-x-0 h-72 pointer-events-none transition-all duration-1000 ${up ? 'bg-gradient-to-b from-emerald-500/12 to-transparent' : 'bg-gradient-to-b from-red-500/12 to-transparent'}`} />
@@ -518,12 +522,11 @@ export default function MarketSection({ userId }: { userId?: string | null }) {
   return (
     <section className="relative overflow-hidden bg-[#080a0f]">
       <style>{CSS}</style>
+      <VideoBackground videoRef={videoRef} />
 
-      {/* Background atmosphere */}
-      <div className="absolute top-0 right-0 w-[500px] h-96 rounded-full blur-[160px] pointer-events-none bg-indigo-600/20" style={{animation:'glowPulse 6s ease-in-out infinite'}} />
-      <div className="absolute bottom-0 left-0 w-80 h-72 rounded-full blur-[130px] pointer-events-none bg-purple-600/15" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] rounded-full blur-[180px] pointer-events-none bg-violet-900/20" />
-      <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent" />
+      {/* Colour tint overlay — video üstüne renk katar */}
+      <div className="absolute inset-0 bg-indigo-950/30 pointer-events-none z-[1]" />
+      <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent z-[2]" />
 
       {/* Header */}
       <div className="relative z-10 flex items-center justify-between px-5 sm:px-8 pt-7 pb-5">
