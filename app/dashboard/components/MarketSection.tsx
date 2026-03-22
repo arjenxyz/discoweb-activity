@@ -215,7 +215,7 @@ export default function MarketSection({ userId, economyApproved }: { userId?: st
     setEcoLoading(true);
     const params = new URLSearchParams();
     if (userId) params.set('user_id', userId);
-    fetch(apiUrl(`/api/member/economy-status?${params}`), { credentials: 'include' })
+    fetchWithCreds(`/api/member/economy-status?${params}`)
       .then(r => r.json()).then(d => setEcoStatus(d as EcoStatus)).catch(() => {}).finally(() => setEcoLoading(false));
   }, [economyApproved, userId]);
 
@@ -609,8 +609,8 @@ export default function MarketSection({ userId, economyApproved }: { userId?: st
       setEcoActionLoading(true);
       setEcoActionMsg(null);
       try {
-        const res = await fetch(apiUrl('/api/member/economy-status'), {
-          method: 'POST', credentials: 'include',
+        const res = await fetchWithCreds('/api/member/economy-status', {
+          method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action }),
         });
@@ -633,7 +633,7 @@ export default function MarketSection({ userId, economyApproved }: { userId?: st
             setEcoActionMsg('✅ Başvuru gönderildi. Developer inceleyecek (max 7 gün).');
           }
           // Durumu yenile
-          const r2 = await fetch(apiUrl('/api/member/economy-status'), { credentials: 'include' });
+          const r2 = await fetchWithCreds('/api/member/economy-status');
           if (r2.ok) setEcoStatus(await r2.json() as EcoStatus);
         }
       } catch { setEcoActionMsg('Bağlantı hatası.'); }
