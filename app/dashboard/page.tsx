@@ -962,8 +962,8 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0b0d12] text-white overflow-auto">
-      <div className="flex h-screen min-h-0">
+    <div className="h-screen bg-[#0b0d12] text-white overflow-hidden flex flex-col">
+      <div className="flex flex-1 min-h-0">
         {/* Sidebar */}
         {effectiveSection !== 'mail' && !unauthorized && (
           <SidebarNav
@@ -975,7 +975,7 @@ export default function DashboardPage() {
         )}
 
         {/* Sağ taraf: header + main */}
-        <div className="flex flex-1 flex-col min-w-0 min-h-0 h-full bg-[#0e1018]">
+        <div className="flex flex-1 flex-col min-w-0 min-h-0 overflow-hidden bg-[#0e1018]">
         {effectiveSection !== 'mail' && (
         <DashboardHeader
           unauthorized={unauthorized}
