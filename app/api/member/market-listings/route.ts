@@ -65,26 +65,34 @@ export async function GET(request: Request) {
     .in('status', ['approved', 'suspended'])
     .order('market_price', { ascending: false });
 
-  // Her listing için aktif ceza sayısını çek
   const guildIds = (listings ?? []).map((l) => l.guild_id);
-  const { data: penalties } = guildIds.length > 0
-    ? await supabase
-        .from('server_penalties')
-        .select('guild_id, type')
-        .in('guild_id', guildIds)
-        .eq('is_active', true)
-    : { data: [] };
+
+  // Paralel: cezalar + sunucu isimleri
+  const [penaltiesRes, serversRes] = await Promise.all([
+    guildIds.length > 0
+      ? supabase.from('server_penalties').select('guild_id, type').in('guild_id', guildIds).eq('is_active', true)
+      : Promise.resolve({ data: [] }),
+    guildIds.length > 0
+      ? supabase.from('servers').select('discord_id, name').in('discord_id', guildIds)
+      : Promise.resolve({ data: [] }),
+  ]);
 
   const penaltyMap: Record<string, string[]> = {};
-  for (const p of penalties ?? []) {
+  for (const p of penaltiesRes.data ?? []) {
     penaltyMap[p.guild_id] = penaltyMap[p.guild_id] ?? [];
     penaltyMap[p.guild_id].push(p.type);
+  }
+
+  const nameMap: Record<string, string> = {};
+  for (const s of serversRes.data ?? []) {
+    nameMap[s.discord_id] = s.name ?? s.discord_id;
   }
 
   const result = (listings ?? []).map((l) => ({
     ...l,
     active_penalties: penaltyMap[l.guild_id] ?? [],
     has_warning: (penaltyMap[l.guild_id] ?? []).length > 0,
+    name: nameMap[l.guild_id] ?? l.guild_id,
   }));
 
   return NextResponse.json({ listings: result });

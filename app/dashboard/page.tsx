@@ -29,6 +29,7 @@ import ActivityReadinessGate, { type ActivityReadiness } from './components/Acti
 import SplashScreen from './components/SplashScreen';
 import SidebarNav from './components/SidebarNav';
 import { sanitizeHtml } from '@/lib/sanitizeHtml';
+import { useRealtimeDashboard } from '@/lib/utils/useRealtimeDashboard';
 import type {
   MemberProfile,
   Notification,
@@ -594,6 +595,26 @@ export default function DashboardPage() {
 
     loadStoreItems();
   }, [activityReadinessLoading, isBlockedByReadiness, refreshStoreItems, unauthorized]);
+
+  // Realtime abonelikleri
+  useRealtimeDashboard({
+    guildId: getCurrentGuildId(),
+    userId: profile?.userId ?? null,
+    onWalletUpdate: (balance) => setWalletBalance(balance),
+    onMailInsert: () => { void refreshMailRef.current?.(); },
+    onNotificationInsert: () => {
+      void fetchWithCreds(apiUrl('/api/notifications'))
+        .then((r) => r.ok ? r.json() : null)
+        .then((data: unknown) => { if (Array.isArray(data)) setNotifications(data as Notification[]); })
+        .catch(() => {});
+    },
+    onOverviewStatsUpdate: () => {
+      void fetchWithCreds('/api/member/overview')
+        .then((r) => r.ok ? r.json() : null)
+        .then((data: unknown) => { if (data && typeof data === 'object') setOverviewStats(data as OverviewStats); })
+        .catch(() => {});
+    },
+  });
 
   useEffect(() => {
     if (activityReadinessLoading || isBlockedByReadiness) return;
@@ -1180,7 +1201,7 @@ export default function DashboardPage() {
               <DiscoverSection />
             )}
             {effectiveSection === 'market' && (
-              <MarketSection />
+              <MarketSection userId={profile?.userId} />
             )}
             {effectiveSection === 'treasury' && (
               <div className="p-4 sm:p-6 lg:p-8">
