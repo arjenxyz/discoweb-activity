@@ -64,10 +64,10 @@ export default function OverviewSection({
   const totalsSince = (overviewStats as OverviewStatsExpanded)?.totalsSinceVerified;
   const verifiedSince = (overviewStats as OverviewStatsExpanded)?.verifiedSince;
 
-  const card = 'rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4 sm:p-5';
+  const card = 'rounded-2xl border border-white/[0.10] bg-white/[0.05] p-4 sm:p-5';
 
   return (
-    <section className="flex flex-col gap-4 p-3 sm:p-6">
+    <section className="flex flex-col gap-4 p-4 sm:p-6">
 
       {overviewLoading ? (
         <div className="flex items-center gap-3 py-12 text-white/30">
@@ -186,13 +186,13 @@ export default function OverviewSection({
                 active: isBooster,
               },
             ].map(({ label, value, sub, icon, color, active }) => (
-              <div key={label} className={`rounded-2xl border p-4 transition-colors ${active ? 'border-white/[0.08] bg-white/[0.03]' : 'border-white/[0.04] bg-white/[0.015]'}`}>
+              <div key={label} className={`rounded-2xl border p-4 transition-colors ${active ? 'border-white/[0.12] bg-white/[0.06]' : 'border-white/[0.06] bg-white/[0.02]'}`}>
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-[10px] font-medium text-white/30 uppercase tracking-wider">{label}</span>
+                  <span className="text-[10px] font-semibold text-white/40 uppercase tracking-wider">{label}</span>
                   <span className={color}>{icon}</span>
                 </div>
-                <p className={`text-xl sm:text-2xl font-black tabular-nums ${active ? 'text-white' : 'text-white/25'}`}>{value}</p>
-                <p className="mt-0.5 text-[10px] text-white/25">{sub}</p>
+                <p className={`text-xl sm:text-2xl font-black tabular-nums ${active ? 'text-white' : 'text-white/20'}`}>{value}</p>
+                <p className="mt-0.5 text-[10px] text-white/30">{sub}</p>
               </div>
             ))}
           </div>

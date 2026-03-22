@@ -879,8 +879,8 @@ export default function DashboardPage() {
     : effectiveSection === 'store'
       ? isActivityEmbed
         ? 'mx-0 w-full max-w-full px-0'
-        : 'w-full px-0 sm:px-6'
-      : 'w-full px-4 sm:px-6';
+        : 'w-full max-w-4xl px-0 sm:px-6'
+      : 'w-full max-w-4xl px-4 sm:px-6';
   const mainSpacingClass = effectiveSection === 'mail'
     ? 'py-0 gap-0'
     : effectiveSection === 'store'
@@ -948,7 +948,7 @@ export default function DashboardPage() {
         )}
 
         {/* Sağ taraf: header + main */}
-        <div className="flex flex-1 flex-col min-w-0 min-h-0 h-full">
+        <div className="flex flex-1 flex-col min-w-0 min-h-0 h-full bg-[#0e1018]">
         {effectiveSection !== 'mail' && (
         <DashboardHeader
           unauthorized={unauthorized}

@@ -147,7 +147,7 @@ export default function DashboardHeader({
       />
 
       {/* Header */}
-      <header className={`md:fixed inset-x-0 top-0 flex h-16 items-center bg-[#0b0d12]/90 backdrop-blur-xl border-b border-white/[0.06] px-4 sm:px-6 transition-all duration-200 ${
+      <header className={`md:fixed inset-x-0 top-0 flex h-16 items-center bg-[#0e1018]/95 backdrop-blur-xl border-b border-white/[0.06] px-4 sm:px-6 transition-all duration-200 ${
         isProfileOpen ? 'z-[9991]' : 'z-30'
       }`}>
 
