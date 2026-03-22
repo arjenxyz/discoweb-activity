@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
-import { LuHouse, LuMail, LuStore, LuSettings, LuChevronRight, LuTicket, LuSend, LuTag, LuTrendingUp } from 'react-icons/lu';
+import { LuHouse, LuMail, LuStore, LuSettings, LuChevronRight, LuTicket, LuSend, LuTag, LuTrendingUp, LuChartBar } from 'react-icons/lu';
 import Image from 'next/image';
 import DiscordAgreementButton from '@/components/DiscordAgreementButton';
 import type { Notification, Section } from '../types';
@@ -57,6 +57,7 @@ type DashboardHeaderProps = {
     showIndicator: boolean;
   };
   mailUnreadCount?: number;
+  onOpenLeaderboard?: () => void;
 };
 
 const RANDOM_GIFS = [
@@ -73,6 +74,7 @@ export default function DashboardHeader({
   walletBalance,
   loginUrl,
   navigation,
+  onOpenLeaderboard,
   profile,
   server,
   mailUnreadCount = 0,
@@ -258,7 +260,7 @@ export default function DashboardHeader({
                       <LuChevronRight className="h-3.5 w-3.5 text-white/30" />
                     </button>
 
-                    <div className="grid grid-cols-3 gap-1.5 pt-1">
+                    <div className="grid grid-cols-4 gap-1.5 pt-1">
                       <button
                         type="button"
                         onClick={settings.onOpenTransfer}
@@ -282,6 +284,14 @@ export default function DashboardHeader({
                       >
                         <LuTrendingUp className="h-3.5 w-3.5" />
                         Kazanç
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setIsProfileOpen(false); onOpenLeaderboard?.(); }}
+                        className="flex flex-col items-center gap-1 rounded-xl border border-white/[0.06] bg-white/[0.03] py-2.5 text-xs text-white/60 transition hover:bg-white/[0.07] hover:text-white"
+                      >
+                        <LuChartBar className="h-3.5 w-3.5" />
+                        Sıralama
                       </button>
                     </div>
                   </div>
