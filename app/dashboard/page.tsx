@@ -1402,7 +1402,15 @@ export default function DashboardPage() {
                         });
                         const d = await res.json() as { error?: string; mari_received?: number; new_mari_balance?: number };
                         if (!res.ok) {
-                          setMariConvertError(d.error ?? 'Dönüşüm başarısız');
+                          const errorMap: Record<string, string> = {
+                            economy_not_approved: 'Bu sunucuda Yüksek Ekonomi aktif değil. Mari dönüşümü yalnızca Yüksek Ekonomi onaylı sunucularda yapılabilir.',
+                            insufficient_papel: 'Yetersiz Papel bakiyesi.',
+                            server_daily_limit: 'Bugün bu sunucudan daha fazla dönüşüm yapamazsın.',
+                            global_daily_limit: 'Günlük global Mari limitine ulaştın.',
+                            amount_too_small: 'Miktar çok küçük.',
+                            no_selected_guild: 'Sunucu seçili değil.',
+                          };
+                          setMariConvertError(errorMap[d.error ?? ''] ?? d.error ?? 'Dönüşüm başarısız');
                         } else {
                           setMariConvertSuccess(`${(d.mari_received ?? 0).toFixed(6)} Mari edinildi!`);
                           setMariBalance(d.new_mari_balance ?? mariBalance);
