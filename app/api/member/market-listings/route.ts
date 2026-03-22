@@ -58,10 +58,10 @@ export async function GET(request: Request) {
     });
   }
 
-  // Tüm borsadaki sunucular
+  // Tüm borsadaki sunucular — V2: activity_score ve Mari fiyatları
   const { data: listings } = await supabase
     .from('server_listings')
-    .select('guild_id, status, market_price, ipo_price, total_lots, founder_lots, public_lots, listed_at, circuit_breaker_until')
+    .select('guild_id, status, market_price, ipo_price, total_lots, founder_lots, public_lots, listed_at, activity_score')
     .in('status', ['approved', 'suspended'])
     .order('market_price', { ascending: false });
 
@@ -69,13 +69,13 @@ export async function GET(request: Request) {
 
   const botToken = process.env.DISCORD_BOT_TOKEN;
 
-  // Paralel: cezalar + sunucu isimleri + Discord ikonları
+  // Paralel: cezalar + sunucu bilgileri (mari_rate dahil) + Discord ikonları
   const [penaltiesRes, serversRes, ...iconResults] = await Promise.all([
     guildIds.length > 0
       ? supabase.from('server_penalties').select('guild_id, type').in('guild_id', guildIds).eq('is_active', true)
       : Promise.resolve({ data: [] }),
     guildIds.length > 0
-      ? supabase.from('servers').select('discord_id, name').in('discord_id', guildIds)
+      ? supabase.from('servers').select('discord_id, name, daily_papel_cap, mari_rate_override').in('discord_id', guildIds)
       : Promise.resolve({ data: [] }),
     ...(botToken && guildIds.length > 0
       ? guildIds.map((id) =>
@@ -100,9 +100,13 @@ export async function GET(request: Request) {
     penaltyMap[p.guild_id].push(p.type);
   }
 
-  const nameMap: Record<string, string> = {};
-  for (const s of serversRes.data ?? []) {
-    nameMap[s.discord_id] = s.name ?? s.discord_id;
+  const serverMap: Record<string, { name: string; mari_rate: number }> = {};
+  for (const s of (serversRes.data ?? []) as Array<{
+    discord_id: string; name: string;
+    daily_papel_cap: number; mari_rate_override: number | null;
+  }>) {
+    const mariRate = s.mari_rate_override ?? ((s.daily_papel_cap ?? 500) / 2);
+    serverMap[s.discord_id] = { name: s.name ?? s.discord_id, mari_rate: mariRate };
   }
 
   const iconMap: Record<string, string | null> = {};
@@ -114,7 +118,8 @@ export async function GET(request: Request) {
     ...l,
     active_penalties: penaltyMap[l.guild_id] ?? [],
     has_warning: (penaltyMap[l.guild_id] ?? []).length > 0,
-    name: nameMap[l.guild_id] ?? l.guild_id,
+    name: serverMap[l.guild_id]?.name ?? l.guild_id,
+    mari_rate: serverMap[l.guild_id]?.mari_rate ?? 1, // 1 MRI = X papel
     icon_url: iconMap[l.guild_id] ?? null,
   }));
 

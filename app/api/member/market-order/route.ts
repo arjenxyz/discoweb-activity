@@ -2,14 +2,15 @@
  * POST /api/member/market-order — Alış veya satış emri ver
  * DELETE /api/member/market-order — Emir iptal et
  *
- * Emir eşleştirme (matching) aynı işlemde yapılır:
- *   - Alış emrinde: fiyat >= sell_price olan açık satış emirleri çekilir, ACID transaction içinde eşleştirilir
- *   - Satış emrinde: fiyat <= buy_price olan açık alış emirleri çekilir, ACID transaction içinde eşleştirilir
+ * V2 — Mari Ekonomisi:
+ *   - Tüm fiyatlar Mari (MRI) cinsinden
+ *   - Bakiye: member_wallets.mari_balance kullanılır (papel değil)
+ *   - Circuit breaker kaldırıldı (pump&dump tasarım özelliği)
  *
- * Platform komisyonu: %2 (wallet_ledger: 'market_fee')
- * Max 3 farklı sunucuya yatırım limiti (alış emirlerinde kontrol edilir)
+ * Platform komisyonu: %2
+ * Max 3 farklı sunucuya yatırım limiti
  * Kendi sunucusuna yatırım engeli
- * Reserved balance: emir açılınca reserved_balance += total, kapanınca --
+ * Reserved Mari: emir açılınca mari_reserved += total, kapanınca --
  */
 
 import { NextResponse } from 'next/server';
@@ -46,8 +47,19 @@ export async function POST(request: Request) {
   const supabase = getSupabase();
   if (!supabase) return NextResponse.json({ error: 'missing_service_role' }, { status: 500 });
 
-  const guildId = await getSelectedGuildId(request);
-  if (!guildId) return NextResponse.json({ error: 'no_selected_guild' }, { status: 400 });
+  // investGuildId: yatırım yapılan sunucu (URL param)
+  // walletGuildId: paranın olduğu sunucu (cookie — kullanıcının aktif sunucusu)
+  const url = new URL(request.url);
+  const investGuildId = url.searchParams.get('guild_id');
+  if (!investGuildId) return NextResponse.json({ error: 'no_invest_guild' }, { status: 400 });
+
+  // Cookie/env'den al (query param'ı atla — investGuildId farklı sunucu olabilir)
+  const { cookies } = await import('next/headers');
+  const cookieStore = await cookies();
+  const walletGuildId = cookieStore.get('selected_guild_id')?.value
+    ?? process.env.DISCORD_GUILD_ID
+    ?? process.env.NEXT_PUBLIC_DISCORD_GUILD_ID
+    ?? investGuildId; // fallback: aynı sunucu
 
   const body = (await request.json()) as {
     type?: 'buy' | 'sell';
@@ -56,6 +68,7 @@ export async function POST(request: Request) {
   };
 
   const { type, lot_count, price_per_lot } = body;
+  const guildId = investGuildId; // listing/holdings/orders için
 
   if (!type || !['buy', 'sell'].includes(type)) {
     return NextResponse.json({ error: 'invalid_type' }, { status: 400 });
@@ -115,25 +128,31 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'exceeds_max_order_lots', max: maxLots }, { status: 400 });
     }
 
-    // Kullanıcının yeterli bakiyesi var mı? (reserved_balance dahil)
-    const totalCost = lot_count * price_per_lot;
+    // V2: Mari bakiyesi kontrolü (walletGuildId — kullanıcının aktif sunucusu)
+    const totalCostMari = lot_count * price_per_lot; // Mari cinsinden
     const { data: wallet } = await supabase
       .from('member_wallets')
-      .select('balance, reserved_balance')
-      .eq('guild_id', guildId)
+      .select('mari_balance, mari_reserved')
+      .eq('guild_id', walletGuildId)
       .eq('user_id', userId)
       .maybeSingle();
 
-    const available = (wallet?.balance ?? 0) - (wallet?.reserved_balance ?? 0);
-    if (available < totalCost) {
-      return NextResponse.json({ error: 'insufficient_balance', available }, { status: 400 });
+    const availableMari = (wallet?.mari_balance ?? 0) - (wallet?.mari_reserved ?? 0);
+    if (availableMari < totalCostMari) {
+      return NextResponse.json({
+        error: 'insufficient_balance',
+        available: availableMari,
+        required: totalCostMari,
+        currency: 'MRI',
+        wallet_guild: walletGuildId,
+      }, { status: 400 });
     }
 
-    // Reserved balance artır
+    // Reserved Mari artır
     await supabase
       .from('member_wallets')
-      .update({ reserved_balance: (wallet?.reserved_balance ?? 0) + totalCost })
-      .eq('guild_id', guildId)
+      .update({ mari_reserved: (wallet?.mari_reserved ?? 0) + totalCostMari })
+      .eq('guild_id', walletGuildId)
       .eq('user_id', userId);
 
   } else {
@@ -182,14 +201,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'order_create_failed' }, { status: 500 });
   }
 
-  // Büyük işlem logu (eşik: 10.000 lot VEYA 1.000.000 Papel)
+  // Büyük işlem logu (eşik: 10.000 lot VEYA 500 MRI)
   const totalValue = lot_count * price_per_lot;
-  if (lot_count >= 10000 || totalValue >= 1_000_000) {
+  if (lot_count >= 10000 || totalValue >= 500) {
     devLog('buyuk_islemler', DevLogEmbeds.buyukIslem(guildId, userId, type, lot_count, totalValue));
   }
 
   // Eşleştirme dene
-  await matchOrders(supabase, guildId, order.id, type, price_per_lot, userId);
+  await matchOrders(supabase, guildId, order.id, type, price_per_lot, userId, walletGuildId);
 
   return NextResponse.json({ ok: true, order_id: order.id });
 }
@@ -233,19 +252,19 @@ export async function DELETE(request: Request) {
     .update({ status: 'cancelled' })
     .eq('id', orderId);
 
-  // Alış emriyse reserved_balance serbest bırak
+  // V2: Alış emriyse mari_reserved serbest bırak
   if (order.type === 'buy') {
-    const refund = order.remaining_lots * order.price_per_lot;
+    const refund = order.remaining_lots * order.price_per_lot; // MRI cinsinden
     const { data: wallet } = await supabase
       .from('member_wallets')
-      .select('reserved_balance')
+      .select('mari_reserved')
       .eq('guild_id', order.guild_id)
       .eq('user_id', userId)
       .maybeSingle();
 
     await supabase
       .from('member_wallets')
-      .update({ reserved_balance: Math.max(0, (wallet?.reserved_balance ?? 0) - refund) })
+      .update({ mari_reserved: Math.max(0, (wallet?.mari_reserved ?? 0) - refund) })
       .eq('guild_id', order.guild_id)
       .eq('user_id', userId);
   }
@@ -265,6 +284,7 @@ async function matchOrders(
   orderType: 'buy' | 'sell',
   newPrice: number,
   newUserId: string,
+  newUserWalletGuildId?: string, // alıcının kendi sunucusu (çapraz yatırım için)
 ) {
   const counterType = orderType === 'buy' ? 'sell' : 'buy';
 
@@ -377,39 +397,40 @@ async function matchOrders(
       updated_at: new Date().toISOString(),
     }).eq('user_id', sellUserId).eq('guild_id', guildId);
 
-    // Alıcının wallet'ından para çık (reserved_balance düş + ledger)
+    // V2: Alıcının Mari bakiyesinden düş (çapraz yatırım: kendi sunucusunun wallet'ı)
+    const buyerWalletGuild = (buyUserId === newUserId && newUserWalletGuildId) ? newUserWalletGuildId : guildId;
     const { data: buyerWallet } = await supabase
       .from('member_wallets')
-      .select('balance, reserved_balance')
-      .eq('guild_id', guildId)
+      .select('mari_balance, mari_reserved')
+      .eq('guild_id', buyerWalletGuild)
       .eq('user_id', buyUserId)
       .maybeSingle();
 
     await supabase.from('member_wallets').update({
-      balance: (buyerWallet?.balance ?? 0) - totalAmount,
-      reserved_balance: Math.max(0, (buyerWallet?.reserved_balance ?? 0) - totalAmount),
+      mari_balance: Math.max(0, (buyerWallet?.mari_balance ?? 0) - totalAmount),
+      mari_reserved: Math.max(0, (buyerWallet?.mari_reserved ?? 0) - totalAmount),
       updated_at: new Date().toISOString(),
-    }).eq('guild_id', guildId).eq('user_id', buyUserId);
+    }).eq('guild_id', buyerWalletGuild).eq('user_id', buyUserId);
 
     await supabase.from('wallet_ledger').insert({
-      guild_id: guildId,
+      guild_id: buyerWalletGuild,
       user_id: buyUserId,
       amount: -totalAmount,
       type: 'market_fee',
-      note: `Lot alımı: ${tradeLots} lot @ ${tradePrice} Papel`,
+      note: `Lot alımı: ${tradeLots} lot @ ${tradePrice} MRI`,
     });
 
-    // Satıcıya para gönder (komisyon düşülmüş)
+    // Satıcıya Mari gönder (komisyon düşülmüş)
     const sellerReceives = totalAmount - platformFee;
     const { data: sellerWallet } = await supabase
       .from('member_wallets')
-      .select('balance')
+      .select('mari_balance')
       .eq('guild_id', guildId)
       .eq('user_id', sellUserId)
       .maybeSingle();
 
     await supabase.from('member_wallets').update({
-      balance: (sellerWallet?.balance ?? 0) + sellerReceives,
+      mari_balance: (sellerWallet?.mari_balance ?? 0) + sellerReceives,
       updated_at: new Date().toISOString(),
     }).eq('guild_id', guildId).eq('user_id', sellUserId);
 
@@ -418,7 +439,7 @@ async function matchOrders(
       user_id: sellUserId,
       amount: sellerReceives,
       type: 'market_fee',
-      note: `Lot satımı: ${tradeLots} lot @ ${tradePrice} Papel`,
+      note: `Lot satımı: ${tradeLots} lot @ ${tradePrice} MRI`,
     });
 
     // Emirlerin remaining_lots ve status güncelle
@@ -465,38 +486,7 @@ async function matchOrders(
       .eq('guild_id', guildId);
   }
 
-  // Circuit breaker kontrolü: son 24 saatte fiyat -%30'dan fazla düştü mü?
-  await checkCircuitBreaker(supabase, guildId);
+  // V2: Circuit breaker kaldırıldı — pump&dump tasarım özelliği
 }
 
-async function checkCircuitBreaker(supabase: SupabaseClient, guildId: string) {
-  const { data: listing } = await supabase
-    .from('server_listings')
-    .select('market_price, ipo_price')
-    .eq('guild_id', guildId)
-    .maybeSingle();
-
-  if (!listing) return;
-
-  const oneDayAgo = new Date(Date.now() - 86400 * 1000).toISOString();
-  const { data: oldTrade } = await supabase
-    .from('market_trades')
-    .select('price_per_lot')
-    .eq('guild_id', guildId)
-    .gte('traded_at', oneDayAgo)
-    .order('traded_at', { ascending: true })
-    .limit(1)
-    .maybeSingle();
-
-  if (!oldTrade) return;
-
-  const priceDrop = (oldTrade.price_per_lot - listing.market_price) / oldTrade.price_per_lot;
-
-  if (priceDrop >= 0.30) {
-    const breakerUntil = new Date(Date.now() + 3600 * 1000).toISOString(); // 1 saat
-    await supabase.from('server_listings').update({
-      circuit_breaker_until: breakerUntil,
-    }).eq('guild_id', guildId);
-    devLog('circuit_breaker', DevLogEmbeds.circuitBreaker(guildId, listing.market_price, priceDrop * 100, breakerUntil));
-  }
-}
+// V2: checkCircuitBreaker kaldırıldı (pump&dump tasarım özelliği)

@@ -32,13 +32,14 @@ type Listing = {
   name: string;
   icon_url: string | null;
   status: string;
-  market_price: number;
-  ipo_price: number;
+  market_price: number;  // MRI cinsinden
+  ipo_price: number;     // MRI cinsinden
   total_lots: number;
   founder_lots: number;
   public_lots: number;
   listed_at: string;
-  circuit_breaker_until: string | null;
+  activity_score: number;
+  mari_rate: number;     // 1 MRI = X papel (kullanıcının sunucusuna göre)
   active_penalties: string[];
   has_warning: boolean;
 };
@@ -56,13 +57,26 @@ type SelectedListing = Listing & {
   treasury: { balance: number; total_collected: number; total_burned: number } | null;
 };
 
+type MariInfo = {
+  mari_rate: number;
+  papel_balance: number;
+  mari_balance: number;
+  server_limit: number;
+  server_used_today: number;
+  server_remaining_today: number;
+  global_limit: number;
+  global_used_today: number;
+  global_remaining_today: number;
+};
+
 /* ─── Helpers ─────────────────────────────────────────── */
 function priceDiff(l: Listing) {
   const diff = l.market_price - l.ipo_price;
   const pct = l.ipo_price > 0 ? (diff / l.ipo_price) * 100 : 0;
   return { diff, pct };
 }
-function isCB(until: string | null) { return !!until && new Date(until) > new Date(); }
+function fmtMari(v: number) { return v.toFixed(4).replace(/\.?0+$/, '') + ' MRI'; }
+function fmtPapel(v: number, rate: number) { return Math.round(v * rate).toLocaleString('tr-TR') + ' P'; }
 
 function nameColor(name: string) {
   const g = ['from-violet-500 to-purple-700','from-blue-500 to-indigo-700','from-emerald-500 to-teal-700',
@@ -121,7 +135,7 @@ function Ticker({ listings }: { listings: Listing[] }) {
           return (
             <span key={i} className="inline-flex items-center gap-2 text-[11px] shrink-0 font-mono">
               <span className="text-white/50 font-semibold">{l.name}</span>
-              <span className="text-white font-black tabular-nums">{l.market_price.toLocaleString()}<span className="text-white/30 text-[9px] ml-0.5">P</span></span>
+              <span className="text-white font-black tabular-nums">{l.market_price.toFixed(3)}<span className="text-white/30 text-[9px] ml-0.5">MRI</span></span>
               <span className={`font-black text-[10px] px-1.5 py-0.5 rounded-full ${up ? 'text-emerald-300 bg-emerald-500/20' : 'text-red-300 bg-red-500/20'}`}>
                 {up ? '▲' : '▼'} {Math.abs(pct).toFixed(2)}%
               </span>
@@ -176,10 +190,16 @@ export default function MarketSection({ userId }: { userId?: string | null }) {
   const [portfolioLoading, setPortfolioLoading] = useState(false);
   const [orderType, setOrderType] = useState<'buy'|'sell'>('buy');
   const [orderLots, setOrderLots] = useState('');
-  const [orderPrice, setOrderPrice] = useState('');
   const [orderLoading, setOrderLoading] = useState(false);
   const [orderError, setOrderError] = useState<string|null>(null);
   const [orderSuccess, setOrderSuccess] = useState(false);
+  // Mari dönüşüm modal
+  const [mariOpen, setMariOpen] = useState(false);
+  const [mariInfo, setMariInfo] = useState<MariInfo | null>(null);
+  const [mariInput, setMariInput] = useState('');
+  const [mariLoading, setMariLoading] = useState(false);
+  const [mariError, setMariError] = useState<string|null>(null);
+  const [mariSuccess, setMariSuccess] = useState(false);
 
   useEffect(() => {
     fetch(apiUrl('/api/member/market-listings'))
@@ -220,7 +240,7 @@ export default function MarketSection({ userId }: { userId?: string | null }) {
 
   const openDetail = async (guildId: string) => {
     setDetailLoading(true); setSelected(null);
-    setOrderError(null); setOrderSuccess(false); setOrderLots(''); setOrderPrice(''); setOrderType('buy');
+    setOrderError(null); setOrderSuccess(false); setOrderLots(''); setOrderType('buy');
     const [dr, or] = await Promise.all([
       fetch(apiUrl(`/api/member/market-listings?guild_id=${guildId}`)).then(r=>r.json()),
       fetchWithCreds(`/api/member/market-orders?guild_id=${guildId}`).then(r=>r.json()).catch(()=>({})),
@@ -229,7 +249,6 @@ export default function MarketSection({ userId }: { userId?: string | null }) {
     if (base && dr.listing) {
       setSelected({ ...base, penalties: dr.penalties??[], events: dr.events??[], treasury: dr.treasury??null });
       setMyOrders(or.orders??[]); setMyHolding(or.holding??null);
-      setOrderPrice(String(dr.listing.market_price??''));
     }
     setDetailLoading(false);
   };
@@ -238,20 +257,21 @@ export default function MarketSection({ userId }: { userId?: string | null }) {
   const submitOrder = async () => {
     if (!selected) return;
     setOrderLoading(true); setOrderError(null); setOrderSuccess(false);
+    // Market order: fiyat = mevcut market_price (MRI cinsinden)
+    const price_per_lot = selected.market_price;
     try {
       const res = await fetchWithCreds(`/api/member/market-order?guild_id=${selected.guild_id}`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: orderType, lot_count: parseInt(orderLots), price_per_lot: parseFloat(orderPrice) }),
+        body: JSON.stringify({ type: orderType, lot_count: parseInt(orderLots), price_per_lot }),
       });
       const data = await res.json();
       if (!res.ok) {
         const msgs: Record<string,string> = {
-          insufficient_balance: 'Yetersiz bakiye.',
+          insufficient_balance: `Yetersiz Mari bakiyesi. Mevcut: ${data.available?.toFixed(4)} MRI`,
           insufficient_lots: 'Yeterli lot yok.',
           own_server: 'Kendi sunucunuza yatırım yapamazsınız.',
           max_portfolio_reached: 'Maksimum 3 farklı sunucu yatırımı.',
           vesting_locked: `Founder kilidi. Satılabilir: ${data.vested_lots??0} lot.`,
-          circuit_breaker_active: 'Devre kesici aktif.',
           not_listed: 'Bu sunucu listede değil.',
         };
         throw new Error(msgs[data.error] ?? 'Emir gönderilemedi.');
@@ -267,6 +287,45 @@ export default function MarketSection({ userId }: { userId?: string | null }) {
     if (!selected) return;
     await fetchWithCreds(`/api/member/market-order?order_id=${orderId}&guild_id=${selected.guild_id}`, { method: 'DELETE' });
     setMyOrders(prev => prev.filter(o => o.id !== orderId));
+  };
+
+  const openMariModal = async () => {
+    setMariOpen(true); setMariError(null); setMariSuccess(false); setMariInput('');
+    const res = await fetchWithCreds('/api/member/mari-convert').then(r => r.json()).catch(() => null);
+    setMariInfo(res);
+  };
+
+  const submitMariConvert = async () => {
+    setMariLoading(true); setMariError(null); setMariSuccess(false);
+    try {
+      const res = await fetchWithCreds('/api/member/mari-convert', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ papel_amount: parseFloat(mariInput) }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        const msgs: Record<string,string> = {
+          insufficient_papel: 'Yeterli papel bakiyesi yok.',
+          server_daily_limit: `Bugün bu sunucudan daha fazla dönüşüm yapamazsın. (Limit: ${mariInfo?.server_limit} MRI)`,
+          global_daily_limit: `Günlük global limitine ulaştın. (Limit: ${mariInfo?.global_limit} MRI)`,
+          min_activity_required: 'Bugün yeterli aktivite sağlanmadı. (50+ mesaj veya 30+ dk ses)',
+          economy_not_approved: 'Bu sunucu henüz yüksek ekonomiye geçmedi.',
+        };
+        throw new Error(msgs[data.error] ?? 'Dönüşüm başarısız.');
+      }
+      setMariSuccess(true);
+      setMariInfo(prev => prev ? {
+        ...prev,
+        mari_balance: data.new_mari_balance,
+        papel_balance: prev.papel_balance - parseFloat(mariInput),
+        server_used_today: prev.server_used_today + data.mari_gained,
+        server_remaining_today: prev.server_remaining_today - data.mari_gained,
+        global_used_today: prev.global_used_today + data.mari_gained,
+        global_remaining_today: prev.global_remaining_today - data.mari_gained,
+      } : null);
+      setMariInput('');
+    } catch(e) { setMariError(e instanceof Error ? e.message : 'Bir hata oluştu.'); }
+    finally { setMariLoading(false); }
   };
 
   /* ─ Loading ─ */
@@ -294,10 +353,11 @@ export default function MarketSection({ userId }: { userId?: string | null }) {
 
     const { pct } = priceDiff(selected);
     const up = pct >= 0;
-    const cb = isCB(selected.circuit_breaker_until);
-    const canTrade = !cb && selected.status === 'approved';
-    const totalVal = parseInt(orderLots||'0') * parseFloat(orderPrice||'0');
-    const netSell = (totalVal * 0.98).toFixed(0);
+    const canTrade = selected.status === 'approved';
+    const mariRate = selected.mari_rate ?? 1;
+    const orderLotsNum = parseInt(orderLots||'0');
+    const totalValMari = orderLotsNum * selected.market_price;
+    const netSellMari = totalValMari * 0.98;
     const plPct = myHolding && myHolding.avg_buy_price > 0
       ? ((selected.market_price - myHolding.avg_buy_price) / myHolding.avg_buy_price) * 100 : null;
     const plVal = myHolding ? (selected.market_price - myHolding.avg_buy_price) * myHolding.lot_count : 0;
@@ -327,7 +387,6 @@ export default function MarketSection({ userId }: { userId?: string | null }) {
           </div>
           <div className="flex items-center gap-1.5 flex-shrink-0">
             <StatusBadge status={selected.status} />
-            {cb && <span className="inline-flex items-center gap-1 rounded-full border border-orange-500/30 bg-orange-500/15 px-2 py-0.5 text-[10px] font-bold text-orange-400"><LuZap className="w-2.5 h-2.5"/>CB</span>}
           </div>
         </div>
 
@@ -338,16 +397,17 @@ export default function MarketSection({ userId }: { userId?: string | null }) {
               <p className="text-[11px] text-white/30 uppercase tracking-widest mb-2 font-semibold">Güncel Fiyat</p>
               <div className="flex items-baseline gap-2.5 flex-wrap">
                 <span className="text-5xl sm:text-6xl font-black text-white tracking-tighter tabular-nums leading-none" style={{animation:'countUp .4s cubic-bezier(.34,1.56,.64,1) both'}}>
-                  {selected.market_price.toLocaleString()}
+                  {selected.market_price.toFixed(4).replace(/\.?0+$/, '')}
                 </span>
-                <span className="text-xl font-bold text-white/25 mb-1">Papel</span>
+                <span className="text-xl font-bold text-white/25 mb-1">MRI</span>
               </div>
+              <p className="text-xs text-white/20 mt-1 tabular-nums">≈ {fmtPapel(selected.market_price, mariRate)}</p>
               <div className="flex items-center gap-2 mt-3 flex-wrap">
                 <span className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-black border ${up ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/25' : 'bg-red-500/15 text-red-300 border-red-500/25'}`}>
                   {up ? <LuTrendingUp className="w-4 h-4"/> : <LuTrendingDown className="w-4 h-4"/>}
                   {up?'+':''}{pct.toFixed(2)}%
                 </span>
-                <span className="text-xs text-white/25">IPO: {selected.ipo_price.toLocaleString()} P</span>
+                <span className="text-xs text-white/25">IPO: {fmtMari(selected.ipo_price)}</span>
               </div>
             </div>
 
@@ -364,14 +424,9 @@ export default function MarketSection({ userId }: { userId?: string | null }) {
         </div>
 
         {/* Alerts */}
-        {(cb || selected.events.length > 0 || selected.penalties.length > 0) && (
+        {(selected.events.length > 0 || selected.penalties.length > 0) && (
           <div className="relative z-10 space-y-2 px-5 sm:px-8 pb-4">
-            {cb && (
-              <div className="flex items-start gap-3 rounded-2xl border border-orange-500/20 bg-orange-500/8 backdrop-blur-sm px-4 py-3">
-                <LuClock className="w-4 h-4 text-orange-400 shrink-0 mt-0.5"/>
-                <div><p className="text-xs font-bold text-orange-300">Devre Kesici Aktif</p><p className="text-[11px] text-orange-400/60 mt-0.5">Trading geçici olarak durdurulmuş.</p></div>
-              </div>
-            )}
+            {/* V2: Circuit breaker kaldırıldı */}
             {selected.events.map(ev => (
               <div key={ev.id} className="flex items-start gap-3 rounded-2xl border border-blue-500/20 bg-blue-500/8 backdrop-blur-sm px-4 py-3">
                 <LuInfo className="w-4 h-4 text-blue-400 shrink-0 mt-0.5"/>
@@ -390,7 +445,7 @@ export default function MarketSection({ userId }: { userId?: string | null }) {
         {/* Stats grid */}
         <div className="relative z-10 grid grid-cols-2 sm:grid-cols-4 gap-2 px-5 sm:px-8 pb-5">
           {[
-            { icon: LuCoins,    label: 'IPO Fiyatı',   value: `${selected.ipo_price.toLocaleString()} P`, accent: 'text-yellow-400', bg: 'bg-yellow-500/8 border-yellow-500/15' },
+            { icon: LuCoins,    label: 'IPO Fiyatı',   value: fmtMari(selected.ipo_price), accent: 'text-yellow-400', bg: 'bg-yellow-500/8 border-yellow-500/15' },
             { icon: LuChartBar, label: 'Halka Açık Lot', value: selected.public_lots.toLocaleString(),      accent: 'text-blue-400',   bg: 'bg-blue-500/8 border-blue-500/15' },
             { icon: LuLandmark, label: 'Hazine',         value: selected.treasury ? `${selected.treasury.balance.toLocaleString()} P` : '—', accent: 'text-purple-400', bg: 'bg-purple-500/8 border-purple-500/15' },
             { icon: LuCalendar, label: 'Listelenme',     value: new Date(selected.listed_at).toLocaleDateString('tr-TR'), accent: 'text-white/50', bg: 'bg-white/5 border-white/10' },
@@ -417,11 +472,11 @@ export default function MarketSection({ userId }: { userId?: string | null }) {
               <div className="grid grid-cols-3 gap-4">
                 {[
                   { label: 'Lot', value: myHolding.lot_count.toLocaleString(), sub: null },
-                  { label: 'Ort. Maliyet', value: myHolding.avg_buy_price.toFixed(1), sub: 'P/lot' },
+                  { label: 'Ort. Maliyet', value: fmtMari(myHolding.avg_buy_price), sub: '/lot' },
                   {
                     label: 'K/Z',
                     value: plPct !== null ? `${plPct >= 0 ? '+' : ''}${plPct.toFixed(2)}%` : '—',
-                    sub: plPct !== null ? `${plVal >= 0 ? '+' : ''}${Math.round(plVal).toLocaleString()} P` : null,
+                    sub: plPct !== null ? `${plVal >= 0 ? '+' : ''}${plVal.toFixed(4)} MRI` : null,
                     colored: true,
                   },
                 ].map(({ label, value, sub, colored }) => (
@@ -436,7 +491,7 @@ export default function MarketSection({ userId }: { userId?: string | null }) {
           </div>
         )}
 
-        {/* Order form */}
+        {/* Order form — V2: Market Order (fiyat = market_price, kullanıcı sadece lot girer) */}
         {canTrade && (
           <div className="relative z-10 mx-5 sm:mx-8 mb-5 rounded-3xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-xl overflow-hidden" style={{animation:'fadeUp .5s ease-out both'}}>
             {/* Buy/Sell toggle */}
@@ -454,35 +509,39 @@ export default function MarketSection({ userId }: { userId?: string | null }) {
               ))}
             </div>
             <div className="p-5 space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { label: 'Lot Miktarı', key: 'lots', val: orderLots, set: setOrderLots },
-                  { label: 'Fiyat / Lot',  key: 'price', val: orderPrice, set: setOrderPrice },
-                ].map(({ label, val, set }) => (
-                  <div key={label}>
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-white/30 mb-2">{label}</p>
-                    <input type="number" min={1} placeholder="0" value={val} onChange={e => set(e.target.value)}
-                      className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm font-bold text-white placeholder-white/15 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 focus:border-indigo-500/40 transition tabular-nums backdrop-blur-sm"/>
-                  </div>
-                ))}
+              {/* Anlık fiyat bilgisi */}
+              <div className="flex items-center justify-between rounded-2xl border border-white/[0.06] bg-black/20 px-4 py-3">
+                <span className="text-[10px] text-white/30 font-semibold uppercase tracking-wider">Anlık Fiyat</span>
+                <div className="text-right">
+                  <p className="text-sm font-black text-white tabular-nums">{fmtMari(selected.market_price)}</p>
+                  <p className="text-[10px] text-white/25 mt-0.5">≈ {fmtPapel(selected.market_price, mariRate)}</p>
+                </div>
               </div>
 
-              {orderLots && orderPrice && (
+              {/* Sadece lot miktarı */}
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-white/30 mb-2">Lot Miktarı</p>
+                <input type="number" min={1} placeholder="0" value={orderLots} onChange={e => setOrderLots(e.target.value)}
+                  className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm font-bold text-white placeholder-white/15 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 focus:border-indigo-500/40 transition tabular-nums backdrop-blur-sm"/>
+              </div>
+
+              {orderLots && parseInt(orderLots) > 0 && (
                 <div className="flex items-center justify-between rounded-2xl border border-white/[0.07] bg-black/30 px-4 py-3 backdrop-blur-sm">
                   <span className="text-xs text-white/30 font-semibold uppercase tracking-wider">Toplam</span>
                   <div className="text-right">
-                    <p className="text-sm font-black text-white tabular-nums">{totalVal.toLocaleString()} P</p>
-                    {orderType === 'sell' && <p className="text-[10px] text-white/25 mt-0.5">Net: {parseInt(netSell).toLocaleString()} P (-%2 komisyon)</p>}
+                    <p className="text-sm font-black text-white tabular-nums">{fmtMari(totalValMari)}</p>
+                    <p className="text-[10px] text-white/25 mt-0.5">≈ {fmtPapel(totalValMari, mariRate)}</p>
+                    {orderType === 'sell' && <p className="text-[10px] text-emerald-400/60 mt-0.5">Net: {fmtMari(netSellMari)} (-%2 kom.)</p>}
                   </div>
                 </div>
               )}
 
-              <button onClick={submitOrder} disabled={orderLoading || !orderLots || !orderPrice}
+              <button onClick={submitOrder} disabled={orderLoading || !orderLots || parseInt(orderLots) <= 0}
                 className={`relative w-full overflow-hidden rounded-2xl py-4 text-sm font-black text-white transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed shadow-2xl ${
                   orderType === 'buy' ? 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-500/25' : 'bg-rose-600 hover:bg-rose-500 shadow-rose-500/25'
                 }`}>
                 <span className="absolute inset-0 translate-x-[-100%] bg-gradient-to-r from-transparent via-white/10 to-transparent" style={{animation:'shimmer 3s ease-in-out infinite'}}/>
-                <span className="relative">{orderLoading ? 'Gönderiliyor...' : orderType === 'buy' ? 'Alış Emri Ver' : 'Satış Emri Ver'}</span>
+                <span className="relative">{orderLoading ? 'İşleniyor...' : orderType === 'buy' ? '▲ Satın Al' : '▼ Sat'}</span>
               </button>
 
               {orderError && (
@@ -494,7 +553,7 @@ export default function MarketSection({ userId }: { userId?: string | null }) {
               {orderSuccess && (
                 <div className="flex items-center gap-2 rounded-2xl border border-emerald-500/20 bg-emerald-500/8 px-4 py-3">
                   <LuCheck className="w-4 h-4 text-emerald-400 shrink-0"/>
-                  <p className="text-xs font-semibold text-emerald-300">Emir başarıyla iletildi!</p>
+                  <p className="text-xs font-semibold text-emerald-300">İşlem gerçekleşti!</p>
                 </div>
               )}
             </div>
@@ -512,7 +571,7 @@ export default function MarketSection({ userId }: { userId?: string | null }) {
                     {ord.type === 'buy' ? '▲ AL' : '▼ SAT'}
                   </span>
                   <span className="text-sm font-bold text-white tabular-nums">{ord.remaining_lots.toLocaleString()} lot</span>
-                  <span className="text-xs text-white/25 tabular-nums">@ {ord.price_per_lot.toLocaleString()} P</span>
+                  <span className="text-xs text-white/25 tabular-nums">@ {fmtMari(ord.price_per_lot)}</span>
                   <button onClick={() => cancelOrder(ord.id)} className="ml-auto p-1.5 rounded-full text-white/20 hover:text-red-400 hover:bg-red-500/10 transition-all" title="İptal">
                     <LuX className="w-3.5 h-3.5"/>
                   </button>
@@ -558,12 +617,127 @@ export default function MarketSection({ userId }: { userId?: string | null }) {
             <p className="text-[11px] text-white/25 font-medium mt-0.5">P2P · Anlık fiyatlar · {listings.length} sunucu</p>
           </div>
         </div>
-        <button onClick={() => setInfoOpen(v => !v)}
-          className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.05] backdrop-blur-sm px-3.5 py-2 text-xs text-white/40 hover:text-white/70 hover:bg-white/8 hover:border-white/20 transition-all">
-          <LuInfo className="w-3.5 h-3.5"/>
-          <span className="hidden sm:inline font-semibold">Nasıl çalışır?</span>
-        </button>
+        <div className="flex items-center gap-2">
+          {/* Mari Dönüştür butonu */}
+          <button onClick={openMariModal}
+            className="flex items-center gap-1.5 rounded-full border border-violet-500/30 bg-violet-500/10 backdrop-blur-sm px-3.5 py-2 text-xs text-violet-300 hover:text-violet-200 hover:bg-violet-500/20 hover:border-violet-500/50 transition-all font-bold">
+            <LuCoins className="w-3.5 h-3.5"/>
+            <span className="hidden sm:inline">P → MRI</span>
+          </button>
+          <button onClick={() => setInfoOpen(v => !v)}
+            className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.05] backdrop-blur-sm px-3.5 py-2 text-xs text-white/40 hover:text-white/70 hover:bg-white/8 hover:border-white/20 transition-all">
+            <LuInfo className="w-3.5 h-3.5"/>
+            <span className="hidden sm:inline font-semibold">Nasıl çalışır?</span>
+          </button>
+        </div>
       </div>
+
+      {/* Mari Dönüşüm Modalı */}
+      {mariOpen && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" style={{animation:'fadeUp .2s ease-out both'}}>
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setMariOpen(false)}/>
+          <div className="relative w-full max-w-sm rounded-3xl border border-white/[0.12] bg-[#0d0f1a] shadow-2xl overflow-hidden">
+            {/* Modal header */}
+            <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-white/[0.07]">
+              <div>
+                <p className="font-black text-white text-base">Papel → Mari</p>
+                <p className="text-[11px] text-white/30 mt-0.5">Küresel rezerv paraya dönüştür</p>
+              </div>
+              <button onClick={() => setMariOpen(false)} className="p-2 rounded-full text-white/30 hover:text-white hover:bg-white/8 transition-all">
+                <LuX className="w-4 h-4"/>
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4">
+              {mariInfo ? (
+                <>
+                  {/* Kur bilgisi */}
+                  <div className="rounded-2xl border border-violet-500/20 bg-violet-500/8 px-4 py-3 space-y-1.5">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-white/40">Kur</span>
+                      <span className="font-black text-white">1 MRI = {mariInfo.mari_rate.toLocaleString('tr-TR')} P</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-white/40">Papel Bakiyen</span>
+                      <span className="font-bold text-white tabular-nums">{mariInfo.papel_balance.toLocaleString('tr-TR')} P</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-white/40">Mari Bakiyen</span>
+                      <span className="font-bold text-violet-300 tabular-nums">{fmtMari(mariInfo.mari_balance)}</span>
+                    </div>
+                  </div>
+
+                  {/* Limit barları */}
+                  <div className="space-y-2">
+                    <div>
+                      <div className="flex justify-between text-[10px] text-white/30 mb-1">
+                        <span>Bu sunucu (bugün)</span>
+                        <span className="tabular-nums">{mariInfo.server_used_today.toFixed(2)} / {mariInfo.server_limit} MRI</span>
+                      </div>
+                      <div className="h-1.5 rounded-full bg-white/8 overflow-hidden">
+                        <div className="h-full rounded-full bg-violet-500 transition-all" style={{width:`${Math.min(100,(mariInfo.server_used_today/mariInfo.server_limit)*100)}%`}}/>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex justify-between text-[10px] text-white/30 mb-1">
+                        <span>Global limit (bugün)</span>
+                        <span className="tabular-nums">{mariInfo.global_used_today.toFixed(2)} / {mariInfo.global_limit} MRI</span>
+                      </div>
+                      <div className="h-1.5 rounded-full bg-white/8 overflow-hidden">
+                        <div className="h-full rounded-full bg-indigo-500 transition-all" style={{width:`${Math.min(100,(mariInfo.global_used_today/mariInfo.global_limit)*100)}%`}}/>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Input */}
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-white/30 mb-2">Dönüştürmek istediğin Papel</p>
+                    <div className="relative">
+                      <input type="number" min={1} placeholder="0" value={mariInput} onChange={e => setMariInput(e.target.value)}
+                        className="w-full rounded-2xl border border-white/10 bg-black/30 pl-4 pr-16 py-3 text-sm font-bold text-white placeholder-white/15 focus:outline-none focus:ring-1 focus:ring-violet-500/50 focus:border-violet-500/40 transition tabular-nums"/>
+                      <button onClick={() => setMariInput(String(Math.floor(mariInfo.papel_balance)))}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-violet-400 hover:text-violet-300 px-2 py-1 rounded-lg hover:bg-violet-500/10 transition">
+                        MAX
+                      </button>
+                    </div>
+                    {mariInput && parseFloat(mariInput) > 0 && (
+                      <p className="text-[11px] text-violet-400/70 mt-2 tabular-nums">
+                        Alacaksın: ≈ {(parseFloat(mariInput) / mariInfo.mari_rate).toFixed(6)} MRI
+                      </p>
+                    )}
+                  </div>
+
+                  <button onClick={submitMariConvert}
+                    disabled={mariLoading || !mariInput || parseFloat(mariInput) <= 0}
+                    className="relative w-full overflow-hidden rounded-2xl py-4 text-sm font-black text-white bg-violet-600 hover:bg-violet-500 transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed shadow-2xl shadow-violet-500/20">
+                    <span className="absolute inset-0 translate-x-[-100%] bg-gradient-to-r from-transparent via-white/10 to-transparent" style={{animation:'shimmer 3s ease-in-out infinite'}}/>
+                    <span className="relative">{mariLoading ? 'Dönüştürülüyor...' : '💱 Dönüştür'}</span>
+                  </button>
+
+                  {mariError && (
+                    <div className="flex items-center gap-2 rounded-2xl border border-red-500/20 bg-red-500/8 px-4 py-3">
+                      <LuX className="w-4 h-4 text-red-400 shrink-0"/>
+                      <p className="text-xs font-semibold text-red-300">{mariError}</p>
+                    </div>
+                  )}
+                  {mariSuccess && (
+                    <div className="flex items-center gap-2 rounded-2xl border border-violet-500/20 bg-violet-500/8 px-4 py-3">
+                      <LuCheck className="w-4 h-4 text-violet-400 shrink-0"/>
+                      <p className="text-xs font-semibold text-violet-300">Dönüşüm başarılı!</p>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="space-y-3 animate-pulse">
+                  <div className="h-20 rounded-2xl bg-white/6"/>
+                  <div className="h-10 rounded-2xl bg-white/6"/>
+                  <div className="h-12 rounded-2xl bg-white/6"/>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Ticker */}
       {listings.length > 0 && <Ticker listings={listings}/>}
@@ -648,7 +822,6 @@ export default function MarketSection({ userId }: { userId?: string | null }) {
               {listings.map((listing, idx) => {
                 const { pct } = priceDiff(listing);
                 const up = pct >= 0;
-                const circuitBreaker = isCB(listing.circuit_breaker_until);
                 return (
                   <button key={listing.guild_id} onClick={() => openDetail(listing.guild_id)}
                     className={`w-full group relative overflow-hidden rounded-3xl transition-all duration-200 active:scale-[.99] text-left backdrop-blur-sm ${
@@ -681,7 +854,6 @@ export default function MarketSection({ userId }: { userId?: string | null }) {
                           <span className="font-black text-sm text-white">{listing.name}</span>
                           <StatusBadge status={listing.status}/>
                           {listing.has_warning && <LuTriangleAlert className="w-3 h-3 text-yellow-400 flex-shrink-0"/>}
-                          {circuitBreaker && <LuZap className="w-3 h-3 text-orange-400 flex-shrink-0"/>}
                         </div>
                         {/* Progress bar */}
                         <div className="flex items-center gap-2">
@@ -696,7 +868,7 @@ export default function MarketSection({ userId }: { userId?: string | null }) {
                       {/* Price */}
                       <div className="text-right flex-shrink-0 space-y-1.5 min-w-[90px]">
                         <p className="text-xl font-black text-white tabular-nums leading-none tracking-tight">
-                          {listing.market_price.toLocaleString()}<span className="text-[11px] text-white/30 ml-0.5 font-bold">P</span>
+                          {listing.market_price.toFixed(3)}<span className="text-[11px] text-white/30 ml-0.5 font-bold">MRI</span>
                         </p>
                         <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-black border ${
                           up ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/25' : 'bg-red-500/15 text-red-300 border-red-500/25'
