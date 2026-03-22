@@ -9,6 +9,37 @@ import { requireSessionUser } from '@/lib/auth';
 import { getSelectedGuildId } from '@/lib/guild';
 import { isGuildAdmin } from '@/lib/adminAuth';
 
+/** Setup'ta atanan admin_role_id'ye sahip mi? Bot token ile kontrol. */
+async function hasServerAdminRole(userId: string, guildId: string, adminRoleId: string | null): Promise<boolean> {
+  if (!adminRoleId) return false;
+  const botToken = process.env.DISCORD_BOT_TOKEN;
+  if (!botToken) return false;
+  try {
+    const res = await fetch(`https://discord.com/api/guilds/${guildId}/members/${userId}`, {
+      headers: { Authorization: `Bot ${botToken}` },
+      cache: 'no-store',
+    });
+    if (!res.ok) return false;
+    const member = await res.json() as { roles?: string[] };
+    return (member.roles ?? []).includes(adminRoleId);
+  } catch { return false; }
+}
+
+/** Discord API'den gerçek üye sayısını çek */
+async function fetchMemberCount(guildId: string): Promise<number> {
+  const botToken = process.env.DISCORD_BOT_TOKEN;
+  if (!botToken) return 0;
+  try {
+    const res = await fetch(`https://discord.com/api/guilds/${guildId}?with_counts=true`, {
+      headers: { Authorization: `Bot ${botToken}` },
+      cache: 'no-store',
+    });
+    if (!res.ok) return 0;
+    const guild = await res.json() as { approximate_member_count?: number };
+    return guild.approximate_member_count ?? 0;
+  } catch { return 0; }
+}
+
 export const dynamic = 'force-dynamic';
 
 const getSupabase = () => {
@@ -29,11 +60,11 @@ export async function GET(request: Request) {
   const guildId = await getSelectedGuildId(request);
   if (!guildId) return NextResponse.json({ error: 'no_selected_guild' }, { status: 400 });
 
-  const [adminCheck, serverRes, appRes] = await Promise.all([
+  const [discordAdminCheck, serverRes, appRes, memberCount] = await Promise.all([
     isGuildAdmin(userId, guildId),
     supabase
       .from('servers')
-      .select('member_count')
+      .select('admin_role_id')
       .eq('discord_id', guildId)
       .maybeSingle(),
     supabase
@@ -41,9 +72,12 @@ export async function GET(request: Request) {
       .select('status, vote_count, vote_threshold, scheduled_open_at')
       .eq('guild_id', guildId)
       .maybeSingle(),
+    fetchMemberCount(guildId),
   ]);
 
-  const memberCount = serverRes.data?.member_count ?? 0;
+  const adminRoleId = serverRes.data?.admin_role_id ?? null;
+  const roleAdminCheck = await hasServerAdminRole(userId, guildId, adminRoleId);
+  const adminCheck = discordAdminCheck || roleAdminCheck;
   const app = appRes.data;
 
   // Kullanıcı daha önce oy verdi mi?
@@ -84,17 +118,19 @@ export async function POST(request: Request) {
   const body = (await request.json()) as { action: 'apply_direct' | 'start_vote' | 'cast_vote' };
 
   if (body.action === 'apply_direct' || body.action === 'start_vote') {
-    // Admin yetkisi gerekli
-    const admin = await isGuildAdmin(userId, guildId);
-    if (!admin) return NextResponse.json({ error: 'forbidden' }, { status: 403 });
-
-    const { data: server } = await supabase
+    // Admin yetkisi: Discord owner/Manage Server VEYA setup'taki admin rolü
+    const { data: serverRow } = await supabase
       .from('servers')
-      .select('member_count')
+      .select('admin_role_id')
       .eq('discord_id', guildId)
       .maybeSingle();
 
-    const memberCount = server?.member_count ?? 0;
+    const [discordAdmin, roleAdmin, memberCount] = await Promise.all([
+      isGuildAdmin(userId, guildId),
+      hasServerAdminRole(userId, guildId, serverRow?.admin_role_id ?? null),
+      fetchMemberCount(guildId),
+    ]);
+    if (!discordAdmin && !roleAdmin) return NextResponse.json({ error: 'forbidden' }, { status: 403 });
 
     if (body.action === 'apply_direct') {
       if (memberCount < 500) return NextResponse.json({ error: 'not_enough_members' }, { status: 400 });
