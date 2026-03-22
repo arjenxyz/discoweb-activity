@@ -57,7 +57,7 @@ export default function DashboardPage() {
   const [walletBalance, setWalletBalance] = useState(0);
   const [mariBalance, setMariBalance] = useState(0);
   const [mariConvertOpen, setMariConvertOpen] = useState(false);
-  const [mariConvertInfo, setMariConvertInfo] = useState<{ mariRate: number; serverDailyUsed: number; globalDailyUsed: number; paperBalance: number } | null>(null);
+  const [mariConvertInfo, setMariConvertInfo] = useState<{ mari_rate: number; server_used_today: number; global_used_today: number; papel_balance: number; mari_balance: number; server_limit: number; global_limit: number } | null>(null);
   const [mariConvertInput, setMariConvertInput] = useState('');
   const [mariConvertLoading, setMariConvertLoading] = useState(false);
   const [mariConvertError, setMariConvertError] = useState<string | null>(null);
@@ -1040,7 +1040,7 @@ export default function DashboardPage() {
               try {
                 const res = await fetchWithCreds('/api/member/mari-convert');
                 if (res.ok) {
-                  const d = await res.json() as { mariRate: number; serverDailyUsed: number; globalDailyUsed: number; paperBalance: number };
+                  const d = await res.json() as NonNullable<typeof mariConvertInfo>;
                   setMariConvertInfo(d);
                 }
               } catch { /* ignore */ }
@@ -1332,12 +1332,12 @@ export default function DashboardPage() {
                       <p className="text-[10px] text-white/35 uppercase tracking-wider">Kur</p>
                       <div className="flex items-center gap-1.5 mt-0.5">
                         <Image src="/Mari.gif" alt="Mari" width={14} height={14} className="h-3.5 w-3.5" unoptimized />
-                        <p className="text-sm font-bold text-white">= {mariConvertInfo.mariRate.toLocaleString('tr-TR')} P</p>
+                        <p className="text-sm font-bold text-white">= {mariConvertInfo.mari_rate.toLocaleString('tr-TR')} P</p>
                       </div>
                     </div>
                     <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] px-3 py-2.5">
                       <p className="text-[10px] text-white/35 uppercase tracking-wider">Papel Bakiye</p>
-                      <p className="text-sm font-bold text-white mt-0.5">{mariConvertInfo.paperBalance.toLocaleString('tr-TR')} P</p>
+                      <p className="text-sm font-bold text-white mt-0.5">{mariConvertInfo.papel_balance.toLocaleString('tr-TR')} P</p>
                     </div>
                   </div>
                   {/* Limitler */}
@@ -1345,19 +1345,19 @@ export default function DashboardPage() {
                     <div>
                       <div className="flex justify-between text-[10px] text-white/40 mb-1">
                         <span>Sunucu günlük limit</span>
-                        <span className="flex items-center gap-1">{mariConvertInfo.serverDailyUsed.toFixed(3)} / 2 <Image src="/Mari.gif" alt="" width={10} height={10} className="h-2.5 w-2.5 inline" unoptimized /></span>
+                        <span className="flex items-center gap-1">{mariConvertInfo.server_used_today.toFixed(3)} / {mariConvertInfo.server_limit} <Image src="/Mari.gif" alt="" width={10} height={10} className="h-2.5 w-2.5 inline" unoptimized /></span>
                       </div>
                       <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
-                        <div className="h-full rounded-full bg-violet-500" style={{ width: `${Math.min(100, (mariConvertInfo.serverDailyUsed / 2) * 100)}%` }} />
+                        <div className="h-full rounded-full bg-violet-500" style={{ width: `${Math.min(100, (mariConvertInfo.server_used_today / mariConvertInfo.server_limit) * 100)}%` }} />
                       </div>
                     </div>
                     <div>
                       <div className="flex justify-between text-[10px] text-white/40 mb-1">
                         <span>Global günlük limit</span>
-                        <span className="flex items-center gap-1">{mariConvertInfo.globalDailyUsed.toFixed(3)} / 6 <Image src="/Mari.gif" alt="" width={10} height={10} className="h-2.5 w-2.5 inline" unoptimized /></span>
+                        <span className="flex items-center gap-1">{mariConvertInfo.global_used_today.toFixed(3)} / {mariConvertInfo.global_limit} <Image src="/Mari.gif" alt="" width={10} height={10} className="h-2.5 w-2.5 inline" unoptimized /></span>
                       </div>
                       <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
-                        <div className="h-full rounded-full bg-violet-400" style={{ width: `${Math.min(100, (mariConvertInfo.globalDailyUsed / 6) * 100)}%` }} />
+                        <div className="h-full rounded-full bg-violet-400" style={{ width: `${Math.min(100, (mariConvertInfo.global_used_today / mariConvertInfo.global_limit) * 100)}%` }} />
                       </div>
                     </div>
                   </div>
@@ -1375,13 +1375,13 @@ export default function DashboardPage() {
                       />
                       <button
                         type="button"
-                        onClick={() => setMariConvertInput(String(Math.floor(Math.min(mariConvertInfo.paperBalance, (2 - mariConvertInfo.serverDailyUsed) * mariConvertInfo.mariRate))))}
+                        onClick={() => setMariConvertInput(String(Math.floor(Math.min(mariConvertInfo.papel_balance, (mariConvertInfo.server_limit - mariConvertInfo.server_used_today) * mariConvertInfo.mari_rate))))}
                         className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/60 hover:text-white hover:bg-white/10 transition"
                       >MAX</button>
                     </div>
                     {mariConvertInput && Number(mariConvertInput) > 0 && (
                       <p className="text-[11px] text-violet-400 mt-1.5">
-                        ≈ {(Number(mariConvertInput) / mariConvertInfo.mariRate).toFixed(6)} <Image src="/Mari.gif" alt="Mari" width={12} height={12} className="h-3 w-3 inline" unoptimized /> alacaksın
+                        ≈ {(Number(mariConvertInput) / mariConvertInfo.mari_rate).toFixed(6)} <Image src="/Mari.gif" alt="Mari" width={12} height={12} className="h-3 w-3 inline" unoptimized /> alacaksın
                       </p>
                     )}
                   </div>
@@ -1408,7 +1408,7 @@ export default function DashboardPage() {
                           setMariBalance(d.new_mari_balance ?? mariBalance);
                           setMariConvertInput('');
                           const infoRes = await fetchWithCreds('/api/member/mari-convert');
-                          if (infoRes.ok) setMariConvertInfo(await infoRes.json() as NonNullable<typeof mariConvertInfo>);
+                          if (infoRes.ok) setMariConvertInfo(await infoRes.json() as NonNullable<typeof mariConvertInfo>); // eslint-disable-line @typescript-eslint/no-explicit-any
                         }
                       } catch {
                         setMariConvertError('Bağlantı hatası');
