@@ -16,6 +16,7 @@ import SettingsSection from './components/SettingsSection';
 import MailSection from './components/MailSection';
 import RafflesSection from './components/RafflesSection';
 import DiscoverSection from './components/DiscoverSection';
+import MarketSection from './components/MarketSection';
 import NotificationDetailModal from './components/NotificationDetailModal';
 import NotificationsModal from './components/NotificationsModal';
 import TransferModal from './components/TransferModal';
@@ -1176,6 +1177,9 @@ export default function DashboardPage() {
 
             {effectiveSection === 'discover' && (
               <DiscoverSection />
+            )}
+            {effectiveSection === 'market' && (
+              <MarketSection />
             )}
           </main>
         </div>
