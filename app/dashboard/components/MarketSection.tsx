@@ -211,6 +211,13 @@ export default function MarketSection({ userId, economyApproved }: { userId?: st
   }, []);
 
   useEffect(() => {
+    if (economyApproved) return;
+    setEcoLoading(true);
+    fetch(apiUrl('/api/member/economy-status'), { credentials: 'include' })
+      .then(r => r.json()).then(d => setEcoStatus(d as EcoStatus)).catch(() => {}).finally(() => setEcoLoading(false));
+  }, [economyApproved]);
+
+  useEffect(() => {
     if (tab !== 'portfolio') return;
     setPortfolioLoading(true);
     fetchWithCreds('/api/member/portfolio').then(r => r.json()).then(d => {
@@ -590,13 +597,6 @@ export default function MarketSection({ userId, economyApproved }: { userId?: st
 
   /* ─ Yüksek Ekonomi gerekli ─ */
   if (!economyApproved) {
-    // Eco status'u lazy yükle
-    if (!ecoStatus && !ecoLoading) {
-      setEcoLoading(true);
-      fetch(apiUrl('/api/member/economy-status'), { credentials: 'include' })
-        .then(r => r.json()).then(d => setEcoStatus(d as EcoStatus)).catch(() => {}).finally(() => setEcoLoading(false));
-    }
-
     const eco = ecoStatus;
     const isAdmin = eco?.is_admin ?? false;
     const memberCount = eco?.member_count ?? 0;
@@ -709,12 +709,23 @@ export default function MarketSection({ userId, economyApproved }: { userId?: st
             </div>
           )}
 
-          {/* Oylama aktif, admin değil */}
-          {!isAdmin && status === 'none' && (
+          {/* Bilgi kutusu — durum yoksa veya üye sayısı belli değilse göster */}
+          {(status === 'none' || status === 'rejected') && eco && (
             <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] px-5 py-3 text-xs text-white/30 space-y-1 text-left w-full">
-              <p>• Sunucu içinden <span className="text-white/50 font-semibold">100 oy</span> toplanarak başvuru yapılabilir</p>
-              <p>• Veya <span className="text-white/50 font-semibold">500+ üyeli</span> sunucular direkt başvurabilir</p>
-              <p>• Başvuru developer tarafından onaylanır (max 7 gün)</p>
+              {canDirect ? (
+                <>
+                  <p>• Sunucunuzun <span className="text-white/50 font-semibold">500+ üyesi</span> var, direkt kayıt yapabilirsiniz</p>
+                  <p>• Başvuru developer tarafından onaylanır <span className="text-white/50">(max 7 gün)</span></p>
+                  {!isAdmin && <p className="text-white/20 mt-1">Kayıt için sunucu yöneticisine başvurun.</p>}
+                </>
+              ) : (
+                <>
+                  <p>• Sunucu içinden <span className="text-white/50 font-semibold">100 oy</span> toplanarak ön başvuru yapılabilir</p>
+                  <p>• Şu an üye sayısı: <span className="text-white/50 font-semibold">{memberCount}</span> (direkt başvuru için 500+ gerekli)</p>
+                  <p>• Başvuru developer tarafından onaylanır <span className="text-white/50">(max 7 gün)</span></p>
+                  {!isAdmin && <p className="text-white/20 mt-1">Oylama başlatmak için sunucu yöneticisine başvurun.</p>}
+                </>
+              )}
             </div>
           )}
 
