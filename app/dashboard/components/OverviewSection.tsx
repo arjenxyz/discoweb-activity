@@ -66,8 +66,33 @@ export default function OverviewSection({
 
   const card = 'rounded-2xl border border-white/[0.10] bg-white/[0.05] p-4 sm:p-5';
 
+  const greeting = (() => {
+    const h = new Date().getHours();
+    if (h < 6) return 'İyi geceler';
+    if (h < 12) return 'Günaydın';
+    if (h < 18) return 'İyi günler';
+    return 'İyi akşamlar';
+  })();
+
   return (
     <section className="flex flex-col gap-4 p-4 sm:p-6">
+
+      {/* SAYFA BAŞLIĞI */}
+      <div className="flex items-end justify-between">
+        <div>
+          <p className="text-xs font-medium text-white/30 mb-0.5">
+            {greeting}{profile?.nickname ? `, ${profile.nickname}` : ''} 👋
+          </p>
+          <h1 className="text-2xl font-black text-white tracking-tight">Ana Sayfa</h1>
+          <p className="mt-1 text-sm text-white/40">
+            Sunucundaki etkinliğin ve istatistiklerin burada.
+          </p>
+        </div>
+        <div className="hidden sm:flex items-center gap-1.5 rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-1.5">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="text-[11px] font-medium text-white/40">Canlı</span>
+        </div>
+      </div>
 
       {overviewLoading ? (
         <div className="flex items-center gap-3 py-12 text-white/30">
