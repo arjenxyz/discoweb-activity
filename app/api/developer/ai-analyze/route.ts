@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { requireDeveloper } from '@/lib/developerAuth';
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export const dynamic = 'force-dynamic';
 
@@ -44,8 +44,8 @@ export async function POST(request: Request) {
   const { guildId, prompt } = body;
   if (!guildId || !prompt) return NextResponse.json({ error: 'missing_fields' }, { status: 400 });
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) return NextResponse.json({ error: 'missing_anthropic_key' }, { status: 500 });
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return NextResponse.json({ error: 'missing_gemini_key' }, { status: 500 });
 
   // Fetch data from Supabase
   const [
@@ -80,23 +80,19 @@ export async function POST(request: Request) {
     investor_count: holdingsCount ?? 0,
   };
 
-  const client = new Anthropic({ apiKey });
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const model = genAI.getGenerativeModel({
+    model: 'gemini-2.5-pro',
+    systemInstruction: SYSTEM_PROMPT,
+    generationConfig: { responseMimeType: 'application/json' },
+  });
 
   let result;
   try {
-    const message = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1024,
-      system: SYSTEM_PROMPT,
-      messages: [
-        {
-          role: 'user',
-          content: `Sunucu verileri:\n${JSON.stringify(marketData, null, 2)}\n\nDeveloper sorusu: ${prompt}`,
-        },
-      ],
-    });
-
-    const text = message.content[0].type === 'text' ? message.content[0].text : '';
+    const response = await model.generateContent(
+      `Sunucu verileri:\n${JSON.stringify(marketData, null, 2)}\n\nDeveloper sorusu: ${prompt}`
+    );
+    const text = response.response.text();
     result = JSON.parse(text);
   } catch (e) {
     return NextResponse.json({ error: 'ai_failed', detail: String(e) }, { status: 500 });
