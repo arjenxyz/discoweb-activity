@@ -80,6 +80,25 @@ export const getMaintenanceFlags = async (guildId?: string) => {
   return { flags, serverId: server.id };
 };
 
+// Global freeze / read-only kontrolü (app_config tablosundan)
+export const checkGlobalFreeze = async (): Promise<{ frozen: boolean; readOnly: boolean }> => {
+  const supabase = getSupabase();
+  if (!supabase) return { frozen: false, readOnly: false };
+
+  const { data } = await supabase
+    .from('app_config')
+    .select('key, value')
+    .in('key', ['global_freeze', 'read_only_mode']);
+
+  const map: Record<string, string> = {};
+  (data ?? []).forEach((row) => { map[row.key] = row.value; });
+
+  return {
+    frozen: map['global_freeze'] === 'true',
+    readOnly: map['read_only_mode'] === 'true',
+  };
+};
+
 export const checkMaintenance = async (keys: MaintenanceKey[], guildId?: string) => {
   const data = await getMaintenanceFlags(guildId);
   if (!data) {

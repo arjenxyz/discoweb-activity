@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { checkMaintenance } from '@/lib/maintenance';
+import { checkMaintenance, checkGlobalFreeze } from '@/lib/maintenance';
 import { logWebEvent, logError } from '@/lib/serverLogger';
 import { logBotError } from '@/lib/activityLogger';
 import { discordFetch } from '@/lib/discordRest';
@@ -53,6 +53,11 @@ const setBalance = async (supabase: SupabaseClient, userId: string, guildId: str
 };
 
 export async function POST(request: Request) {
+  const freeze = await checkGlobalFreeze();
+  if (freeze.frozen || freeze.readOnly) {
+    return NextResponse.json({ error: 'global_freeze', reason: 'Sistem şu anda bakımda.' }, { status: 503 });
+  }
+
   const maintenance = await checkMaintenance(['site', 'store']);
   if (maintenance.blocked) {
     return NextResponse.json(
@@ -81,7 +86,7 @@ export async function POST(request: Request) {
 
   const { data: server, error: serverError } = await supabase
     .from('servers')
-    .select('id')
+    .select('id, economy_tier, burn_rate, treasury_rate')
     .eq('discord_id', selectedGuildId)
     .eq('is_setup', true)
     .maybeSingle();
@@ -360,6 +365,49 @@ export async function POST(request: Request) {
     balance_after: updatedWallet.balance,
     metadata: { orderId: order?.id, itemId: item.id, discountCode: appliedDiscount?.code },
   });
+
+  // Yüksek ekonomi: hazine + yakma kesintileri
+  if (server?.economy_tier === 'advanced') {
+    const burnRate = Number(server.burn_rate ?? 0.05);
+    const treasuryRate = Number(server.treasury_rate ?? 0.10);
+    const burnAmount = Number((finalPrice * burnRate).toFixed(2));
+    const treasuryAmount = Number((finalPrice * treasuryRate).toFixed(2));
+
+    try {
+      // server_treasury bakiyesini güncelle (upsert)
+      // Kayıt yoksa oluştur, varsa arttır
+      const { data: existing } = await supabase
+        .from('server_treasury')
+        .select('balance, total_collected, total_burned')
+        .eq('guild_id', selectedGuildId)
+        .maybeSingle();
+
+      if (existing) {
+        await supabase
+          .from('server_treasury')
+          .update({
+            balance: Number((Number(existing.balance) + treasuryAmount).toFixed(2)),
+            total_collected: Number((Number(existing.total_collected) + treasuryAmount).toFixed(2)),
+            total_burned: Number((Number(existing.total_burned) + burnAmount).toFixed(2)),
+            updated_at: new Date().toISOString(),
+          })
+          .eq('guild_id', selectedGuildId);
+      } else {
+        await supabase
+          .from('server_treasury')
+          .insert({
+            guild_id: selectedGuildId,
+            balance: treasuryAmount,
+            total_collected: treasuryAmount,
+            total_burned: burnAmount,
+            updated_at: new Date().toISOString(),
+          });
+      }
+    } catch (e) {
+      // Hazine hatası satın almayı durdurmaz — sessizce logla
+      console.error('Treasury update failed:', e);
+    }
+  }
 
   // Calculate expires_at for timed roles
   const nowIso = new Date().toISOString();
