@@ -15,7 +15,7 @@ type Embed = {
   timestamp?: string;
 };
 
-const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN ?? '';
+const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN ?? process.env.DISCORD_TOKEN ?? '';
 
 // Kanal cache (process lifecycle boyunca)
 const channelCache: Record<string, string> = {};
