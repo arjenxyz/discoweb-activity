@@ -190,6 +190,13 @@ export default function MarketSection({ userId, economyApproved }: { userId?: st
   const [orderLoading, setOrderLoading] = useState(false);
   const [orderError, setOrderError] = useState<string|null>(null);
   const [orderSuccess, setOrderSuccess] = useState(false);
+  // Ekonomi durum (kilitli ekran için)
+  type EcoStatus = { is_admin: boolean; member_count: number; economy_status: string; vote_count: number; vote_threshold: number; has_voted: boolean; scheduled_open_at: string | null };
+  const [ecoStatus, setEcoStatus] = useState<EcoStatus | null>(null);
+  const [ecoLoading, setEcoLoading] = useState(false);
+  const [ecoActionLoading, setEcoActionLoading] = useState(false);
+  const [ecoActionMsg, setEcoActionMsg] = useState<string | null>(null);
+
   // Mari dönüşüm modal
   const [mariOpen, setMariOpen] = useState(false);
   const [mariInfo, setMariInfo] = useState<MariInfo | null>(null);
@@ -583,22 +590,139 @@ export default function MarketSection({ userId, economyApproved }: { userId?: st
 
   /* ─ Yüksek Ekonomi gerekli ─ */
   if (!economyApproved) {
+    // Eco status'u lazy yükle
+    if (!ecoStatus && !ecoLoading) {
+      setEcoLoading(true);
+      fetch(apiUrl('/api/member/economy-status'), { credentials: 'include' })
+        .then(r => r.json()).then(d => setEcoStatus(d as EcoStatus)).catch(() => {}).finally(() => setEcoLoading(false));
+    }
+
+    const eco = ecoStatus;
+    const isAdmin = eco?.is_admin ?? false;
+    const memberCount = eco?.member_count ?? 0;
+    const status = eco?.economy_status ?? 'none';
+    const canDirect = memberCount >= 500;
+
+    const doAction = async (action: string) => {
+      setEcoActionLoading(true);
+      setEcoActionMsg(null);
+      try {
+        const res = await fetch(apiUrl('/api/member/economy-status'), {
+          method: 'POST', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action }),
+        });
+        const d = await res.json() as { ok?: boolean; error?: string; vote_count?: number; threshold_reached?: boolean; is_valid?: boolean };
+        if (!res.ok) {
+          const msgs: Record<string, string> = {
+            already_voted: 'Zaten oy verdin.',
+            not_in_voting: 'Oylama aktif değil.',
+            not_enough_members: '500+ üye gerekli.',
+            already_applied: 'Başvuru zaten mevcut.',
+            forbidden: 'Bu işlem için yönetici yetkisi gerekli.',
+          };
+          setEcoActionMsg(msgs[d.error ?? ''] ?? d.error ?? 'Hata oluştu.');
+        } else {
+          if (action === 'cast_vote') {
+            if (!d.is_valid) setEcoActionMsg('Oyun kaydedildi fakat hesabın 30 günden genç olduğu için geçersiz sayıldı.');
+            else if (d.threshold_reached) setEcoActionMsg('🎉 Eşik doldu! Başvuru developer incelemesine alındı.');
+            else setEcoActionMsg(`Oyun kaydedildi. Toplam: ${d.vote_count} / ${eco?.vote_threshold ?? 100}`);
+          } else {
+            setEcoActionMsg('✅ Başvuru gönderildi. Developer inceleyecek (max 7 gün).');
+          }
+          // Durumu yenile
+          const r2 = await fetch(apiUrl('/api/member/economy-status'), { credentials: 'include' });
+          if (r2.ok) setEcoStatus(await r2.json() as EcoStatus);
+        }
+      } catch { setEcoActionMsg('Bağlantı hatası.'); }
+      setEcoActionLoading(false);
+    };
+
     return (
-      <section className="relative isolate bg-[#080a0f] min-h-[60vh] flex items-center justify-center">
+      <section className="relative isolate bg-[#080a0f] h-full flex items-center justify-center">
         <style>{CSS}</style>
         <VideoBackground videoRef={videoRef} />
         <div className="absolute inset-0 bg-indigo-950/40 pointer-events-none z-[1]" />
-        <div className="relative z-10 flex flex-col items-center gap-5 px-6 text-center max-w-sm">
+        <div className="relative z-10 flex flex-col items-center gap-5 px-6 text-center max-w-sm w-full">
           <Image src="/Mari.gif" alt="Mari" width={64} height={64} className="h-16 w-16 opacity-60" unoptimized />
           <div>
             <p className="text-lg font-black text-white mb-1">Borsa Kilitli</p>
             <p className="text-sm text-white/40">Bu sunucu henüz Yüksek Ekonomi kademesinde değil. Borsa ve Mari para birimi yalnızca onaylı sunucularda aktif olur.</p>
           </div>
-          <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] px-5 py-3 text-xs text-white/30 space-y-1 text-left w-full">
-            <p>• Sunucu içinden <span className="text-white/50 font-semibold">100 oy</span> toplanarak başvuru yapılabilir</p>
-            <p>• Veya <span className="text-white/50 font-semibold">500+ üyeli</span> sunucular direkt başvurabilir</p>
-            <p>• Başvuru developer tarafından onaylanır (max 7 gün)</p>
-          </div>
+
+          {/* Başvuru durumu */}
+          {eco && status !== 'none' && status !== 'rejected' && (
+            <div className={`w-full rounded-2xl border px-5 py-3 text-sm text-left ${
+              status === 'voting' ? 'border-violet-500/20 bg-violet-500/[0.06]' :
+              status === 'pending' ? 'border-amber-500/20 bg-amber-500/[0.06]' : ''
+            }`}>
+              {status === 'voting' && (
+                <>
+                  <p className="font-bold text-violet-300 mb-1">Oylama Süreci Aktif</p>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="flex-1 h-1.5 rounded-full bg-white/10 overflow-hidden">
+                      <div className="h-full rounded-full bg-violet-500 transition-all" style={{ width: `${Math.min(100, ((eco.vote_count) / (eco.vote_threshold)) * 100)}%` }} />
+                    </div>
+                    <span className="text-xs text-white/40 tabular-nums">{eco.vote_count} / {eco.vote_threshold}</span>
+                  </div>
+                  {!eco.has_voted && (
+                    <button
+                      onClick={() => doAction('cast_vote')}
+                      disabled={ecoActionLoading}
+                      className="w-full rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-40 py-2 text-xs font-bold text-white transition"
+                    >
+                      {ecoActionLoading ? 'Kaydediliyor...' : 'Oy Ver'}
+                    </button>
+                  )}
+                  {eco.has_voted && <p className="text-xs text-white/30 text-center">Oy verdin ✓</p>}
+                </>
+              )}
+              {status === 'pending' && (
+                <>
+                  <p className="font-bold text-amber-300 mb-1">Başvuru İncelemede</p>
+                  <p className="text-xs text-white/40">Developer onayı bekleniyor. Otomatik onay: {eco.scheduled_open_at ? new Date(eco.scheduled_open_at).toLocaleDateString('tr-TR') : '—'}</p>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* Admin başvuru butonları */}
+          {isAdmin && (status === 'none' || status === 'rejected') && (
+            <div className="w-full space-y-2">
+              {canDirect ? (
+                <button
+                  onClick={() => doAction('apply_direct')}
+                  disabled={ecoActionLoading}
+                  className="w-full rounded-2xl border border-violet-500/30 bg-violet-500/10 hover:bg-violet-500/20 disabled:opacity-40 py-3 text-sm font-bold text-violet-300 transition"
+                >
+                  {ecoActionLoading ? 'Gönderiliyor...' : '✦ Yüksek Ekonomi\'ye Kayıt Yaptır'}
+                </button>
+              ) : (
+                <button
+                  onClick={() => doAction('start_vote')}
+                  disabled={ecoActionLoading}
+                  className="w-full rounded-2xl border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] disabled:opacity-40 py-3 text-sm font-bold text-white/70 transition"
+                >
+                  {ecoActionLoading ? 'Başlatılıyor...' : '🗳 Sunucu Oylaması Başlat (100 oy gerekli)'}
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Oylama aktif, admin değil */}
+          {!isAdmin && status === 'none' && (
+            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] px-5 py-3 text-xs text-white/30 space-y-1 text-left w-full">
+              <p>• Sunucu içinden <span className="text-white/50 font-semibold">100 oy</span> toplanarak başvuru yapılabilir</p>
+              <p>• Veya <span className="text-white/50 font-semibold">500+ üyeli</span> sunucular direkt başvurabilir</p>
+              <p>• Başvuru developer tarafından onaylanır (max 7 gün)</p>
+            </div>
+          )}
+
+          {ecoActionMsg && (
+            <p className="text-xs text-center text-white/60">{ecoActionMsg}</p>
+          )}
+
+          {ecoLoading && <p className="text-xs text-white/20">Yükleniyor...</p>}
         </div>
       </section>
     );
