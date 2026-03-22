@@ -7,6 +7,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { requireSessionUser } from '@/lib/auth';
+import { devLog, DevLogEmbeds } from '@/lib/devLog';
 
 export const dynamic = 'force-dynamic';
 
@@ -236,6 +237,9 @@ export async function POST(request: Request) {
       }
     } catch { /* ignore */ }
   }
+
+  // Log: ceza verildi
+  devLog('ceza_log', DevLogEmbeds.ceza(body.guild_id, body.type, body.reason ?? '', session.userId, body.fine_amount));
 
   return NextResponse.json({ ok: true, penalty_id: penalty.id });
 }

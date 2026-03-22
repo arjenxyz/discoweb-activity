@@ -7,6 +7,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { requireSessionUser } from '@/lib/auth';
+import { devLog, DevLogEmbeds } from '@/lib/devLog';
 
 export const dynamic = 'force-dynamic';
 
@@ -86,8 +87,10 @@ export async function POST(request: Request) {
   // global_freeze veya read_only_mode event'i ise app_config güncelle
   if (body.type === 'freeze') {
     await supabase.from('app_config').upsert({ key: 'global_freeze', value: 'true' }, { onConflict: 'key' });
+    devLog('freeze_log', DevLogEmbeds.freeze(true, session.userId));
   } else if (body.type === 'unfreeze') {
     await supabase.from('app_config').upsert({ key: 'global_freeze', value: 'false' }, { onConflict: 'key' });
+    devLog('freeze_log', DevLogEmbeds.freeze(false, session.userId));
   }
 
   // Sunucuya bildiri gönder (guild_id varsa)

@@ -4,6 +4,7 @@ import { requireSessionUser } from '@/lib/auth';
 import { getSelectedGuildId } from '@/lib/guild';
 import { isGuildAdmin } from '@/lib/adminAuth';
 import { checkGlobalFreeze } from '@/lib/maintenance';
+import { devLog, DevLogEmbeds } from '@/lib/devLog';
 
 export const dynamic = 'force-dynamic';
 
@@ -128,6 +129,9 @@ export async function POST(request: Request) {
       // Embed hatası başvuruyu durdurmaz
     }
   }
+
+  // Log: başvuru geldi
+  devLog('basvuru_ekonomi', DevLogEmbeds.ekonomiBasvuru(guildId, userId, starterPackage, application.id));
 
   return NextResponse.json({ ok: true, applicationId: application.id });
 }

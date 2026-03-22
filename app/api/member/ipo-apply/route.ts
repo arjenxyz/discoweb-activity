@@ -4,6 +4,7 @@ import { requireSessionUser } from '@/lib/auth';
 import { getSelectedGuildId } from '@/lib/guild';
 import { isGuildAdmin } from '@/lib/adminAuth';
 import { checkGlobalFreeze } from '@/lib/maintenance';
+import { devLog, DevLogEmbeds } from '@/lib/devLog';
 
 export const dynamic = 'force-dynamic';
 
@@ -176,6 +177,9 @@ export async function POST(request: Request) {
       body: JSON.stringify({ embeds: [embed], components }),
     });
   }
+
+  // Log: IPO başvurusu geldi
+  devLog('basvuru_ipo', DevLogEmbeds.ipoBasvuru(guildId, userId, proposed_price, proposed_founder_ratio, application.id));
 
   return NextResponse.json({ ok: true, application_id: application.id });
 }

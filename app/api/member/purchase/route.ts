@@ -6,6 +6,7 @@ import { logWebEvent, logError } from '@/lib/serverLogger';
 import { logBotError } from '@/lib/activityLogger';
 import { discordFetch } from '@/lib/discordRest';
 import { requireSessionUser } from '@/lib/auth';
+import { devLog, DevLogEmbeds } from '@/lib/devLog';
 
 const GUILD_ID = process.env.DISCORD_GUILD_ID ?? null;
 
@@ -403,6 +404,8 @@ export async function POST(request: Request) {
             updated_at: new Date().toISOString(),
           });
       }
+      // Log: hazine girişi
+      if (selectedGuildId) devLog('hazine_giris', DevLogEmbeds.hazineGiris(selectedGuildId, userId, finalPrice, treasuryAmount, burnAmount));
     } catch (e) {
       // Hazine hatası satın almayı durdurmaz — sessizce logla
       console.error('Treasury update failed:', e);

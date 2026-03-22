@@ -17,6 +17,7 @@ import { createClient } from '@supabase/supabase-js';
 import { requireSessionUser } from '@/lib/auth';
 import { getSelectedGuildId } from '@/lib/guild';
 import { checkGlobalFreeze } from '@/lib/maintenance';
+import { devLog, DevLogEmbeds } from '@/lib/devLog';
 
 export const dynamic = 'force-dynamic';
 
@@ -181,6 +182,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'order_create_failed' }, { status: 500 });
   }
 
+  // Büyük işlem logu (eşik: 10.000 lot VEYA 1.000.000 Papel)
+  const totalValue = lot_count * price_per_lot;
+  if (lot_count >= 10000 || totalValue >= 1_000_000) {
+    devLog('buyuk_islemler', DevLogEmbeds.buyukIslem(guildId, userId, type, lot_count, totalValue));
+  }
+
   // Eşleştirme dene
   await matchOrders(supabase, guildId, order.id, type, price_per_lot, userId);
 
@@ -316,7 +323,13 @@ async function matchOrders(
       .eq('seller_user_id', sellUserId)
       .gte('traded_at', oneHourAgo);
 
-    if ((recentTrades ?? 0) >= 2) continue;
+    if ((recentTrades ?? 0) >= 2) {
+      devLog('suphe_log', DevLogEmbeds.suphe(guildId, buyUserId, sellUserId));
+      continue;
+    }
+
+    // Log: trade gerçekleşti
+    devLog('borsa_trades', DevLogEmbeds.trade(guildId, buyUserId, sellUserId, tradeLots, tradePrice, totalAmount, platformFee));
 
     // Trade kaydı oluştur
     await supabase.from('market_trades').insert({
@@ -468,5 +481,6 @@ async function checkCircuitBreaker(supabase: SupabaseClient, guildId: string) {
     await supabase.from('server_listings').update({
       circuit_breaker_until: breakerUntil,
     }).eq('guild_id', guildId);
+    devLog('circuit_breaker', DevLogEmbeds.circuitBreaker(guildId, listing.market_price, priceDrop * 100, breakerUntil));
   }
 }
