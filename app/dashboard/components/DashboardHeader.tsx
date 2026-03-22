@@ -177,7 +177,7 @@ export default function DashboardHeader({
           {!unauthorized && (
             <div className="flex items-center gap-1.5">
               {/* Mari bakiye */}
-              {mariBalance !== undefined && mariBalance > 0 && (
+              {mariBalance !== undefined && (
                 <button
                   type="button"
                   onClick={() => settings.onOpenMariConvert?.()}
