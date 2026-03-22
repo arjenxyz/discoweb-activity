@@ -449,6 +449,22 @@ async function matchOrders(
     filled_at: newStatus === 'filled' ? new Date().toISOString() : null,
   }).eq('id', newOrderId);
 
+  // market_price'ı en son işlem fiyatıyla güncelle
+  const { data: lastTrade } = await supabase
+    .from('market_trades')
+    .select('price_per_lot')
+    .eq('guild_id', guildId)
+    .order('traded_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (lastTrade) {
+    await supabase
+      .from('server_listings')
+      .update({ market_price: lastTrade.price_per_lot })
+      .eq('guild_id', guildId);
+  }
+
   // Circuit breaker kontrolü: son 24 saatte fiyat -%30'dan fazla düştü mü?
   await checkCircuitBreaker(supabase, guildId);
 }
