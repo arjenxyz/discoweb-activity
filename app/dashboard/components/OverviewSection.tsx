@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
+import { apiUrl } from '@/lib/api';
 import {
   LuMessageSquare,
   LuMic,
@@ -52,7 +53,7 @@ export default function OverviewSection({
   const [ad, setAd] = useState<Ad | null>(null);
 
   useEffect(() => {
-    fetch('/api/ads')
+    fetch(apiUrl('/api/ads'))
       .then(r => r.json())
       .then((d: { ad: Ad | null }) => { if (d.ad) setAd(d.ad); })
       .catch(() => {});

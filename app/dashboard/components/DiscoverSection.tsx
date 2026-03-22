@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { LuUsers } from 'react-icons/lu';
+import { apiUrl } from '@/lib/api';
 
 type Ad = {
   id: string;
@@ -19,7 +20,7 @@ export default function DiscoverSection() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/ads')
+    fetch(apiUrl('/api/ads'))
       .then(r => r.json())
       .then((d: { ad: Ad | null }) => setAd(d.ad ?? null))
       .catch(() => {})
