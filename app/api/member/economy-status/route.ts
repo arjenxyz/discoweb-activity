@@ -52,7 +52,10 @@ const getSupabase = () => {
 export async function GET(request: Request) {
   const session = await requireSessionUser(request);
   if (!session.ok) return session.response;
-  const userId = session.userId;
+  // query param user_id fallback (Activity embed'de session cookie gelmeyebilir)
+  const url = new URL(request.url);
+  const userId = session.userId || url.searchParams.get('user_id') || '';
+  if (!userId) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 
   const supabase = getSupabase();
   if (!supabase) return NextResponse.json({ error: 'missing_service_role' }, { status: 500 });
@@ -76,8 +79,12 @@ export async function GET(request: Request) {
   ]);
 
   const adminRoleId = serverRes.data?.admin_role_id ?? null;
+  // Bot API + Discord OAuth kontrolü paralel çalışır
   const roleAdminCheck = await hasServerAdminRole(userId, guildId, adminRoleId);
   const adminCheck = discordAdminCheck || roleAdminCheck;
+
+  // Debug log — admin durumunu görmek için (production'da kaldırılabilir)
+  console.log('[economy-status] userId:', userId, 'guildId:', guildId, 'adminRoleId:', adminRoleId, 'discordAdmin:', discordAdminCheck, 'roleAdmin:', roleAdminCheck);
   const app = appRes.data;
 
   // Kullanıcı daha önce oy verdi mi?

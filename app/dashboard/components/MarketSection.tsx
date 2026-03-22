@@ -213,9 +213,11 @@ export default function MarketSection({ userId, economyApproved }: { userId?: st
   useEffect(() => {
     if (economyApproved) return;
     setEcoLoading(true);
-    fetch(apiUrl('/api/member/economy-status'), { credentials: 'include' })
+    const params = new URLSearchParams();
+    if (userId) params.set('user_id', userId);
+    fetch(apiUrl(`/api/member/economy-status?${params}`), { credentials: 'include' })
       .then(r => r.json()).then(d => setEcoStatus(d as EcoStatus)).catch(() => {}).finally(() => setEcoLoading(false));
-  }, [economyApproved]);
+  }, [economyApproved, userId]);
 
   useEffect(() => {
     if (tab !== 'portfolio') return;
