@@ -58,12 +58,17 @@ ALTER TABLE public.discount_usages
   ADD COLUMN IF NOT EXISTS guild_id text;
 
 -- discounts → servers üzerinden backfill
-UPDATE public.discount_usages du
-SET guild_id = srv.discord_id
-FROM public.discounts d
-JOIN public.servers srv ON d.server_id = srv.id
-WHERE du.discount_id = d.id
-  AND du.guild_id IS NULL;
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='discounts') THEN
+    UPDATE public.discount_usages du
+    SET guild_id = srv.discord_id
+    FROM public.discounts d
+    JOIN public.servers srv ON d.server_id = srv.id
+    WHERE du.discount_id = d.id
+      AND du.guild_id IS NULL;
+  END IF;
+END $$;
 
 -- ─────────────────────────────────────────
 -- 5. notification_reads — guild_id ekle
@@ -89,7 +94,7 @@ ALTER TABLE public.referral_history
 -- ─────────────────────────────────────────
 
 -- Önce mevcut değerleri normalleştir (boşluk/büyük harf tutarsızlıklarını temizle)
-UPDATE public.wallet_ledger SET type = lower(trim(type)) WHERE type IS NOT NULL;
+UPDATE public.wallet_ledger SET type = lower(trim(type::text)) WHERE type IS NOT NULL;
 
 -- Enum oluştur
 DO $$
@@ -112,14 +117,47 @@ BEGIN
   END IF;
 END $$;
 
--- Tanımsız değerleri 'earn'e çek (crash önler)
+-- Önce type sütununu TEXT'e dönüştür (varsa enum'dan text'e geri alın)
+ALTER TABLE public.wallet_ledger
+  ALTER COLUMN type TYPE text
+  USING type::text;
+
+-- normalize et
+UPDATE public.wallet_ledger
+SET type = lower(trim(type::text))
+WHERE type IS NOT NULL;
+
+-- geçersiz değerleri 'earn'e çek
 UPDATE public.wallet_ledger
 SET type = 'earn'
-WHERE type NOT IN (
-  'earn','spend','transfer_in','transfer_out','refund',
-  'admin_grant','admin_deduct','raffle_entry','raffle_refund',
-  'store_purchase','referral_bonus','daily_bonus'
-);
+WHERE type IS NULL
+  OR type::text NOT IN (
+    'earn','spend','transfer_in','transfer_out','refund',
+    'admin_grant','admin_deduct','raffle_entry','raffle_refund',
+    'store_purchase','referral_bonus','daily_bonus'
+  );
+
+-- CHECK constraint on type değeri
+ALTER TABLE public.wallet_ledger
+  DROP CONSTRAINT IF EXISTS wallet_ledger_type_check;
+ALTER TABLE public.wallet_ledger
+  ADD CONSTRAINT wallet_ledger_type_check CHECK (type::text IN (
+    'earn','spend','transfer_in','transfer_out','refund',
+    'admin_grant','admin_deduct','raffle_entry','raffle_refund',
+    'store_purchase','referral_bonus','daily_bonus'
+  ));
+
+-- Enum oluştur (varsa atla)
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'wallet_ledger_type') THEN
+    CREATE TYPE public.wallet_ledger_type AS ENUM (
+      'earn','spend','transfer_in','transfer_out','refund',
+      'admin_grant','admin_deduct','raffle_entry','raffle_refund',
+      'store_purchase','referral_bonus','daily_bonus'
+    );
+  END IF;
+END $$;
 
 -- TEXT sütununu ENUM'a çevir
 ALTER TABLE public.wallet_ledger

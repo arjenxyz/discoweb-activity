@@ -29,17 +29,17 @@ const deleteForUser = async (
     'voice_participation',
     'daily_earnings',
     'user_guilds',
-    'system_mail_contacts',
     'system_mails',
+    'store_orders',        // guild_id eklendi (migration 20260322000003)
+    'discount_usages',     // guild_id eklendi (migration 20260322000003)
+    'promotion_usages',    // guild_id eklendi (migration 20260322000003)
+    'notification_reads',  // guild_id eklendi (migration 20260322000003)
   ];
 
   // Sadece user_id olan tablolar — yalnızca all scope'da silinir
   const globalTables = [
-    'store_orders',
-    'discount_usages',
-    'promotion_usages',
-    'notification_reads',
     'referral_milestone_claims',
+    'referral_history',
     'system_mail_reads',
     'system_mail_stars',
   ];

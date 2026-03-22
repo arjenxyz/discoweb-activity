@@ -1,8 +1,6 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
-import { apiUrl } from '@/lib/api';
 import {
   LuMessageSquare,
   LuMic,
@@ -13,19 +11,8 @@ import {
   LuGift,
   LuCheck,
   LuClock,
-  LuUsers,
 } from 'react-icons/lu';
 import type { MemberProfile, OverviewStats, OrderStats, OverviewStatsExpanded, BadgeInfo } from '../types';
-
-type Ad = {
-  id: string;
-  invite_url: string;
-  server_name: string;
-  server_description?: string | null;
-  server_icon?: string | null;
-  member_count?: number | null;
-  online_count?: number | null;
-};
 
 type OverviewSectionProps = {
   overviewLoading: boolean;
@@ -50,15 +37,6 @@ export default function OverviewSection({
   formatRoleColor,
   badgeInfo,
 }: OverviewSectionProps) {
-  const [ad, setAd] = useState<Ad | null>(null);
-
-  useEffect(() => {
-    fetch(apiUrl('/api/ads'))
-      .then(r => r.json())
-      .then((d: { ad: Ad | null }) => { if (d.ad) setAd(d.ad); })
-      .catch(() => {});
-  }, []);
-
   const hasTag = (overviewStats as OverviewStatsExpanded)?.hasTag ?? false;
   const isBooster = (overviewStats as OverviewStatsExpanded)?.isBooster ?? false;
   const totalsSince = (overviewStats as OverviewStatsExpanded)?.totalsSinceVerified;
@@ -255,21 +233,8 @@ export default function OverviewSection({
             </div>
           )}
 
-          {/* PAPEL SIRALAMASI */}
-          <div className={card}>
-            <div className="flex items-center gap-2 mb-2">
-              <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-amber-500/10">
-                <LuTrendingUp className="h-3.5 w-3.5 text-amber-400" />
-              </div>
-              <span className="text-sm font-semibold text-white">Papel Sıralaması</span>
-            </div>
-            <p className="text-sm text-white/35 leading-relaxed">
-              Menüden <span className="text-white/60 font-semibold">Sıralama</span>&apos;ya giderek tam listeyi görebilirsin.
-            </p>
-          </div>
-
           {/* TAG ROZETİ */}
-          {badgeInfo !== undefined && (
+          {badgeInfo !== undefined && badgeInfo?.hasTag && (
             <div className={card}>
               <div className="flex items-center gap-2 mb-4">
                 <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-indigo-500/10">
@@ -278,17 +243,7 @@ export default function OverviewSection({
                 <span className="text-sm font-semibold text-white">Tag Rozeti</span>
               </div>
 
-              {!badgeInfo?.hasTag ? (
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/[0.06] bg-white/[0.02]">
-                    <LuTag className="h-4 w-4 text-white/15" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-white/35">Rozet kazanılmadı</p>
-                    <p className="text-xs text-white/20">Sunucu tag&apos;ini taşımıyorsunuz</p>
-                  </div>
-                </div>
-              ) : (
+              {badgeInfo?.hasTag && (
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
                     <div
@@ -395,58 +350,6 @@ export default function OverviewSection({
         </>
       )}
 
-      {/* REKLAM KARTI — Discord invite stili */}
-      {ad && (
-        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4">
-          <p className="mb-3 text-[9px] font-semibold uppercase tracking-[0.3em] text-white/25">Öne Çıkan Sunucu</p>
-          <div className="flex items-center gap-3">
-            {ad.server_icon ? (
-              <Image
-                src={ad.server_icon}
-                alt={ad.server_name}
-                width={48}
-                height={48}
-                unoptimized
-                className="h-12 w-12 rounded-2xl object-cover shrink-0"
-              />
-            ) : (
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#5865F2]/20 text-lg font-black text-white">
-                {ad.server_name.charAt(0)}
-              </div>
-            )}
-            <div className="min-w-0 flex-1">
-              <p className="truncate font-bold text-white">{ad.server_name}</p>
-              {ad.server_description && (
-                <p className="mt-0.5 text-xs text-white/40 line-clamp-1">{ad.server_description}</p>
-              )}
-              {(ad.member_count != null || ad.online_count != null) && (
-                <div className="mt-1 flex items-center gap-3 text-[11px] text-white/35">
-                  {ad.online_count != null && (
-                    <span className="flex items-center gap-1">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                      {ad.online_count.toLocaleString()} çevrimiçi
-                    </span>
-                  )}
-                  {ad.member_count != null && (
-                    <span className="flex items-center gap-1">
-                      <LuUsers className="h-3 w-3" />
-                      {ad.member_count.toLocaleString()} üye
-                    </span>
-                  )}
-                </div>
-              )}
-            </div>
-            <a
-              href={ad.invite_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="shrink-0 rounded-xl bg-[#5865F2] px-4 py-2 text-sm font-bold text-white transition hover:bg-[#4752C4]"
-            >
-              Katıl
-            </a>
-          </div>
-        </div>
-      )}
     </section>
   );
 }
