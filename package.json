@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "@discord/embedded-app-sdk": "^2.4.0",
-    "@google/generative-ai": "^0.24.1",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.93.1",
     "dompurify": "^3.0.11",
