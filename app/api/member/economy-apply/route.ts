@@ -111,12 +111,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'already_voted' }, { status: 400 });
     }
 
-    // Hesap yaşını Discord API'sinden hesapla
-    // Discord ID'nin ilk 42 biti timestamp içeriyor (epoch: 2015-01-01)
-    const DISCORD_EPOCH = 1420070400000n;
-    const accountCreatedAt = new Date(
-      Number((BigInt(userId) >> 22n) + DISCORD_EPOCH)
-    );
+    // Hesap yaşını Discord snowflake'den hesapla (epoch: 2015-01-01)
+    // BigInt literal yerine Number aritmetiği (ES2019 uyumlu)
+    const DISCORD_EPOCH = 1420070400000;
+    const snowflake = parseInt(userId, 10);
+    const accountCreatedAt = new Date(Math.floor(snowflake / 4194304) + DISCORD_EPOCH);
     const accountAgeDays = Math.floor(
       (Date.now() - accountCreatedAt.getTime()) / (1000 * 60 * 60 * 24)
     );
