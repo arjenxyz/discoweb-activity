@@ -261,7 +261,7 @@ export default function MarketSection({ userId }: { userId?: string | null }) {
 
   /* ─ Loading ─ */
   if (loading) return (
-    <section className="relative min-h-[400px] overflow-hidden bg-[#080a0f]">
+    <section className="relative min-h-full overflow-hidden bg-[#080a0f]">
       <style>{CSS}</style>
       <VideoBackground videoRef={videoRef} />
       <div className="relative z-10 p-5 sm:p-8 space-y-3">
@@ -274,7 +274,7 @@ export default function MarketSection({ userId }: { userId?: string | null }) {
   /* ─ Detail view ─ */
   if (detailLoading || selected) {
     if (detailLoading && !selected) return (
-      <section className="relative min-h-[400px] overflow-hidden bg-[#080a0f]">
+      <section className="relative min-h-full overflow-hidden bg-[#080a0f]">
         <style>{CSS}</style>
         <VideoBackground videoRef={videoRef} />
         <div className="relative z-10 p-5 sm:p-8 space-y-3 mt-4"><SkeletonCard /><SkeletonCard /></div>
@@ -293,7 +293,7 @@ export default function MarketSection({ userId }: { userId?: string | null }) {
     const plVal = myHolding ? (selected.market_price - myHolding.avg_buy_price) * myHolding.lot_count : 0;
 
     return (
-      <section className="relative overflow-hidden bg-[#080a0f]">
+      <section className="relative min-h-full overflow-hidden bg-[#080a0f]">
         <style>{CSS}</style>
         <VideoBackground videoRef={videoRef} />
 
@@ -520,7 +520,7 @@ export default function MarketSection({ userId }: { userId?: string | null }) {
   const losers  = [...listings].filter(l => priceDiff(l).pct < 0).sort((a,b) => priceDiff(a).pct - priceDiff(b).pct).slice(0,1);
 
   return (
-    <section className="relative overflow-hidden bg-[#080a0f]">
+    <section className="relative min-h-full overflow-hidden bg-[#080a0f]">
       <style>{CSS}</style>
       <VideoBackground videoRef={videoRef} />
 

@@ -897,21 +897,24 @@ export default function DashboardPage() {
     await refreshStoreItems(storePage + 1, true);
   };
 
-  const fullWidthSections = ['mail', 'market'];
-  const mainWrapperClass = fullWidthSections.includes(effectiveSection)
+  const mainWrapperClass = effectiveSection === 'mail'
     ? 'mx-0 w-full max-w-full px-0'
-    : effectiveSection === 'store'
-      ? isActivityEmbed
-        ? 'mx-0 w-full max-w-full px-0'
-        : 'w-full max-w-4xl px-0 sm:px-6'
-      : 'w-full max-w-4xl px-4 sm:px-6';
-  const mainSpacingClass = fullWidthSections.includes(effectiveSection)
+    : effectiveSection === 'market'
+      ? 'mx-0 w-full max-w-full px-0'
+      : effectiveSection === 'store'
+        ? isActivityEmbed
+          ? 'mx-0 w-full max-w-full px-0'
+          : 'w-full max-w-4xl px-0 sm:px-6'
+        : 'w-full max-w-4xl px-4 sm:px-6';
+  const mainSpacingClass = effectiveSection === 'mail'
     ? 'py-0 gap-0'
-    : effectiveSection === 'store'
-      ? isActivityEmbed
-        ? 'md:pt-20 pb-28 gap-0 md:pb-0'
-        : 'md:pt-20 pb-28 sm:pb-10 gap-0 sm:gap-6 md:pb-0'
-      : 'md:pt-24 pb-6 gap-6';
+    : effectiveSection === 'market'
+      ? 'md:pt-16 pb-0 gap-0'
+      : effectiveSection === 'store'
+        ? isActivityEmbed
+          ? 'md:pt-20 pb-28 gap-0 md:pb-0'
+          : 'md:pt-20 pb-28 sm:pb-10 gap-0 sm:gap-6 md:pb-0'
+        : 'md:pt-24 pb-6 gap-6';
 
   // Splash — readiness sorgulanmadan önce gösterilir
   if (!splashDone) {
