@@ -7,11 +7,9 @@ import {
   LuTrendingUp,
   LuTrendingDown,
   LuTriangleAlert,
-  LuClock,
   LuX,
   LuCheck,
   LuInfo,
-  LuZap,
   LuArrowLeft,
   LuCoins,
   LuChartBar,
@@ -20,7 +18,6 @@ import {
   LuShield,
   LuBriefcase,
   LuStar,
-  LuActivity,
 } from 'react-icons/lu';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { apiUrl } from '@/lib/api';
@@ -176,7 +173,7 @@ const CSS = `
 `;
 
 /* ─── Main ───────────────────────────────────────────── */
-export default function MarketSection({ userId }: { userId?: string | null }) {
+export default function MarketSection({ userId, economyApproved }: { userId?: string | null; economyApproved?: boolean }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
@@ -584,6 +581,29 @@ export default function MarketSection({ userId }: { userId?: string | null }) {
     );
   }
 
+  /* ─ Yüksek Ekonomi gerekli ─ */
+  if (!economyApproved) {
+    return (
+      <section className="relative isolate bg-[#080a0f] min-h-[60vh] flex items-center justify-center">
+        <style>{CSS}</style>
+        <VideoBackground videoRef={videoRef} />
+        <div className="absolute inset-0 bg-indigo-950/40 pointer-events-none z-[1]" />
+        <div className="relative z-10 flex flex-col items-center gap-5 px-6 text-center max-w-sm">
+          <Image src="/Mari.gif" alt="Mari" width={64} height={64} className="h-16 w-16 opacity-60" unoptimized />
+          <div>
+            <p className="text-lg font-black text-white mb-1">Borsa Kilitli</p>
+            <p className="text-sm text-white/40">Bu sunucu henüz Yüksek Ekonomi kademesinde değil. Borsa ve Mari para birimi yalnızca onaylı sunucularda aktif olur.</p>
+          </div>
+          <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] px-5 py-3 text-xs text-white/30 space-y-1 text-left w-full">
+            <p>• Sunucu içinden <span className="text-white/50 font-semibold">100 oy</span> toplanarak başvuru yapılabilir</p>
+            <p>• Veya <span className="text-white/50 font-semibold">500+ üyeli</span> sunucular direkt başvurabilir</p>
+            <p>• Başvuru developer tarafından onaylanır (max 7 gün)</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   /* ─ List view ─ */
   const gainers = [...listings].filter(l => priceDiff(l).pct > 0).sort((a,b) => priceDiff(b).pct - priceDiff(a).pct).slice(0,1);
   const losers  = [...listings].filter(l => priceDiff(l).pct < 0).sort((a,b) => priceDiff(a).pct - priceDiff(b).pct).slice(0,1);
@@ -612,7 +632,7 @@ export default function MarketSection({ userId }: { userId?: string | null }) {
               backgroundSize: '300% 100%', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent',
               animation: 'titleShine 4s ease-in-out infinite',
             }}>
-              Papel Piyasası
+              DiscoWeb Piyasası
             </h2>
             <p className="text-[11px] text-white/25 font-medium mt-0.5">P2P · Anlık fiyatlar · {listings.length} sunucu</p>
           </div>

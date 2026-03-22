@@ -71,15 +71,24 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'server_not_found' }, { status: 404 });
   }
 
-  const { data: wallet } = await supabase
-    .from('member_wallets')
-    .select('balance,mari_balance')
-    .eq('guild_id', selectedGuildId)
-    .eq('user_id', userId)
-    .maybeSingle();
+  const [walletRes, econRes] = await Promise.all([
+    supabase
+      .from('member_wallets')
+      .select('balance,mari_balance')
+      .eq('guild_id', selectedGuildId)
+      .eq('user_id', userId)
+      .maybeSingle(),
+    supabase
+      .from('economy_applications')
+      .select('status')
+      .eq('guild_id', selectedGuildId)
+      .maybeSingle(),
+  ]);
+  const wallet = walletRes.data;
+  const economyApproved = econRes.data?.status === 'approved';
 
   // Eğer kullanıcıya ait cüzdan satırı yoksa otomatik oluştur
-  if (!wallet) {
+  if (!walletRes.data) {
     const { error: walletCreateError } = await supabase.from('member_wallets').upsert(
       {
         guild_id: selectedGuildId,
@@ -107,7 +116,8 @@ export async function GET(request: Request) {
 
   return NextResponse.json({
     balance: wallet?.balance ?? 0,
-    mari_balance: wallet?.mari_balance ?? 0,
+    mari_balance: economyApproved ? (wallet?.mari_balance ?? 0) : undefined,
+    economy_approved: economyApproved,
     dailyLimit: server.transfer_daily_limit,
     taxRate: server.transfer_tax_rate,
     sentToday: totalSent,

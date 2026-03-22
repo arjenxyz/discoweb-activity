@@ -56,6 +56,7 @@ export default function DashboardPage() {
   const tickRef = useRef(0);
   const [walletBalance, setWalletBalance] = useState(0);
   const [mariBalance, setMariBalance] = useState(0);
+  const [economyApproved, setEconomyApproved] = useState(false);
   const [mariConvertOpen, setMariConvertOpen] = useState(false);
   const [mariConvertInfo, setMariConvertInfo] = useState<{ mari_rate: number; server_used_today: number; global_used_today: number; papel_balance: number; mari_balance: number; server_limit: number; global_limit: number } | null>(null);
   const [mariConvertInput, setMariConvertInput] = useState('');
@@ -456,9 +457,10 @@ export default function DashboardPage() {
     try {
       const response = await fetchWithCreds('/api/member/wallet');
       if (response.ok) {
-        const data = (await response.json()) as { balance: number; mari_balance?: number };
+        const data = (await response.json()) as { balance: number; mari_balance?: number; economy_approved?: boolean };
         setWalletBalance(Number(data.balance ?? 0));
-        setMariBalance(Number(data.mari_balance ?? 0));
+        setEconomyApproved(data.economy_approved ?? false);
+        setMariBalance(data.economy_approved ? Number(data.mari_balance ?? 0) : 0);
       } else if (response.status === 401) {
         setUnauthorized(true);
       }
@@ -990,7 +992,7 @@ export default function DashboardPage() {
           unauthorized={unauthorized}
           walletLoading={walletLoading}
           walletBalance={walletBalance}
-          mariBalance={mariBalance}
+          mariBalance={economyApproved ? mariBalance : undefined}
           loginUrl={loginUrl}
           server={{ ...headerServer, onSelectServer: isActivityEmbed ? undefined : handleSelectServer }}
           navigation={{
@@ -1031,7 +1033,7 @@ export default function DashboardPage() {
             onOpenPromotions: openPromotionsModal,
             onOpenDiscounts: openDiscountsModal,
             onOpenEarnings: () => setEarningsModalOpen(true),
-            onOpenMariConvert: async () => {
+            onOpenMariConvert: economyApproved ? async () => {
               setMariConvertOpen(true);
               setMariConvertError(null);
               setMariConvertSuccess(null);
@@ -1044,7 +1046,7 @@ export default function DashboardPage() {
                   setMariConvertInfo(d);
                 }
               } catch { /* ignore */ }
-            },
+            } : undefined,
             menuRef: settingsMenuRef,
           }}
         />
@@ -1229,7 +1231,7 @@ export default function DashboardPage() {
               <DiscoverSection />
             )}
             {effectiveSection === 'market' && (
-              <MarketSection userId={profile?.userId} />
+              <MarketSection userId={profile?.userId} economyApproved={economyApproved} />
             )}
             {effectiveSection === 'treasury' && (
               <div className="p-4 sm:p-6 lg:p-8">

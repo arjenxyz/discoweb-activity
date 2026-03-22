@@ -284,7 +284,7 @@ export default function DashboardHeader({
                       <LuChevronRight className="h-3.5 w-3.5 text-white/30" />
                     </button>
 
-                    <div className="grid grid-cols-5 gap-1.5 pt-1">
+                    <div className={`grid gap-1.5 pt-1 ${settings.onOpenMariConvert ? 'grid-cols-5' : 'grid-cols-4'}`}>
                       <button
                         type="button"
                         onClick={settings.onOpenTransfer}
@@ -317,14 +317,16 @@ export default function DashboardHeader({
                         <LuChartBar className="h-3.5 w-3.5" />
                         Sıralama
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => { setIsProfileOpen(false); settings.onOpenMariConvert?.(); }}
-                        className="flex flex-col items-center gap-1 rounded-xl border border-violet-500/20 bg-violet-500/[0.08] py-2.5 text-xs text-violet-400 transition hover:bg-violet-500/15"
-                      >
-                        <Image src="/Mari.gif" alt="Mari" width={14} height={14} className="h-3.5 w-3.5" unoptimized />
-                        P → Mari
-                      </button>
+                      {settings.onOpenMariConvert && (
+                        <button
+                          type="button"
+                          onClick={() => { setIsProfileOpen(false); settings.onOpenMariConvert?.(); }}
+                          className="flex flex-col items-center gap-1 rounded-xl border border-violet-500/20 bg-violet-500/[0.08] py-2.5 text-xs text-violet-400 transition hover:bg-violet-500/15"
+                        >
+                          <Image src="/Mari.gif" alt="Mari" width={14} height={14} className="h-3.5 w-3.5" unoptimized />
+                          P → Mari
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
