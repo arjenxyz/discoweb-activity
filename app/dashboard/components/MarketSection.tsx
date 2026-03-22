@@ -135,7 +135,7 @@ function Ticker({ listings }: { listings: Listing[] }) {
           return (
             <span key={i} className="inline-flex items-center gap-2 text-[11px] shrink-0 font-mono">
               <span className="text-white/50 font-semibold">{l.name}</span>
-              <span className="text-white font-black tabular-nums">{l.market_price.toFixed(3)}<span className="text-white/30 text-[9px] ml-0.5">MRI</span></span>
+              <span className="inline-flex items-center gap-0.5 text-white font-black tabular-nums">{l.market_price.toFixed(3)}<Image src="/Mari.gif" alt="Mari" width={10} height={10} className="h-2.5 w-2.5 ml-0.5 opacity-60" unoptimized /></span>
               <span className={`font-black text-[10px] px-1.5 py-0.5 rounded-full ${up ? 'text-emerald-300 bg-emerald-500/20' : 'text-red-300 bg-red-500/20'}`}>
                 {up ? '▲' : '▼'} {Math.abs(pct).toFixed(2)}%
               </span>
@@ -399,7 +399,7 @@ export default function MarketSection({ userId }: { userId?: string | null }) {
                 <span className="text-5xl sm:text-6xl font-black text-white tracking-tighter tabular-nums leading-none" style={{animation:'countUp .4s cubic-bezier(.34,1.56,.64,1) both'}}>
                   {selected.market_price.toFixed(4).replace(/\.?0+$/, '')}
                 </span>
-                <span className="text-xl font-bold text-white/25 mb-1">MRI</span>
+                <Image src="/Mari.gif" alt="Mari" width={28} height={28} className="h-7 w-7 mb-1 opacity-40" unoptimized />
               </div>
               <p className="text-xs text-white/20 mt-1 tabular-nums">≈ {fmtPapel(selected.market_price, mariRate)}</p>
               <div className="flex items-center gap-2 mt-3 flex-wrap">
@@ -621,8 +621,8 @@ export default function MarketSection({ userId }: { userId?: string | null }) {
           {/* Mari Dönüştür butonu */}
           <button onClick={openMariModal}
             className="flex items-center gap-1.5 rounded-full border border-violet-500/30 bg-violet-500/10 backdrop-blur-sm px-3.5 py-2 text-xs text-violet-300 hover:text-violet-200 hover:bg-violet-500/20 hover:border-violet-500/50 transition-all font-bold">
-            <LuCoins className="w-3.5 h-3.5"/>
-            <span className="hidden sm:inline">P → MRI</span>
+            <Image src="/Mari.gif" alt="Mari" width={14} height={14} className="h-3.5 w-3.5" unoptimized />
+            <span className="hidden sm:inline">P → Mari</span>
           </button>
           <button onClick={() => setInfoOpen(v => !v)}
             className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.05] backdrop-blur-sm px-3.5 py-2 text-xs text-white/40 hover:text-white/70 hover:bg-white/8 hover:border-white/20 transition-all">
@@ -655,7 +655,7 @@ export default function MarketSection({ userId }: { userId?: string | null }) {
                   <div className="rounded-2xl border border-violet-500/20 bg-violet-500/8 px-4 py-3 space-y-1.5">
                     <div className="flex justify-between text-xs">
                       <span className="text-white/40">Kur</span>
-                      <span className="font-black text-white">1 MRI = {mariInfo.mari_rate.toLocaleString('tr-TR')} P</span>
+                      <span className="inline-flex items-center gap-1 font-black text-white"><Image src="/Mari.gif" alt="Mari" width={14} height={14} className="h-3.5 w-3.5" unoptimized /> = {mariInfo.mari_rate.toLocaleString('tr-TR')} P</span>
                     </div>
                     <div className="flex justify-between text-xs">
                       <span className="text-white/40">Papel Bakiyen</span>
@@ -672,7 +672,7 @@ export default function MarketSection({ userId }: { userId?: string | null }) {
                     <div>
                       <div className="flex justify-between text-[10px] text-white/30 mb-1">
                         <span>Bu sunucu (bugün)</span>
-                        <span className="tabular-nums">{mariInfo.server_used_today.toFixed(2)} / {mariInfo.server_limit} MRI</span>
+                        <span className="inline-flex items-center gap-1 tabular-nums">{mariInfo.server_used_today.toFixed(2)} / {mariInfo.server_limit} <Image src="/Mari.gif" alt="" width={10} height={10} className="h-2.5 w-2.5" unoptimized /></span>
                       </div>
                       <div className="h-1.5 rounded-full bg-white/8 overflow-hidden">
                         <div className="h-full rounded-full bg-violet-500 transition-all" style={{width:`${Math.min(100,(mariInfo.server_used_today/mariInfo.server_limit)*100)}%`}}/>
@@ -681,7 +681,7 @@ export default function MarketSection({ userId }: { userId?: string | null }) {
                     <div>
                       <div className="flex justify-between text-[10px] text-white/30 mb-1">
                         <span>Global limit (bugün)</span>
-                        <span className="tabular-nums">{mariInfo.global_used_today.toFixed(2)} / {mariInfo.global_limit} MRI</span>
+                        <span className="inline-flex items-center gap-1 tabular-nums">{mariInfo.global_used_today.toFixed(2)} / {mariInfo.global_limit} <Image src="/Mari.gif" alt="" width={10} height={10} className="h-2.5 w-2.5" unoptimized /></span>
                       </div>
                       <div className="h-1.5 rounded-full bg-white/8 overflow-hidden">
                         <div className="h-full rounded-full bg-indigo-500 transition-all" style={{width:`${Math.min(100,(mariInfo.global_used_today/mariInfo.global_limit)*100)}%`}}/>
@@ -702,7 +702,7 @@ export default function MarketSection({ userId }: { userId?: string | null }) {
                     </div>
                     {mariInput && parseFloat(mariInput) > 0 && (
                       <p className="text-[11px] text-violet-400/70 mt-2 tabular-nums">
-                        Alacaksın: ≈ {(parseFloat(mariInput) / mariInfo.mari_rate).toFixed(6)} MRI
+                        Alacaksın: ≈ {(parseFloat(mariInput) / mariInfo.mari_rate).toFixed(6)} <Image src="/Mari.gif" alt="Mari" width={12} height={12} className="h-3 w-3 inline" unoptimized />
                       </p>
                     )}
                   </div>
@@ -868,7 +868,7 @@ export default function MarketSection({ userId }: { userId?: string | null }) {
                       {/* Price */}
                       <div className="text-right flex-shrink-0 space-y-1.5 min-w-[90px]">
                         <p className="text-xl font-black text-white tabular-nums leading-none tracking-tight">
-                          {listing.market_price.toFixed(3)}<span className="text-[11px] text-white/30 ml-0.5 font-bold">MRI</span>
+                          {listing.market_price.toFixed(3)}<Image src="/Mari.gif" alt="Mari" width={12} height={12} className="h-3 w-3 ml-0.5 inline opacity-50" unoptimized />
                         </p>
                         <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-black border ${
                           up ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/25' : 'bg-red-500/15 text-red-300 border-red-500/25'

@@ -73,7 +73,7 @@ export async function GET(request: Request) {
 
   const { data: wallet } = await supabase
     .from('member_wallets')
-    .select('balance')
+    .select('balance,mari_balance')
     .eq('guild_id', selectedGuildId)
     .eq('user_id', userId)
     .maybeSingle();
@@ -107,6 +107,7 @@ export async function GET(request: Request) {
 
   return NextResponse.json({
     balance: wallet?.balance ?? 0,
+    mari_balance: wallet?.mari_balance ?? 0,
     dailyLimit: server.transfer_daily_limit,
     taxRate: server.transfer_tax_rate,
     sentToday: totalSent,

@@ -55,6 +55,13 @@ export default function DashboardPage() {
   const unauthorizedRef = useRef(unauthorized);
   const tickRef = useRef(0);
   const [walletBalance, setWalletBalance] = useState(0);
+  const [mariBalance, setMariBalance] = useState(0);
+  const [mariConvertOpen, setMariConvertOpen] = useState(false);
+  const [mariConvertInfo, setMariConvertInfo] = useState<{ mariRate: number; serverDailyUsed: number; globalDailyUsed: number; paperBalance: number } | null>(null);
+  const [mariConvertInput, setMariConvertInput] = useState('');
+  const [mariConvertLoading, setMariConvertLoading] = useState(false);
+  const [mariConvertError, setMariConvertError] = useState<string | null>(null);
+  const [mariConvertSuccess, setMariConvertSuccess] = useState<string | null>(null);
   const [walletLoading, setWalletLoading] = useState(true);
   const [overviewStats, setOverviewStats] = useState<OverviewStats | OverviewStatsExpanded | null>(null);
   const [overviewLoading, setOverviewLoading] = useState(true);
@@ -449,8 +456,9 @@ export default function DashboardPage() {
     try {
       const response = await fetchWithCreds('/api/member/wallet');
       if (response.ok) {
-        const data = (await response.json()) as { balance: number };
+        const data = (await response.json()) as { balance: number; mari_balance?: number };
         setWalletBalance(Number(data.balance ?? 0));
+        setMariBalance(Number(data.mari_balance ?? 0));
       } else if (response.status === 401) {
         setUnauthorized(true);
       }
@@ -982,6 +990,7 @@ export default function DashboardPage() {
           unauthorized={unauthorized}
           walletLoading={walletLoading}
           walletBalance={walletBalance}
+          mariBalance={mariBalance}
           loginUrl={loginUrl}
           server={{ ...headerServer, onSelectServer: isActivityEmbed ? undefined : handleSelectServer }}
           navigation={{
@@ -1022,6 +1031,20 @@ export default function DashboardPage() {
             onOpenPromotions: openPromotionsModal,
             onOpenDiscounts: openDiscountsModal,
             onOpenEarnings: () => setEarningsModalOpen(true),
+            onOpenMariConvert: async () => {
+              setMariConvertOpen(true);
+              setMariConvertError(null);
+              setMariConvertSuccess(null);
+              setMariConvertInput('');
+              setMariConvertInfo(null);
+              try {
+                const res = await fetchWithCreds('/api/member/mari-convert');
+                if (res.ok) {
+                  const d = await res.json() as { mariRate: number; serverDailyUsed: number; globalDailyUsed: number; paperBalance: number };
+                  setMariConvertInfo(d);
+                }
+              } catch { /* ignore */ }
+            },
             menuRef: settingsMenuRef,
           }}
         />
@@ -1285,6 +1308,125 @@ export default function DashboardPage() {
         open={earningsModalOpen}
         onClose={() => setEarningsModalOpen(false)}
       />
+
+      {/* MRI Dönüştürme Modal */}
+      {mariConvertOpen && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setMariConvertOpen(false)}>
+          <div className="w-full max-w-sm overflow-hidden rounded-2xl border border-white/10 bg-[#0f1116] shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="border-b border-white/[0.06] px-5 py-4 flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Image src="/Mari.gif" alt="Mari" width={20} height={20} className="h-5 w-5" unoptimized />
+                  <p className="text-sm font-bold text-white">Papel → Mari Dönüştür</p>
+                </div>
+                <p className="text-[11px] text-white/40 mt-0.5">Papel harcayarak global rezerv para birimi edin</p>
+              </div>
+              <button type="button" onClick={() => setMariConvertOpen(false)} className="text-white/30 hover:text-white/70 text-lg leading-none">✕</button>
+            </div>
+            <div className="p-5 space-y-4">
+              {mariConvertInfo ? (
+                <>
+                  {/* Kur ve limit bilgisi */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] px-3 py-2.5">
+                      <p className="text-[10px] text-white/35 uppercase tracking-wider">Kur</p>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <Image src="/Mari.gif" alt="Mari" width={14} height={14} className="h-3.5 w-3.5" unoptimized />
+                        <p className="text-sm font-bold text-white">= {mariConvertInfo.mariRate.toLocaleString('tr-TR')} P</p>
+                      </div>
+                    </div>
+                    <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] px-3 py-2.5">
+                      <p className="text-[10px] text-white/35 uppercase tracking-wider">Papel Bakiye</p>
+                      <p className="text-sm font-bold text-white mt-0.5">{mariConvertInfo.paperBalance.toLocaleString('tr-TR')} P</p>
+                    </div>
+                  </div>
+                  {/* Limitler */}
+                  <div className="space-y-2">
+                    <div>
+                      <div className="flex justify-between text-[10px] text-white/40 mb-1">
+                        <span>Sunucu günlük limit</span>
+                        <span className="flex items-center gap-1">{mariConvertInfo.serverDailyUsed.toFixed(3)} / 2 <Image src="/Mari.gif" alt="" width={10} height={10} className="h-2.5 w-2.5 inline" unoptimized /></span>
+                      </div>
+                      <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+                        <div className="h-full rounded-full bg-violet-500" style={{ width: `${Math.min(100, (mariConvertInfo.serverDailyUsed / 2) * 100)}%` }} />
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex justify-between text-[10px] text-white/40 mb-1">
+                        <span>Global günlük limit</span>
+                        <span className="flex items-center gap-1">{mariConvertInfo.globalDailyUsed.toFixed(3)} / 6 <Image src="/Mari.gif" alt="" width={10} height={10} className="h-2.5 w-2.5 inline" unoptimized /></span>
+                      </div>
+                      <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+                        <div className="h-full rounded-full bg-violet-400" style={{ width: `${Math.min(100, (mariConvertInfo.globalDailyUsed / 6) * 100)}%` }} />
+                      </div>
+                    </div>
+                  </div>
+                  {/* Input */}
+                  <div>
+                    <label className="block text-[11px] text-white/40 mb-1.5">Dönüştürmek istediğin papel miktarı</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="number"
+                        min={1}
+                        value={mariConvertInput}
+                        onChange={e => setMariConvertInput(e.target.value)}
+                        placeholder="0"
+                        className="flex-1 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/20 focus:outline-none focus:border-violet-500/50"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setMariConvertInput(String(Math.floor(Math.min(mariConvertInfo.paperBalance, (2 - mariConvertInfo.serverDailyUsed) * mariConvertInfo.mariRate))))}
+                        className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/60 hover:text-white hover:bg-white/10 transition"
+                      >MAX</button>
+                    </div>
+                    {mariConvertInput && Number(mariConvertInput) > 0 && (
+                      <p className="text-[11px] text-violet-400 mt-1.5">
+                        ≈ {(Number(mariConvertInput) / mariConvertInfo.mariRate).toFixed(6)} <Image src="/Mari.gif" alt="Mari" width={12} height={12} className="h-3 w-3 inline" unoptimized /> alacaksın
+                      </p>
+                    )}
+                  </div>
+                  {mariConvertError && <p className="text-xs text-rose-400">{mariConvertError}</p>}
+                  {mariConvertSuccess && <p className="text-xs text-emerald-400">{mariConvertSuccess}</p>}
+                  <button
+                    type="button"
+                    disabled={mariConvertLoading || !mariConvertInput || Number(mariConvertInput) <= 0}
+                    onClick={async () => {
+                      setMariConvertLoading(true);
+                      setMariConvertError(null);
+                      setMariConvertSuccess(null);
+                      try {
+                        const res = await fetchWithCreds('/api/member/mari-convert', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ papel_amount: Number(mariConvertInput) }),
+                        });
+                        const d = await res.json() as { error?: string; mari_received?: number; new_mari_balance?: number };
+                        if (!res.ok) {
+                          setMariConvertError(d.error ?? 'Dönüşüm başarısız');
+                        } else {
+                          setMariConvertSuccess(`${(d.mari_received ?? 0).toFixed(6)} Mari edinildi!`);
+                          setMariBalance(d.new_mari_balance ?? mariBalance);
+                          setMariConvertInput('');
+                          const infoRes = await fetchWithCreds('/api/member/mari-convert');
+                          if (infoRes.ok) setMariConvertInfo(await infoRes.json() as NonNullable<typeof mariConvertInfo>);
+                        }
+                      } catch {
+                        setMariConvertError('Bağlantı hatası');
+                      }
+                      setMariConvertLoading(false);
+                    }}
+                    className="w-full rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-40 disabled:cursor-not-allowed py-2.5 text-sm font-bold text-white transition"
+                  >
+                    {mariConvertLoading ? 'Dönüştürülüyor...' : 'Dönüştür'}
+                  </button>
+                </>
+              ) : (
+                <div className="py-8 text-center text-sm text-white/30">Yükleniyor...</div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <DiscountsModal
         isOpen={discountsModalOpen}

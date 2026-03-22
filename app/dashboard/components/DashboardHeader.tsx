@@ -14,6 +14,7 @@ type DashboardHeaderProps = {
   unauthorized: boolean;
   walletLoading: boolean;
   walletBalance: number;
+  mariBalance?: number;
   loginUrl: string;
   navigation: {
     activeSection: Section;
@@ -51,6 +52,7 @@ type DashboardHeaderProps = {
     onOpenDiscounts: () => void;
     onOpenReferral?: () => void;
     onOpenEarnings?: () => void;
+    onOpenMariConvert?: () => void;
     menuRef: RefObject<HTMLDivElement | null>;
   };
   maintenance?: {
@@ -74,6 +76,7 @@ export default function DashboardHeader({
   unauthorized,
   walletLoading,
   walletBalance,
+  mariBalance,
   loginUrl,
   navigation,
   onOpenLeaderboard,
@@ -172,11 +175,27 @@ export default function DashboardHeader({
         {/* Sağ — bakiye + profil */}
         <div className="flex items-center gap-2">
           {!unauthorized && (
-            <div className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm">
-              <Image src="/papel.gif" alt="Papel" width={16} height={16} className="h-4 w-4" />
-              <span className="font-bold text-white tabular-nums">
-                {walletLoading ? '—' : walletBalance.toFixed(2)}
-              </span>
+            <div className="flex items-center gap-1.5">
+              {/* Mari bakiye */}
+              {mariBalance !== undefined && mariBalance > 0 && (
+                <button
+                  type="button"
+                  onClick={() => settings.onOpenMariConvert?.()}
+                  className="flex items-center gap-1.5 rounded-full border border-violet-500/30 bg-violet-500/10 px-3 py-1.5 text-sm transition hover:bg-violet-500/20"
+                >
+                  <Image src="/Mari.gif" alt="Mari" width={16} height={16} className="h-4 w-4" unoptimized />
+                  <span className="font-bold text-violet-200 tabular-nums">
+                    {walletLoading ? '—' : mariBalance.toFixed(3)}
+                  </span>
+                </button>
+              )}
+              {/* Papel bakiye */}
+              <div className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm">
+                <Image src="/papel.gif" alt="Papel" width={16} height={16} className="h-4 w-4" />
+                <span className="font-bold text-white tabular-nums">
+                  {walletLoading ? '—' : walletBalance.toFixed(2)}
+                </span>
+              </div>
             </div>
           )}
 
@@ -265,7 +284,7 @@ export default function DashboardHeader({
                       <LuChevronRight className="h-3.5 w-3.5 text-white/30" />
                     </button>
 
-                    <div className="grid grid-cols-4 gap-1.5 pt-1">
+                    <div className="grid grid-cols-5 gap-1.5 pt-1">
                       <button
                         type="button"
                         onClick={settings.onOpenTransfer}
@@ -297,6 +316,14 @@ export default function DashboardHeader({
                       >
                         <LuChartBar className="h-3.5 w-3.5" />
                         Sıralama
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setIsProfileOpen(false); settings.onOpenMariConvert?.(); }}
+                        className="flex flex-col items-center gap-1 rounded-xl border border-violet-500/20 bg-violet-500/[0.08] py-2.5 text-xs text-violet-400 transition hover:bg-violet-500/15"
+                      >
+                        <Image src="/Mari.gif" alt="Mari" width={14} height={14} className="h-3.5 w-3.5" unoptimized />
+                        P → Mari
                       </button>
                     </div>
                   </div>
