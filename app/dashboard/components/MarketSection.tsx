@@ -30,6 +30,7 @@ import { VideoBackground } from '@/app/dashboard/components/VideoBackground';
 type Listing = {
   guild_id: string;
   name: string;
+  icon_url: string | null;
   status: string;
   market_price: number;
   ipo_price: number;
@@ -49,6 +50,7 @@ type MarketOrder = {
   created_at: string; expires_at: string;
 };
 type SelectedListing = Listing & {
+  icon_url: string | null;
   penalties: Array<{ id: string; type: string; reason: string; price_multiplier: number }>;
   events: Array<{ id: string; title: string; severity: string; description: string }>;
   treasury: { balance: number; total_collected: number; total_burned: number } | null;
@@ -73,8 +75,16 @@ function initials(name: string) {
 }
 
 /* ─── Sub-components ─────────────────────────────────── */
-function Avatar({ name, size = 'md' }: { name: string; size?: 'sm'|'md'|'lg' }) {
+function Avatar({ name, iconUrl, size = 'md' }: { name: string; iconUrl?: string | null; size?: 'sm'|'md'|'lg' }) {
   const cls = size === 'sm' ? 'w-9 h-9 text-xs rounded-xl' : size === 'lg' ? 'w-16 h-16 text-xl rounded-2xl' : 'w-12 h-12 text-sm rounded-2xl';
+  if (iconUrl) {
+    return (
+      <div className={`${cls} overflow-hidden flex-shrink-0 shadow-lg`}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={iconUrl} alt={name} className="w-full h-full object-cover" />
+      </div>
+    );
+  }
   return (
     <div className={`${cls} bg-gradient-to-br ${nameColor(name)} flex items-center justify-center font-black text-white shadow-lg flex-shrink-0 select-none`}>
       {initials(name)}
@@ -309,7 +319,7 @@ export default function MarketSection({ userId }: { userId?: string | null }) {
             Geri
           </button>
           <div className="flex-1 min-w-0 flex items-center gap-2.5">
-            <Avatar name={selected.name} size="sm" />
+            <Avatar name={selected.name} iconUrl={selected.icon_url} size="sm" />
             <div className="min-w-0">
               <p className="font-black text-sm text-white truncate">{selected.name}</p>
               <p className="text-[10px] text-white/25 font-mono">{selected.guild_id}</p>
@@ -531,19 +541,19 @@ export default function MarketSection({ userId }: { userId?: string | null }) {
       {/* Header */}
       <div className="relative z-10 flex items-center justify-between px-5 sm:px-8 pt-7 pb-5">
         <div className="flex items-center gap-4">
-          <div className="relative">
-            <div className="p-2.5 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl shadow-2xl shadow-indigo-500/30">
-              <LuActivity className="w-5 h-5 text-white"/>
+          <div className="relative flex-shrink-0">
+            <div className="w-11 h-11 rounded-2xl overflow-hidden shadow-2xl shadow-black/40">
+              <Image src="/gif/cat.gif" alt="Papel" width={44} height={44} className="w-full h-full object-cover" unoptimized />
             </div>
             <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[#080a0f]" style={{animation:'glowPulse 2s ease-in-out infinite'}}/>
           </div>
           <div>
             <h2 className="text-xl sm:text-2xl font-black tracking-tight" style={{
-              backgroundImage: 'linear-gradient(105deg,#a5b4fc 0%,#a5b4fc 35%,#e0e7ff 45%,#a5b4fc 55%,#a5b4fc 100%)',
+              backgroundImage: 'linear-gradient(105deg,#e2e8f0 0%,#e2e8f0 35%,#ffffff 45%,#e2e8f0 55%,#e2e8f0 100%)',
               backgroundSize: '300% 100%', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent',
               animation: 'titleShine 4s ease-in-out infinite',
             }}>
-              Yatırım Borsası
+              Papel Piyasası
             </h2>
             <p className="text-[11px] text-white/25 font-medium mt-0.5">P2P · Anlık fiyatlar · {listings.length} sunucu</p>
           </div>
@@ -657,7 +667,7 @@ export default function MarketSection({ userId }: { userId?: string | null }) {
                     <div className="relative flex items-center gap-4 pl-5 pr-4 py-4">
                       {/* Rank + avatar */}
                       <div className="relative flex-shrink-0">
-                        <Avatar name={listing.name} size="md"/>
+                        <Avatar name={listing.name} iconUrl={listing.icon_url} size="md"/>
                         {idx < 3 && (
                           <div className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center shadow-lg shadow-yellow-500/40">
                             <span className="text-[9px] font-black text-black">{idx+1}</span>
@@ -753,7 +763,7 @@ export default function MarketSection({ userId }: { userId?: string | null }) {
                     <button key={h.guild_id} onClick={() => openDetail(h.guild_id)}
                       className={`w-full relative overflow-hidden rounded-3xl border p-4 text-left backdrop-blur-sm transition-all active:scale-[.99] ${up2 ? 'border-emerald-500/15 bg-emerald-500/5 hover:border-emerald-500/25 hover:bg-emerald-500/10' : 'border-red-500/15 bg-red-500/5 hover:border-red-500/25 hover:bg-red-500/10'}`}>
                       <div className="flex items-center gap-3">
-                        <Avatar name={h.name}/>
+                        <Avatar name={h.name} iconUrl={h.icon_url}/>
                         <div className="flex-1 min-w-0 space-y-1">
                           <p className="font-black text-sm text-white truncate">{h.name}</p>
                           <p className="text-[11px] text-white/30">{h.lot_count.toLocaleString()} lot · ort. {h.avg_buy_price.toFixed(1)} P</p>

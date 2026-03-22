@@ -67,14 +67,31 @@ export async function GET(request: Request) {
 
   const guildIds = (listings ?? []).map((l) => l.guild_id);
 
-  // Paralel: cezalar + sunucu isimleri
-  const [penaltiesRes, serversRes] = await Promise.all([
+  const botToken = process.env.DISCORD_BOT_TOKEN;
+
+  // Paralel: cezalar + sunucu isimleri + Discord ikonları
+  const [penaltiesRes, serversRes, ...iconResults] = await Promise.all([
     guildIds.length > 0
       ? supabase.from('server_penalties').select('guild_id, type').in('guild_id', guildIds).eq('is_active', true)
       : Promise.resolve({ data: [] }),
     guildIds.length > 0
       ? supabase.from('servers').select('discord_id, name').in('discord_id', guildIds)
       : Promise.resolve({ data: [] }),
+    ...(botToken && guildIds.length > 0
+      ? guildIds.map((id) =>
+          fetch(`https://discord.com/api/guilds/${id}`, {
+            headers: { Authorization: `Bot ${botToken}` },
+          })
+            .then((r) => (r.ok ? r.json() : null))
+            .then((d: { icon: string | null } | null) => ({
+              guild_id: id,
+              icon_url: d?.icon
+                ? `https://cdn.discordapp.com/icons/${id}/${d.icon}.webp?size=64`
+                : null,
+            }))
+            .catch(() => ({ guild_id: id, icon_url: null }))
+        )
+      : []),
   ]);
 
   const penaltyMap: Record<string, string[]> = {};
@@ -88,11 +105,17 @@ export async function GET(request: Request) {
     nameMap[s.discord_id] = s.name ?? s.discord_id;
   }
 
+  const iconMap: Record<string, string | null> = {};
+  for (const r of iconResults as Array<{ guild_id: string; icon_url: string | null }>) {
+    iconMap[r.guild_id] = r.icon_url;
+  }
+
   const result = (listings ?? []).map((l) => ({
     ...l,
     active_penalties: penaltyMap[l.guild_id] ?? [],
     has_warning: (penaltyMap[l.guild_id] ?? []).length > 0,
     name: nameMap[l.guild_id] ?? l.guild_id,
+    icon_url: iconMap[l.guild_id] ?? null,
   }));
 
   return NextResponse.json({ listings: result });
