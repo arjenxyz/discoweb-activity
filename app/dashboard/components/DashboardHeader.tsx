@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
-import { LuHouse, LuMail, LuStore, LuSettings, LuChevronRight, LuTicket, LuSend, LuTag, LuTrendingUp, LuChartBar } from 'react-icons/lu';
+import { LuHouse, LuMail, LuStore, LuSettings, LuChevronRight, LuTicket, LuSend, LuTag, LuTrendingUp, LuChartBar, LuCompass, LuVault } from 'react-icons/lu';
 import Image from 'next/image';
 import DiscordAgreementButton from '@/components/DiscordAgreementButton';
 import type { Notification, Section } from '../types';
@@ -125,6 +125,9 @@ export default function DashboardHeader({
     { key: 'overview', label: 'Genel', icon: <LuHouse className="h-3.5 w-3.5" /> },
     { key: 'store', label: 'Mağaza', icon: <LuStore className="h-3.5 w-3.5" /> },
     { key: 'raffles', label: 'Çekilişler', requiresAuth: true, icon: <LuTicket className="h-3.5 w-3.5" /> },
+    { key: 'discover', label: 'Topluluk', icon: <LuCompass className="h-3.5 w-3.5" /> },
+    { key: 'market', label: 'Borsa', icon: <LuTrendingUp className="h-3.5 w-3.5" /> },
+    { key: 'treasury', label: 'Sunucu Kasası', icon: <LuVault className="h-3.5 w-3.5" /> },
     { key: 'mail', label: 'Mesajlar', requiresAuth: true, icon: <LuMail className="h-3.5 w-3.5" /> },
   ];
 

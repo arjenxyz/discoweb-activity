@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { LuChevronRight, LuGift, LuHouse, LuMail, LuStore, LuCompass, LuTrendingUp } from 'react-icons/lu';
+import { LuChevronRight, LuGift, LuHouse, LuMail, LuStore, LuCompass, LuTrendingUp, LuVault } from 'react-icons/lu';
 import type { MemberProfile, Section } from '../types';
 
 type SidebarNavProps = {
@@ -21,6 +21,7 @@ const NAV_GROUPS = [
       { key: 'raffles' as Section, label: 'Çekilişler', icon: LuGift },
       { key: 'discover' as Section, label: 'Topluluk', icon: LuCompass },
       { key: 'market' as Section, label: 'Borsa', icon: LuTrendingUp },
+      { key: 'treasury' as Section, label: 'Sunucu Kasası', icon: LuVault },
     ],
   },
   {

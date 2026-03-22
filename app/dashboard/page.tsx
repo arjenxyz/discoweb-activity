@@ -17,6 +17,7 @@ import MailSection from './components/MailSection';
 import RafflesSection from './components/RafflesSection';
 import DiscoverSection from './components/DiscoverSection';
 import MarketSection from './components/MarketSection';
+import TreasuryCard from './components/TreasuryCard';
 import NotificationDetailModal from './components/NotificationDetailModal';
 import NotificationsModal from './components/NotificationsModal';
 import TransferModal from './components/TransferModal';
@@ -1180,6 +1181,11 @@ export default function DashboardPage() {
             )}
             {effectiveSection === 'market' && (
               <MarketSection />
+            )}
+            {effectiveSection === 'treasury' && (
+              <div className="p-4 sm:p-6 lg:p-8">
+                <TreasuryCard />
+              </div>
             )}
           </main>
         </div>
