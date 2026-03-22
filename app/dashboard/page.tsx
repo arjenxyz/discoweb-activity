@@ -63,7 +63,7 @@ export default function DashboardPage() {
   const [storeHasMore, setStoreHasMore] = useState(true);
   const [storeLoadingMore, setStoreLoadingMore] = useState(false);
   const [activeSection, setActiveSection] = useState<Section>('overview');
-  const [leaderboardOpen, setLeaderboardOpen] = useState(false);
+  const [leaderboardOpen, setLeaderboardOpen] = useState(false); // TODO: kazanç/promosyon bölümlerine taşı
   const [isActivityEmbed, setIsActivityEmbed] = useState(false);
   const [, setSearchParams] = useState<URLSearchParams | null>(null);
 
@@ -982,8 +982,6 @@ export default function DashboardPage() {
           }}
           mailUnreadCount={mailUnreadCount}
           renderNotificationBody={renderNotificationBody}
-          leaderboardOpen={leaderboardOpen}
-          onOpenLeaderboard={() => setLeaderboardOpen(true)}
           settings={{
             open: settingsOpen,
             onToggle: handleToggleSettings,

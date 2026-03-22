@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
-import { LuHouse, LuMail, LuStore, LuSettings, LuChevronRight, LuChartBar, LuTicket, LuSend, LuTag, LuTrendingUp } from 'react-icons/lu';
+import { LuHouse, LuMail, LuStore, LuSettings, LuChevronRight, LuTicket, LuSend, LuTag, LuTrendingUp } from 'react-icons/lu';
 import Image from 'next/image';
 import DiscordAgreementButton from '@/components/DiscordAgreementButton';
 import type { Notification, Section } from '../types';
@@ -18,8 +18,6 @@ type DashboardHeaderProps = {
     activeSection: Section;
     onNavigate: (section: Section) => void;
   };
-  leaderboardOpen?: boolean;
-  onOpenLeaderboard?: () => void;
   profile: {
     name: string;
     username: string;
@@ -75,7 +73,6 @@ export default function DashboardHeader({
   walletBalance,
   loginUrl,
   navigation,
-  onOpenLeaderboard,
   profile,
   server,
   mailUnreadCount = 0,
@@ -127,12 +124,9 @@ export default function DashboardHeader({
     { key: 'store', label: 'Mağaza', icon: <LuStore className="h-3.5 w-3.5" /> },
     { key: 'raffles', label: 'Çekilişler', requiresAuth: true, icon: <LuTicket className="h-3.5 w-3.5" /> },
     { key: 'mail', label: 'Mesajlar', requiresAuth: true, icon: <LuMail className="h-3.5 w-3.5" /> },
-    { key: 'leaderboard', label: 'Sıralama', requiresAuth: true, icon: <LuChartBar className="h-3.5 w-3.5" /> },
   ];
 
   const handleNavClick = (key: Section) => {
-    if (key === 'mail') { navigation.onNavigate('mail'); return; }
-    if (key === 'leaderboard') { onOpenLeaderboard?.(); return; }
     navigation.onNavigate(key);
   };
 
@@ -165,36 +159,8 @@ export default function DashboardHeader({
           </button>
         </div>
 
-        {/* Orta — nav */}
-        <div className="flex-1 flex items-center justify-center">
-          <nav className="hidden lg:flex items-center gap-0.5">
-            {navItems.filter(item => !item.requiresAuth || !unauthorized).map((item) => {
-              const isActive = item.key === 'leaderboard'
-                ? false
-                : navigation.activeSection === item.key;
-              return (
-                <button
-                  key={item.key}
-                  type="button"
-                  onClick={() => handleNavClick(item.key)}
-                  className={`group relative flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-medium transition-all duration-200 ${
-                    isActive
-                      ? 'bg-white/10 text-white'
-                      : 'text-white/50 hover:bg-white/[0.06] hover:text-white/80'
-                  }`}
-                >
-                  {item.icon}
-                  {item.label}
-                  {item.key === 'mail' && mailUnreadCount > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white ring-1 ring-[#0b0d12]">
-                      {mailUnreadCount > 9 ? '9+' : mailUnreadCount}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </nav>
-        </div>
+        {/* Orta — boşluk */}
+        <div className="flex-1" />
 
         {/* Sağ — bakiye + profil */}
         <div className="flex items-center gap-2">
