@@ -102,6 +102,7 @@ export async function GET(request: Request) {
   return NextResponse.json({
     is_admin: adminCheck,
     member_count: memberCount,
+    _debug: { userId, guildId, adminRoleId, discordAdmin: discordAdminCheck, roleAdmin: roleAdminCheck },
     economy_status: app?.status ?? 'none',      // none | voting | pending | approved | rejected
     vote_count: app?.vote_count ?? 0,
     vote_threshold: app?.vote_threshold ?? 100,
