@@ -28,6 +28,16 @@ export default function SettingsSection({
   const [applySuccess, setApplySuccess] = useState(false);
   const [applyError, setApplyError] = useState<string | null>(null);
 
+  // IPO başvuru state'leri
+  const [ipoListed, setIpoListed] = useState(false);
+  const [ipoListing, setIpoListing] = useState<{ status: string; market_price: number; ipo_price: number } | null>(null);
+  const [ipoPending, setIpoPending] = useState(false);
+  const [ipoPrice, setIpoPrice] = useState('');
+  const [ipoFounderRatio, setIpoFounderRatio] = useState('55');
+  const [ipoLoading, setIpoLoading] = useState(false);
+  const [ipoSuccess, setIpoSuccess] = useState(false);
+  const [ipoError, setIpoError] = useState<string | null>(null);
+
   useEffect(() => {
     fetch(apiUrl('/api/member/treasury'))
       .then((r) => r.json())
@@ -41,7 +51,54 @@ export default function SettingsSection({
       .then((r) => r.json())
       .then((d) => { if (d.pending) setHasPending(true); })
       .catch(() => {});
+
+    // IPO durum kontrolü
+    fetch(apiUrl('/api/member/ipo-status'))
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.listed) {
+          setIpoListed(true);
+          setIpoListing(d.listing);
+        } else if (d.pending) {
+          setIpoPending(true);
+        }
+      })
+      .catch(() => {});
   }, []);
+
+  const handleIpoApply = async () => {
+    const price = Number(ipoPrice);
+    const ratio = Number(ipoFounderRatio) / 100;
+    if (!price || price <= 0) { setIpoError('Geçersiz başlangıç fiyatı.'); return; }
+    if (ratio < 0.51 || ratio > 0.80) { setIpoError('Founder oranı %51–%80 arasında olmalı.'); return; }
+    setIpoLoading(true);
+    setIpoError(null);
+    try {
+      const res = await fetchWithCreds('/api/member/ipo-apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ proposed_price: price, proposed_founder_ratio: ratio }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const msgs: Record<string, string> = {
+          forbidden: 'Sadece sunucu yöneticileri başvurabilir.',
+          not_advanced: 'Önce Yüksek Ekonomi kademesine geçilmeli.',
+          already_listed: 'Sunucu zaten borsada listelendi.',
+          pending_exists: 'Zaten bekleyen bir IPO başvurusu var.',
+          invalid_price: 'Geçersiz başlangıç fiyatı.',
+          invalid_founder_ratio: 'Founder oranı %51–%80 arasında olmalı.',
+        };
+        throw new Error(msgs[data.error] ?? 'IPO başvurusu gönderilemedi.');
+      }
+      setIpoSuccess(true);
+      setIpoPending(true);
+    } catch (e: unknown) {
+      setIpoError(e instanceof Error ? e.message : 'Bir hata oluştu.');
+    } finally {
+      setIpoLoading(false);
+    }
+  };
 
   const handleApply = async () => {
     const pkg = Number(starterPackage);
@@ -170,6 +227,64 @@ export default function SettingsSection({
             <span className="ml-auto rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">Aktif</span>
           </div>
           <p className="mt-2 text-sm text-white/40">Bu sunucu Yüksek Ekonomi kademesinde çalışıyor.</p>
+
+          {/* IPO Başvurusu */}
+          <div className="mt-4 border-t border-white/10 pt-4">
+            {ipoListed && ipoListing ? (
+              <div className="flex items-center gap-2">
+                <LuCheck className="h-4 w-4 text-emerald-400" />
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">Borsada Listelendi</p>
+                <span className={`ml-auto rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                  ipoListing.status === 'approved' ? 'bg-emerald-500/15 text-emerald-400'
+                  : ipoListing.status === 'suspended' ? 'bg-yellow-500/15 text-yellow-400'
+                  : 'bg-red-500/15 text-red-400'
+                }`}>{ipoListing.status === 'approved' ? 'Aktif' : ipoListing.status === 'suspended' ? 'Askıda' : 'Delisted'}</span>
+              </div>
+            ) : ipoPending || ipoSuccess ? (
+              <div className="flex items-center gap-2">
+                <LuClock className="h-4 w-4 text-yellow-400" />
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-yellow-300">IPO Başvurusu İnceleniyor</p>
+              </div>
+            ) : (
+              <>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-300 mb-2">Yatırım Borsasına Başvur (IPO)</p>
+                <p className="text-xs text-white/40 mb-3">
+                  Sunucunuzu yatırım borsasına açın. Yatırımcılar lot satın alabilir, siz hazineden temettü alabilirsiniz.
+                </p>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <input
+                    type="number"
+                    min={1}
+                    placeholder="Başlangıç fiyatı (Papel/lot)"
+                    value={ipoPrice}
+                    onChange={(e) => setIpoPrice(e.target.value)}
+                    className="flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/30 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  />
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min={51}
+                      max={80}
+                      placeholder="Founder %"
+                      value={ipoFounderRatio}
+                      onChange={(e) => setIpoFounderRatio(e.target.value)}
+                      className="w-24 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/30 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    />
+                    <span className="text-xs text-white/40">founder (%51–80)</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleIpoApply}
+                    disabled={ipoLoading}
+                    className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-500 disabled:opacity-50"
+                  >
+                    {ipoLoading ? 'Gönderiliyor...' : <><LuArrowRight className="h-3.5 w-3.5" /> Başvur</>}
+                  </button>
+                </div>
+                {ipoError && <p className="mt-2 text-xs text-red-400">{ipoError}</p>}
+              </>
+            )}
+          </div>
         </div>
       )}
 
