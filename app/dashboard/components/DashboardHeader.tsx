@@ -10,6 +10,7 @@ import type { Notification, Section } from '../types';
 import type { JSX, RefObject } from 'react';
 
 type DashboardHeaderProps = {
+  isActivityEmbed?: boolean;
   unauthorized: boolean;
   walletLoading: boolean;
   walletBalance: number;
@@ -69,6 +70,7 @@ const RANDOM_GIFS = [
 ];
 
 export default function DashboardHeader({
+  isActivityEmbed = false,
   unauthorized,
   walletLoading,
   walletBalance,
@@ -146,9 +148,9 @@ export default function DashboardHeader({
       />
 
       {/* Header */}
-      <header className={`md:fixed inset-x-0 top-0 flex h-16 items-center bg-[#0e1018]/95 backdrop-blur-xl border-b border-white/[0.06] px-4 sm:px-6 transition-all duration-200 ${
-        isProfileOpen ? 'z-[9991]' : 'z-30'
-      }`}>
+      <header className={`md:fixed inset-x-0 top-0 flex items-center bg-[#0e1018]/95 backdrop-blur-xl border-b border-white/[0.06] px-4 sm:px-6 transition-all duration-200 ${
+        isActivityEmbed ? 'h-auto pt-[env(safe-area-inset-top,0px)] pb-2 min-h-[4rem]' : 'h-16'
+      } ${isProfileOpen ? 'z-[9991]' : 'z-30'}`}>
 
         {/* Sol — logo */}
         <div className="flex items-center gap-3 min-w-fit">

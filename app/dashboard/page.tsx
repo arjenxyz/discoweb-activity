@@ -978,6 +978,7 @@ export default function DashboardPage() {
         <div className="flex flex-1 flex-col min-w-0 min-h-0 overflow-hidden bg-[#0e1018]">
         {effectiveSection !== 'mail' && (
         <DashboardHeader
+          isActivityEmbed={isActivityEmbed}
           unauthorized={unauthorized}
           walletLoading={walletLoading}
           walletBalance={walletBalance}
