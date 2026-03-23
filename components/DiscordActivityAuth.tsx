@@ -333,12 +333,16 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
             setDiscordLocale(savedLocale || navigator.language);
             addLog(`Locale (hızlı yol): ${savedLocale || navigator.language}`);
 
-            // Rich Presence — SDK zaten başlatılmışsa ayarla
-            try {
-              const existingSdk = (await import('@/lib/discordSdk')).getDiscordSdk();
-              if (existingSdk) {
+            // Rich Presence — SDK'yı başlat ve ayarla
+            const fastClientId = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
+            if (fastClientId && inDiscordRuntime) {
+              try {
+                const { DiscordSDK } = await import('@discord/embedded-app-sdk');
+                const fastSdk = new DiscordSDK(fastClientId);
+                await withTimeout(fastSdk.ready(), 10000, 'sdk_ready_fast_timeout');
+                setDiscordSdk(fastSdk);
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                await (existingSdk.commands as any).setActivity({
+                await (fastSdk.commands as any).setActivity({
                   activity: {
                     type: 0,
                     details: 'DiscoWeb Dashboard',
@@ -348,9 +352,9 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
                   },
                 });
                 addLog('Rich Presence ayarlandı (hızlı yol)');
+              } catch (e) {
+                addLog(`Rich Presence ayarlanamadı (hızlı yol): ${String(e)}`);
               }
-            } catch {
-              // opsiyonel
             }
             // Mevcut session varsa da login logu at (Activity yeniden açıldı)
             try {
