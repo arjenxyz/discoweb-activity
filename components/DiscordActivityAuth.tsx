@@ -146,7 +146,37 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
       setDiscordSdk(sdk);
 
       // Discord kullanıcısının dil ayarını al ve locale'i set et
-      const sdkLocale = (sdk as unknown as { locale?: string }).locale ?? navigator.language;
+      // 1. sdk.commands.userSettingsGetLocale() — en güvenilir yol
+      // 2. URL param ?locale=tr (Discord bazı versiyonlarda geçirir)
+      // 3. sdk.locale property (bazı SDK versiyonlarında mevcut)
+      // 4. navigator.language fallback
+      let sdkLocale = navigator.language;
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const localeResult = await (sdk.commands as any).userSettingsGetLocale?.();
+        if (localeResult?.locale) {
+          sdkLocale = localeResult.locale;
+          addLog(`userSettingsGetLocale: ${sdkLocale}`);
+        } else {
+          throw new Error('no locale from command');
+        }
+      } catch {
+        // URL param kontrolü
+        const urlLocale = new URLSearchParams(window.location.search).get('locale');
+        if (urlLocale) {
+          sdkLocale = urlLocale;
+          addLog(`URL locale: ${sdkLocale}`);
+        } else {
+          // sdk.locale property fallback
+          const propLocale = (sdk as unknown as { locale?: string }).locale;
+          if (propLocale) {
+            sdkLocale = propLocale;
+            addLog(`sdk.locale property: ${sdkLocale}`);
+          } else {
+            addLog(`navigator.language fallback: ${sdkLocale}`);
+          }
+        }
+      }
       setDiscordLocale(sdkLocale);
       addLog(`Locale ayarlandı: ${sdkLocale}`);
 
