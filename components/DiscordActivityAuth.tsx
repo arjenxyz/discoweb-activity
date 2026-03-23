@@ -355,6 +355,7 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
                 let guildName: string | null = savedGuildName;
                 if (tokenRes.ok) {
                   const tokenData = await tokenRes.json() as { access_token: string; guild_name?: string | null };
+                  addLog(`discord-token guild_name: ${JSON.stringify(tokenData.guild_name)}`);
                   if (tokenData.guild_name) {
                     guildName = tokenData.guild_name;
                     try { localStorage.setItem(`discord_guild_name_${guildId}`, guildName); } catch {}
@@ -364,6 +365,8 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
                     10000, 'authenticate_fast_timeout'
                   );
                   addLog('RPC authenticate (hızlı yol) başarılı');
+                } else {
+                  addLog(`discord-token endpoint hatası: ${tokenRes.status}`);
                 }
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 await (fastSdk.commands as any).setActivity({
@@ -373,7 +376,6 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
                     state: 'Economy & Role Management',
                     timestamps: { start: Date.now() },
                     assets: { large_image: 'discoweb', large_text: 'DiscoWeb' },
-                    buttons: [{ label: 'Open DiscoWeb', url: 'https://discoweb.tech' }],
                   },
                 });
                 addLog('Rich Presence ayarlandı (hızlı yol)');
