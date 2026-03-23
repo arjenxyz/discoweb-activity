@@ -23,5 +23,8 @@
   "settings_dropdown_transfer": "Papel gonder",
   "settings_dropdown_settings": "Ayarlar",
   "settings_dropdown_logout": "Cikis yap",
-  "settings_dropdown_account_aria": "Hesap"
+  "settings_dropdown_account_aria": "Hesap",
+  "confirm_dialog_default_title": "Onay",
+  "confirm_dialog_yes": "Evet",
+  "confirm_dialog_cancel": "İptal"
 }

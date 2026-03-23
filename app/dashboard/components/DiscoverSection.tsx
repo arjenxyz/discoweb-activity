@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { LuUsers } from 'react-icons/lu';
 import { apiUrl } from '@/lib/api';
+import { useT } from '@/contexts/LocaleContext';
 
 type Ad = {
   id: string;
@@ -16,6 +17,7 @@ type Ad = {
 };
 
 export default function DiscoverSection() {
+  const t = useT();
   const [ad, setAd] = useState<Ad | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -32,18 +34,18 @@ export default function DiscoverSection() {
   return (
     <section className="flex flex-col gap-4 p-3 sm:p-6">
       <div>
-        <h2 className="text-lg font-black text-white">Topluluk</h2>
-        <p className="mt-0.5 text-sm text-white/40">Öne çıkan Discord sunucularını keşfet.</p>
+        <h2 className="text-lg font-black text-white">{t('discover_title')}</h2>
+        <p className="mt-0.5 text-sm text-white/40">{t('discover_subtitle')}</p>
       </div>
 
       {loading ? (
         <div className="flex items-center gap-3 py-12 text-white/30">
           <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/10 border-t-white/40" />
-          <span className="text-sm">Yükleniyor...</span>
+          <span className="text-sm">{t('loading')}</span>
         </div>
       ) : ad ? (
         <div className={card}>
-          <p className="mb-4 text-[9px] font-semibold uppercase tracking-[0.3em] text-white/25">Öne Çıkan Sunucu</p>
+          <p className="mb-4 text-[9px] font-semibold uppercase tracking-[0.3em] text-white/25">{t('discover_featured_badge')}</p>
 
           <div className="flex items-start gap-4">
             {ad.server_icon ? (
@@ -71,13 +73,13 @@ export default function DiscoverSection() {
                   {ad.online_count != null && (
                     <span className="flex items-center gap-1.5">
                       <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                      {ad.online_count.toLocaleString()} çevrimiçi
+                      {t('discover_online_count', { count: ad.online_count.toLocaleString() })}
                     </span>
                   )}
                   {ad.member_count != null && (
                     <span className="flex items-center gap-1.5">
                       <LuUsers className="h-3.5 w-3.5" />
-                      {ad.member_count.toLocaleString()} üye
+                      {t('discover_member_count', { count: ad.member_count.toLocaleString() })}
                     </span>
                   )}
                 </div>
@@ -92,15 +94,15 @@ export default function DiscoverSection() {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-xl bg-[#5865F2] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-[#4752C4]"
             >
-              Sunucuya Katıl
+              {t('discover_join_button')}
             </a>
           </div>
         </div>
       ) : (
         <div className={`${card} text-center py-16`}>
           <p className="text-4xl mb-3">🧭</p>
-          <p className="text-sm font-semibold text-white/40">Henüz öne çıkan sunucu yok</p>
-          <p className="mt-1 text-xs text-white/25">Yakında burada sunucular görünecek.</p>
+          <p className="text-sm font-semibold text-white/40">{t('discover_empty_title')}</p>
+          <p className="mt-1 text-xs text-white/25">{t('discover_empty_subtitle')}</p>
         </div>
       )}
     </section>

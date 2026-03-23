@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import type { Notification } from '../types';
+import { useT } from '@/contexts/LocaleContext';
 
 type NotificationsModalProps = {
   open: boolean;
@@ -22,6 +23,7 @@ export default function NotificationsModal({
   onOpenNotification,
   renderNotificationBody,
 }: NotificationsModalProps) {
+  const t = useT();
   if (!open) {
     return null;
   }
@@ -32,15 +34,15 @@ export default function NotificationsModal({
         <div className={`transition ${activeNotification ? 'blur-sm' : ''}`}>
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-lg font-semibold text-white">Bildirimler</p>
-              <p className="text-xs text-white/50">Tüm bildirimlerinizi görüntüleyin</p>
+              <p className="text-lg font-semibold text-white">{t('notifications_modal_title')}</p>
+              <p className="text-xs text-white/50">{t('notifications_modal_subtitle')}</p>
             </div>
             <button
               type="button"
               onClick={onClose}
               className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/60 transition hover:border-white/30 hover:text-white"
             >
-              Kapat
+              {t('notifications_modal_close')}
             </button>
           </div>
         </div>
@@ -50,7 +52,7 @@ export default function NotificationsModal({
           }`}
         >
           {loading ? (
-            <p className="text-sm text-white/60">Yükleniyor...</p>
+            <p className="text-sm text-white/60">{t('notifications_modal_loading')}</p>
           ) : notifications.length ? (
             notifications.map((item) => (
               <button
@@ -104,12 +106,12 @@ export default function NotificationsModal({
                   </a>
                 )}
                 <span className="mt-2 inline-flex rounded-full border border-white/10 px-2 py-1 text-[11px] text-white/50">
-                  {item.type === 'announcement' ? 'Duyuru' : 'Mail'}
+                  {item.type === 'announcement' ? t('notifications_type_announcement') : t('notifications_type_mail')}
                 </span>
               </button>
             ))
           ) : (
-            <p className="text-sm text-white/50">Henüz bildirim yok.</p>
+            <p className="text-sm text-white/50">{t('notifications_modal_empty')}</p>
           )}
         </div>
       </div>

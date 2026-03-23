@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { LuBell } from 'react-icons/lu';
 import type { Notification } from '../types';
 import type { RefObject } from 'react';
+import { useT } from '@/contexts/LocaleContext';
 
 type NotificationsDropdownProps = {
   open: boolean;
@@ -28,13 +29,14 @@ export default function NotificationsDropdown({
   onOpenModal,
   renderNotificationBody,
 }: NotificationsDropdownProps) {
+  const t = useT();
   return (
     <div ref={menuRef} className="relative">
       <button
         type="button"
         onClick={onToggle}
         className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/70 transition hover:border-white/30 hover:text-white"
-        aria-label="Bildirimler"
+        aria-label={t('notifications_dropdown_title')}
       >
         <LuBell className="h-4 w-4" />
         {unreadCount > 0 && (
@@ -46,20 +48,20 @@ export default function NotificationsDropdown({
       {open && (
         <div className="absolute right-0 z-50 mt-3 w-80 rounded-2xl border border-white/15 bg-[#0f1116] p-4 shadow-2xl">
           <div className="flex items-center justify-between">
-            <p className="text-sm font-semibold">Bildirimler</p>
+            <p className="text-sm font-semibold">{t('notifications_dropdown_title')}</p>
             {onOpenModal && (
               <button
                 type="button"
                 onClick={() => onOpenModal()}
                 className="text-xs text-white/60 hover:text-white"
               >
-                Tümünü Gör
+                {t('notifications_dropdown_see_all')}
               </button>
             )}
           </div>
           <div className="mt-3 max-h-96 overflow-y-auto space-y-3 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
             {loading ? (
-              <p className="text-xs text-white/50">Yükleniyor...</p>
+              <p className="text-xs text-white/50">{t('notifications_dropdown_loading')}</p>
             ) : notifications.length ? (
               notifications.map((item) => (
                 <button
@@ -93,7 +95,7 @@ export default function NotificationsDropdown({
                 </button>
               ))
             ) : (
-              <p className="text-xs text-white/50">Yeni bildirim yok.</p>
+              <p className="text-xs text-white/50">{t('notifications_dropdown_empty')}</p>
             )}
           </div>
         </div>

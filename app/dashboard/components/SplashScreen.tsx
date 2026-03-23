@@ -6,12 +6,14 @@ import DeveloperPanel from './DeveloperPanel';
 import { apiUrl } from '@/lib/api';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { getDiscordSdk } from '@/lib/discordSdk';
+import { useT } from '@/contexts/LocaleContext';
 
 type Props = {
   onEnter: () => void;
 };
 
 export default function SplashScreen({ onEnter }: Props) {
+  const t = useT();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [muted, setMuted] = useState(true);
   const [visible, setVisible] = useState(false);
@@ -45,7 +47,7 @@ export default function SplashScreen({ onEnter }: Props) {
   };
 
   useEffect(() => {
-    const t = setTimeout(() => setVisible(true), 80);
+    const t2 = setTimeout(() => setVisible(true), 80);
 
     // Oturum açıksa kullanıcı bilgisini çek
     fetchWithCreds(apiUrl('/api/auth/me'))
@@ -76,7 +78,7 @@ export default function SplashScreen({ onEnter }: Props) {
     checkMaintenance(true);
     const interval = setInterval(() => checkMaintenance(false), 30000);
 
-    return () => { clearTimeout(t); clearInterval(interval); };
+    return () => { clearTimeout(t2); clearInterval(interval); };
   }, []);
 
   const toggleMute = () => {
@@ -119,7 +121,7 @@ export default function SplashScreen({ onEnter }: Props) {
         Disco<span style={logoBlueStyle}>Web</span>
       </span>
       <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/30">
-        Discord Economy Platform
+        {t('splash_platform_name')}
       </span>
     </div>
   );
@@ -147,7 +149,7 @@ export default function SplashScreen({ onEnter }: Props) {
               <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="2" strokeOpacity="0.3" />
               <path d="M8 2a6 6 0 016 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
             </svg>
-            Yükleniyor
+            {t('loading')}
           </span>
         </button>
       );
@@ -163,7 +165,7 @@ export default function SplashScreen({ onEnter }: Props) {
       >
         {!blocked && <span className="pointer-events-none absolute inset-0 -translate-x-full skew-x-12 bg-white/20 transition-transform duration-500 group-hover:translate-x-full" />}
         <span className="relative flex items-center gap-2">
-          {blocked ? 'Activity Bakımda' : 'Hadi Başlayalım'}
+          {blocked ? t('splash_maintenance_title') : t('splash_start_button')}
           {!blocked && (
             <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-0.5">
               <path d="M3.75 7.25a.75.75 0 000 1.5h6.19l-2.72 2.72a.75.75 0 001.06 1.06l4-4a.75.75 0 000-1.06l-4-4a.75.75 0 00-1.06 1.06l2.72 2.72H3.75z" />
@@ -181,9 +183,9 @@ export default function SplashScreen({ onEnter }: Props) {
         <span className="text-xs text-white/60">Created by <span className="text-white/90 font-semibold">thearjen</span> · All rights reserved</span>
       </div>
       <div className="flex items-center gap-2 pl-[26px]">
-        <button type="button" onClick={() => openLink('https://discoweb.tech/terms')} className="text-xs text-white/50 hover:text-white/75 transition-colors">Kullanım Şartları</button>
+        <button type="button" onClick={() => openLink('https://discoweb.tech/terms')} className="text-xs text-white/50 hover:text-white/75 transition-colors">{t('splash_terms')}</button>
         <span className="text-white/30 text-xs">·</span>
-        <button type="button" onClick={() => openLink('https://discoweb.tech/privacy')} className="text-xs text-white/50 hover:text-white/75 transition-colors">Gizlilik Politikası</button>
+        <button type="button" onClick={() => openLink('https://discoweb.tech/privacy')} className="text-xs text-white/50 hover:text-white/75 transition-colors">{t('splash_privacy')}</button>
       </div>
     </div>
   );

@@ -6,6 +6,7 @@ import { useEffect, useRef } from 'react';
 import { apiUrl } from '@/lib/api';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { sanitizeHtml } from '@/lib/sanitizeHtml';
+import { useT } from '@/contexts/LocaleContext';
 import {
   LuChevronLeft,
   LuTrash2,
@@ -16,15 +17,16 @@ import {
 } from 'react-icons/lu';
 
 /* ─── Kategori → Gönderici Bilgisi ─── */
-const SENDER_CONFIG: Record<string, { name: string; avatar: string; verified: boolean }> = {
-  announcement: { name: 'Sistem Duyuruları', avatar: '📢', verified: true },
-  system:       { name: 'Sistem Yöneticisi', avatar: '⚙️', verified: true },
-  maintenance:  { name: 'Bakım Ekibi',       avatar: '🔧', verified: true },
-  sponsor:      { name: 'İş Ortaklıkları',   avatar: '💼', verified: false },
-  update:       { name: 'Ürün Güncellemeleri', avatar: '✨', verified: true },
-  lottery:      { name: 'Kampanya Yönetimi',  avatar: '🎉', verified: false },
-  reward:       { name: 'Ödül Merkezi',       avatar: '🎁', verified: true },
-  order:        { name: 'Sipariş Yönetimi',   avatar: '📦', verified: true },
+type SenderConfig = { nameKey: string; avatar: string; verified: boolean };
+const SENDER_CONFIG: Record<string, SenderConfig> = {
+  announcement: { nameKey: 'mail_sender_announcement', avatar: '📢', verified: true },
+  system:       { nameKey: 'mail_sender_system',       avatar: '⚙️', verified: true },
+  maintenance:  { nameKey: 'mail_sender_maintenance',  avatar: '🔧', verified: true },
+  sponsor:      { nameKey: 'mail_sender_sponsor',      avatar: '💼', verified: false },
+  update:       { nameKey: 'mail_sender_update',       avatar: '✨', verified: true },
+  lottery:      { nameKey: 'mail_sender_lottery',      avatar: '🎉', verified: false },
+  reward:       { nameKey: 'mail_sender_reward',       avatar: '🎁', verified: true },
+  order:        { nameKey: 'mail_sender_order',        avatar: '📦', verified: true },
 };
 
 /* ─── Kategori Renkleri ─── */
@@ -39,15 +41,15 @@ const CATEGORY_COLORS: Record<string, string> = {
   order:        'bg-indigo-500/15 text-indigo-400 border-indigo-500/20',
 };
 
-const CATEGORY_LABELS: Record<string, string> = {
-  announcement: 'Duyuru',
-  system: 'Sistem',
-  maintenance: 'Bakım',
-  sponsor: 'Sponsor',
-  update: 'Güncelleme',
-  lottery: 'Çekiliş',
-  reward: 'Ödül',
-  order: 'Sipariş',
+const CATEGORY_LABEL_KEYS: Record<string, string> = {
+  announcement: 'mail_detail_category_announcement',
+  system:       'mail_detail_category_system',
+  maintenance:  'mail_detail_category_maintenance',
+  sponsor:      'mail_detail_category_sponsor',
+  update:       'mail_detail_category_update',
+  lottery:      'mail_detail_category_lottery',
+  reward:       'mail_detail_category_reward',
+  order:        'mail_detail_category_order',
 };
 
 type MailDetailModalProps = {
@@ -63,6 +65,7 @@ const isVideoUrl = (url: string) => {
 };
 
 export default function MailDetailModal({ mail, onClose, onDelete, onStar }: MailDetailModalProps) {
+  const t = useT();
   const modalRef = useRef<HTMLDivElement>(null);
 
   // ESC ile kapat
@@ -90,9 +93,11 @@ export default function MailDetailModal({ mail, onClose, onDelete, onStar }: Mai
 
   if (!mail) return null;
 
-  const sender = SENDER_CONFIG[mail.category] ?? SENDER_CONFIG.system;
+  const senderCfg = SENDER_CONFIG[mail.category] ?? SENDER_CONFIG.system;
+  const senderName = t(senderCfg.nameKey);
   const categoryColor = CATEGORY_COLORS[mail.category] ?? CATEGORY_COLORS.system;
-  const categoryLabel = CATEGORY_LABELS[mail.category] ?? mail.category;
+  const categoryLabelKey = CATEGORY_LABEL_KEYS[mail.category];
+  const categoryLabel = categoryLabelKey ? t(categoryLabelKey) : mail.category;
 
   const formatDate = (date: string) => {
     const d = new Date(date);
@@ -131,7 +136,7 @@ export default function MailDetailModal({ mail, onClose, onDelete, onStar }: Mai
                 </div>
               </div>
               <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-white/[0.04] border border-white/[0.06]">
-                <span className="text-sm text-white/60">Ödül Miktarı</span>
+                <span className="text-sm text-white/60">{t('mail_receipt_reward_amount')}</span>
                 <span className="text-lg font-bold text-emerald-400">+{meta.reward_amount.toFixed(2)} Papel</span>
               </div>
               {body && (
@@ -154,7 +159,7 @@ export default function MailDetailModal({ mail, onClose, onDelete, onStar }: Mai
             <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5 sm:p-6">
               <div className="flex items-center justify-between mb-5">
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#5865F2]/70">Dijital Makbuz</p>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#5865F2]/70">{t('mail_receipt_label')}</p>
                   <p className="text-base font-bold text-white mt-1">{mail.title}</p>
                 </div>
                 <p className="text-[11px] text-white/40">{formatDate(meta.purchase_date || mail.created_at)}</p>
@@ -171,25 +176,25 @@ export default function MailDetailModal({ mail, onClose, onDelete, onStar }: Mai
 
               <div className="mt-5 pt-4 border-t border-white/[0.06] space-y-2">
                 <div className="flex justify-between text-sm px-1">
-                  <span className="text-white/40">Ara Toplam</span>
+                  <span className="text-white/40">{t('mail_receipt_subtotal')}</span>
                   <span className="text-white/60">{subtotal.toFixed(2)} Papel</span>
                 </div>
                 {discount > 0 && (
                   <div className="flex justify-between text-sm px-1">
-                    <span className="text-white/40">İndirim</span>
+                    <span className="text-white/40">{t('mail_receipt_discount')}</span>
                     <span className="text-emerald-400">-{discount.toFixed(2)} Papel</span>
                   </div>
                 )}
                 {meta.coupon_code && (
                   <div className="px-1">
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-[11px] text-emerald-300">
-                      Kupon: <span className="font-mono font-bold">{meta.coupon_code}</span>
+                      {t('mail_receipt_coupon_label')} <span className="font-mono font-bold">{meta.coupon_code}</span>
                       {meta.coupon_pct && <span>({meta.coupon_pct}%)</span>}
                     </span>
                   </div>
                 )}
                 <div className="flex justify-between items-center pt-2 px-1">
-                  <span className="text-base font-bold text-white">Toplam</span>
+                  <span className="text-base font-bold text-white">{t('mail_receipt_total')}</span>
                   <span className="text-xl font-black text-white">{total.toFixed(2)} Papel</span>
                 </div>
               </div>
@@ -329,7 +334,7 @@ export default function MailDetailModal({ mail, onClose, onDelete, onStar }: Mai
               <button
                 onClick={onClose}
                 className="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/[0.06] transition-all"
-                aria-label="Geri"
+                aria-label={t('mail_detail_back_aria')}
               >
                 <LuChevronLeft className="w-5 h-5" />
               </button>
@@ -345,7 +350,7 @@ export default function MailDetailModal({ mail, onClose, onDelete, onStar }: Mai
                 <button
                   onClick={() => onStar(mail.id)}
                   className="p-1.5 rounded-lg hover:bg-white/[0.06] transition-all"
-                  aria-label="Yıldız"
+                  aria-label={t('mail_detail_star_aria')}
                 >
                   <LuStar className={`w-4 h-4 transition-colors ${mail.is_starred ? 'fill-yellow-400 text-yellow-400' : 'text-white/30 hover:text-yellow-400'}`} />
                 </button>
@@ -354,7 +359,7 @@ export default function MailDetailModal({ mail, onClose, onDelete, onStar }: Mai
                 <button
                   onClick={() => onDelete(mail.id)}
                   className="p-1.5 rounded-lg text-white/30 hover:text-rose-400 hover:bg-rose-500/10 transition-all"
-                  aria-label="Sil"
+                  aria-label={t('mail_detail_delete_aria')}
                 >
                   <LuTrash2 className="w-4 h-4" />
                 </button>
@@ -362,7 +367,7 @@ export default function MailDetailModal({ mail, onClose, onDelete, onStar }: Mai
               <button
                 onClick={onClose}
                 className="p-1.5 rounded-lg text-white/30 hover:text-white hover:bg-white/[0.06] transition-all sm:hidden"
-                aria-label="Kapat"
+                aria-label={t('mail_detail_close_aria')}
               >
                 <LuX className="w-4 h-4" />
               </button>
@@ -390,16 +395,16 @@ export default function MailDetailModal({ mail, onClose, onDelete, onStar }: Mai
                     </div>
                   ) : (
                     <div className="w-10 h-10 rounded-xl bg-[#5865F2]/15 flex items-center justify-center text-lg flex-shrink-0">
-                      {sender.avatar}
+                      {senderCfg.avatar}
                     </div>
                   )}
                   <div>
                     <div className="flex items-center gap-1.5">
                       <span className="text-sm font-semibold text-white">
-                        {mail.author_name ?? sender.name}
+                        {mail.author_name ?? senderName}
                       </span>
-                      {sender.verified && (
-                        <LuShield className="w-3.5 h-3.5 text-[#5865F2]" title="Doğrulanmış" />
+                      {senderCfg.verified && (
+                        <LuShield className="w-3.5 h-3.5 text-[#5865F2]" title={t('mail_detail_verified_tooltip')} />
                       )}
                     </div>
                     <p className="text-[11px] text-white/30 mt-0.5">{formatDate(mail.created_at)}</p>
@@ -448,7 +453,7 @@ export default function MailDetailModal({ mail, onClose, onDelete, onStar }: Mai
                   className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#5865F2]/10 hover:bg-[#5865F2]/20 border border-[#5865F2]/20 text-[#7289DA] hover:text-white text-sm font-semibold rounded-xl transition-all"
                 >
                   <LuExternalLink className="w-4 h-4" />
-                  Detayları Görüntüle
+                  {t('mail_detail_view_details')}
                 </a>
               )}
             </div>

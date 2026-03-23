@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import Image from 'next/image';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import type { OverviewStatsExpanded } from '../types';
+import { useT } from '@/contexts/LocaleContext';
 
 type Props = {
   open: boolean;
@@ -11,6 +12,7 @@ type Props = {
 };
 
 export default function EarningsModal({ open, onClose }: Props) {
+  const t = useT();
   const [data, setData] = useState<OverviewStatsExpanded | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,18 +30,18 @@ export default function EarningsModal({ open, onClose }: Props) {
         const json = (await overviewRes.json()) as OverviewStatsExpanded;
         setData(json);
       } else {
-        setError('Veri alınamadı.');
+        setError(t('earnings_fetch_error'));
       }
       if (walletRes.ok) {
         const w = (await walletRes.json()) as { balance: number };
         setPapel(Number(w.balance ?? 0));
       }
     } catch {
-      setError('Bağlantı hatası.');
+      setError(t('earnings_connection_error'));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     if (open) fetchData();
@@ -82,8 +84,8 @@ export default function EarningsModal({ open, onClose }: Props) {
         {/* Header */}
         <div className="sticky top-0 z-10 flex items-center justify-between bg-[#13151a]/95 backdrop-blur-sm px-5 py-4 border-b border-white/5">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-indigo-300">Kazanç Özeti</p>
-            <p className="text-lg font-black text-white mt-0.5">Papel Bilgileri</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-indigo-300">{t('earnings_modal_title')}</p>
+            <p className="text-lg font-black text-white mt-0.5">{t('earnings_modal_subtitle')}</p>
           </div>
           <button
             type="button"
@@ -96,7 +98,7 @@ export default function EarningsModal({ open, onClose }: Props) {
 
         <div className="px-5 py-4 space-y-4">
           {loading && (
-            <p className="text-center text-sm text-white/50 py-8">Yükleniyor...</p>
+            <p className="text-center text-sm text-white/50 py-8">{t('loading')}</p>
           )}
           {error && (
             <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</p>
@@ -108,7 +110,7 @@ export default function EarningsModal({ open, onClose }: Props) {
               <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4 flex items-center gap-4">
                 <Image src="/papel.gif" alt="papel" width={40} height={40} className="h-10 w-10" />
                 <div>
-                  <p className="text-xs text-white/50">Güncel Papel Bakiyesi</p>
+                  <p className="text-xs text-white/50">{t('earnings_balance_label')}</p>
                   <p className="text-2xl font-black text-emerald-400">
                     {papel !== null ? fmt(papel) : '—'}
                   </p>
@@ -125,17 +127,17 @@ export default function EarningsModal({ open, onClose }: Props) {
 
               {/* Kazanç Oranları */}
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <p className="text-xs font-semibold uppercase tracking-widest text-indigo-300 mb-3">Kazanç Oranları</p>
+                <p className="text-xs font-semibold uppercase tracking-widest text-indigo-300 mb-3">{t('earnings_rates_title')}</p>
                 <div className="space-y-2">
                   <RateRow
-                    label="Mesaj başına"
+                    label={t('earnings_rate_per_message')}
                     base={baseMsg}
                     tag={data.hasTag ? tagMsg : null}
                     boost={data.isBooster ? boostMsg : null}
                     effective={effectiveMsg}
                   />
                   <RateRow
-                    label="Sesli dakika başına"
+                    label={t('earnings_rate_per_voice')}
                     base={baseVoice}
                     tag={data.hasTag ? tagVoice : null}
                     boost={data.isBooster ? boostVoice : null}
@@ -147,8 +149,8 @@ export default function EarningsModal({ open, onClose }: Props) {
                 <div className="mt-3 flex flex-wrap gap-2">
                   <Badge
                     active={Boolean(data.hasTag)}
-                    activeLabel="Tag: Aktif"
-                    inactiveLabel="Tag: Yok"
+                    activeLabel={t('earnings_tag_active')}
+                    inactiveLabel={t('earnings_tag_inactive')}
                     color="indigo"
                   />
                   <Badge
@@ -162,7 +164,7 @@ export default function EarningsModal({ open, onClose }: Props) {
 
               {/* Bugünkü & Toplam İstatistikler */}
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                <p className="text-xs font-semibold uppercase tracking-widest text-indigo-300 mb-3">İstatistikler</p>
+                <p className="text-xs font-semibold uppercase tracking-widest text-indigo-300 mb-3">{t('earnings_stats_title')}</p>
                 <div className="grid grid-cols-2 gap-2">
                   <StatCard label="Son 24 saat · Mesaj" value={data.messagesLast24h ?? 0} />
                   <StatCard label="Son 24 saat · Ses (dk)" value={data.voiceMinutesLast24h ?? 0} />
@@ -186,13 +188,13 @@ export default function EarningsModal({ open, onClose }: Props) {
               {/* Aktif Yetkiler */}
               {data.activePerks && data.activePerks.length > 0 && (
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-widest text-indigo-300 mb-3">Aktif Yetkiler</p>
+                  <p className="text-xs font-semibold uppercase tracking-widest text-indigo-300 mb-3">{t('earnings_perks_title')}</p>
                   <div className="space-y-2">
                     {data.activePerks.map((perk, i) => (
                       <div key={perk.role_id + i} className="flex items-center justify-between rounded-xl border border-white/5 bg-[#0b0d12]/60 px-3 py-2">
-                        <p className="text-sm text-white">{perk.title ?? 'Yetki'}</p>
+                        <p className="text-sm text-white">{perk.title ?? t('earnings_perk_default_title')}</p>
                         <p className="text-xs text-white/40">
-                          {perk.expires_at ? `${fmtDate(perk.expires_at)}'e kadar` : 'Süresiz'}
+                          {perk.expires_at ? t('earnings_perk_until', { date: fmtDate(perk.expires_at) }) : t('earnings_perk_permanent')}
                         </p>
                       </div>
                     ))}

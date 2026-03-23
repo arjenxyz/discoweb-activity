@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { useT } from '@/contexts/LocaleContext';
 
 type DiscountsModalProps = {
   isOpen: boolean;
@@ -14,6 +15,7 @@ type DiscountsModalProps = {
 };
 
 export default function DiscountsModal({ isOpen, onClose, onApply, loading, error, success, maintenance }: DiscountsModalProps) {
+  const t = useT();
   const [code, setCode] = useState('');
   const [localLoading, setLocalLoading] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
@@ -49,12 +51,12 @@ export default function DiscountsModal({ isOpen, onClose, onApply, loading, erro
         >
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-lg font-semibold text-white">Bakım Modu</p>
-              <p className="text-xs text-white/50">Bu özellik şu anda bakımda.</p>
+              <p className="text-lg font-semibold text-white">{t('maintenance_modal_title')}</p>
+              <p className="text-xs text-white/50">{t('maintenance_modal_subtitle')}</p>
             </div>
           </div>
           <div className="mt-5">
-            <p className="text-sm text-white/60">{maintenance.reason || 'Lütfen daha sonra tekrar deneyin.'}</p>
+            <p className="text-sm text-white/60">{maintenance.reason || t('maintenance_modal_default_reason')}</p>
           </div>
           <div className="mt-6 flex items-center justify-end gap-3">
             <button
@@ -62,7 +64,7 @@ export default function DiscountsModal({ isOpen, onClose, onApply, loading, erro
               onClick={onClose}
               className="rounded-full border border-white/10 px-4 py-2 text-xs text-white transition hover:border-white/30"
             >
-              Kapat
+              {t('maintenance_modal_close')}
             </button>
           </div>
         </div>
@@ -73,9 +75,9 @@ export default function DiscountsModal({ isOpen, onClose, onApply, loading, erro
 
   const validate = (value: string) => {
     const trimmed = value.trim();
-    if (!trimmed) return 'Lütfen bir kod girin.';
-    if (trimmed.length < 3) return 'Kod çok kısa.';
-    if (trimmed.length > 100) return 'Kod çok uzun.';
+    if (!trimmed) return t('discount_modal_enter_code');
+    if (trimmed.length < 3) return t('discount_modal_code_too_short');
+    if (trimmed.length > 100) return t('discount_modal_code_too_long');
     return null;
   };
 
@@ -109,8 +111,8 @@ export default function DiscountsModal({ isOpen, onClose, onApply, loading, erro
       >
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-lg font-semibold text-white">İndirim Kodu Gir</p>
-            <p className="text-xs text-white/50">İndirim kodunuzu buradan girin.</p>
+            <p className="text-lg font-semibold text-white">{t('discount_modal_title')}</p>
+            <p className="text-xs text-white/50">{t('discount_modal_subtitle')}</p>
           </div>
         </div>
 
@@ -133,7 +135,7 @@ export default function DiscountsModal({ isOpen, onClose, onApply, loading, erro
             onClick={onClose}
             className="rounded-full border border-white/10 px-4 py-2 text-xs text-white transition hover:border-white/30"
           >
-            Vazgeç
+            {t('discount_modal_cancel')}
           </button>
           <button
             type="button"
@@ -141,7 +143,7 @@ export default function DiscountsModal({ isOpen, onClose, onApply, loading, erro
             disabled={isLoading}
             className="rounded-full bg-emerald-500 px-4 py-2 text-xs font-semibold text-white transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {isLoading ? 'Kontrol ediliyor...' : 'Kodu Uygula'}
+            {isLoading ? t('discount_modal_checking') : t('discount_modal_apply')}
           </button>
         </div>
       </div>

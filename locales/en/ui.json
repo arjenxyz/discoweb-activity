@@ -23,5 +23,8 @@
   "settings_dropdown_transfer": "Send Papel",
   "settings_dropdown_settings": "Settings",
   "settings_dropdown_logout": "Sign out",
-  "settings_dropdown_account_aria": "Account"
+  "settings_dropdown_account_aria": "Account",
+  "confirm_dialog_default_title": "Confirm",
+  "confirm_dialog_yes": "Yes",
+  "confirm_dialog_cancel": "Cancel"
 }
