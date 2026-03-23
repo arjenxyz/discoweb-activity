@@ -261,6 +261,7 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
             timestamps: { start: Date.now() },
             assets: { large_image: 'discoweb', large_text: 'DiscoWeb' },
             party: rpActiveCount > 0 ? { id: guildId, size: [rpActiveCount, 9999] } : undefined,
+            buttons: [{ label: 'Open DiscoWeb', url: 'https://discoweb.tech' }],
           },
         });
         addLog('Rich Presence ayarlandı');
@@ -387,6 +388,7 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
                     timestamps: { start: Date.now() },
                     assets: { large_image: 'discoweb', large_text: 'DiscoWeb' },
                     party: activeCount > 0 ? { id: guildId, size: [activeCount, 9999] } : undefined,
+                    buttons: [{ label: 'Open DiscoWeb', url: 'https://discoweb.tech' }],
                   },
                 });
                 addLog('Rich Presence ayarlandı (hızlı yol)');
