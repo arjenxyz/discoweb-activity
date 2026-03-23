@@ -5,6 +5,7 @@ import fetchWithCreds from '@/lib/fetchWithCreds';
 import { apiUrl } from '@/lib/api';
 import { setDiscordSdk } from '@/lib/discordSdk';
 import { useLocale } from '@/contexts/LocaleContext';
+import DmScreen from '@/app/dashboard/components/DmScreen';
 
 interface DiscordActivityAuthProps {
   children: React.ReactNode;
@@ -49,6 +50,7 @@ const clearAuthState = () => {
 export default function DiscordActivityAuth({ children }: DiscordActivityAuthProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isDmContext, setIsDmContext] = useState(false);
   const [debugLogs, setDebugLogs] = useState<string[]>([]);
   const userInfoRef = useRef<{ username: string; avatar: string | null } | null>(null);
   const { setDiscordLocale } = useLocale();
@@ -237,6 +239,14 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
 
       addLog(`guildId=${guildId}, dev=${isDevMode}, discord=${inDiscordRuntime}`);
 
+      // DM veya grup sohbeti tespiti: Discord runtime'da guild_id yoksa DmScreen göster
+      if (inDiscordRuntime && !isDevMode && !guildId) {
+        addLog('guild_id yok → DM veya grup sohbeti, DmScreen gösteriliyor');
+        setIsDmContext(true);
+        setIsLoading(false);
+        return;
+      }
+
       // frame_id'yi storage'a kaydet
       if (frameIdFromUrl) {
         try { localStorage.setItem('discord_frame_id', frameIdFromUrl); } catch {}
@@ -354,6 +364,10 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
   if (isLoading) {
     // Auth arka planda çalışır, kullanıcıya siyah ekran gösterilir
     return <div className="min-h-screen bg-[#0b0d12]" />;
+  }
+
+  if (isDmContext) {
+    return <DmScreen />;
   }
 
   if (error) {
