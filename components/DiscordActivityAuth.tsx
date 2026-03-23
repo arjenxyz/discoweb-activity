@@ -279,6 +279,8 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
 
           if (meRes.ok) {
             addLog('Mevcut session geçerli → hızlı geç');
+            // Tarayıcı dilini locale olarak set et (SDK locale yoksa fallback)
+            setDiscordLocale(navigator.language);
             // Mevcut session varsa da login logu at (Activity yeniden açıldı)
             try {
               const meData = await meRes.clone().json() as { username?: string; avatar?: string };
