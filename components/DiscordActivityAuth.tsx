@@ -247,7 +247,7 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
             details: 'DiscoWeb Dashboard',
             state: 'Sunucu yönetimi',
             timestamps: { start: Date.now() },
-            assets: { large_image: 'embedded_cover', large_text: 'DiscoWeb' },
+            assets: { large_image: 'discoweb', large_text: 'DiscoWeb' },
           },
         });
         addLog('Rich Presence ayarlandı');
@@ -344,7 +344,7 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
                     details: 'DiscoWeb Dashboard',
                     state: 'Sunucu yönetimi',
                     timestamps: { start: Date.now() },
-                    assets: { large_image: 'embedded_cover', large_text: 'DiscoWeb' },
+                    assets: { large_image: 'discoweb', large_text: 'DiscoWeb' },
                   },
                 });
                 addLog('Rich Presence ayarlandı (hızlı yol)');
