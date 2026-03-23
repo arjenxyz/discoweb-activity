@@ -252,6 +252,7 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
             state: 'Economy & Role Management',
             timestamps: { start: Date.now() },
             assets: { large_image: 'discoweb', large_text: 'DiscoWeb' },
+            buttons: [{ label: 'Open DiscoWeb', url: 'https://discoweb.tech' }],
           },
         });
         addLog('Rich Presence ayarlandı');
@@ -346,11 +347,18 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
                 await withTimeout(fastSdk.ready(), 10000, 'sdk_ready_fast_timeout');
                 setDiscordSdk(fastSdk);
                 // Discord access token ile RPC bağlantısını authenticate et
-                const tokenRes = await fetchWithCreds(apiUrl('/api/activity/discord-token'), { signal });
+                const tokenRes = await fetchWithCreds(
+                  apiUrl(`/api/activity/discord-token?guild_id=${encodeURIComponent(guildId)}`),
+                  { signal }
+                );
                 const savedGuildName = (() => { try { return localStorage.getItem(`discord_guild_name_${guildId}`); } catch { return null; } })();
                 let guildName: string | null = savedGuildName;
                 if (tokenRes.ok) {
-                  const tokenData = await tokenRes.json() as { access_token: string };
+                  const tokenData = await tokenRes.json() as { access_token: string; guild_name?: string | null };
+                  if (tokenData.guild_name) {
+                    guildName = tokenData.guild_name;
+                    try { localStorage.setItem(`discord_guild_name_${guildId}`, guildName); } catch {}
+                  }
                   await withTimeout(
                     fastSdk.commands.authenticate({ access_token: tokenData.access_token }),
                     10000, 'authenticate_fast_timeout'
@@ -365,6 +373,7 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
                     state: 'Economy & Role Management',
                     timestamps: { start: Date.now() },
                     assets: { large_image: 'discoweb', large_text: 'DiscoWeb' },
+                    buttons: [{ label: 'Open DiscoWeb', url: 'https://discoweb.tech' }],
                   },
                 });
                 addLog('Rich Presence ayarlandı (hızlı yol)');

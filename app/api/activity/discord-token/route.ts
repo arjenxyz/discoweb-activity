@@ -14,6 +14,9 @@ export async function GET(request: Request) {
 
   const supabase = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
 
+  const url = new URL(request.url);
+  const guildId = url.searchParams.get('guild_id');
+
   const { data } = await supabase
     .from('users')
     .select('oauth_access_token')
@@ -24,5 +27,31 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'no_token' }, { status: 404 });
   }
 
-  return NextResponse.json({ access_token: data.oauth_access_token });
+  // Guild adını önce DB'den, bulamazsa Discord API'den al
+  let guildName: string | null = null;
+  if (guildId) {
+    const { data: server } = await supabase
+      .from('servers')
+      .select('name')
+      .eq('discord_id', guildId)
+      .maybeSingle();
+    guildName = server?.name ?? null;
+
+    if (!guildName) {
+      const botToken = process.env.DISCORD_BOT_TOKEN;
+      if (botToken) {
+        try {
+          const guildRes = await fetch(`https://discord.com/api/v10/guilds/${guildId}`, {
+            headers: { Authorization: `Bot ${botToken}` },
+          });
+          if (guildRes.ok) {
+            const guildData = await guildRes.json() as { name: string };
+            guildName = guildData.name ?? null;
+          }
+        } catch { /* opsiyonel */ }
+      }
+    }
+  }
+
+  return NextResponse.json({ access_token: data.oauth_access_token, guild_name: guildName });
 }
