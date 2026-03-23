@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { LuShieldCheck, LuList, LuMail, LuUser, LuX } from 'react-icons/lu';
+import { useT } from '@/contexts/LocaleContext';
 
 interface Props {
   href: string;
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export default function DiscordAgreementButton({ href, children, className, targetBlank }: Props) {
+  const t = useT();
   const router = useRouter();
   const [showAgreementModal, setShowAgreementModal] = useState(false);
   const [isProcessingAgreement, setIsProcessingAgreement] = useState(false);
@@ -133,28 +135,28 @@ export default function DiscordAgreementButton({ href, children, className, targ
                 <LuShieldCheck className="h-6 w-6" />
               </div>
               <div className="flex-1">
-                <h3 id="discord-agreement-title" className="text-lg font-semibold text-white">Kullanıcı Sözleşmesi ve Veri Kullanımı</h3>
-                <p className="text-sm text-white/70 mt-2">Kısaca: Hesabınız doğrulanacak ve hizmetimize erişim için gerekli temel bilgiler toplanacaktır.</p>
+                <h3 id="discord-agreement-title" className="text-lg font-semibold text-white">{t('agreement_title')}</h3>
+                <p className="text-sm text-white/70 mt-2">{t('agreement_body_intro')}</p>
               </div>
-              <button onClick={() => { setShowAgreementModal(false); setTimeout(() => lastActiveEl.current?.focus(), 50); }} aria-label="Kapat" className="ml-3 text-white/50 hover:text-white">
+              <button onClick={() => { setShowAgreementModal(false); setTimeout(() => lastActiveEl.current?.focus(), 50); }} aria-label={t('close')} className="ml-3 text-white/50 hover:text-white">
                 <LuX className="h-5 w-5" />
               </button>
             </div>
 
               <div className="mt-4 space-y-3 text-sm text-white/70">
-                <p>Bu hizmet, Discord hesabınız ve sunucu verilerinizle entegre çalışmak için aşağıdaki bilgileri kullanacaktır:</p>
+                <p>{t('agreement_body_main')}</p>
                 <ul className="ml-0 mt-2 grid gap-2 text-sm">
-                  <li className="flex items-start gap-2"><LuUser className="mt-1 text-white/60"/> <span>Discord kullanıcı kimliğiniz, takma adınız ve avatar bilgileri (hesap tanımlama için).</span></li>
-                  <li className="flex items-start gap-2"><LuList className="mt-1 text-white/60"/> <span>Sunucularınızın listesi ve hangi sunucularda yönetici olduğunuz — hangi sunucularda işlem yapabileceğinizi göstermek için.</span></li>
-                  <li className="flex items-start gap-2"><LuShieldCheck className="mt-1 text-white/60"/> <span>Sunucu üyelik durumunuz ve rolleriniz (yetki kontrolleri için).</span></li>
-                  <li className="flex items-start gap-2"><LuList className="mt-1 text-white/60"/> <span>Sunucuya katılma bilgisi — bazı özellikler için sunucu erişimi gerekebilir.</span></li>
-                  <li className="flex items-start gap-2"><LuMail className="mt-1 text-white/60"/> <span>E-posta adresiniz — hesap doğrulama, önemli bildirimler ve destek için kullanılır.</span></li>
-                  <li className="flex items-start gap-2"><LuShieldCheck className="mt-1 text-white/60"/> <span>Panel içi işlemleriniz; ör. cüzdan bakiyesi, işlemler ve satın alma geçmişi.</span></li>
+                  <li className="flex items-start gap-2"><LuUser className="mt-1 text-white/60"/> <span>{t('agreement_item_1')}</span></li>
+                  <li className="flex items-start gap-2"><LuList className="mt-1 text-white/60"/> <span>{t('agreement_item_2')}</span></li>
+                  <li className="flex items-start gap-2"><LuShieldCheck className="mt-1 text-white/60"/> <span>{t('agreement_item_3')}</span></li>
+                  <li className="flex items-start gap-2"><LuList className="mt-1 text-white/60"/> <span>{t('agreement_item_4')}</span></li>
+                  <li className="flex items-start gap-2"><LuMail className="mt-1 text-white/60"/> <span>{t('agreement_item_5')}</span></li>
+                  <li className="flex items-start gap-2"><LuShieldCheck className="mt-1 text-white/60"/> <span>{t('agreement_item_6')}</span></li>
                 </ul>
 
-                <p className="mt-2">Bu veriler yalnızca hizmet sağlamak, hesap doğrulaması ve talep ettiğiniz özellikleri çalıştırmak için kullanılacaktır. Discord OAuth sırasında talep edilecek scope&#39;lar (ör: identify, email, guilds, guilds.join) sadece gerekli işlemler için kullanılacaktır. Ayrıntılı gizlilik politikamız için lütfen <a href="/privacy" className="text-blue-400 underline">Gizlilik</a> sayfasını ziyaret edin.</p>
+                <p className="mt-2">{t('agreement_disclaimer')} <a href="/privacy" className="text-blue-400 underline">{t('agreement_privacy_link')}</a></p>
 
-                <div className="mt-2 text-sm text-white/60">Kabul etmezseniz, giriş işlemi tamamlanmayacak ve ana sayfaya yönlendirileceksiniz.</div>
+                <div className="mt-2 text-sm text-white/60">{t('agreement_no_consent')}</div>
 
                 <label className="mt-3 inline-flex items-center gap-2 text-sm text-white/80">
                   <input
@@ -163,7 +165,7 @@ export default function DiscordAgreementButton({ href, children, className, targ
                     onChange={(e) => setDontShowAgain(e.target.checked)}
                     className="h-4 w-4 rounded border-white/10 bg-black/10"
                   />
-                  <span>Bir daha gösterme</span>
+                  <span>{t('agreement_dont_show')}</span>
                 </label>
               </div>
 
@@ -173,7 +175,7 @@ export default function DiscordAgreementButton({ href, children, className, targ
                 className="sm:w-auto w-full rounded-md px-4 py-3 bg-white/5 border border-white/10 text-sm text-white/80 hover:bg-white/10"
                 aria-label="Kabul etmiyorum"
               >
-                Giriş Yapmadan Devam Etmiyorum
+                {t('agreement_decline')}
               </button>
               <button
                 onClick={acceptAgreement}
@@ -181,7 +183,7 @@ export default function DiscordAgreementButton({ href, children, className, targ
                 className="sm:w-auto w-full rounded-md px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-500 text-white text-sm font-medium hover:from-blue-700 hover:to-blue-600 disabled:opacity-50 flex items-center justify-center gap-2"
                 aria-label="Kabul ediyorum ve devam et"
               >
-                {isProcessingAgreement ? 'İşleniyor...' : 'Kabul Ediyorum'}
+                {isProcessingAgreement ? t('market_order_processing') : t('agreement_accept')}
               </button>
             </div>
           </div>

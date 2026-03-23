@@ -49,10 +49,10 @@ export default function OverviewSection({
 
   const greeting = (() => {
     const h = new Date().getHours();
-    if (h < 6) return 'İyi geceler';
-    if (h < 12) return 'Günaydın';
-    if (h < 18) return 'İyi günler';
-    return 'İyi akşamlar';
+    if (h < 6) return t('greeting_night');
+    if (h < 12) return t('greeting_morning');
+    if (h < 18) return t('greeting_afternoon');
+    return t('greeting_evening');
   })();
 
   return (
@@ -64,14 +64,14 @@ export default function OverviewSection({
           <p className="text-xs font-medium text-white/30 mb-0.5">
             {greeting}{profile?.nickname ? `, ${profile.nickname}` : ''} 👋
           </p>
-          <h1 className="text-2xl font-black text-white tracking-tight">Ana Sayfa</h1>
+          <h1 className="text-2xl font-black text-white tracking-tight">{t('overview_title')}</h1>
           <p className="mt-1 text-sm text-white/40">
-            Sunucundaki etkinliğin ve istatistiklerin burada.
+            {t('overview_subtitle')}
           </p>
         </div>
         <div className="hidden sm:flex items-center gap-1.5 rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-1.5">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="text-[11px] font-medium text-white/40">Canlı</span>
+          <span className="text-[11px] font-medium text-white/40">{t('overview_live')}</span>
         </div>
       </div>
 
@@ -119,12 +119,12 @@ export default function OverviewSection({
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       {hasTag && (
                         <span className="flex items-center gap-1 rounded-full border border-indigo-500/25 bg-indigo-500/10 px-2 py-0.5 text-[10px] font-semibold text-indigo-300">
-                          <LuTag className="h-2.5 w-2.5" /> Tag
+                          <LuTag className="h-2.5 w-2.5" /> {t('overview_badge_tag')}
                         </span>
                       )}
                       {isBooster && (
                         <span className="flex items-center gap-1 rounded-full border border-pink-500/25 bg-pink-500/10 px-2 py-0.5 text-[10px] font-semibold text-pink-300">
-                          <LuZap className="h-2.5 w-2.5" /> Booster
+                          <LuZap className="h-2.5 w-2.5" /> {t('overview_badge_booster')}
                         </span>
                       )}
                     </div>

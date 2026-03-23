@@ -131,10 +131,10 @@ export default function DashboardHeader({
   const navItems: Array<{ key: Section; label: string; requiresAuth?: boolean; icon: JSX.Element }> = [
     { key: 'overview', label: t('dashboard_nav_overview'), icon: <LuHouse className="h-3.5 w-3.5" /> },
     { key: 'store', label: t('dashboard_nav_store'), icon: <LuStore className="h-3.5 w-3.5" /> },
-    { key: 'raffles', label: 'Çekilişler', requiresAuth: true, icon: <LuTicket className="h-3.5 w-3.5" /> },
-    { key: 'discover', label: 'Topluluk', icon: <LuCompass className="h-3.5 w-3.5" /> },
-    { key: 'market', label: 'Borsa', icon: <LuTrendingUp className="h-3.5 w-3.5" /> },
-    { key: 'treasury', label: 'Sunucu Kasası', icon: <LuVault className="h-3.5 w-3.5" /> },
+    { key: 'raffles', label: t('nav_raffles'), requiresAuth: true, icon: <LuTicket className="h-3.5 w-3.5" /> },
+    { key: 'discover', label: t('nav_community'), icon: <LuCompass className="h-3.5 w-3.5" /> },
+    { key: 'market', label: t('nav_exchange'), icon: <LuTrendingUp className="h-3.5 w-3.5" /> },
+    { key: 'treasury', label: t('nav_treasury'), icon: <LuVault className="h-3.5 w-3.5" /> },
     { key: 'mail', label: t('dashboard_nav_mail'), requiresAuth: true, icon: <LuMail className="h-3.5 w-3.5" /> },
   ];
 
@@ -326,7 +326,7 @@ export default function DashboardHeader({
                           className="flex flex-col items-center gap-1 rounded-xl border border-violet-500/20 bg-violet-500/[0.08] py-2.5 text-xs text-violet-400 transition hover:bg-violet-500/15"
                         >
                           <Image src="/Mari.gif" alt="Mari" width={14} height={14} className="h-3.5 w-3.5" unoptimized />
-                          P → Mari
+                          {t('header_convert_to_mari')}
                         </button>
                       )}
                     </div>

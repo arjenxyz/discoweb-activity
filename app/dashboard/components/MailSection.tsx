@@ -564,7 +564,7 @@ export default function MailSection({
                     <div className="flex-shrink-0">
                       <span className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${config.css}`}>
                         <span className="text-sm">{config.icon}</span>
-                        <span>{config.label}</span>
+                        <span>{t(`mail_category_${mail.category}` as Parameters<typeof t>[0]) || config.label}</span>
                       </span>
                     </div>
 
@@ -619,7 +619,7 @@ export default function MailSection({
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
                         <span className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide ${config.css}`}>
-                          {config.label}
+                          {t(`mail_category_${mail.category}` as Parameters<typeof t>[0]) || config.label}
                         </span>
                         <span className="text-[10px] text-white/25 ml-auto flex-shrink-0">
                           {formatDate(mail.created_at)}

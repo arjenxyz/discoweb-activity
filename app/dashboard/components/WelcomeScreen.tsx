@@ -77,7 +77,7 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
       <main className="relative z-10 flex min-h-screen w-full flex-col items-start justify-center gap-0 px-8 sm:px-16">
         {phase === 'success' ? (
           <div className="flex w-full justify-center">
-            <SuccessState />
+            <SuccessState t={t} />
           </div>
         ) : (
           <div className="flex flex-col gap-5 max-w-lg">
@@ -91,16 +91,16 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
                 className="text-4xl font-black leading-tight tracking-tight text-white"
                 style={{ textShadow: '0 0 60px rgba(255,255,255,0.15), 0 2px 20px rgba(0,0,0,1)' }}
               >
-                Seni aramızda görmek harika olacak.
+                {t('welcome_heading')}
               </h1>
               <p className="text-sm text-white/70 leading-relaxed max-w-sm" style={{ textShadow: '0 1px 8px rgba(0,0,0,1)' }}>
-                Birkaç saniye içinde hazır olacaksın. Seni içeride karşılamak için sabırsızlanıyoruz.
+                {t('welcome_subtitle')}
               </p>
             </div>
             {error && (
               <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 backdrop-blur-md flex flex-col gap-2">
                 {errorCode && (
-                  <p className="text-xs font-mono text-red-400">hata: <span className="font-bold">{errorCode}</span></p>
+                  <p className="text-xs font-mono text-red-400">{t('welcome_error_prefix')} <span className="font-bold">{errorCode}</span></p>
                 )}
                 <p className="text-sm text-red-300 leading-relaxed">{error}</p>
                 <button
@@ -158,7 +158,7 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
   );
 }
 
-function SuccessState() {
+function SuccessState({ t }: { t: (key: string) => string }) {
   return (
     <div className="flex flex-col items-center gap-4 text-center drop-shadow-lg">
       <div
@@ -169,8 +169,8 @@ function SuccessState() {
           <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
         </svg>
       </div>
-      <h2 className="text-xl font-black">Artık birlikteyiz!</h2>
-      <p className="text-sm text-white/70">DiscoWeb dünyasına giriş yapılıyor...</p>
+      <h2 className="text-xl font-black">{t('welcome_success_heading')}</h2>
+      <p className="text-sm text-white/70">{t('welcome_success_subtitle')}</p>
       <style>{`
         @keyframes popIn {
           from { transform: scale(0); opacity: 0; }

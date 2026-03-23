@@ -71,8 +71,8 @@ export default function SettingsSection({
   const handleIpoApply = async () => {
     const price = Number(ipoPrice);
     const ratio = Number(ipoFounderRatio) / 100;
-    if (!price || price <= 0) { setIpoError('Geçersiz başlangıç fiyatı.'); return; }
-    if (ratio < 0.51 || ratio > 0.80) { setIpoError('Founder oranı %51–%80 arasında olmalı.'); return; }
+    if (!price || price <= 0) { setIpoError(t('settings_error_invalid_price')); return; }
+    if (ratio < 0.51 || ratio > 0.80) { setIpoError(t('settings_error_founder_range')); return; }
     setIpoLoading(true);
     setIpoError(null);
     try {
@@ -84,19 +84,19 @@ export default function SettingsSection({
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         const msgs: Record<string, string> = {
-          forbidden: 'Sadece sunucu yöneticileri başvurabilir.',
-          not_advanced: 'Önce Yüksek Ekonomi kademesine geçilmeli.',
-          already_listed: 'Sunucu zaten borsada listelendi.',
-          pending_exists: 'Zaten bekleyen bir IPO başvurusu var.',
-          invalid_price: 'Geçersiz başlangıç fiyatı.',
-          invalid_founder_ratio: 'Founder oranı %51–%80 arasında olmalı.',
+          forbidden: t('settings_error_ipo_forbidden'),
+          not_advanced: t('settings_error_not_advanced'),
+          already_listed: t('settings_error_already_listed'),
+          pending_exists: t('settings_error_pending_exists'),
+          invalid_price: t('settings_error_invalid_price'),
+          invalid_founder_ratio: t('settings_error_founder_range'),
         };
-        throw new Error(msgs[data.error] ?? 'IPO başvurusu gönderilemedi.');
+        throw new Error(msgs[data.error] ?? t('settings_error_ipo_submit_failed'));
       }
       setIpoSuccess(true);
       setIpoPending(true);
     } catch (e: unknown) {
-      setIpoError(e instanceof Error ? e.message : 'Bir hata oluştu.');
+      setIpoError(e instanceof Error ? e.message : t('settings_error_generic'));
     } finally {
       setIpoLoading(false);
     }
@@ -105,7 +105,7 @@ export default function SettingsSection({
   const handleApply = async () => {
     const pkg = Number(starterPackage);
     if (!Number.isFinite(pkg) || pkg < 0) {
-      setApplyError('Geçersiz başlangıç paketi miktarı.');
+      setApplyError(t('settings_error_invalid_amount'));
       return;
     }
     setApplyLoading(true);
@@ -119,17 +119,17 @@ export default function SettingsSection({
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         const msgs: Record<string, string> = {
-          forbidden: 'Sadece sunucu yöneticileri başvurabilir.',
-          already_advanced: 'Sunucu zaten Yüksek Ekonomi kademesinde.',
-          pending_application_exists: 'Zaten bekleyen bir başvurunuz var.',
-          invalid_starter_package: 'Geçersiz başlangıç paketi.',
+          forbidden: t('settings_error_economy_forbidden'),
+          already_advanced: t('settings_error_already_advanced'),
+          pending_application_exists: t('settings_error_pending_application'),
+          invalid_starter_package: t('settings_error_invalid_package'),
         };
-        throw new Error(msgs[data.error] ?? 'Başvuru gönderilemedi.');
+        throw new Error(msgs[data.error] ?? t('settings_error_apply_submit_failed'));
       }
       setApplySuccess(true);
       setHasPending(true);
     } catch (e: unknown) {
-      setApplyError(e instanceof Error ? e.message : 'Bir hata oluştu.');
+      setApplyError(e instanceof Error ? e.message : t('settings_error_generic'));
     } finally {
       setApplyLoading(false);
     }

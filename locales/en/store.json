@@ -94,5 +94,6 @@
   "maintenance_modal_title": "Maintenance Mode",
   "maintenance_modal_subtitle": "This feature is currently under maintenance.",
   "maintenance_modal_default_reason": "Please try again later.",
-  "maintenance_modal_close": "Close"
+  "maintenance_modal_close": "Close",
+  "checkout_insufficient_balance_detail": "Insufficient balance! (Missing: {missing})"
 }

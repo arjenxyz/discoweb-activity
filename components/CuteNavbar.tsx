@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 import { apiUrl } from '@/lib/api';
+import { useT } from '@/contexts/LocaleContext';
 
 // Dropdown Link
 const DropdownLink = ({ href, children }: { href: string; children: React.ReactNode }) => (
@@ -28,6 +29,7 @@ const ChevronIcon = ({ isOpen }: { isOpen: boolean }) => (
 );
 
 export default function CuteNavbar() {
+  const t = useT();
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -187,15 +189,15 @@ export default function CuteNavbar() {
                     : 'text-white/80 hover:text-white hover:bg-white/5'
                 }`}
               >
-                Ana Sayfa
+                {t('nav_home')}
                 <ChevronIcon isOpen={openMenu === 'home'} />
               </button>
               {openMenu === 'home' && (
                 <div className="absolute top-full left-1/2 -translate-x-1/2 pt-4 w-72 animate-slideUp origin-top z-50">
                   <div className="bg-[#5865F2] border border-white/20 rounded-[32px] shadow-[0_20px_50px_rgba(88,101,242,0.4)] p-5 pb-16 relative overflow-visible">
                     <div className="relative z-20 space-y-1">
-                      <DropdownLink href="#">🏠 Genel Bakış</DropdownLink>
-                      <DropdownLink href="#">🎯 Özellikler</DropdownLink>
+                      <DropdownLink href="#">🏠 {t('nav_overview')}</DropdownLink>
+                      <DropdownLink href="#">🎯 {t('nav_features')}</DropdownLink>
                     </div>
                     <div className="absolute -bottom-6 -right-6 w-40 h-40 pointer-events-none drop-shadow-2xl z-10 transform rotate-[-10deg] transition-transform duration-500 group-hover:rotate-0 group-hover:scale-105">
                       <div className="relative w-full h-full">
@@ -220,15 +222,15 @@ export default function CuteNavbar() {
                     : 'text-white/80 hover:text-white hover:bg-white/5'
                 }`}
               >
-                Mağaza
+                {t('nav_store')}
                 <ChevronIcon isOpen={openMenu === 'store'} />
               </button>
               {openMenu === 'store' && (
                 <div className="absolute top-full left-1/2 -translate-x-1/2 pt-4 w-72 animate-slideUp origin-top z-50">
                   <div className="bg-[#5865F2] border border-white/20 rounded-[32px] shadow-[0_20px_50px_rgba(88,101,242,0.4)] p-5 pb-16 relative overflow-visible">
                     <div className="relative z-20 space-y-1">
-                      <DropdownLink href="#">🎁 Ürünler</DropdownLink>
-                      <DropdownLink href="#">🔥 Kampanyalar</DropdownLink>
+                      <DropdownLink href="#">🎁 {t('nav_products')}</DropdownLink>
+                      <DropdownLink href="#">🔥 {t('nav_campaigns')}</DropdownLink>
                     </div>
                     <div className="absolute -bottom-6 -right-6 w-40 h-40 pointer-events-none drop-shadow-2xl z-10 transform rotate-[-10deg] transition-transform duration-500 group-hover:rotate-0 group-hover:scale-105">
                       <div className="relative w-full h-full">
@@ -248,11 +250,11 @@ export default function CuteNavbar() {
             {/* (örnek) Profil / Giriş Butonları */}
             {isLoggedIn ? (
               <Link href="/dashboard" className="text-sm font-semibold text-white/90 hover:text-white">
-                Profil
+                {t('nav_profile')}
               </Link>
             ) : (
               <Link href={DISCORD_LOGIN_URL} className="text-sm font-semibold text-white/90 hover:text-white">
-                Giriş Yap
+                {t('nav_login')}
               </Link>
             )}
           </div>
@@ -262,15 +264,15 @@ export default function CuteNavbar() {
         <nav className="md:hidden bg-gray-900/95 backdrop-blur-md border-t border-gray-800 px-2 py-3 flex justify-around items-center">
           <Link href="/" className="flex flex-col items-center text-xs text-white/80 hover:text-white">
             <span className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center">🏠</span>
-            Anasayfa
+            {t('nav_home')}
           </Link>
           <Link href="/dashboard" className="flex flex-col items-center text-xs text-white/80 hover:text-white">
             <span className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center">🛍️</span>
-            Mağaza
+            {t('nav_store')}
           </Link>
           <Link href={isLoggedIn ? '/dashboard' : DISCORD_LOGIN_URL} className="flex flex-col items-center text-xs text-white/80 hover:text-white">
             <span className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center">👤</span>
-            {isLoggedIn ? 'Profil' : 'Giriş'}
+            {isLoggedIn ? t('nav_profile') : t('nav_login')}
           </Link>
         </nav>
       </div>

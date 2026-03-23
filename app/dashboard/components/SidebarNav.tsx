@@ -13,27 +13,6 @@ type SidebarNavProps = {
   profile: MemberProfile | null;
 };
 
-const NAV_GROUPS = [
-  {
-    label: 'Keşfet',
-    items: [
-      { key: 'overview' as Section, label: 'Ana Sayfa', icon: LuHouse },
-      { key: 'store' as Section, label: 'Mağaza', icon: LuStore },
-      { key: 'raffles' as Section, label: 'Çekilişler', icon: LuGift },
-      { key: 'discover' as Section, label: 'Topluluk', icon: LuCompass },
-      { key: 'market' as Section, label: 'Borsa', icon: LuTrendingUp },
-      { key: 'treasury' as Section, label: 'Sunucu Kasası', icon: LuVault },
-    ],
-  },
-  {
-    label: 'Hesabım',
-    requiresAuth: true,
-    items: [
-      { key: 'mail' as Section, label: 'Mesajlar', icon: LuMail },
-    ],
-  },
-];
-
 export default function SidebarNav({
   effectiveSection,
   unauthorized,
@@ -42,6 +21,27 @@ export default function SidebarNav({
 }: SidebarNavProps) {
   const t = useT();
   const [collapsed, setCollapsed] = useState(false);
+
+  const NAV_GROUPS = [
+    {
+      label: t('nav_group_discover'),
+      items: [
+        { key: 'overview' as Section, label: t('nav_home'), icon: LuHouse },
+        { key: 'store' as Section, label: t('nav_store'), icon: LuStore },
+        { key: 'raffles' as Section, label: t('nav_raffles'), icon: LuGift },
+        { key: 'discover' as Section, label: t('nav_community'), icon: LuCompass },
+        { key: 'market' as Section, label: t('nav_exchange'), icon: LuTrendingUp },
+        { key: 'treasury' as Section, label: t('nav_treasury'), icon: LuVault },
+      ],
+    },
+    {
+      label: t('nav_group_account'),
+      requiresAuth: true,
+      items: [
+        { key: 'mail' as Section, label: t('nav_messages'), icon: LuMail },
+      ],
+    },
+  ];
 
   return (
     <aside
@@ -73,7 +73,7 @@ export default function SidebarNav({
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold text-white leading-tight">
-                {profile?.guildName ?? 'Sunucu'}
+                {profile?.guildName ?? t('nav_server')}
               </p>
               <p className="text-[10px] text-white/35">{t('dashboard_server_active_badge')}</p>
             </div>

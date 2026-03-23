@@ -94,5 +94,6 @@
   "maintenance_modal_title": "Bakım Modu",
   "maintenance_modal_subtitle": "Bu özellik şu anda bakımda.",
   "maintenance_modal_default_reason": "Lütfen daha sonra tekrar deneyin.",
-  "maintenance_modal_close": "Kapat"
+  "maintenance_modal_close": "Kapat",
+  "checkout_insufficient_balance_detail": "Yetersiz bakiye! (Eksik: {missing})"
 }

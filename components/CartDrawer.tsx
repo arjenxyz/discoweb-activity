@@ -179,7 +179,7 @@ export default function CartDrawer() {
             setMessage({ text: t('coupon_min_spend_error', { remaining: data.remaining }), type: 'error' });
             setCheckoutErrorType('other');
         } else if (data.error === 'insufficient_balance') {
-            setMessage({ text: `Yetersiz bakiye! (Eksik: ${data.required - data.available})`, type: 'error' });
+            setMessage({ text: t('checkout_insufficient_balance_detail', { missing: String(data.required - data.available) }), type: 'error' });
             setCheckoutErrorType('insufficient_balance');
         } else {
             setMessage({ text: data.error || t('checkout_error_generic'), type: 'error' });
@@ -431,7 +431,7 @@ export default function CartDrawer() {
                             <div>
                               <p className="text-xs font-bold text-indigo-300">{t('cart_welcome_coupon_title')}</p>
                               <p className="text-[10px] text-white/60">
-                                {welcomeCoupon.percent}% indirim
+                                {welcomeCoupon.percent}{t('cart_discount_suffix')}
                                 {wLimit > 1 && <span className="ml-1.5 text-white/40">• {t('cart_coupon_used_count', { used: wUsage, limit: wLimit })}</span>}
                               </p>
                             </div>
@@ -455,7 +455,7 @@ export default function CartDrawer() {
                                 <div>
                                   <p className="text-xs font-bold text-emerald-300">{coupon.code}</p>
                                   <p className="text-[10px] text-white/60">
-                                    {coupon.percent}% indirim
+                                    {coupon.percent}{t('cart_discount_suffix')}
                                     {perUserLimit > 1 && <span className="ml-1.5 text-white/40">• {t('cart_coupon_used_count', { used: userUsageCount, limit: perUserLimit })}</span>}
                                   </p>
                                 </div>

@@ -98,7 +98,7 @@ export default function LeaderboardDrawer({
         if (!res.ok) {
           setHasMore(false);
           const json = await res.json().catch(() => null);
-          setError(json?.error || 'Veri alınamadı.');
+          setError(json?.error || t('leaderboard_fetch_error'));
           return;
         }
 
@@ -115,7 +115,7 @@ export default function LeaderboardDrawer({
         setPage((prev) => (reset ? 1 : prev + 1));
       } catch {
         setHasMore(false);
-        setError('Veri çekilemedi. Lütfen tekrar deneyin.');
+        setError(t('leaderboard_fetch_error_retry'));
       } finally {
         setLoading(false);
       }
