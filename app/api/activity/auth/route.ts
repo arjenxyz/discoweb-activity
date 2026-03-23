@@ -274,6 +274,7 @@ const envFlags = {
         avatar: user.avatar,
         discriminator: user.discriminator,
         guildId: guildId,
+        guildName: activeGuildName,
       },
       // Bearer token for clients that can't send cookies (like embedded apps in iframes)
       bearerToken: null,

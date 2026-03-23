@@ -14,22 +14,15 @@ export async function GET(request: Request) {
 
   const supabase = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
 
-  const url = new URL(request.url);
-  const guildId = url.searchParams.get('guild_id');
+  const { data } = await supabase
+    .from('users')
+    .select('oauth_access_token')
+    .eq('discord_id', session.userId)
+    .maybeSingle();
 
-  const [userResult, serverResult] = await Promise.all([
-    supabase.from('users').select('oauth_access_token').eq('discord_id', session.userId).maybeSingle(),
-    guildId
-      ? supabase.from('servers').select('name').eq('discord_id', guildId).maybeSingle()
-      : Promise.resolve({ data: null }),
-  ]);
-
-  if (!userResult.data?.oauth_access_token) {
+  if (!data?.oauth_access_token) {
     return NextResponse.json({ error: 'no_token' }, { status: 404 });
   }
 
-  return NextResponse.json({
-    access_token: userResult.data.oauth_access_token,
-    guild_name: serverResult.data?.name ?? null,
-  });
+  return NextResponse.json({ access_token: data.oauth_access_token });
 }

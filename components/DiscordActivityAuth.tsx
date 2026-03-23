@@ -219,7 +219,7 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
 
       const result = await response.json() as {
         status: string;
-        user?: { id: string; username: string };
+        user?: { id: string; username: string; guildName?: string | null };
         bearerToken?: string;
         reason?: string;
       };
@@ -235,21 +235,15 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
 
       if (result.user) {
         userInfoRef.current = { username: result.user.username, avatar: null };
+        if (result.user.guildName) {
+          try { localStorage.setItem('discord_guild_name', result.user.guildName); } catch {}
+        }
       }
       addLog(`SDK auth tamamlandı, kullanıcı: ${result.user?.username}`);
 
       // Rich Presence ayarla
       try {
-        // Sunucu adını DB'den al
-        let rpGuildName: string | null = null;
-        try {
-          const rpTokenRes = await fetchWithCreds(apiUrl(`/api/activity/discord-token?guild_id=${encodeURIComponent(guildId)}`));
-          if (rpTokenRes.ok) {
-            const rpData = await rpTokenRes.json() as { guild_name?: string | null };
-            rpGuildName = rpData.guild_name ?? null;
-          }
-        } catch { /* opsiyonel */ }
-
+        const rpGuildName = result.user?.guildName ?? null;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await (sdk.commands as any).setActivity({
           activity: {
@@ -352,14 +346,11 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
                 await withTimeout(fastSdk.ready(), 10000, 'sdk_ready_fast_timeout');
                 setDiscordSdk(fastSdk);
                 // Discord access token ile RPC bağlantısını authenticate et
-                const tokenRes = await fetchWithCreds(
-                  apiUrl(`/api/activity/discord-token?guild_id=${encodeURIComponent(guildId)}`),
-                  { signal }
-                );
-                let guildName: string | null = null;
+                const tokenRes = await fetchWithCreds(apiUrl('/api/activity/discord-token'), { signal });
+                const savedGuildName = (() => { try { return localStorage.getItem('discord_guild_name'); } catch { return null; } })();
+                let guildName: string | null = savedGuildName;
                 if (tokenRes.ok) {
-                  const tokenData = await tokenRes.json() as { access_token: string; guild_name?: string | null };
-                  guildName = tokenData.guild_name ?? null;
+                  const tokenData = await tokenRes.json() as { access_token: string };
                   await withTimeout(
                     fastSdk.commands.authenticate({ access_token: tokenData.access_token }),
                     10000, 'authenticate_fast_timeout'
