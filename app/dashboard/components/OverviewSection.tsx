@@ -149,7 +149,7 @@ export default function OverviewSection({
                       </span>
                     ))
                   ) : (
-                    <span className="text-xs text-white/25">Rol yok</span>
+                    <span className="text-xs text-white/25">{t('overview_no_roles')}</span>
                   )}
                 </div>
               </div>
@@ -160,33 +160,33 @@ export default function OverviewSection({
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {[
               {
-                label: 'Mesaj',
-                value: overviewStats?.userMessages?.toLocaleString('tr-TR') ?? '0',
-                sub: 'toplam mesaj',
+                label: t('overview_stat_message_label'),
+                value: overviewStats?.userMessages?.toLocaleString() ?? '0',
+                sub: t('overview_stat_message_sub'),
                 icon: <LuMessageSquare className="h-4 w-4" />,
                 color: 'text-indigo-400',
                 active: true,
               },
               {
-                label: 'Sesli',
-                value: overviewStats?.userVoiceMinutes?.toLocaleString('tr-TR') ?? '0',
-                sub: 'dakika ses',
+                label: t('overview_stat_voice_label'),
+                value: overviewStats?.userVoiceMinutes?.toLocaleString() ?? '0',
+                sub: t('overview_stat_voice_sub'),
                 icon: <LuMic className="h-4 w-4" />,
                 color: 'text-violet-400',
                 active: true,
               },
               {
-                label: 'Tag',
-                value: hasTag ? 'Aktif' : 'Yok',
-                sub: 'sunucu tag',
+                label: t('overview_stat_tag_label'),
+                value: hasTag ? t('overview_stat_active') : t('overview_stat_none'),
+                sub: t('overview_stat_tag_sub'),
                 icon: <LuTag className="h-4 w-4" />,
                 color: hasTag ? 'text-indigo-400' : 'text-white/20',
                 active: hasTag,
               },
               {
-                label: 'Boost',
-                value: isBooster ? 'Aktif' : 'Yok',
-                sub: 'sunucu boost',
+                label: t('overview_stat_boost_label'),
+                value: isBooster ? t('overview_stat_active') : t('overview_stat_none'),
+                sub: t('overview_stat_boost_sub'),
                 icon: <LuZap className="h-4 w-4" />,
                 color: isBooster ? 'text-pink-400' : 'text-white/20',
                 active: isBooster,
@@ -220,16 +220,16 @@ export default function OverviewSection({
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
-                  <p className="text-[10px] text-white/30 mb-1.5">Toplam Mesaj</p>
+                  <p className="text-[10px] text-white/30 mb-1.5">{t('overview_since_total_messages')}</p>
                   <p className="text-lg font-black text-white tabular-nums">
                     {totalsSince.messages?.toLocaleString?.('tr-TR') ?? totalsSince.messages ?? 0}
                   </p>
                 </div>
                 <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
-                  <p className="text-[10px] text-white/30 mb-1.5">Toplam Ses</p>
+                  <p className="text-[10px] text-white/30 mb-1.5">{t('overview_since_total_voice')}</p>
                   <p className="text-lg font-black text-white tabular-nums">
-                    {totalsSince.voice_minutes?.toLocaleString?.('tr-TR') ?? totalsSince.voice_minutes ?? 0}
-                    <span className="text-xs font-normal text-white/30 ml-1">dk</span>
+                    {totalsSince.voice_minutes?.toLocaleString?.() ?? totalsSince.voice_minutes ?? 0}
+                    <span className="text-xs font-normal text-white/30 ml-1">{t('overview_since_voice_unit')}</span>
                   </p>
                 </div>
               </div>
@@ -243,7 +243,7 @@ export default function OverviewSection({
                 <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-indigo-500/10">
                   <LuAward className="h-3.5 w-3.5 text-indigo-400" />
                 </div>
-                <span className="text-sm font-semibold text-white">Tag Rozeti</span>
+                <span className="text-sm font-semibold text-white">{t('overview_badge_title')}</span>
               </div>
 
               {badgeInfo?.hasTag && (
@@ -259,15 +259,15 @@ export default function OverviewSection({
                       {badgeInfo.currentBadge?.emoji ?? '🏅'}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-white">{badgeInfo.currentBadge?.name ?? 'Rozetsiz'}</p>
+                      <p className="text-sm font-bold text-white">{badgeInfo.currentBadge?.name ?? t('overview_badge_no_badge')}</p>
                       <p className="flex items-center gap-1 text-xs text-white/35">
                         <LuClock className="h-3 w-3" />
-                        {badgeInfo.tagDays} gün tag taşıyorsunuz
+                        {t('overview_badge_carrying_days', { days: String(badgeInfo.tagDays) })}
                       </p>
                     </div>
                     {!badgeInfo.nextBadge && badgeInfo.currentBadge && (
                       <span className="shrink-0 flex items-center gap-1 rounded-full border border-amber-400/20 bg-amber-400/10 px-2 py-0.5 text-[10px] font-semibold text-amber-400">
-                        <LuCheck className="h-3 w-3" /> Maks
+                        <LuCheck className="h-3 w-3" /> {t('overview_badge_max')}
                       </span>
                     )}
                   </div>
@@ -275,9 +275,9 @@ export default function OverviewSection({
                   {badgeInfo.nextBadge && badgeInfo.daysToNext !== null && (
                     <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-[10px] text-white/35">{badgeInfo.currentBadge?.name ?? 'Başlangıç'}</span>
+                        <span className="text-[10px] text-white/35">{badgeInfo.currentBadge?.name ?? t('overview_badge_start')}</span>
                         <span className="flex items-center gap-1 text-[10px] text-white/40">
-                          {badgeInfo.daysToNext}g kaldı → {badgeInfo.nextBadge.emoji} <span className="font-semibold text-white/60">{badgeInfo.nextBadge.name}</span>
+                          {t('overview_badge_days_left', { days: String(badgeInfo.daysToNext) })} → {badgeInfo.nextBadge.emoji} <span className="font-semibold text-white/60">{badgeInfo.nextBadge.name}</span>
                         </span>
                       </div>
                       <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/8">
@@ -298,7 +298,7 @@ export default function OverviewSection({
                   )}
 
                   {!badgeInfo.nextBadge && badgeInfo.currentBadge && (
-                    <p className="text-xs text-amber-400/60 flex items-center gap-1.5">🎉 En yüksek rozete ulaştınız!</p>
+                    <p className="text-xs text-amber-400/60 flex items-center gap-1.5">{t('overview_badge_max_reached')}</p>
                   )}
                 </div>
               )}
@@ -310,7 +310,7 @@ export default function OverviewSection({
                     <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-500/10">
                       <LuGift className="h-3.5 w-3.5 text-emerald-400" />
                     </div>
-                    <span className="text-sm font-semibold text-white">Aktif Çekilişler</span>
+                    <span className="text-sm font-semibold text-white">{t('overview_raffles_title')}</span>
                     <span className="ml-auto rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
                       {badgeInfo!.activeRaffles.length}
                     </span>
@@ -339,7 +339,7 @@ export default function OverviewSection({
                             <span className={`shrink-0 flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold ${
                               eligible ? 'border-emerald-500/25 bg-emerald-500/15 text-emerald-300' : 'border-white/8 bg-white/5 text-white/30'
                             }`}>
-                              {eligible ? <><LuCheck className="h-2.5 w-2.5" /> Uygunsun</> : <>{raffle.min_tag_days}g gerekli</>}
+                              {eligible ? <><LuCheck className="h-2.5 w-2.5" /> {t('overview_raffle_eligible')}</> : <>{t('overview_raffle_required_days', { days: String(raffle.min_tag_days) })}</>}
                             </span>
                           </div>
                         </div>

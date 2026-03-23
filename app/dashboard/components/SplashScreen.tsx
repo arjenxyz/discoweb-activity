@@ -230,7 +230,7 @@ export default function SplashScreen({ onEnter }: Props) {
           <div className="flex items-center gap-2">
             {user.avatarUrl && <img src={user.avatarUrl} alt={user.username} className="h-6 w-6 rounded-full opacity-70" />}
             <span className="text-sm text-white/50">
-              Hoş geldin, <span className="text-white font-semibold">{user.username}</span>
+              {t('splash_welcome_user', { username: user.username })}
             </span>
           </div>
         )}
@@ -254,7 +254,7 @@ export default function SplashScreen({ onEnter }: Props) {
             <div className="flex items-center gap-2">
               {user.avatarUrl && <img src={user.avatarUrl} alt={user.username} className="h-6 w-6 rounded-full opacity-70" />}
               <span className="text-sm text-white/50">
-                Hoş geldin, <span className="text-white font-semibold">{user.username}</span>
+                {t('splash_welcome_user', { username: user.username })}
               </span>
             </div>
           )}

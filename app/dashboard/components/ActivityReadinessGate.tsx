@@ -46,71 +46,24 @@ type GateCopy = {
   helper: string;
 };
 
-const COPY_BY_STATUS: Record<ActivityReadinessStatus, GateCopy> = {
-  ready: {
-    title: 'Her şey hazır',
-    description: 'Sistem başarıyla başlatıldı ve kullanıma hazır.',
-    helper: 'Bir sorun yaşıyorsanız sayfayı yeniden deneyebilirsiniz.',
-  },
-  unauthorized: {
-    title: 'Oturum Doğrulanamadı',
-    description: 'Discord Activity oturumunuz şu anda doğrulanamıyor. Bu durum genellikle oturum sürenizin dolması veya Discord bağlantı sorunlarından kaynaklanmaktadır.',
-    helper: 'Activity penceresini kapatıp bir süre bekledikten sonra tekrar açınız.',
-  },
-  missing_guild: {
-    title: 'Sunucu Bilgisi Alınamadı',
-    description: 'Bu Activity oturumunda sunucu bilgisi iletilemedi. Activity, yalnızca bir sunucunun ses kanalından başlatıldığında düzgün çalışabilmektedir.',
-    helper: 'Lütfen Activity\'yi sunucu içindeki bir ses kanalından yeniden başlatınız.',
-  },
-  missing_service_role: {
-    title: 'Sistem Yapılandırması Eksik',
-    description: 'Sunucu tarafındaki servis yapılandırması eksik veya hatalı. Bu teknik bir sorun olup uygulamanın düzgün çalışabilmesi için giderilmesi gerekmektedir.',
-    helper: 'Lütfen bu durumu proje geliştiricisine bildirin.',
-  },
-  server_not_registered: {
-    title: 'Sunucu Kaydı Bulunamadı',
-    description: 'Botumuzun sunucunuzda aktif olduğunu biliyoruz, ancak sunucunuza ait bir kayıt sistemimizde bulunamıyor. Bu durum genellikle kurulum sürecinin tamamlanmamış olmasından, yetki eksikliklerinden veya sunucu veritabanı kaydının oluşturulamamasından kaynaklanmaktadır. Kurulumu tamamlamak için discoweb.tech adresini ziyaret ederek sunucunuzu birkaç adımda sisteme ekleyebilirsiniz.',
-    helper: 'Sunucu yöneticisi veya sahibi discoweb.tech üzerinden kurulumu tamamlayabilir.',
-  },
-  server_setup_required: {
-    title: 'Kurulum Tamamlanmamış',
-    description: 'Sunucu sahibi olduğunuzu tespit ettik. DiscoWeb uygulamasına devam edebilmek için discoweb.tech sitemizi ziyaret ederek kurulumu kolayca tamamlayabilirsiniz. İşlem yalnızca birkaç dakika sürmektedir.',
-    helper: 'discoweb.tech üzerinden kurulumu tamamladıktan sonra buraya geri dönebilirsiniz.',
-  },
-  missing_bot_token: {
-    title: 'Bot Yapılandırması Eksik',
-    description: 'Sunucu tarafında bot kimlik doğrulama bilgisi bulunamadı. Rol atamaları ve kazanç işlemleri bu bilgi olmadan gerçekleştirilememektedir.',
-    helper: 'Bu teknik durumu proje geliştiricisine veya sistem yöneticisine bildirin.',
-  },
-  missing_user_profile: {
-    title: 'Üyelik Kaydı Bulunamadı',
-    description: 'Bu sunucuda size ait bir üyelik kaydı henüz oluşturulmamış. DiscoWeb\'e erişim sağlamak için profil oluşturmanız gerekmektedir.',
-    helper: 'Aşağıdaki butona tıklayarak hızlıca kayıt oluşturabilirsiniz.',
-  },
-  missing_verify_role: {
-    title: 'Hesap Doğrulaması Gerekli',
-    description: 'Bu sunucudaki içeriklere erişim sağlayabilmek için doğrulanmış üye rolüne sahip olmanız gerekmektedir. Rol ataması otomatik olarak gerçekleştirilmektedir.',
-    helper: 'Aşağıdaki butona tıklayın; rol hesabınıza anında atanacaktır.',
-  },
-  bot_not_in_guild: {
-    title: 'Bot Sunucuda Bulunamıyor',
-    description: 'Kazanç takibi, rol yönetimi ve diğer DiscoWeb özelliklerinin çalışabilmesi için botun sunucunuzda aktif olması zorunludur. Bot şu anda bu sunucuda görünmüyor.',
-    helper: 'Sunucu yöneticilerinden birinin botu sunucuya davet etmesi gerekmektedir.',
-  },
-  user_not_in_guild: {
-    title: 'Sunucu Üyeliği Bulunamadı',
-    description: 'Kullandığınız Discord hesabı, seçili sunucuda aktif üye olarak görünmüyor. Bu durum sunucudan ayrılmış olmanızdan ya da hesap değişikliğinden kaynaklanıyor olabilir.',
-    helper: 'Sunucuya tekrar katılın ve ardından Activity\'yi yeniden başlatın.',
-  },
-  discord_api_error: {
-    title: 'Discord Servis Hatası',
-    description: 'Discord sunucularından geçici olarak yanıt alınamıyor. Bu durum Discord altyapısındaki anlık kesintilerden kaynaklanmakta olup kısa süre içinde kendiliğinden çözülmektedir.',
-    helper: 'Birkaç dakika bekledikten sonra tekrar deneyebilirsiniz.',
-  },
-};
 
 export default function ActivityReadinessGate({ readiness, loading, onRetry }: GateProps) {
   const t = useT();
+
+  const COPY_BY_STATUS: Record<ActivityReadinessStatus, GateCopy> = {
+    ready: { title: t('gate_ready_title'), description: t('gate_ready_description'), helper: t('gate_ready_helper') },
+    unauthorized: { title: t('gate_unauthorized_title'), description: t('gate_unauthorized_description'), helper: t('gate_unauthorized_helper') },
+    missing_guild: { title: t('gate_missing_guild_title'), description: t('gate_missing_guild_description'), helper: t('gate_missing_guild_helper') },
+    missing_service_role: { title: t('gate_missing_service_role_title'), description: t('gate_missing_service_role_description'), helper: t('gate_missing_service_role_helper') },
+    server_not_registered: { title: t('gate_server_not_registered_title'), description: t('gate_server_not_registered_description'), helper: t('gate_server_not_registered_helper') },
+    server_setup_required: { title: t('gate_server_setup_required_title'), description: t('gate_server_setup_required_description'), helper: t('gate_server_setup_required_helper') },
+    missing_bot_token: { title: t('gate_missing_bot_token_title'), description: t('gate_missing_bot_token_description'), helper: t('gate_missing_bot_token_helper') },
+    missing_user_profile: { title: t('gate_missing_user_profile_title'), description: t('gate_missing_user_profile_description'), helper: t('gate_missing_user_profile_helper') },
+    missing_verify_role: { title: t('gate_missing_verify_role_title'), description: t('gate_missing_verify_role_description'), helper: t('gate_missing_verify_role_helper') },
+    bot_not_in_guild: { title: t('gate_bot_not_in_guild_title'), description: t('gate_bot_not_in_guild_description'), helper: t('gate_bot_not_in_guild_helper') },
+    user_not_in_guild: { title: t('gate_user_not_in_guild_title'), description: t('gate_user_not_in_guild_description'), helper: t('gate_user_not_in_guild_helper') },
+    discord_api_error: { title: t('gate_discord_api_error_title'), description: t('gate_discord_api_error_description'), helper: t('gate_discord_api_error_helper') },
+  };
   const [copied, setCopied] = useState(false);
   const [muted, setMuted] = useState(true);
   const [reportedStatus, setReportedStatus] = useState<string | null>(null);
