@@ -235,8 +235,8 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
 
       if (result.user) {
         userInfoRef.current = { username: result.user.username, avatar: null };
-        if (result.user.guildName) {
-          try { localStorage.setItem('discord_guild_name', result.user.guildName); } catch {}
+        if (result.user.guildName && guildId) {
+          try { localStorage.setItem(`discord_guild_name_${guildId}`, result.user.guildName); } catch {}
         }
       }
       addLog(`SDK auth tamamlandı, kullanıcı: ${result.user?.username}`);
@@ -347,7 +347,7 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
                 setDiscordSdk(fastSdk);
                 // Discord access token ile RPC bağlantısını authenticate et
                 const tokenRes = await fetchWithCreds(apiUrl('/api/activity/discord-token'), { signal });
-                const savedGuildName = (() => { try { return localStorage.getItem('discord_guild_name'); } catch { return null; } })();
+                const savedGuildName = (() => { try { return localStorage.getItem(`discord_guild_name_${guildId}`); } catch { return null; } })();
                 let guildName: string | null = savedGuildName;
                 if (tokenRes.ok) {
                   const tokenData = await tokenRes.json() as { access_token: string };
