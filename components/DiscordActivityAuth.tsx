@@ -341,13 +341,22 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
                 const fastSdk = new DiscordSDK(fastClientId);
                 await withTimeout(fastSdk.ready(), 10000, 'sdk_ready_fast_timeout');
                 setDiscordSdk(fastSdk);
-                // rpc.activities.write scope'unu grant et (prompt:none — kullanıcıya göstermez)
+                // rpc.activities.write scope'unu grant et
                 try {
                   await withTimeout(
                     fastSdk.commands.authorize({ client_id: fastClientId, scope: ['identify', 'guilds', 'rpc.activities.write'], prompt: 'none' }),
                     10000, 'authorize_fast_timeout'
                   );
-                } catch { /* scope zaten grant edilmişse devam */ }
+                } catch {
+                  // prompt:none başarısız → consent ile dene (bir kerelik popup)
+                  try {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    await withTimeout(
+                      (fastSdk.commands.authorize as any)({ client_id: fastClientId, scope: ['identify', 'guilds', 'rpc.activities.write'], prompt: 'consent' }),
+                      15000, 'authorize_consent_fast_timeout'
+                    );
+                  } catch { /* authorize başarısız, setActivity muhtemelen çalışmaz */ }
+                }
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 await (fastSdk.commands as any).setActivity({
                   activity: {
