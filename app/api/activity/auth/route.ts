@@ -265,21 +265,6 @@ const envFlags = {
       }
     }
 
-    // Activity için sadece kullanıcı bilgilerini döndür, sunucu seçimi olmadan direkt dashboard'a yönlendir
-    const responseBody: Record<string, unknown> = {
-      status: 'ok',
-      user: {
-        id: user.id,
-        username: user.username,
-        avatar: user.avatar,
-        discriminator: user.discriminator,
-        guildId: guildId,
-        guildName: activeGuildName,
-      },
-      // Bearer token for clients that can't send cookies (like embedded apps in iframes)
-      bearerToken: null,
-    };
-
     // Create session token (and add it to cookies for browser requests)
     const sessionToken = createSessionToken(user.id);
 
@@ -307,6 +292,20 @@ const envFlags = {
     const activeGuildIcon = activeGuild?.icon ?? null;
 
     const isNewUser = !existingUserForLog;
+
+    // Activity için sadece kullanıcı bilgilerini döndür, sunucu seçimi olmadan direkt dashboard'a yönlendir
+    const responseBody: Record<string, unknown> = {
+      status: 'ok',
+      user: {
+        id: user.id,
+        username: user.username,
+        avatar: user.avatar,
+        discriminator: user.discriminator,
+        guildId: guildId,
+        guildName: activeGuildName,
+      },
+      bearerToken: null,
+    };
 
     await logActivityLogin({
       userId: user.id,
