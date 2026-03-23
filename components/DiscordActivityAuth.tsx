@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { apiUrl } from '@/lib/api';
 import { setDiscordSdk } from '@/lib/discordSdk';
+import { useLocale } from '@/contexts/LocaleContext';
 
 interface DiscordActivityAuthProps {
   children: React.ReactNode;
@@ -50,6 +51,7 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
   const [error, setError] = useState<string | null>(null);
   const [debugLogs, setDebugLogs] = useState<string[]>([]);
   const userInfoRef = useRef<{ username: string; avatar: string | null } | null>(null);
+  const { setDiscordLocale } = useLocale();
 
   const addLog = useCallback((msg: string) => {
     console.log('[DiscordAuth]', msg);
@@ -140,6 +142,11 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
       if (signal.aborted) return;
       addLog('sdk.ready() BAŞARILI');
       setDiscordSdk(sdk);
+
+      // Discord kullanıcısının dil ayarını al ve locale'i set et
+      const sdkLocale = (sdk as unknown as { locale?: string }).locale ?? navigator.language;
+      setDiscordLocale(sdkLocale);
+      addLog(`Locale ayarlandı: ${sdkLocale}`);
 
       // prompt=none önce dene, başarısızsa consent ile
       let code: string;
