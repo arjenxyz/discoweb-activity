@@ -9,6 +9,7 @@ export const MAINTENANCE_KEYS = [
   'discounts',
   'transfers',
   'bot',
+  'borsa',
 ] as const;
 
 export type MaintenanceKey = (typeof MAINTENANCE_KEYS)[number];
