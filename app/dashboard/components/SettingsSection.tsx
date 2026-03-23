@@ -39,6 +39,7 @@ export default function SettingsSection({
   const [ipoLoading, setIpoLoading] = useState(false);
   const [ipoSuccess, setIpoSuccess] = useState(false);
   const [ipoError, setIpoError] = useState<string | null>(null);
+  const [ipoEstimatedDate, setIpoEstimatedDate] = useState('');
 
   useEffect(() => {
     fetch(apiUrl('/api/member/treasury'))
@@ -79,7 +80,11 @@ export default function SettingsSection({
       const res = await fetchWithCreds('/api/member/ipo-apply', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ proposed_price: price, proposed_founder_ratio: ratio }),
+        body: JSON.stringify({
+          proposed_price: price,
+          proposed_founder_ratio: ratio,
+          ...(ipoEstimatedDate ? { estimated_date: ipoEstimatedDate } : {}),
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -274,15 +279,27 @@ export default function SettingsSection({
                     />
                     <span className="text-xs text-white/40">founder (%51–80)</span>
                   </div>
-                  <button
-                    type="button"
-                    onClick={handleIpoApply}
-                    disabled={ipoLoading}
-                    className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-500 disabled:opacity-50"
-                  >
-                    {ipoLoading ? 'Gönderiliyor...' : <><LuArrowRight className="h-3.5 w-3.5" /> Başvur</>}
-                  </button>
                 </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-white/40">
+                    Tahmini halka arz tarihi <span className="text-white/25">(isteğe bağlı — 2 gün önce otomatik onaylanır)</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={ipoEstimatedDate}
+                    min={new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)}
+                    onChange={(e) => setIpoEstimatedDate(e.target.value)}
+                    className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 [color-scheme:dark]"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={handleIpoApply}
+                  disabled={ipoLoading}
+                  className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-500 disabled:opacity-50"
+                >
+                  {ipoLoading ? 'Gönderiliyor...' : <><LuArrowRight className="h-3.5 w-3.5" /> Başvur</>}
+                </button>
                 {ipoError && <p className="mt-2 text-xs text-red-400">{ipoError}</p>}
               </>
             )}

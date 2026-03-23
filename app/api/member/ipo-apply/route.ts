@@ -41,15 +41,29 @@ export async function POST(request: Request) {
   const body = (await request.json()) as {
     proposed_price?: number;
     proposed_founder_ratio?: number; // 0.51 – 0.80
+    estimated_date?: string; // YYYY-MM-DD — tahmini halka arz tarihi
   };
 
-  const { proposed_price, proposed_founder_ratio } = body;
+  const { proposed_price, proposed_founder_ratio, estimated_date } = body;
 
   if (!proposed_price || proposed_price <= 0) {
     return NextResponse.json({ error: 'invalid_price' }, { status: 400 });
   }
   if (!proposed_founder_ratio || proposed_founder_ratio < 0.51 || proposed_founder_ratio > 0.80) {
     return NextResponse.json({ error: 'invalid_founder_ratio' }, { status: 400 });
+  }
+
+  // estimated_date varsa doğrula: bugünden en az 3 gün sonra olmalı
+  let autoApproveAt: string | null = null;
+  if (estimated_date) {
+    const estimatedMs = new Date(estimated_date).getTime();
+    const minDate = Date.now() + 3 * 24 * 60 * 60 * 1000;
+    if (isNaN(estimatedMs) || estimatedMs < minDate) {
+      return NextResponse.json({ error: 'invalid_estimated_date' }, { status: 400 });
+    }
+    // auto_approve_at = estimated_date - 2 gün
+    const autoApproveDate = new Date(estimatedMs - 2 * 24 * 60 * 60 * 1000);
+    autoApproveAt = autoApproveDate.toISOString().slice(0, 10);
   }
 
   // Sunucu Yüksek Ekonomi'de mi?
@@ -118,6 +132,8 @@ export async function POST(request: Request) {
       proposed_price,
       proposed_founder_ratio,
       guild_stats_snapshot: guildStatsSnapshot,
+      ...(estimated_date ? { estimated_date } : {}),
+      ...(autoApproveAt ? { auto_approve_at: autoApproveAt } : {}),
     })
     .select('id')
     .single();
@@ -143,6 +159,10 @@ export async function POST(request: Request) {
         { name: 'Halka Açık', value: `${publicLots.toLocaleString()} lot`, inline: true },
         { name: 'Hazine', value: `${(treasury?.balance ?? 0).toLocaleString()} Papel`, inline: true },
         { name: 'Üye Sayısı', value: `${memberCount ?? 0}`, inline: true },
+        ...(estimated_date ? [
+          { name: 'Tahmini Tarih', value: estimated_date, inline: true },
+          { name: 'Otomatik Onay', value: autoApproveAt ?? '-', inline: true },
+        ] : []),
       ],
       footer: { text: `Başvuru ID: ${application.id}` },
       timestamp: new Date().toISOString(),
