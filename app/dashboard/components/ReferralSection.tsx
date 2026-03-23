@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { siteConfig } from '@/config/site';
 import { apiUrl } from '@/lib/api';
+import { useT } from '@/contexts/LocaleContext';
 
 type ReferralStatus = {
   type: 'success' | 'error';
@@ -14,6 +15,7 @@ type ReferralStatus = {
 const MILESTONES = [5, 10, 20, 50, 100];
 
 export default function ReferralSection() {
+  const t = useT();
   const searchParams = useSearchParams();
 
   const [referralCode, setReferralCode] = useState<string>('');
@@ -114,23 +116,23 @@ export default function ReferralSection() {
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
           const messages: Record<string, string> = {
-            already_referred: 'Zaten davet edildiniz.',
-            code_not_found: 'Kod bulunamadı.',
-            cannot_use_own_code: 'Kendi kodunuzu kullanamazsınız.',
-            invalid_code: 'Geçersiz kod.',
-            update_failed: 'Davet bilgisi kaydedilemedi.',
-            history_failed: 'Davet geçmişi kaydedilemedi.',
-            increment_failed: 'Davet sayısı güncellenemedi.',
-            new_account: 'Hesabınız çok yeni; lütfen daha sonra tekrar deneyin.',
+            already_referred: t('referral_error_already_referred'),
+            code_not_found: t('referral_error_code_not_found'),
+            cannot_use_own_code: t('referral_error_own_code'),
+            invalid_code: t('referral_error_invalid_code'),
+            update_failed: t('referral_error_update_failed'),
+            history_failed: t('referral_error_history_failed'),
+            increment_failed: t('referral_error_increment_failed'),
+            new_account: t('referral_error_new_account'),
           };
-          setStatus({ type: 'error', message: messages[data.error] ?? 'Kod doğrulama başarısız oldu.' });
+          setStatus({ type: 'error', message: messages[data.error] ?? t('referral_error_validation_failed') });
         } else {
-          setStatus({ type: 'success', message: 'Kod başarıyla eklendi! 🎉' });
+          setStatus({ type: 'success', message: t('referral_success_added') });
           setReferredBy(refCode.trim().toUpperCase());
           setTotalInvites((prev) => prev + 1);
         }
       } catch {
-        setStatus({ type: 'error', message: 'Sunucuya bağlanırken hata oldu.' });
+        setStatus({ type: 'error', message: t('referral_error_server') });
       } finally {
         setRefSubmitted(true);
       }
@@ -225,9 +227,9 @@ export default function ReferralSection() {
     if (!referralCode) return;
     try {
       await navigator.clipboard.writeText(referralCode);
-      setStatus({ type: 'success', message: 'Kod kopyalandı!' });
+      setStatus({ type: 'success', message: t('referral_copied') });
     } catch {
-      setStatus({ type: 'error', message: 'Kopyalama başarısız oldu.' });
+      setStatus({ type: 'error', message: t('referral_copy_failed') });
     }
     window.setTimeout(() => setStatus(null), 2500);
   };
@@ -288,8 +290,8 @@ export default function ReferralSection() {
   }, [inviteAvailable]);
 
   const milestoneText = totalInvites >= nextMilestone
-    ? `Tüm hedeflere ulaştın!`
-    : `Bir sonraki hedef: ${nextMilestone} davet (${nextMilestone - totalInvites} kaldı)`;
+    ? t('referral_milestone_reached')
+    : t('referral_milestone_next', { target: nextMilestone, remaining: nextMilestone - totalInvites });
 
   return (
     <section id="referral-section" className="space-y-6">
@@ -297,16 +299,16 @@ export default function ReferralSection() {
       <div className="rounded-3xl border border-white/15 bg-gradient-to-br from-[#0b0d12]/70 via-[#0b0d12]/50 to-[#111827]/70 p-6 shadow-2xl backdrop-blur">
         <div className="flex flex-col gap-3 sm:items-end sm:flex-row sm:justify-between">
           <div>
-            <p className="text-sm font-medium text-white/60">Davet Kodun</p>
+            <p className="text-sm font-medium text-white/60">{t('referral_your_code_label')}</p>
             <h1 className="mt-1 text-3xl font-extrabold tracking-wide text-white">{referralCode || '—'}</h1>
-            <p className="mt-1 text-xs text-white/40">Bu kodu arkadaşlarınla paylaşarak ödül kazanabilirsin.</p>
+            <p className="mt-1 text-xs text-white/40">{t('referral_share_hint')}</p>
           </div>
           <button
             type="button"
             onClick={copyToClipboard}
             className="inline-flex items-center gap-2 rounded-2xl bg-white/10 px-5 py-2 text-sm font-semibold text-white transition hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-indigo-400"
           >
-            Kopyala
+            {t('referral_copy_button')}
             <span className="inline-flex h-2 w-2 rounded-full bg-emerald-400" />
           </button>
         </div>
@@ -314,16 +316,16 @@ export default function ReferralSection() {
 
       {/* Davet Eden */}
       <div className="rounded-3xl border border-white/15 bg-white/5 p-6 shadow-inner">
-        <p className="text-sm font-medium text-white/60">Seni Kim Davet Etti?</p>
+        <p className="text-sm font-medium text-white/60">{t('referral_who_invited_label')}</p>
         {referredBy ? (
           <div className="mt-3 flex flex-col gap-2 rounded-2xl bg-white/5 p-4">
-            <p className="text-sm font-semibold text-white">Davet eden: <span className="text-indigo-200">{referredBy}</span></p>
-            <p className="text-xs text-white/40">Bu bilgi, davet kodunu ilk kullandığın anda kaydedilir.</p>
+            <p className="text-sm font-semibold text-white">{t('referral_invited_by', { code: referredBy })}</p>
+            <p className="text-xs text-white/40">{t('referral_invited_by_note')}</p>
           </div>
         ) : (
           <div className="mt-3 rounded-2xl bg-white/5 p-4">
-            <p className="text-sm font-semibold text-white">Davet kodu otomatik olarak çalıştırılıyor.</p>
-            <p className="text-xs text-white/40">Eğer herhangi bir kodunuz yoksa, bir arkadaştan davet bağlantısı isteyin.</p>
+            <p className="text-sm font-semibold text-white">{t('referral_auto_running')}</p>
+            <p className="text-xs text-white/40">{t('referral_no_code_hint')}</p>
           </div>
         )}
 
@@ -342,7 +344,7 @@ export default function ReferralSection() {
       <div className="rounded-3xl border border-white/15 bg-white/5 p-6 shadow-inner">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-white/60">Görev İlerleme</p>
+            <p className="text-sm font-medium text-white/60">{t('referral_progress_label')}</p>
             <p className="text-xs text-white/40">{milestoneText}</p>
           </div>
           <span className="text-sm font-bold text-white/80">{totalInvites} / {nextMilestone}</span>
@@ -359,8 +361,8 @@ export default function ReferralSection() {
       {/* Davet Ekranı */}
       <div className="rounded-3xl border border-white/15 bg-gradient-to-br from-[#0b0d12]/60 via-[#0b0d12]/50 to-[#111827]/50 p-6 shadow-2xl">
         <div className="flex flex-col gap-2">
-          <p className="text-sm font-semibold text-white">Arkadaşlarını Davet Et</p>
-          <p className="text-sm text-white/60">Discord davet penceresini açarak doğrudan arkadaşlarını ekle.</p>
+          <p className="text-sm font-semibold text-white">{t('referral_invite_section_title')}</p>
+          <p className="text-sm text-white/60">{t('referral_invite_description')}</p>
 
           <button
             type="button"
@@ -369,17 +371,17 @@ export default function ReferralSection() {
           >
             <span className="flex items-center gap-2">
               <span className="inline-flex h-3 w-3 rounded-full bg-emerald-300 animate-pulse" />
-              Arkadaşlarını Çağır
+              {t('referral_invite_button')}
             </span>
           </button>
 
           {!inviteAvailable && (
             <div className="text-xs text-white/40">
-              <p>Discord SDK yüklenemiyor — davet penceresi açılamıyor.</p>
-              {inviteError && <p className="mt-1">Hata: {inviteError}</p>}
+              <p>{t('referral_sdk_unavailable')}</p>
+              {inviteError && <p className="mt-1">{t('referral_sdk_error_prefix')} {inviteError}</p>}
               {inviteFallbackUrl && (
                 <div className="mt-2 rounded-lg border border-white/15 bg-white/5 p-3">
-                  <p className="text-xs text-white/60">Bu durumda aşağıdaki bağlantıyı kopyalayıp Discord’da açabilirsiniz:</p>
+                  <p className="text-xs text-white/60">{t('referral_fallback_hint')}</p>
                   <div className="mt-2 flex items-center gap-2">
                     <input
                       type="text"
@@ -398,7 +400,7 @@ export default function ReferralSection() {
                       }}
                       className="rounded-xl bg-indigo-500 px-4 py-2 text-xs font-semibold text-white"
                     >
-                      Kopyala
+                      {t('referral_copy_button')}
                     </button>
                   </div>
                 </div>

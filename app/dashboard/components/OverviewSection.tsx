@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { useT } from '@/contexts/LocaleContext';
 import {
   LuMessageSquare,
   LuMic,
@@ -38,6 +39,7 @@ export default function OverviewSection({
   formatRoleColor,
   badgeInfo,
 }: OverviewSectionProps) {
+  const t = useT();
   const hasTag = (overviewStats as OverviewStatsExpanded)?.hasTag ?? false;
   const isBooster = (overviewStats as OverviewStatsExpanded)?.isBooster ?? false;
   const totalsSince = (overviewStats as OverviewStatsExpanded)?.totalsSinceVerified;
@@ -76,7 +78,7 @@ export default function OverviewSection({
       {overviewLoading ? (
         <div className="flex items-center gap-3 py-12 text-white/30">
           <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/10 border-t-white/40" />
-          <span className="text-sm">Yükleniyor...</span>
+          <span className="text-sm">{t('overview_loading')}</span>
         </div>
       ) : (
         <>
@@ -87,12 +89,12 @@ export default function OverviewSection({
             {profileLoading ? (
               <div className="flex items-center gap-3 py-4 text-white/30">
                 <div className="h-3 w-3 animate-spin rounded-full border-2 border-white/10 border-t-white/40" />
-                <span className="text-sm">Profil yükleniyor...</span>
+                <span className="text-sm">{t('profile_loading')}</span>
               </div>
             ) : profileError ? (
               <p className="text-sm text-rose-300">{profileError}</p>
             ) : unauthorized ? (
-              <p className="text-sm text-white/40">Profil bilgilerini görmek için giriş yapın.</p>
+              <p className="text-sm text-white/40">{t('profile_login_required')}</p>
             ) : (
               <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 {/* Avatar + isim */}
@@ -208,7 +210,7 @@ export default function OverviewSection({
                 <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-500/10">
                   <LuTrendingUp className="h-3.5 w-3.5 text-emerald-400" />
                 </div>
-                <span className="text-sm font-semibold text-white">Doğrulandıktan Beri</span>
+                <span className="text-sm font-semibold text-white">{t('overview_since_verified')}</span>
                 {verifiedSince && (
                   <span className="ml-auto flex items-center gap-1 text-[10px] text-white/25">
                     <LuClock className="h-3 w-3" />

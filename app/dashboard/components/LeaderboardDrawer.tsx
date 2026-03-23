@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import type { MemberProfile, OverviewStats, OverviewStatsExpanded } from '../types';
+import { useT } from '@/contexts/LocaleContext';
 
 type LeaderboardDrawerProps = {
   isOpen: boolean;
@@ -27,6 +28,7 @@ export default function LeaderboardDrawer({
     papel: number;
   };
 
+  const t = useT();
   const [members, setMembers] = useState<LeaderboardMember[]>([]);
   const membersRef = useRef<LeaderboardMember[]>([]);
   const [loading, setLoading] = useState(false);
@@ -150,7 +152,7 @@ export default function LeaderboardDrawer({
   };
 
   const getDisplayName = (member: LeaderboardMember) =>
-    member.nickname || member.displayName || member.username || member.userId || 'Bilinmiyor';
+    member.nickname || member.displayName || member.username || member.userId || t('dashboard_leaderboard_unknown');
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
@@ -165,8 +167,8 @@ export default function LeaderboardDrawer({
       >
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/10 bg-[#0b0d12]/95 p-5">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-indigo-300">Papel Sıralaması</p>
-            <p className="text-xs text-white/50">Sunucunuzun en çok papel kazananları</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-indigo-300">{t('dashboard_leaderboard_papel_title')}</p>
+            <p className="text-xs text-white/50">{t('dashboard_leaderboard_subtitle')}</p>
           </div>
           <button
             type="button"
@@ -182,7 +184,7 @@ export default function LeaderboardDrawer({
             {error ? (
               <p className="text-sm text-red-400">{error}</p>
             ) : isLoading && members.length === 0 ? (
-              <p className="text-sm text-white/40">Yükleniyor...</p>
+              <p className="text-sm text-white/40">{t('loading')}</p>
             ) : visibleLeaderboard.length > 0 ? (
               <>
                 {visibleLeaderboard.map((member: LeaderboardMember, idx: number) => {
@@ -221,20 +223,20 @@ export default function LeaderboardDrawer({
                       onClick={handleLoadMore}
                       disabled={isLoading}
                     >
-                      {isLoading ? 'Yükleniyor...' : 'Daha fazla göster'}
+                      {isLoading ? t('loading') : t('dashboard_leaderboard_load_more')}
                     </button>
                   </div>
                 )}
               </>
             ) : (
-              <p className="text-sm text-white/40">Sıralama verisi bulunamadı.</p>
+              <p className="text-sm text-white/40">{t('dashboard_leaderboard_no_data')}</p>
             )}
           </div>
         </div>
 
         {showCurrentUserFooter && (
           <div className="sticky bottom-0 z-10 border-t border-white/10 bg-[#0b0d12]/95 p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-300">Senin Sıralaman</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-300">{t('dashboard_leaderboard_your_rank')}</p>
             <div className="mt-2 flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3">
               <span className="w-8 text-center font-bold text-white/80">
                 {currentUserRank >= 0 ? currentUserRank + 1 : '—'}

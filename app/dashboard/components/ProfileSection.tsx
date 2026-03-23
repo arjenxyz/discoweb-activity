@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import type { MemberProfile } from '../types';
+import { useT } from '@/contexts/LocaleContext';
 
 type ProfileSectionProps = {
   profileLoading: boolean;
@@ -18,19 +19,20 @@ export default function ProfileSection({
   profile,
   formatRoleColor,
 }: ProfileSectionProps) {
+  const t = useT();
   return (
     <section className="grid gap-4">
       <div className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-indigo-300">Profil</p>
-        <h1 className="mt-2 text-2xl font-semibold">Hoş geldin!</h1>
-        <p className="mt-1 text-sm text-white/60">Discord bilgileriniz ve rolleriniz burada görünür.</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-indigo-300">{t('profile_section_label')}</p>
+        <h1 className="mt-2 text-2xl font-semibold">{t('profile_welcome')}</h1>
+        <p className="mt-1 text-sm text-white/60">{t('profile_subtitle')}</p>
 
         {profileLoading ? (
-          <p className="mt-4 text-sm text-white/60">Profil yükleniyor...</p>
+          <p className="mt-4 text-sm text-white/60">{t('profile_loading')}</p>
         ) : profileError ? (
           <p className="mt-4 text-sm text-rose-300">{profileError}</p>
         ) : unauthorized ? (
-          <p className="mt-4 text-sm text-white/60">Profil bilgilerini görmek için giriş yapın.</p>
+          <p className="mt-4 text-sm text-white/60">{t('profile_login_required')}</p>
         ) : (
           <div className="mt-4 grid gap-4 md:grid-cols-[auto_1fr]">
             <div className="h-20 w-20 overflow-hidden rounded-2xl border border-white/10 bg-white/10">
@@ -69,7 +71,7 @@ export default function ProfileSection({
                     </span>
                   ))
                 ) : (
-                  <span className="text-xs text-white/40">Rol bilgisi bulunamadı.</span>
+                  <span className="text-xs text-white/40">{t('profile_no_roles')}</span>
                 )}
               </div>
             </div>

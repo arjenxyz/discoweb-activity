@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import type { ActivityReadiness } from './ActivityReadinessGate';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { VideoBackground, MuteButton } from './VideoBackground';
+import { useT } from '@/contexts/LocaleContext';
 
 type Props = {
   readiness: ActivityReadiness;
@@ -13,6 +14,7 @@ type Props = {
 type Phase = 'intro' | 'loading' | 'success';
 
 export default function WelcomeScreen({ readiness, onRetry }: Props) {
+  const t = useT();
   const [phase, setPhase] = useState<Phase>('intro');
   const [error, setError] = useState<string | null>(null);
   const [errorCode, setErrorCode] = useState<string | null>(null);
@@ -37,7 +39,7 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
 
   const handleStart = async () => {
     if (!readiness.guildId) {
-      setError('Sunucu bilgisi bulunamadı, lütfen yeniden deneyin.');
+      setError(t('welcome_error_no_guild'));
       return;
     }
     setPhase('loading');
@@ -52,13 +54,13 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
         const json = await response.json().catch(() => null);
         const code = json?.error ?? null;
         setErrorCode(code);
-        setError(code ?? response.statusText ?? 'Profil oluşturma başarısız.');
+        setError(code ?? response.statusText ?? t('welcome_error_profile_create'));
         setPhase('intro');
         return;
       }
       setPhase('success');
     } catch {
-      setError('Bir hata oluştu, lütfen tekrar dene.');
+      setError(t('welcome_error_generic'));
       setPhase('intro');
     }
   };
@@ -123,7 +125,7 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
                   disabled={reported}
                   className="self-start flex items-center gap-1.5 rounded-full border border-red-400/40 bg-red-500/25 px-4 py-1.5 text-xs font-semibold text-red-200 backdrop-blur-md transition hover:bg-red-500/40 disabled:opacity-50"
                 >
-                  {reported ? '✓ Bildirildi' : 'Bildir'}
+                  {reported ? t('gate_reported_button') : t('gate_report_button')}
                 </button>
               </div>
             )}
@@ -138,10 +140,10 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
                 {phase === 'loading' ? (
                   <span className="flex items-center gap-2">
                     <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                    Yükleniyor...
+                    {t('welcome_loading')}
                   </span>
                 ) : (
-                  'Hazırlıklar Başlasın!'
+                  t('welcome_create_profile_button')
                 )}
               </button>
               {/* Mobilde ses butonu butonun sağında */}

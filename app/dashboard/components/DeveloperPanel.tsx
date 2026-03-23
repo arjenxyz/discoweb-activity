@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { apiUrl } from '@/lib/api';
+import { useT } from '@/contexts/LocaleContext';
 
 type Props = {
   maintenance: boolean;
@@ -21,6 +22,7 @@ type Ad = {
 };
 
 export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClose }: Props) {
+  const t = useT();
   const [loading, setLoading] = useState(false);
   const [clearLoading, setClearLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -148,7 +150,7 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
       const data = await res.json() as { maintenance: boolean };
       onMaintenanceChange(data.maintenance);
     } catch (e) {
-      setError(`Hata: ${e instanceof Error ? e.message : String(e)}`);
+      setError(`${t('developer_panel_error_prefix')} ${e instanceof Error ? e.message : String(e)}`);
     } finally {
       setLoading(false);
     }
@@ -168,7 +170,7 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
         <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
           <div className="flex items-center gap-2">
             <span className="flex h-2 w-2 rounded-full bg-[#5865F2]" />
-            <span className="text-sm font-bold text-white">Developer Panel</span>
+            <span className="text-sm font-bold text-white">{t('developer_panel_title')}</span>
           </div>
           <button
             onClick={onClose}
@@ -186,9 +188,9 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
           <div className="rounded-xl border border-white/10 bg-white/5 p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-semibold text-white">Activity Bakım Modu</p>
+                <p className="text-sm font-semibold text-white">{t('developer_panel_maintenance_title')}</p>
                 <p className="mt-0.5 text-xs text-white/40">
-                  {maintenance ? 'Tüm sunucularda aktif' : 'Kapalı'}
+                  {maintenance ? t('developer_panel_maintenance_active') : t('developer_panel_maintenance_inactive')}
                 </p>
               </div>
               <button
@@ -207,7 +209,7 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
             </div>
             {maintenance && (
               <p className="mt-3 rounded-lg bg-yellow-500/10 px-3 py-2 text-xs text-yellow-400">
-                Kullanıcılar yalnızca karşılama ekranını görebilir.
+                {t('developer_panel_maintenance_warning')}
               </p>
             )}
           </div>

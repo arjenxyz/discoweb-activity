@@ -5,6 +5,7 @@ import WelcomeScreen from './WelcomeScreen';
 import VerifyRoleScreen from './VerifyRoleScreen';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { VideoBackground, MuteButton } from './VideoBackground';
+import { useT } from '@/contexts/LocaleContext';
 
 export type ActivityReadinessStatus =
   | 'ready'
@@ -108,6 +109,7 @@ const COPY_BY_STATUS: Record<ActivityReadinessStatus, GateCopy> = {
 };
 
 export default function ActivityReadinessGate({ readiness, loading, onRetry }: GateProps) {
+  const t = useT();
   const [copied, setCopied] = useState(false);
   const [muted, setMuted] = useState(true);
   const [reportedStatus, setReportedStatus] = useState<string | null>(null);
@@ -259,19 +261,19 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
                 disabled={alreadyReported}
                 className="self-start flex items-center gap-1.5 rounded-full border border-red-400/40 bg-red-500/25 px-4 py-1.5 text-xs font-semibold text-red-200 backdrop-blur-md transition hover:bg-red-500/40 disabled:opacity-50"
               >
-                {alreadyReported ? '✓ Bildirildi' : (
+                {alreadyReported ? t('gate_reported_button') : (
                   <>
                     <svg viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3">
                       <path d="M3.5 2a.5.5 0 01.5-.5h8a.5.5 0 01.354.854L9.207 5.5l3.147 3.146A.5.5 0 0112 9.5H4.5V14a.5.5 0 01-1 0V2z" />
                     </svg>
-                    Bildir
+                    {t('gate_report_button')}
                   </>
                 )}
               </button>
             </div>
           )}
 
-          {copied && <p className="text-xs font-semibold text-emerald-400">Kopyalandı.</p>}
+          {copied && <p className="text-xs font-semibold text-emerald-400">{t('gate_copied')}</p>}
 
           <div className="flex flex-wrap items-center gap-2 pt-2">
             {/* Mobilde ses butonu */}
@@ -288,9 +290,9 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
               {loading ? (
                 <span className="flex items-center gap-2">
                   <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                  Kontrol ediliyor...
+                  {t('gate_checking')}
                 </span>
-              ) : 'Tekrar Dene'}
+              ) : t('gate_retry_button')}
             </button>
 
             {isBotMissing && isAdmin && readiness.inviteUrl && (
@@ -299,7 +301,7 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
                 onClick={() => openBotInvite(readiness.inviteUrl as string)}
                 className="rounded-full border border-emerald-400/30 bg-emerald-500/20 px-6 py-3.5 text-sm font-bold text-emerald-100 backdrop-blur-md transition hover:bg-emerald-500/30"
               >
-                Botu Sunucuya Ekle
+                {t('gate_add_bot_button')}
               </button>
             )}
 
@@ -309,7 +311,7 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
                 onClick={() => copyToClipboard(supportMessage)}
                 className="rounded-full border border-yellow-400/30 bg-yellow-500/20 px-6 py-3.5 text-sm font-bold text-yellow-100 backdrop-blur-md transition hover:bg-yellow-500/30"
               >
-                {isAdmin ? 'Yetkili notunu kopyala' : 'Yetkiliye mesaj kopyala'}
+                {isAdmin ? t('gate_copy_admin_note') : t('gate_copy_admin_message')}
               </button>
             )}
 
@@ -319,7 +321,7 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
                 onClick={openSetupSite}
                 className="rounded-full border border-[#5865F2]/50 bg-[#5865F2]/30 px-6 py-3.5 text-sm font-bold text-white backdrop-blur-md transition hover:bg-[#5865F2]/50"
               >
-                discoweb.tech&apos;te Kur
+                {t('gate_setup_site_button')}
               </button>
             )}
           </div>

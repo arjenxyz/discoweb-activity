@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import type { ActivityReadiness } from './ActivityReadinessGate';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { VideoBackground, MuteButton } from './VideoBackground';
+import { useT } from '@/contexts/LocaleContext';
 
 type Props = {
   readiness: ActivityReadiness;
@@ -19,6 +20,7 @@ const ERROR_MESSAGES: Record<string, string> = {
 };
 
 export default function VerifyRoleScreen({ readiness, onRetry }: Props) {
+  const t = useT();
   const [phase, setPhase] = useState<Phase>('idle');
   const [error, setError] = useState<string | null>(null);
   const [errorCode, setErrorCode] = useState<string | null>(null);
@@ -52,13 +54,13 @@ export default function VerifyRoleScreen({ readiness, onRetry }: Props) {
         const json = await res.json().catch(() => null);
         const code = json?.error ?? null;
         setErrorCode(code);
-        setError(code ? (ERROR_MESSAGES[code] ?? `Bilinmeyen hata: ${code}`) : 'Rol ataması başarısız oldu.');
+        setError(code ? (ERROR_MESSAGES[code] ?? `Bilinmeyen hata: ${code}`) : t('verify_role_error_assign'));
         setPhase('error');
         return;
       }
       setPhase('success');
     } catch {
-      setError('Bir hata oluştu, lütfen tekrar dene.');
+      setError(t('verify_role_error_generic'));
       setPhase('error');
     }
   };
@@ -123,7 +125,7 @@ export default function VerifyRoleScreen({ readiness, onRetry }: Props) {
                   disabled={reported}
                   className="self-start flex items-center gap-1.5 rounded-full border border-red-400/40 bg-red-500/25 px-4 py-1.5 text-xs font-semibold text-red-200 backdrop-blur-md transition hover:bg-red-500/40 disabled:opacity-50"
                 >
-                  {reported ? '✓ Bildirildi' : 'Bildir'}
+                  {reported ? t('gate_reported_button') : t('gate_report_button')}
                 </button>
               </div>
             )}
@@ -137,10 +139,10 @@ export default function VerifyRoleScreen({ readiness, onRetry }: Props) {
                 {phase === 'loading' ? (
                   <span className="flex items-center gap-2">
                     <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                    Atanıyor...
+                    {t('verify_role_assigning')}
                   </span>
                 ) : (
-                  'İlerlemeye Devam Et'
+                  t('verify_role_button')
                 )}
               </button>
               {/* Mobilde ses butonu butonun sağında */}

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { LuChevronRight, LuGift, LuHouse, LuMail, LuStore, LuCompass, LuTrendingUp, LuVault } from 'react-icons/lu';
 import type { MemberProfile, Section } from '../types';
+import { useT } from '@/contexts/LocaleContext';
 
 type SidebarNavProps = {
   effectiveSection: Section;
@@ -39,6 +40,7 @@ export default function SidebarNav({
   onNavigate,
   profile,
 }: SidebarNavProps) {
+  const t = useT();
   const [collapsed, setCollapsed] = useState(false);
 
   return (
@@ -54,7 +56,7 @@ export default function SidebarNav({
             type="button"
             onClick={() => setCollapsed(false)}
             className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/60 transition hover:bg-white/10 hover:text-white"
-            aria-label="Menüyü Aç"
+            aria-label={t('dashboard_menu_open_aria')}
           >
             <LuChevronRight className="h-4 w-4" />
           </button>
@@ -73,13 +75,13 @@ export default function SidebarNav({
               <p className="truncate text-sm font-semibold text-white leading-tight">
                 {profile?.guildName ?? 'Sunucu'}
               </p>
-              <p className="text-[10px] text-white/35">Aktif</p>
+              <p className="text-[10px] text-white/35">{t('dashboard_server_active_badge')}</p>
             </div>
             <button
               type="button"
               onClick={() => setCollapsed(true)}
               className="shrink-0 rounded-lg p-1.5 text-white/30 transition hover:bg-white/5 hover:text-white/60"
-              aria-label="Menüyü Kapat"
+              aria-label={t('dashboard_menu_close')}
             >
               <LuChevronRight className="h-3.5 w-3.5 rotate-180" />
             </button>

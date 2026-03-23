@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useEffect, useRef } from 'react';
+import { useT } from '@/contexts/LocaleContext';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { apiUrl } from '@/lib/api';
 import fetchWithCreds from '@/lib/fetchWithCreds';
@@ -84,6 +85,7 @@ export default function MailSection({
   onOpenMail,
   onBack,
 }: MailSectionProps) {
+  const t = useT();
   const [activeCategory, setActiveCategory] = useState<'all' | string>('all');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [selectedMail, setSelectedMail] = useState<MailItem | null>(null);
@@ -190,7 +192,7 @@ export default function MailSection({
     if (diffDays === 0) {
       return d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
     } else if (diffDays < 7) {
-      const days = ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt'];
+      const days = [t('mail_day_sun'), t('mail_day_mon'), t('mail_day_tue'), t('mail_day_wed'), t('mail_day_thu'), t('mail_day_fri'), t('mail_day_sat')];
       return days[d.getDay()];
     } else {
       return d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' });
@@ -217,10 +219,10 @@ export default function MailSection({
   };
 
   const navItems = [
-    { key: 'all', label: 'Gelen Kutusu', icon: <LuInbox /> },
+    { key: 'all', label: t('mail_category_all'), icon: <LuInbox /> },
     ...FIXED_CATEGORIES.map(cat => ({
       key: cat,
-      label: CATEGORY_CONFIG[cat]?.label ?? cat,
+      label: t(`mail_category_${cat}` as string) || CATEGORY_CONFIG[cat]?.label || cat,
       icon: CATEGORY_CONFIG[cat]?.icon ?? <LuMail />,
     })),
   ];
@@ -229,7 +231,7 @@ export default function MailSection({
     <section className="relative w-full h-screen overflow-hidden bg-[#0b0d12] flex flex-col">
       {serverName && (
         <div className="px-4 py-2 bg-[#1f2430] border-b border-white/10 text-sm text-white/80">
-          <span className="font-semibold text-white">Sunucu:</span> {serverName}
+          <span className="font-semibold text-white">{t('dashboard_server_label')}:</span> {serverName}
         </div>
       )}
 
@@ -246,7 +248,7 @@ export default function MailSection({
               onClick={onBack}
               className="flex items-center justify-center w-8 h-8 md:w-auto md:h-auto md:gap-1.5 md:px-3 md:py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-xs font-bold text-white/60 transition-all hover:border-white/[0.15] hover:bg-white/[0.08] hover:text-white"
             >
-              <LuChevronLeft className="w-4 h-4" /> <span className="hidden md:inline">Geri</span>
+              <LuChevronLeft className="w-4 h-4" /> <span className="hidden md:inline">{t('mail_back_button')}</span>
             </button>
           )}
           {/* Mobile sidebar toggle */}
@@ -255,17 +257,17 @@ export default function MailSection({
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="md:hidden flex items-center gap-1.5 rounded-xl border border-white/[0.08] bg-white/[0.04] px-2.5 py-1.5 text-[11px] font-semibold text-white/60 hover:bg-white/[0.08] transition-all"
           >
-            <LuInbox className="w-3.5 h-3.5" /> Klasörler
+            <LuInbox className="w-3.5 h-3.5" /> {t('mail_folders_label')}
           </button>
           <div className="hidden md:block p-2.5 bg-gradient-to-br from-[#5865F2] to-indigo-600 rounded-xl shadow-lg shadow-[#5865F2]/20">
             <LuMail className="w-5 h-5 text-white" />
           </div>
           <div className="hidden md:block">
-            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#5865F2]">İletişim</p>
-            <h2 className="text-lg font-bold text-white tracking-tight">Posta Kutusu</h2>
+            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#5865F2]">{t('mail_section_header_label')}</p>
+            <h2 className="text-lg font-bold text-white tracking-tight">{t('mail_box_title')}</h2>
           </div>
           {/* Mobile title */}
-          <span className="md:hidden text-sm font-bold text-white">Posta</span>
+          <span className="md:hidden text-sm font-bold text-white">{t('mail_mobile_title')}</span>
         </div>
 
         <div className="flex items-center gap-2">
@@ -296,7 +298,7 @@ export default function MailSection({
             : 'w-64'
         } flex flex-col border-r border-white/[0.06] bg-[#0b0d12]/98 backdrop-blur-2xl min-h-0`}>
           <div className="flex-1 overflow-y-auto px-5 pt-6 pb-4 custom-scrollbar">
-            <p className="text-xs font-bold uppercase tracking-widest text-white/30 mb-4 px-2">Klasörler</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-white/30 mb-4 px-2">{t('mail_folders_label')}</p>
             <div className="space-y-1">
               {navItems.map((item) => {
                 const isActive = activeCategory === item.key;
@@ -334,9 +336,9 @@ export default function MailSection({
           {/* Bottom stats */}
           <div className="flex-shrink-0 px-5 pb-5">
             <div className="rounded-xl border border-white/5 bg-white/[0.02] p-4">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-white/30 mb-2">Depolama</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-white/30 mb-2">{t('mail_storage_label')}</p>
               <p className="text-xs text-white/50 mb-2">
-                {countsTotal.all} mesajdan {countsUnread.all} okunmadı
+                {t('mail_unread_count', { total: countsTotal.all, unread: countsUnread.all })}
               </p>
               <div className="w-full h-1.5 rounded-full bg-white/5 overflow-hidden">
                 <div
@@ -361,7 +363,7 @@ export default function MailSection({
                   type="text"
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  placeholder="Mesajlarda ara..."
+                  placeholder={t('mail_search_placeholder')}
                   className="flex-1 bg-transparent outline-none text-sm text-white placeholder-white/30"
                 />
               </div>
@@ -375,7 +377,7 @@ export default function MailSection({
               <button
                 onClick={selectAll}
                 className="hidden md:flex p-2 rounded-lg hover:bg-white/5 transition-colors"
-                title="Tümünü Seç"
+                title={t('mail_select_all_title')}
               >
                 <div className={`w-4 h-4 border-2 rounded flex items-center justify-center transition-all ${
                   selectedIds.size > 0 ? 'bg-[#5865F2] border-[#5865F2]' : 'border-white/30'
@@ -392,10 +394,10 @@ export default function MailSection({
               <button
                 onClick={() => {
                   window.dispatchEvent(new CustomEvent('mail:refresh'));
-                  showToast('Yenilendi', 'success');
+                  showToast(t('mail_refreshed'), 'success');
                 }}
                 className="p-1.5 md:p-2 rounded-lg hover:bg-white/5 text-white/40 hover:text-white transition-colors"
-                title="Yenile"
+                title={t('mail_refresh_title')}
               >
                 <LuRefreshCw className={`w-3.5 h-3.5 md:w-4 md:h-4 ${loading ? 'animate-spin' : ''}`} />
               </button>
@@ -410,16 +412,16 @@ export default function MailSection({
                       const ids = Array.from(selectedIds);
                       try {
                         const res = await fetchWithCreds(apiUrl('/api/mail'), { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids }) });
-                        if (!res.ok) { showToast('Silme hatası', 'error'); return; }
+                        if (!res.ok) { showToast(t('mail_delete_error_toast'), 'error'); return; }
                         showToast(`${ids.length} mesaj silindi`, 'success');
                         setSelectedIds(new Set());
                         window.dispatchEvent(new CustomEvent('mail:refresh'));
                       } catch {
-                        showToast('Silme hatası', 'error');
+                        showToast(t('mail_delete_error_toast'), 'error');
                       }
                     }}
                     className="p-1.5 md:p-2 rounded-lg hover:bg-white/5 text-white/40 hover:text-rose-400 transition-colors"
-                    title="Sil"
+                    title={t('mail_delete_title')}
                   >
                     <LuTrash2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
                   </button>
@@ -429,21 +431,21 @@ export default function MailSection({
                       const ids = Array.from(selectedIds);
                       try {
                         const res = await fetchWithCreds(apiUrl('/api/mail'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids }) });
-                        if (!res.ok) { showToast('İşlem hatası', 'error'); return; }
-                        showToast('Okundu işaretlendi', 'success');
+                        if (!res.ok) { showToast(t('mail_action_error'), 'error'); return; }
+                        showToast(t('mail_marked_read'), 'success');
                         setSelectedIds(new Set());
                         window.dispatchEvent(new CustomEvent('mail:refresh'));
                       } catch {
-                        showToast('İşlem hatası', 'error');
+                        showToast(t('mail_action_error'), 'error');
                       }
                     }}
                     className="p-1.5 md:p-2 rounded-lg hover:bg-white/5 text-white/40 hover:text-[#5865F2] transition-colors"
-                    title="Okundu işaretle"
+                    title={t('mail_read_title')}
                   >
                     <LuMailOpen className="w-3.5 h-3.5 md:w-4 md:h-4" />
                   </button>
 
-                  <span className="text-[10px] font-bold text-[#5865F2] ml-0.5">{selectedIds.size} seçili</span>
+                  <span className="text-[10px] font-bold text-[#5865F2] ml-0.5">{t('mail_selected_count', { count: selectedIds.size })}</span>
                 </>
               )}
             </div>
@@ -453,7 +455,7 @@ export default function MailSection({
               <span className="sm:hidden">{filtered.length}</span>
               <button
                 onClick={toggleSort}
-                title={sortOrder === 'desc' ? 'En yeni önce' : 'En eski önce'}
+                title={sortOrder === 'desc' ? t('mail_sort_newest') : t('mail_sort_oldest')}
                 className="p-1 md:p-1.5 rounded-lg hover:bg-white/5 text-white/35 hover:text-white transition-colors"
               >
                 {sortOrder === 'desc' ? <LuChevronDown className="w-3.5 h-3.5" /> : <LuChevronUp className="w-3.5 h-3.5" />}
@@ -466,7 +468,7 @@ export default function MailSection({
             {loading && (
               <div className="flex flex-col items-center justify-center h-64 text-white/50">
                 <LuRefreshCw className="w-8 h-8 animate-spin mb-3" />
-                <span className="text-sm">Yükleniyor...</span>
+                <span className="text-sm">{t('mail_loading')}</span>
               </div>
             )}
 
@@ -481,8 +483,8 @@ export default function MailSection({
                 <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-4">
                   <LuArchive className="w-8 h-8 text-white/20" />
                 </div>
-                <p className="text-white font-bold">Kutu Boş</p>
-                <p className="text-sm text-white/40 mt-1">Bu kategoride henüz mesaj yok.</p>
+                <p className="text-white font-bold">{t('mail_empty_box_title')}</p>
+                <p className="text-sm text-white/40 mt-1">{t('mail_empty_box_subtitle2')}</p>
               </div>
             )}
 
@@ -537,10 +539,10 @@ export default function MailSection({
                           try {
                             const method = mail.is_starred ? 'DELETE' : 'POST';
                             const res = await fetchWithCreds(apiUrl('/api/mail/star'), { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: String(mail.id) }) });
-                            if (!res.ok) { showToast('Yıldız işlemi başarısız', 'error'); return; }
+                            if (!res.ok) { showToast(t('mail_star_failed'), 'error'); return; }
                             window.dispatchEvent(new CustomEvent('mail:refresh'));
                           } catch {
-                            showToast('Yıldız işlemi başarısız', 'error');
+                            showToast(t('mail_star_failed'), 'error');
                           }
                         }}
                         className="p-1 rounded-lg hover:bg-white/10 transition-colors"
@@ -588,11 +590,11 @@ export default function MailSection({
                           e.stopPropagation();
                           try {
                             const res = await fetchWithCreds(apiUrl('/api/mail'), { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids: [mail.id] }) });
-                            if (!res.ok) { showToast('Silme hatası', 'error'); return; }
-                            showToast('Mesaj silindi', 'success');
+                            if (!res.ok) { showToast(t('mail_delete_error_toast'), 'error'); return; }
+                            showToast(t('mail_deleted_toast'), 'success');
                             window.dispatchEvent(new CustomEvent('mail:refresh'));
                           } catch {
-                            showToast('Silme hatası', 'error');
+                            showToast(t('mail_delete_error_toast'), 'error');
                           }
                         }}
                         className="p-2 rounded-lg bg-white/5 hover:bg-rose-500/20 text-white/30 hover:text-rose-400 transition-all"
@@ -649,45 +651,45 @@ export default function MailSection({
               type="button"
               onClick={async () => {
                 const ids = filtered.filter(m => !m.is_read).map(m => m.id);
-                if (ids.length === 0) return showToast('Okunmamış mesaj yok', 'error');
+                if (ids.length === 0) return showToast(t('mail_no_unread'), 'error');
                 try {
                   const res = await fetchWithCreds(apiUrl('/api/mail'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids }) });
-                  if (!res.ok) { showToast('İşlem başarısız', 'error'); return; }
-                  showToast('Tüm mesajlar okundu olarak işaretlendi', 'success');
+                  if (!res.ok) { showToast(t('mail_action_failed'), 'error'); return; }
+                  showToast(t('mail_all_read'), 'success');
                   window.dispatchEvent(new CustomEvent('mail:refresh'));
                 } catch {
-                  showToast('İşlem başarısız', 'error');
+                  showToast(t('mail_action_failed'), 'error');
                 }
               }}
               className="flex items-center gap-1.5 px-3 md:px-4 py-2 rounded-xl bg-white/[0.04] border border-white/[0.05] text-[11px] md:text-xs font-semibold text-white/60 hover:bg-white/[0.08] hover:text-white transition-all"
             >
-              <LuCheckCheck className="w-3.5 h-3.5 md:w-4 md:h-4" /> <span className="hidden sm:inline">Tümünü</span> Okundu<span className="hidden sm:inline"> Say</span>
+              <LuCheckCheck className="w-3.5 h-3.5 md:w-4 md:h-4" /> {t('mail_mark_all_read')}
             </button>
 
             <button
               type="button"
               onClick={async () => {
                 const ids = filtered.filter(m => m.category === 'reward' && !m.is_read).map(m => m.id);
-                if (ids.length === 0) return showToast('Talep edilecek ödül yok', 'error');
+                if (ids.length === 0) return showToast(t('mail_rewards_no_target'), 'error');
                 try {
                   const res = await fetchWithCreds(apiUrl('/api/mail/claim-rewards'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids }) });
                   const data = await res.json().catch(() => ({}));
                   if (!res.ok) {
-                    showToast(data.error === 'already_claimed' ? 'Ödüller zaten alındı' : 'Talep başarısız', 'error');
+                    showToast(data.error === 'already_claimed' ? t('mail_rewards_already_claimed') : t('mail_claim_failed'), 'error');
                     return;
                   }
                   const claimed = data.claimed ?? 0;
-                  showToast(claimed > 0 ? `${claimed.toFixed(2)} Papel hesabınıza eklendi!` : 'Ödüller talep edildi', 'success');
+                  showToast(claimed > 0 ? t('mail_rewards_claimed_toast', { amount: claimed.toFixed(2) }) : t('mail_rewards_claimed_generic'), 'success');
                   window.dispatchEvent(new CustomEvent('mail:refresh'));
                   // Bakiye güncelleme eventi
                   window.dispatchEvent(new CustomEvent('wallet:refresh'));
                 } catch {
-                  showToast('Talep başarısız', 'error');
+                  showToast(t('mail_claim_failed'), 'error');
                 }
               }}
               className="flex items-center gap-1.5 px-3.5 md:px-5 py-2 rounded-xl bg-gradient-to-r from-[#5865F2] to-indigo-600 text-[11px] md:text-xs font-bold text-white shadow-lg shadow-[#5865F2]/20 hover:shadow-[#5865F2]/40 transition-all"
             >
-              <LuGift className="w-3.5 h-3.5 md:w-4 md:h-4" /> Hepsini Al
+              <LuGift className="w-3.5 h-3.5 md:w-4 md:h-4" /> {t('mail_claim_all')}
             </button>
           </div>
         </div>
@@ -715,20 +717,20 @@ export default function MailSection({
           onDelete={async (id) => {
             try {
               const res = await fetch(apiUrl('/api/mail'), { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids: [id] }) });
-              if (!res.ok) { showToast('Silme hatası', 'error'); return; }
-              showToast('Mesaj silindi', 'success');
+              if (!res.ok) { showToast(t('mail_delete_error_toast'), 'error'); return; }
+              showToast(t('mail_deleted_toast'), 'success');
               setSelectedMail(null);
               try { router.push(getCurrentGuildPath()); } catch {}
               window.dispatchEvent(new CustomEvent('mail:refresh'));
-            } catch { showToast('Silme hatası', 'error'); }
+            } catch { showToast(t('mail_delete_error_toast'), 'error'); }
           }}
           onStar={async (id) => {
             try {
               const method = selectedMail?.is_starred ? 'DELETE' : 'POST';
               const res = await fetch(apiUrl('/api/mail/star'), { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: String(id) }) });
-              if (!res.ok) { showToast('Yıldız işlemi başarısız', 'error'); return; }
+              if (!res.ok) { showToast(t('mail_star_failed'), 'error'); return; }
               window.dispatchEvent(new CustomEvent('mail:refresh'));
-            } catch { showToast('Yıldız işlemi başarısız', 'error'); }
+            } catch { showToast(t('mail_star_failed'), 'error'); }
           }}
         />
       )}

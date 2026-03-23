@@ -8,17 +8,8 @@ import { apiUrl } from '@/lib/api';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { sanitizeHtml } from '@/lib/sanitizeHtml';
 import {
-  LuReply,
-  LuReplyAll,
-  LuForward,
-  LuArchive,
-  LuTrash2,
-  LuMoveVertical,
-  LuStar,
-  LuPrinter,
-  LuDownload,
+
   LuChevronLeft,
-  LuClock,
   LuShield,
   LuLoaderCircle,
 } from 'react-icons/lu';
