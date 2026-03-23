@@ -88,6 +88,36 @@ export async function POST(request: Request) {
 
   try {
     await deleteForUser(supabase, userId, scope, selectedGuildId);
+
+    if (scope === 'all') {
+      // Discord OAuth2 token'ı revoke et
+      const clientId = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
+      const clientSecret = process.env.DISCORD_CLIENT_SECRET;
+
+      if (clientId && clientSecret) {
+        const { data: userRow } = await supabase
+          .from('users')
+          .select('oauth_access_token')
+          .eq('discord_id', userId)
+          .maybeSingle();
+
+        if (userRow?.oauth_access_token) {
+          await fetch('https://discord.com/api/oauth2/token/revoke', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+              client_id: clientId,
+              client_secret: clientSecret,
+              token: userRow.oauth_access_token,
+            }),
+          }).catch(() => {}); // revoke başarısız olsa da devam et
+        }
+      }
+
+      // users tablosundaki kaydı sil
+      await supabase.from('users').delete().eq('discord_id', userId);
+    }
+
     return NextResponse.json({ status: 'ok', scope, guildId: selectedGuildId });
   } catch (err) {
     console.error('delete-data error', err);
