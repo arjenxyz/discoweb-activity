@@ -1,11 +1,12 @@
 'use client';
 
 import Image from 'next/image';
-import { 
-  LuX, LuCalendar, 
-  LuCircleCheck, LuPackage 
+import {
+  LuX, LuCalendar,
+  LuCircleCheck, LuPackage
 } from 'react-icons/lu';
 import type { Notification } from '../types';
+import { useT } from '@/contexts/LocaleContext';
 
 type NotificationDetailModalProps = {
   notification: Notification | null;
@@ -13,11 +14,12 @@ type NotificationDetailModalProps = {
   renderNotificationBody?: (body: string) => React.ReactNode;
 };
 
-export default function NotificationDetailModal({ 
-  notification, 
+export default function NotificationDetailModal({
+  notification,
   onClose,
 }: NotificationDetailModalProps) {
-  
+  const t = useT();
+
   if (!notification) return null;
 
   // --- VERİ AYRIŞTIRMA ---
@@ -78,7 +80,7 @@ export default function NotificationDetailModal({
           <div className="mx-auto w-10 h-10 bg-[#5865F2] rounded-full flex items-center justify-center shadow-lg shadow-[#5865F2]/40 mb-2">
             <LuCircleCheck className="w-5 h-5 text-white" />
           </div>
-          <h2 className="text-base font-bold text-white tracking-tight leading-none">Ödeme Başarılı</h2>
+          <h2 className="text-base font-bold text-white tracking-tight leading-none">{t('receipt_payment_success')}</h2>
           <p className="text-[10px] text-white/40 mt-1 uppercase tracking-widest font-mono">{data.orderNo || '#SIP-0000'}</p>
         </div>
 
@@ -102,11 +104,11 @@ export default function NotificationDetailModal({
           {/* Grid Bilgi */}
           <div className="grid grid-cols-2 gap-2">
              <div className="bg-white/[0.02] border border-white/5 p-2 rounded-xl flex flex-col items-center justify-center text-center">
-                <span className="text-[9px] uppercase font-bold text-white/30 mb-0.5">Yöntem</span>
+                <span className="text-[9px] uppercase font-bold text-white/30 mb-0.5">{t('receipt_method_label')}</span>
                 <span className="text-[10px] font-bold text-white truncate w-full px-1">{data.paymentMethod || '-'}</span>
              </div>
              <div className="bg-white/[0.02] border border-white/5 p-2 rounded-xl flex flex-col items-center justify-center text-center">
-                <span className="text-[9px] uppercase font-bold text-white/30 mb-0.5">Bakiye</span>
+                <span className="text-[9px] uppercase font-bold text-white/30 mb-0.5">{t('receipt_balance_label')}</span>
                 <span className="text-[10px] font-bold text-emerald-400 truncate w-full px-1">{data.balance || '-'}</span>
              </div>
           </div>
@@ -115,7 +117,7 @@ export default function NotificationDetailModal({
           {data.items.length > 0 && (
             <div className="bg-white/[0.02] rounded-xl border border-white/5 overflow-hidden">
                <div className="px-3 py-1.5 bg-white/5 text-[9px] font-bold text-white/40 uppercase tracking-widest flex items-center gap-1">
-                  <LuPackage className="w-3 h-3" /> Ürün Detayları
+                  <LuPackage className="w-3 h-3" /> {t('receipt_items_title')}
                </div>
                <div className="p-1">
                  {data.items.map((item, idx) => (
@@ -136,12 +138,12 @@ export default function NotificationDetailModal({
           {/* Ara Toplamlar */}
           <div className="space-y-0.5 pt-1 px-1">
              <div className="flex justify-between text-[10px] text-white/40">
-                <span>Ara Toplam</span>
+                <span>{t('receipt_subtotal')}</span>
                 <span>{data.subtotal || '-'}</span>
              </div>
              {data.discount && (
                <div className="flex justify-between text-[10px] text-emerald-400/80">
-                  <span>İndirim</span>
+                  <span>{t('receipt_discount')}</span>
                   <span>{data.discount}</span>
                </div>
              )}
@@ -152,7 +154,7 @@ export default function NotificationDetailModal({
         <div className="shrink-0 bg-[#0b0d12] pt-2 pb-1">
            {/* Toplam */}
            <div className="flex justify-between items-center border-t border-white/10 border-dashed pt-3 pb-4 px-5">
-              <span className="text-[10px] font-bold text-white/60 uppercase tracking-widest">Genel Toplam</span>
+              <span className="text-[10px] font-bold text-white/60 uppercase tracking-widest">{t('receipt_grand_total')}</span>
               <span className="text-xl font-black text-white tracking-tight">{data.total || '-'}</span>
            </div>
 

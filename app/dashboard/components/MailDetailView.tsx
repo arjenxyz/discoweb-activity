@@ -2,13 +2,13 @@ import Image from 'next/image';
 import type { MailItem } from '../types';
 import { LuUser, LuCalendar, LuTag, LuExternalLink, LuChevronLeft } from 'react-icons/lu';
 
-const CATEGORY_LABELS: Record<string, string> = {
-  announcement: 'Sistem Duyurusu',
-  maintenance: 'Bakım',
-  sponsor: 'Sponsor',
-  update: 'Güncelleme',
-  lottery: 'Promosyonlar',
-  reward: 'Ödül',
+const CATEGORY_LABEL_KEYS: Record<string, string> = {
+  announcement: 'mail_detail_category_announcement',
+  maintenance: 'mail_detail_category_maintenance',
+  sponsor: 'mail_detail_category_sponsor',
+  update: 'mail_detail_category_update',
+  lottery: 'mail_detail_category_lottery',
+  reward: 'mail_detail_category_reward',
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -24,6 +24,7 @@ type Props = {
   mail: MailItem;
   onClose: () => void;
   renderBody: (body: string) => React.ReactNode;
+  t: (key: string) => string;
 };
 
 const isVideoUrl = (url: string) => {
@@ -32,7 +33,7 @@ const isVideoUrl = (url: string) => {
 };
 
 
-export default function MailDetailView({ mail, onClose, renderBody }: Props) {
+export default function MailDetailView({ mail, onClose, renderBody, t }: Props) {
   const categoryColor = CATEGORY_COLORS[mail.category] || 'bg-gray-500/10 text-gray-300 border-gray-500/20';
 
   return (
@@ -48,18 +49,18 @@ export default function MailDetailView({ mail, onClose, renderBody }: Props) {
                 className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/70 transition hover:border-white/30 hover:bg-white/10 hover:text-white"
               >
                 <LuChevronLeft className="h-4 w-4" />
-                <span>Geri Dön</span>
+                <span>{t('mail_back_button')}</span>
               </button>
               <div className="h-6 w-px bg-white/10 hidden sm:block" />
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-300">POSTA</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-300">{t('mail_detail_back_to_mail')}</p>
                 <h1 className="text-lg font-bold text-white leading-tight max-w-2xl truncate">{mail.title}</h1>
               </div>
             </div>
             <div className="flex items-center gap-3">
               <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border ${categoryColor}`}>
                 <LuTag className="h-3 w-3" />
-                {CATEGORY_LABELS[mail.category] ?? mail.category}
+                {CATEGORY_LABEL_KEYS[mail.category] ? t(CATEGORY_LABEL_KEYS[mail.category]) : mail.category}
               </div>
             </div>
           </div>
@@ -103,7 +104,7 @@ export default function MailDetailView({ mail, onClose, renderBody }: Props) {
                 </div>
               </div>
               <p className="text-base text-white/60 leading-relaxed">
-                Bu mesajı size gönderdi
+                {t('mail_detail_sent_by')}
               </p>
             </div>
           </div>
@@ -125,12 +126,12 @@ export default function MailDetailView({ mail, onClose, renderBody }: Props) {
                   className="w-full max-h-[600px] object-contain"
                   poster={mail.image_url.replace(/\.(mp4|webm|mov|avi|mkv)$/i, '.jpg')}
                 >
-                  Tarayıcınız video oynatmayı desteklemiyor.
+                  {t('mail_detail_video_fallback')}
                 </video>
               ) : (
                 <Image
                   src={mail.image_url}
-                  alt="İçerik görseli"
+                  alt={t('mail_detail_image_alt')}
                   width={1600}
                   height={800}
                   unoptimized
@@ -149,7 +150,7 @@ export default function MailDetailView({ mail, onClose, renderBody }: Props) {
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-3 px-10 py-5 rounded-2xl border border-white/20 bg-white/5 text-white font-semibold text-lg transition hover:border-white/40 hover:bg-white/10 hover:text-white hover:shadow-2xl group"
               >
-                <span>Detayları Görüntüle</span>
+                <span>{t('mail_detail_view_details')}</span>
                 <LuExternalLink className="h-6 w-6 transition group-hover:translate-x-1" />
               </a>
             </div>

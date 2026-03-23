@@ -113,7 +113,7 @@ export default function CartDrawer() {
         if (!resp.ok || data?.error) {
            // Hata yönetimi
            if (data?.error === 'MIN_SPEND_NOT_MET') {
-             setMessage({ text: `${data.remaining} Papel daha ekle`, type: 'error' });
+             setMessage({ text: t('coupon_min_spend_error', { remaining: data.remaining }), type: 'error' });
            } else if (data?.error === 'ALREADY_USED') {
              setMessage({ text: t('coupon_already_used_error'), type: 'error' });
            } else {
@@ -135,12 +135,12 @@ export default function CartDrawer() {
             setCode('');
             setShowCouponInput(false);
         } else {
-            setMessage({ text: res.message || 'Hata', type: 'error' });
+            setMessage({ text: res.message || t('coupon_invalid_error'), type: 'error' });
         }
 
       } catch (err) {
         console.error(err);
-        setMessage({ text: 'Bağlantı hatası', type: 'error' });
+        setMessage({ text: t('checkout_error_generic'), type: 'error' });
       }
 
       setApplying(false);
@@ -176,7 +176,7 @@ export default function CartDrawer() {
 
         // Backend tarafındaki limit kontrolü (Güvenlik için çift kontrol)
         if (data.error === 'MIN_SPEND_NOT_MET') {
-            setMessage({ text: `Sepet limiti için ${data.remaining} Papel daha gerekli`, type: 'error' });
+            setMessage({ text: t('coupon_min_spend_error', { remaining: data.remaining }), type: 'error' });
             setCheckoutErrorType('other');
         } else if (data.error === 'insufficient_balance') {
             setMessage({ text: `Yetersiz bakiye! (Eksik: ${data.required - data.available})`, type: 'error' });
@@ -214,7 +214,7 @@ export default function CartDrawer() {
 
     } catch (e) {
       console.error(e);
-      setMessage({ text: 'Hata oluştu', type: 'error' });
+      setMessage({ text: t('checkout_error_generic'), type: 'error' });
       setCheckoutError(true);
       setCheckoutErrorType('other');
       setCheckoutLoading(false);
@@ -301,7 +301,7 @@ export default function CartDrawer() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="font-bold text-white text-sm truncate">{it.title}</div>
-                    <div className="text-xs text-white/40 mt-0.5">{it.price} Papel</div>
+                    <div className="text-xs text-white/40 mt-0.5">{it.price} {t('cart_papel_unit')}</div>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="flex items-center bg-black/40 rounded-lg border border-white/5 h-8">
@@ -396,9 +396,9 @@ export default function CartDrawer() {
                       <div>
                         <p className="text-xs font-bold text-emerald-400">{appliedCoupon.code}</p>
                         <div className="text-[9px] text-white/40 space-y-0.5">
-                          {currentMinSpend > 0 && <p>Min. {currentMinSpend} Papel</p>}
+                          {currentMinSpend > 0 && <p>Min. {currentMinSpend} {t('cart_papel_unit')}</p>}
                           <p>
-                            Kullanım: {
+                            {t('cart_coupon_usage_label')}: {
                               (() => {
                                 const coupon = appliedCoupon as Coupon | undefined;
                                 const usage = Number(coupon?.userUsageCount ?? coupon?.used_count ?? 0);
@@ -429,14 +429,14 @@ export default function CartDrawer() {
                         <div className="mt-3 p-3 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 rounded-lg">
                           <div className="flex items-center justify-between">
                             <div>
-                              <p className="text-xs font-bold text-indigo-300">Hoşgeldin İndirimi</p>
+                              <p className="text-xs font-bold text-indigo-300">{t('cart_welcome_coupon_title')}</p>
                               <p className="text-[10px] text-white/60">
                                 {welcomeCoupon.percent}% indirim
-                                {wLimit > 1 && <span className="ml-1.5 text-white/40">• {wUsage}/{wLimit} kullanıldı</span>}
+                                {wLimit > 1 && <span className="ml-1.5 text-white/40">• {t('cart_coupon_used_count', { used: wUsage, limit: wLimit })}</span>}
                               </p>
                             </div>
                             <button onClick={() => handleApply((welcomeCoupon as Coupon).code)} disabled={applying} className="px-3 py-1 bg-indigo-500 hover:bg-indigo-400 text-white text-xs font-bold rounded-lg transition-colors">
-                              Kullan
+                              {t('cart_coupon_use_button')}
                             </button>
                           </div>
                         </div>
@@ -456,11 +456,11 @@ export default function CartDrawer() {
                                   <p className="text-xs font-bold text-emerald-300">{coupon.code}</p>
                                   <p className="text-[10px] text-white/60">
                                     {coupon.percent}% indirim
-                                    {perUserLimit > 1 && <span className="ml-1.5 text-white/40">• {userUsageCount}/{perUserLimit} kullanıldı</span>}
+                                    {perUserLimit > 1 && <span className="ml-1.5 text-white/40">• {t('cart_coupon_used_count', { used: userUsageCount, limit: perUserLimit })}</span>}
                                   </p>
                                 </div>
                                 <button onClick={() => handleApply(coupon.code)} disabled={applying} className="px-3 py-1 bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-bold rounded-lg transition-colors">
-                                  Kullan
+                                  {t('cart_coupon_use_button')}
                                 </button>
                               </div>
                             </div>
@@ -478,7 +478,7 @@ export default function CartDrawer() {
                     <p className="text-xs text-white/50 mb-0.5">{t('cart_drawer_total')}</p>
                     <div className="flex items-baseline gap-2">
                        <span className="text-2xl font-bold text-white">{total.toFixed(2)}</span>
-                       <span className="text-sm font-medium text-white/50">Papel</span>
+                       <span className="text-sm font-medium text-white/50">{t('cart_papel_unit')}</span>
                     </div>
                     {discountAmount > 0 && <p className="text-[10px] text-emerald-400">{t('discount_applied_label', { discount: String(discountAmount) })}</p>}
                  </div>

@@ -305,7 +305,7 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
                   <div key={a.id} className="flex items-center justify-between gap-2 rounded-lg border border-white/[0.06] bg-black/20 px-3 py-2">
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-xs font-semibold text-white">{a.server_name}</p>
-                      <p className="text-[10px] text-white/30">{a.active ? '🟢 Aktif' : '⚫ Pasif'}</p>
+                      <p className="text-[10px] text-white/30">{a.active ? '🟢 Görüntüleniyor' : '⚫ Gizlendi'}</p>
                     </div>
                     <button
                       onClick={() => deleteAd(a.id)}

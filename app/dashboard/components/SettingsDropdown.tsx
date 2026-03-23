@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { LuChevronDown, LuGift, LuSend, LuSettings, LuTag } from 'react-icons/lu';
 import type { RefObject } from 'react';
+import { useT } from '@/contexts/LocaleContext';
 
 type SettingsDropdownProps = {
   open: boolean;
@@ -31,7 +32,8 @@ export default function SettingsDropdown({
   profile,
   profileLoading,
 }: SettingsDropdownProps) {
-  const displayName = profile?.name ?? 'Uye';
+  const t = useT();
+  const displayName = profile?.name ?? t('dashboard_user_fallback');
   const username = profile?.username ?? 'guest';
 
   return (
@@ -42,7 +44,7 @@ export default function SettingsDropdown({
         className={`flex items-center gap-2 rounded-full border border-white/5 bg-white/5 px-2.5 py-1.5 text-white/70 transition hover:border-white/20 hover:text-white ${
           open ? 'bg-white/10 text-white' : ''
         }`}
-        aria-label="Hesap"
+        aria-label={t('settings_dropdown_account_aria')}
       >
         <div className="h-7 w-7 overflow-hidden rounded-full border border-white/5 bg-white/10">
           {profile?.avatarUrl ? (
@@ -70,7 +72,7 @@ export default function SettingsDropdown({
 
       {open && (
         <div className="absolute right-0 z-10 mt-3 w-64 rounded-2xl border border-white/10 bg-[#0f1116] p-4 shadow-2xl">
-          <p className="text-sm font-semibold text-white">Hesap</p>
+          <p className="text-sm font-semibold text-white">{t('settings_dropdown_account_label')}</p>
           <p className="mt-1 text-xs text-white/50">{displayName} - @{username}</p>
 
           <div className="mt-3 space-y-2">
@@ -83,7 +85,7 @@ export default function SettingsDropdown({
               className="flex w-full items-center gap-2 rounded-xl border border-white/5 bg-white/5 px-3 py-2 text-left text-xs text-white/70 transition hover:border-white/15 hover:text-white"
             >
               <LuGift className="h-3.5 w-3.5 text-indigo-300" />
-              Promosyon
+              {t('settings_dropdown_promotions')}
             </button>
 
             <button
@@ -95,7 +97,7 @@ export default function SettingsDropdown({
               className="flex w-full items-center gap-2 rounded-xl border border-white/5 bg-white/5 px-3 py-2 text-left text-xs text-white/70 transition hover:border-white/15 hover:text-white"
             >
               <LuTag className="h-3.5 w-3.5 text-indigo-300" />
-              Indirim kodu
+              {t('settings_dropdown_discount_code')}
             </button>
 
             <button
@@ -104,7 +106,7 @@ export default function SettingsDropdown({
               className="flex w-full items-center gap-2 rounded-xl border border-white/5 bg-white/5 px-3 py-2 text-left text-xs text-white/70 transition hover:border-white/15 hover:text-white"
             >
               <LuSend className="h-3.5 w-3.5 text-indigo-300" />
-              Papel gonder
+              {t('settings_dropdown_transfer')}
             </button>
 
             <button
@@ -113,7 +115,7 @@ export default function SettingsDropdown({
               className="flex w-full items-center gap-2 rounded-xl border border-white/5 bg-white/5 px-3 py-2 text-left text-xs text-white/70 transition hover:border-white/15 hover:text-white"
             >
               <LuSettings className="h-3.5 w-3.5 text-indigo-300" />
-              Ayarlar
+              {t('settings_dropdown_settings')}
             </button>
 
           </div>

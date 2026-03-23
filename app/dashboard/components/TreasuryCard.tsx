@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { LuFlame, LuVault, LuTrendingUp, LuGift } from 'react-icons/lu';
 import { apiUrl } from '@/lib/api';
+import { useT } from '@/contexts/LocaleContext';
 
 type Treasury = {
   balance: number;
@@ -13,6 +14,7 @@ type Treasury = {
 };
 
 export default function TreasuryCard() {
+  const t = useT();
   const [treasury, setTreasury] = useState<Treasury | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdvanced, setIsAdvanced] = useState(false);
@@ -36,19 +38,19 @@ export default function TreasuryCard() {
     Number(n).toLocaleString('tr-TR', { maximumFractionDigits: 0 });
 
   const stats = [
-    { icon: LuVault,      label: 'Hazine Bakiyesi', value: fmt(treasury.balance),              color: 'text-blue-400' },
-    { icon: LuTrendingUp, label: 'Toplam Toplanan',  value: fmt(treasury.total_collected),       color: 'text-emerald-400' },
-    { icon: LuFlame,      label: 'Toplam Yakılan',   value: fmt(treasury.total_burned),          color: 'text-orange-400' },
-    { icon: LuGift,       label: 'Dağıtılan Temettü',value: fmt(treasury.total_dividends_paid),  color: 'text-purple-400' },
+    { icon: LuVault,      label: t('treasury_balance'),    value: fmt(treasury.balance),              color: 'text-blue-400' },
+    { icon: LuTrendingUp, label: t('treasury_collected'),  value: fmt(treasury.total_collected),       color: 'text-emerald-400' },
+    { icon: LuFlame,      label: t('treasury_burned'),     value: fmt(treasury.total_burned),          color: 'text-orange-400' },
+    { icon: LuGift,       label: t('treasury_dividends'),  value: fmt(treasury.total_dividends_paid),  color: 'text-purple-400' },
   ];
 
   return (
     <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4 sm:p-5">
       <div className="mb-4 flex items-center gap-2">
         <LuVault className="h-4 w-4 text-blue-400" />
-        <p className="text-sm font-bold text-white">Sunucu Hazinesi</p>
+        <p className="text-sm font-bold text-white">{t('treasury_title')}</p>
         <span className="ml-auto rounded-full bg-blue-500/15 px-2 py-0.5 text-[10px] font-semibold text-blue-400">
-          Yüksek Ekonomi
+          {t('treasury_badge')}
         </span>
       </div>
 
@@ -58,7 +60,7 @@ export default function TreasuryCard() {
             <Icon className={`mb-1.5 h-4 w-4 ${color}`} />
             <p className="text-[11px] text-white/40">{label}</p>
             <p className={`mt-0.5 text-base font-black ${color}`}>{value}</p>
-            <p className="text-[10px] text-white/25">Papel</p>
+            <p className="text-[10px] text-white/25">{t('treasury_papel_unit')}</p>
           </div>
         ))}
       </div>

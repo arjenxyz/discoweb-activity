@@ -9,6 +9,7 @@ import {
 import Image from 'next/image';
 import { useCart } from '../../../lib/cart';
 import CartDrawer from '../../../components/CartDrawer';
+import { useT } from '@/contexts/LocaleContext';
 import ProductDetailModal from './ProductDetailModal';
 import { formatDuration } from '../../../lib/formatDuration';
 
@@ -51,6 +52,7 @@ export default function StoreSection({
   renderPapelAmount,
   ownedRoleIds = [],
 }: StoreSectionProps) {
+  const t = useT();
   const cart = useCart();
   const [infoOpen, setInfoOpen] = useState(false);
   const [expandedItem, setExpandedItem] = useState<StoreItem | null>(null);
@@ -101,8 +103,8 @@ export default function StoreSection({
               <LuStore className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
             <div>
-              <h2 className="text-base sm:text-lg font-bold text-white tracking-tight">Mağaza</h2>
-              <p className="text-[10px] sm:text-[11px] text-white/50 font-medium hidden sm:block">Topluluğun en havalı eşyaları</p>
+              <h2 className="text-base sm:text-lg font-bold text-white tracking-tight">{t('store_title')}</h2>
+              <p className="text-[10px] sm:text-[11px] text-white/50 font-medium hidden sm:block">{t('store_subtitle')}</p>
             </div>
           </div>
         {/* Sepet Butonu */}
@@ -112,7 +114,7 @@ export default function StoreSection({
           >
             <LuShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform" />
 
-            <span className="text-xs sm:text-sm font-bold">Sepetim</span>
+            <span className="text-xs sm:text-sm font-bold">{t('store_cart_button')}</span>
 
             {/* Bildirim Balonu (Kırmızı) - toplam adet */}
             {cart?.items.length > 0 && (
@@ -126,7 +128,7 @@ export default function StoreSection({
         {storeLoading ? (
           <div className="flex flex-col items-center justify-center py-24 text-white/60">
             <LuLoader className="w-10 h-10 animate-spin text-[#5865F2] mb-3" />
-            <p className="text-sm font-medium">Yükleniyor...</p>
+            <p className="text-sm font-medium">{t('store_loading')}</p>
           </div>
         ) : (
           <div className="relative z-10 flex-1 flex flex-col">
@@ -144,7 +146,7 @@ export default function StoreSection({
                       <button
                         type="button"
                         onClick={() => setExpandedItem(item)}
-                        aria-label="Ürünü büyüt"
+                        aria-label={t('store_expand_aria')}
                         className="absolute top-3 right-3 z-20 p-1.5 rounded-md bg-white/5 hover:bg-white/10 transition-colors text-white/70"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor">
@@ -185,7 +187,7 @@ export default function StoreSection({
 
                         {/* Açıklama */}
                         <p className="text-xs text-white/60 leading-relaxed line-clamp-2 min-h-[32px] group-hover:text-white/90 transition-colors whitespace-normal break-words max-w-full">
-                          {item.description || "Açıklama yok."}
+                          {item.description || t('store_no_description')}
                         </p>
 
                         {/* Etiketler */}
@@ -202,14 +204,14 @@ export default function StoreSection({
                           {item.role_id && (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide bg-violet-500/10 text-violet-400 border border-violet-500/20 backdrop-blur-sm">
                               <LuShield className="w-3 h-3" />
-                              Rol
+                              {t('store_product_role_label')}
                             </span>
                           )}
 
                           {item.role_id && ownedRoleIds.includes(item.role_id) && (item.duration_days ?? 0) === 0 && (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide bg-teal-500/20 text-teal-300 border border-teal-500/30 backdrop-blur-sm">
                               <LuBadgeCheck className="w-3 h-3" />
-                              Mevcut
+                              {t('store_owned_badge')}
                             </span>
                           )}
                         </div>
@@ -223,7 +225,7 @@ export default function StoreSection({
                             <div className="relative z-10 mt-4">
                               <div className="flex items-center justify-center gap-2 rounded-xl px-4 h-10 text-xs font-bold text-teal-300 bg-teal-500/10 border border-teal-500/20">
                                 <LuBadgeCheck className="w-4 h-4" />
-                                <span>Zaten Sahipsiniz</span>
+                                <span>{t('store_already_owned')}</span>
                               </div>
                             </div>
                           );
@@ -236,7 +238,7 @@ export default function StoreSection({
                                 <button
                                   type="button"
                                   onClick={() => onAddToCart(item)}
-                                  title={isInCart ? "Sepette Var" : "Sepete Ekle"}
+                                  title={isInCart ? t('store_in_cart') : t('store_add_to_cart')}
                                   className={`flex items-center justify-center w-10 h-10 rounded-xl border backdrop-blur-md transition-all active:scale-95 ${
                                     isInCart
                                       ? 'border-emerald-500/30 bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30'
@@ -264,7 +266,7 @@ export default function StoreSection({
                               ) : (
                                 <>
                                   <LuBadgeCheck className="w-4 h-4" />
-                                  <span>{purchaseFeedback[item.id]?.message ?? 'Hemen Al'}</span>
+                                  <span>{purchaseFeedback[item.id]?.message ?? t('store_buy_now')}</span>
                                 </>
                               )}
                             </button>
@@ -307,7 +309,7 @@ export default function StoreSection({
                         <div className="flex-1 flex flex-col justify-between p-3 min-w-0">
                           <div onClick={() => setExpandedItem(item)}>
                             <h4 className="text-sm font-bold text-white leading-tight truncate">{item.title}</h4>
-                            <p className="text-[11px] text-white/40 line-clamp-1 mt-0.5">{item.description || 'Açıklama yok.'}</p>
+                            <p className="text-[11px] text-white/40 line-clamp-1 mt-0.5">{item.description || t('store_no_description')}</p>
 
                             {/* Price + tags row */}
                             <div className="flex items-center gap-2 mt-2">
@@ -323,7 +325,7 @@ export default function StoreSection({
                               {item.role_id && (
                                 <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-violet-400">
                                   <LuShield className="w-2.5 h-2.5" />
-                                  Rol
+                                  {t('store_product_role_label')}
                                 </span>
                               )}
                             </div>
@@ -366,7 +368,7 @@ export default function StoreSection({
                                   ) : (
                                     <>
                                       <LuBadgeCheck className="w-3.5 h-3.5" />
-                                      <span>{feedback?.message ?? 'Satın Al'}</span>
+                                      <span>{feedback?.message ?? t('store_buy_now_mobile')}</span>
                                     </>
                                   )}
                                 </button>
@@ -385,8 +387,8 @@ export default function StoreSection({
                  <div className="w-24 h-24 mb-3 opacity-60 grayscale">
                     <Image src="/gif/sungorbobcry.gif" alt="Empty" width={96} height={96} className="object-contain" unoptimized />
                  </div>
-                 <h3 className="text-base font-bold text-white">Raflar Bomboş!</h3>
-                 <p className="text-white/40 text-xs mt-1">Şu an ürün yok, daha sonra gel.</p>
+                 <h3 className="text-base font-bold text-white">{t('store_empty_title')}</h3>
+                 <p className="text-white/40 text-xs mt-1">{t('store_empty_subtitle')}</p>
               </div>
             )}
 
@@ -395,7 +397,7 @@ export default function StoreSection({
                 {isLoadingMore ? (
                   <div className="flex items-center gap-2 text-white/60">
                     <LuLoader className="w-4 h-4 animate-spin" />
-                    <span className="text-sm">Daha fazla yükleniyor…</span>
+                    <span className="text-sm">{t('store_loading_more')}</span>
                   </div>
                 ) : (
                   <button
@@ -403,7 +405,7 @@ export default function StoreSection({
                     onClick={onLoadMore}
                     className="text-xs text-white/60 hover:text-white transition"
                   >
-                    Daha fazla yükle
+                    {t('store_load_more')}
                   </button>
                 )}
                 <div ref={loadMoreRef} className="h-px w-full" />
@@ -421,8 +423,8 @@ export default function StoreSection({
                     <LuInfo className="w-4 h-4" />
                   </div>
                   <div className="text-left">
-                    <p className="text-sm font-bold text-white group-hover:text-[#5865F2] transition-colors">Önemli Bilgiler</p>
-                    <p className="text-[10px] text-white/40">Alışveriş öncesi okumanız gerekenler</p>
+                    <p className="text-sm font-bold text-white group-hover:text-[#5865F2] transition-colors">{t('store_info_title')}</p>
+                    <p className="text-[10px] text-white/40">{t('store_info_subtitle')}</p>
                   </div>
                 </div>
                 {infoOpen ? <LuChevronUp className="text-white/40" /> : <LuChevronDown className="text-white/40" />}
@@ -430,14 +432,14 @@ export default function StoreSection({
 
               <div className={`overflow-hidden transition-all duration-300 ease-in-out ${infoOpen ? 'max-h-[500px] opacity-100 mt-2' : 'max-h-0 opacity-0'}`}>
                 <div className="p-4 rounded-2xl bg-black/20 border border-white/5 text-xs text-white/60 space-y-2">
-                  <p>• Papel kazanmak için yazılı veya sesli sohbet kanallarını kullanın.</p>
-                  <p>• Spam, flood veya anlamsız içerik için ödül verilmez; kurallara uyun.</p>
-                  <p>• Süreli roller, tanımlanan süre sonunda otomatik olarak silinir; uzatım için yeniden satın alma gerekir.</p>
-                  <p>• Aynı rolü tekrar almak süreyi üst üste ekler.</p>
-                  <p>• İndirim kuponları sadece belirlenen kategori ve ürünlerde geçerlidir; kuponlar birbirleriyle birleştirilemez.</p>
-                  <p>• Kuponlar nakde çevrilemez ve süresi dolduğunda geçersiz kabul edilir.</p>
-                  <p>• Satın alınan ürünlerin iadesi (yetki suistimali, teknik sorunlar hariç) yapılmaz; iade talepleri yönetici onayı gerektirir.</p>
-                  <p>• Adil olmayan yollarla papel kazandığı tespit edilen kullanıcıların bakiyeleri sıfırlanabilir ve ek yaptırımlar uygulanabilir.</p>
+                  <p>• {t('store_info_tip1')}</p>
+                  <p>• {t('store_info_tip2')}</p>
+                  <p>• {t('store_info_tip3')}</p>
+                  <p>• {t('store_info_tip4')}</p>
+                  <p>• {t('store_info_tip5')}</p>
+                  <p>• {t('store_info_tip6')}</p>
+                  <p>• {t('store_info_tip7')}</p>
+                  <p>• {t('store_info_tip8')}</p>
                 </div>
               </div>
             </div>
