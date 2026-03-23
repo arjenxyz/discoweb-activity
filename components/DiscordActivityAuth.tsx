@@ -240,12 +240,22 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
 
       // Rich Presence ayarla
       try {
+        // Sunucu adını DB'den al
+        let rpGuildName: string | null = null;
+        try {
+          const rpTokenRes = await fetchWithCreds(apiUrl(`/api/activity/discord-token?guild_id=${encodeURIComponent(guildId)}`));
+          if (rpTokenRes.ok) {
+            const rpData = await rpTokenRes.json() as { guild_name?: string | null };
+            rpGuildName = rpData.guild_name ?? null;
+          }
+        } catch { /* opsiyonel */ }
+
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await (sdk.commands as any).setActivity({
           activity: {
             type: 0,
-            details: 'DiscoWeb Dashboard',
-            state: 'Sunucu yönetimi',
+            details: rpGuildName ? `${rpGuildName} · Server Dashboard` : 'Server Dashboard',
+            state: 'Economy & Role Management',
             timestamps: { start: Date.now() },
             assets: { large_image: 'discoweb', large_text: 'DiscoWeb' },
           },
@@ -342,11 +352,16 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
                 await withTimeout(fastSdk.ready(), 10000, 'sdk_ready_fast_timeout');
                 setDiscordSdk(fastSdk);
                 // Discord access token ile RPC bağlantısını authenticate et
-                const tokenRes = await fetchWithCreds(apiUrl('/api/activity/discord-token'), { signal });
+                const tokenRes = await fetchWithCreds(
+                  apiUrl(`/api/activity/discord-token?guild_id=${encodeURIComponent(guildId)}`),
+                  { signal }
+                );
+                let guildName: string | null = null;
                 if (tokenRes.ok) {
-                  const { access_token } = await tokenRes.json() as { access_token: string };
+                  const tokenData = await tokenRes.json() as { access_token: string; guild_name?: string | null };
+                  guildName = tokenData.guild_name ?? null;
                   await withTimeout(
-                    fastSdk.commands.authenticate({ access_token }),
+                    fastSdk.commands.authenticate({ access_token: tokenData.access_token }),
                     10000, 'authenticate_fast_timeout'
                   );
                   addLog('RPC authenticate (hızlı yol) başarılı');
@@ -355,8 +370,8 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
                 await (fastSdk.commands as any).setActivity({
                   activity: {
                     type: 0,
-                    details: 'DiscoWeb Dashboard',
-                    state: 'Sunucu yönetimi',
+                    details: guildName ? `${guildName} · Server Dashboard` : 'Server Dashboard',
+                    state: 'Economy & Role Management',
                     timestamps: { start: Date.now() },
                     assets: { large_image: 'discoweb', large_text: 'DiscoWeb' },
                   },
