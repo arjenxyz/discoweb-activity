@@ -186,7 +186,7 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
       let code: string;
       try {
         const res = await withTimeout(
-          sdk.commands.authorize({ client_id: clientId, scope: ['identify', 'guilds'], prompt: 'none' }),
+          sdk.commands.authorize({ client_id: clientId, scope: ['identify', 'guilds', 'rpc.activities.write'], prompt: 'none' }),
           15000, 'auth_none_timeout'
         );
         code = res.code;
@@ -195,7 +195,7 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
         addLog('authorize(none) başarısız, consent deneniyor...');
         const consentRes = await withTimeout<{ code: string }>(
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (sdk.commands.authorize as any)({ client_id: clientId, scope: ['identify', 'guilds'], prompt: 'consent' }),
+          (sdk.commands.authorize as any)({ client_id: clientId, scope: ['identify', 'guilds', 'rpc.activities.write'], prompt: 'consent' }),
           15000, 'auth_consent_timeout'
         );
         code = consentRes.code;
@@ -242,11 +242,13 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
       try {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await (sdk.commands as any).setActivity({
-          details: 'DiscoWeb Dashboard',
-          state: 'Sunucu yönetimi',
-          timestamps: { start: Date.now() },
-          largeImageKey: 'embedded_cover',
-          largeImageText: 'DiscoWeb',
+          activity: {
+            type: 0,
+            details: 'DiscoWeb Dashboard',
+            state: 'Sunucu yönetimi',
+            timestamps: { start: Date.now() },
+            assets: { large_image: 'embedded_cover', large_text: 'DiscoWeb' },
+          },
         });
         addLog('Rich Presence ayarlandı');
       } catch {
@@ -337,11 +339,13 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
               if (existingSdk) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 await (existingSdk.commands as any).setActivity({
-                  details: 'DiscoWeb Dashboard',
-                  state: 'Sunucu yönetimi',
-                  timestamps: { start: Date.now() },
-                  largeImageKey: 'embedded_cover',
-                  largeImageText: 'DiscoWeb',
+                  activity: {
+                    type: 0,
+                    details: 'DiscoWeb Dashboard',
+                    state: 'Sunucu yönetimi',
+                    timestamps: { start: Date.now() },
+                    assets: { large_image: 'embedded_cover', large_text: 'DiscoWeb' },
+                  },
                 });
                 addLog('Rich Presence ayarlandı (hızlı yol)');
               }
