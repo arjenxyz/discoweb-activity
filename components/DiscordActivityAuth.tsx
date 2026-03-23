@@ -67,6 +67,7 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
         localStorage.removeItem('discord_frame_id');
         localStorage.removeItem('discord_instance_id');
         localStorage.removeItem('discord_bearer_token');
+        localStorage.removeItem('discord_locale');
         localStorage.removeItem('auth_ready');
       } catch {
         // ignore
@@ -178,6 +179,7 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
         }
       }
       setDiscordLocale(sdkLocale);
+      try { localStorage.setItem('discord_locale', sdkLocale); } catch {}
       addLog(`Locale ayarlandı: ${sdkLocale}`);
 
       // prompt=none önce dene, başarısızsa consent ile
@@ -235,6 +237,21 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
         userInfoRef.current = { username: result.user.username, avatar: null };
       }
       addLog(`SDK auth tamamlandı, kullanıcı: ${result.user?.username}`);
+
+      // Rich Presence ayarla
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (sdk.commands as any).setActivity({
+          details: 'DiscoWeb Dashboard',
+          state: 'Sunucu yönetimi',
+          timestamps: { start: Date.now() },
+          largeImageKey: 'embedded_cover',
+          largeImageText: 'DiscoWeb',
+        });
+        addLog('Rich Presence ayarlandı');
+      } catch {
+        addLog('Rich Presence ayarlanamadı (görmezden gelinir)');
+      }
 
       // ACTIVITY_INSTANCE_PARTICIPANTS_UPDATE — kendi userId'si listeden çıkınca beacon at
       if (result.user?.id) {
@@ -309,8 +326,28 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
 
           if (meRes.ok) {
             addLog('Mevcut session geçerli → hızlı geç');
-            // Tarayıcı dilini locale olarak set et (SDK locale yoksa fallback)
-            setDiscordLocale(navigator.language);
+            // Kaydedilmiş Discord locale'i kullan; yoksa navigator.language fallback
+            const savedLocale = (() => { try { return localStorage.getItem('discord_locale'); } catch { return null; } })();
+            setDiscordLocale(savedLocale || navigator.language);
+            addLog(`Locale (hızlı yol): ${savedLocale || navigator.language}`);
+
+            // Rich Presence — SDK zaten başlatılmışsa ayarla
+            try {
+              const existingSdk = (await import('@/lib/discordSdk')).getDiscordSdk();
+              if (existingSdk) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                await (existingSdk.commands as any).setActivity({
+                  details: 'DiscoWeb Dashboard',
+                  state: 'Sunucu yönetimi',
+                  timestamps: { start: Date.now() },
+                  largeImageKey: 'embedded_cover',
+                  largeImageText: 'DiscoWeb',
+                });
+                addLog('Rich Presence ayarlandı (hızlı yol)');
+              }
+            } catch {
+              // opsiyonel
+            }
             // Mevcut session varsa da login logu at (Activity yeniden açıldı)
             try {
               const meData = await meRes.clone().json() as { username?: string; avatar?: string };

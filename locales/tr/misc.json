@@ -370,5 +370,6 @@
   "transfer_error_invalid_payload": "Eksik bilgi gönderildi.",
   "transfer_error_unauthorized": "Oturum gerekli.",
   "transfer_error_generic": "Transfer başarısız.",
-  "transfer_success": "Transfer tamamlandı. Kesinti: {amount} papel."
+  "transfer_success": "Transfer tamamlandı. Kesinti: {amount} papel.",
+  "server_unknown": "Sunucu bilinmiyor"
 }

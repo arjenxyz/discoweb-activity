@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useState } from 'react';
 import { resolveLocale, translations, type SupportedLocale } from '@/lib/i18n';
 
 interface LocaleContextValue {
@@ -16,14 +16,10 @@ const LocaleContext = createContext<LocaleContextValue>({
 });
 
 export function LocaleProvider({ children }: { children: React.ReactNode }) {
-  const [locale, setLocale] = useState<SupportedLocale>('en');
-
-  // İlk render'da tarayıcı/sistem dilini kullan; SDK locale gelince üstüne yazar
-  useEffect(() => {
+  const [locale, setLocale] = useState<SupportedLocale>(() => {
     const browserLocale = typeof navigator !== 'undefined' ? navigator.language : '';
-    const resolved = resolveLocale(browserLocale);
-    setLocale(resolved);
-  }, []);
+    return resolveLocale(browserLocale);
+  });
 
   const setDiscordLocale = useCallback((discordLocale: string) => {
     setLocale(resolveLocale(discordLocale));
