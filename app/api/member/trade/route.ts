@@ -64,7 +64,7 @@ const calcPriceNudge = (action: 'buy' | 'sell', lotCount: number, publicLots: nu
 };
 
 export async function POST(request: Request) {
-  const maintenance = await checkMaintenance(['site', 'borsa']);
+  const maintenance = await checkMaintenance(['site', 'transactions']);
   if (maintenance.blocked) {
     return NextResponse.json(
       { error: 'maintenance', key: maintenance.key, reason: maintenance.reason },
