@@ -3,6 +3,7 @@
 import { useMemo, useRef, useState } from 'react';
 import WelcomeScreen from './WelcomeScreen';
 import VerifyRoleScreen from './VerifyRoleScreen';
+import DmScreen from './DmScreen';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { VideoBackground, MuteButton } from './VideoBackground';
 import { useT } from '@/contexts/LocaleContext';
@@ -144,6 +145,10 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
       setReportedStatus(readiness.status);
     } catch { /* sessizce geç */ }
   };
+  if (readiness.status === 'missing_guild') {
+    return <DmScreen />;
+  }
+
   if (readiness.status === 'missing_user_profile') {
     return <WelcomeScreen readiness={readiness} onRetry={onRetry} />;
   }

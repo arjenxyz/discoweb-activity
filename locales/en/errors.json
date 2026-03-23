@@ -66,5 +66,12 @@
   "verify_role_success_title": "Verified!",
   "verify_role_success_subtitle": "Redirecting you to the Dashboard...",
   "verify_role_error_assign": "Role assignment failed.",
-  "verify_role_error_generic": "An error occurred, please try again."
+  "verify_role_error_generic": "An error occurred, please try again.",
+  "dm_screen_title": "DM or Group Chat",
+  "dm_screen_subtitle": "This Activity only works in server voice channels.",
+  "dm_screen_description": "Activities opened from DMs or group chats don't have server context, so the system can't run. You need to join a voice channel in a Discord server and start the Activity from there.",
+  "dm_screen_step_1": "Join a Discord server",
+  "dm_screen_step_2": "Enter a voice channel",
+  "dm_screen_step_3": "Start the Activity from the voice channel",
+  "dm_screen_close_hint": "You can close this window."
 }

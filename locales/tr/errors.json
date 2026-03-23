@@ -66,5 +66,12 @@
   "verify_role_success_title": "Doğrulandın!",
   "verify_role_success_subtitle": "Dashboard'a yönlendiriliyorsun...",
   "verify_role_error_assign": "Rol ataması başarısız oldu.",
-  "verify_role_error_generic": "Bir hata oluştu, lütfen tekrar dene."
+  "verify_role_error_generic": "Bir hata oluştu, lütfen tekrar dene.",
+  "dm_screen_title": "DM veya Grup Sohbeti",
+  "dm_screen_subtitle": "Bu Activity yalnızca sunucu ses kanallarında çalışır.",
+  "dm_screen_description": "DM veya grup sohbetlerinden açılan Activity'lerde sunucu bilgisi bulunmadığı için sistem çalışamaz. Bir sunucunun ses kanalına katılarak Activity'yi oradan başlatman gerekiyor.",
+  "dm_screen_step_1": "Bir Discord sunucusuna katıl",
+  "dm_screen_step_2": "Ses kanalına gir",
+  "dm_screen_step_3": "Activity'yi ses kanalından başlat",
+  "dm_screen_close_hint": "Bu pencereyi kapatabilirsin."
 }
