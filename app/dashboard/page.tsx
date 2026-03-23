@@ -30,6 +30,7 @@ import SplashScreen from './components/SplashScreen';
 import SidebarNav from './components/SidebarNav';
 import { sanitizeHtml } from '@/lib/sanitizeHtml';
 import { useRealtimeDashboard } from '@/lib/utils/useRealtimeDashboard';
+import { useT } from '@/contexts/LocaleContext';
 import type {
   MemberProfile,
   Notification,
@@ -43,6 +44,7 @@ import type {
 } from './types';
 
 export default function DashboardPage() {
+  const t = useT();
   const cart = useCart();
   const router = useRouter();
   const [splashDone, setSplashDone] = useState(false);
@@ -658,7 +660,7 @@ export default function DashboardPage() {
 
   const handleTransfer = async () => {
     if (isSiteMaintenance || isTransfersMaintenance) {
-      setTransferError(transfersReason ?? 'Papel gÃ¶nderme bakÄ±mdadÄ±r.');
+      setTransferError(transfersReason ?? t('transfer_error_maintenance'));
       return;
     }
 
@@ -667,11 +669,11 @@ export default function DashboardPage() {
 
     const amountValue = Number(transferAmount);
     if (!transferRecipientId.trim()) {
-      setTransferError('AlÄ±cÄ± ID zorunlu.');
+      setTransferError(t('transfer_error_no_recipient'));
       return;
     }
     if (Number.isNaN(amountValue) || amountValue <= 0) {
-      setTransferError('GeÃ§erli bir miktar girin.');
+      setTransferError(t('transfer_error_invalid_amount'));
       return;
     }
 
@@ -689,19 +691,19 @@ export default function DashboardPage() {
 
     if (!response.ok) {
       if (data.error === 'invalid_amount') {
-        setTransferError('GeÃ§ersiz miktar.');
+        setTransferError(t('transfer_error_invalid_amount_api'));
       } else if (data.error === 'self_transfer') {
-        setTransferError('Kendinize transfer yapamazsÄ±nÄ±z.');
+        setTransferError(t('transfer_error_self'));
       } else if (data.error === 'insufficient_funds') {
-        setTransferError('Yetersiz bakiye.');
+        setTransferError(t('transfer_error_insufficient'));
       } else if (data.error === 'daily_limit_exceeded') {
-        setTransferError('GÃ¼nlÃ¼k transfer limiti aÅŸÄ±ldÄ±.');
+        setTransferError(t('transfer_error_daily_limit'));
       } else if (data.error === 'invalid_payload') {
-        setTransferError('Eksik bilgi gÃ¶nderildi.');
+        setTransferError(t('transfer_error_invalid_payload'));
       } else if (data.error === 'unauthorized') {
-        setTransferError('Oturum gerekli.');
+        setTransferError(t('transfer_error_unauthorized'));
       } else {
-        setTransferError('Transfer baÅŸarÄ±sÄ±z.');
+        setTransferError(t('transfer_error_generic'));
       }
       setTransferLoading(false);
       return;
@@ -710,11 +712,11 @@ export default function DashboardPage() {
     if (typeof data.senderBalance === 'number') {
       setWalletBalance(data.senderBalance);
     }
-    setTransferSuccess(`Transfer tamamlandÄ±. Kesinti: ${Number(data.taxAmount ?? 0).toFixed(2)} papel.`);
+    setTransferSuccess(t('transfer_success', { amount: Number(data.taxAmount ?? 0).toFixed(2) }));
     setTransferRecipientId('');
     setTransferAmount('');
     setTransferLoading(false);
-    // Bakiye gÃ¼ncellemesi iÃ§in yeniden yÃ¼kle
+    // Bakiye güncellemesi için yeniden yükle
     await refreshWalletBalance();
   };
 
@@ -802,7 +804,7 @@ export default function DashboardPage() {
 
   const handleOpenTransfer = useCallback(() => {
     if (isSiteMaintenance || isTransfersMaintenance) {
-      setTransferError(transfersReason ?? 'Papel gÃ¶nderme bakÄ±mdadÄ±r.');
+      setTransferError(transfersReason ?? t('transfer_error_maintenance'));
       setTransferSuccess(null);
       setTransferModalOpen(true);
       setSettingsOpen(false);
@@ -841,7 +843,7 @@ export default function DashboardPage() {
 
   const handlePurchase = async (itemId: string) => {
     if (isSiteMaintenance || isStoreMaintenance) {
-      setPurchaseFeedback(prev => ({ ...prev, [itemId]: { status: 'error', message: 'Mağaza bakımda' } }));
+      setPurchaseFeedback(prev => ({ ...prev, [itemId]: { status: 'error', message: t('purchase_error_maintenance') } }));
       setTimeout(() => setPurchaseFeedback(prev => ({ ...prev, [itemId]: undefined })), 3000);
       return;
     }
@@ -865,22 +867,22 @@ export default function DashboardPage() {
 
     if (!response.ok) {
       const errorMessages: Record<string, string> = {
-        missing_bot_token: 'Bot yapılandırması eksik, yöneticiye haber ver.',
-        bot_missing_manage_roles: 'Botun rol yönetim yetkisi yok.',
-        bot_role_hierarchy: 'Botun rol sırası hedef rolden düşük, yönetici düzeltmeli.',
-        insufficient_balance: 'Yetersiz bakiye.',
-        item_not_found: 'Ürün bulunamadı.',
-        invalid_item_price: 'Ürün fiyatı geçersiz, yöneticiye haber ver.',
-        already_owned: 'Bu ürüne zaten sahipsin.',
-        role_not_found: 'Rol bulunamadı.',
-        not_verified: 'Hesabın doğrulanmamış.',
-        server_not_found: 'Sunucu ayarları bulunamadı, kurulum tekrar yapılmalı.',
-        no_guild_selected: 'Sunucu seçimi bulunamadı, Activity\'yi yeniden aç.',
-        forbidden: 'Erişim reddedildi.',
-        rollback_failed: 'İşlem sırasında hata oluştu, yönetici bilgilendirildi.',
-        role_assign_failed: 'Rol verilemedi, ödeme alınmadı.',
+        missing_bot_token: t('purchase_error_missing_bot_token'),
+        bot_missing_manage_roles: t('purchase_error_bot_manage_roles'),
+        bot_role_hierarchy: t('purchase_error_bot_hierarchy'),
+        insufficient_balance: t('purchase_error_insufficient_balance'),
+        item_not_found: t('purchase_error_item_not_found'),
+        invalid_item_price: t('purchase_error_invalid_price'),
+        already_owned: t('purchase_error_already_owned'),
+        role_not_found: t('purchase_error_role_not_found'),
+        not_verified: t('purchase_error_not_verified'),
+        server_not_found: t('purchase_error_server_not_found'),
+        no_guild_selected: t('purchase_error_no_guild'),
+        forbidden: t('purchase_error_forbidden'),
+        rollback_failed: t('purchase_error_rollback_failed'),
+        role_assign_failed: t('purchase_error_role_assign_failed'),
       };
-      const msg = errorMessages[data.error ?? ''] || data.error || 'Satın alma başarısız.';
+      const msg = errorMessages[data.error ?? ''] || data.error || t('purchase_error_generic');
       setPurchaseFeedback(prev => ({ ...prev, [itemId]: { status: 'error', message: msg } }));
       setTimeout(() => setPurchaseFeedback(prev => ({ ...prev, [itemId]: undefined })), 4000);
       return;
@@ -889,12 +891,12 @@ export default function DashboardPage() {
     if (data.success && typeof data.newBalance === 'number') {
       setWalletBalance(data.newBalance);
       const successMsg = data.mailInserted === false
-        ? 'Satın alındı! (Bildirim maili gönderilemedi)'
-        : 'Satın alındı!';
+        ? t('purchase_success_no_mail')
+        : t('purchase_success');
       setPurchaseFeedback(prev => ({ ...prev, [itemId]: { status: 'success', message: successMsg } }));
       setTimeout(() => setPurchaseFeedback(prev => ({ ...prev, [itemId]: undefined })), 3000);
     } else {
-      setPurchaseFeedback(prev => ({ ...prev, [itemId]: { status: 'error', message: 'Bilinmeyen hata oluştu.' } }));
+      setPurchaseFeedback(prev => ({ ...prev, [itemId]: { status: 'error', message: t('purchase_error_unknown') } }));
       setTimeout(() => setPurchaseFeedback(prev => ({ ...prev, [itemId]: undefined })), 3000);
     }
     // Bakiye ve maÄŸaza Ã¼rÃ¼nleri gÃ¼ncellemesi iÃ§in yeniden yÃ¼kle
@@ -1075,7 +1077,7 @@ export default function DashboardPage() {
             )}
             {unauthorized && (
               <section className="rounded-2xl border border-rose-500/30 bg-rose-500/10 p-6">
-                <p className="text-sm font-semibold text-rose-200">Oturumunuz sonlandÄ±</p>
+                <p className="text-sm font-semibold text-rose-200">{t('session_ended')}</p>
                 <p className="mt-2 text-sm text-rose-100/80">LÃ¼tfen tekrar giriÅŸ yapÄ±n.</p>
                 <Link
                   href={loginUrl}
@@ -1418,7 +1420,7 @@ export default function DashboardPage() {
                           setMariBalance(d.new_mari_balance ?? mariBalance);
                           setMariConvertInput('');
                           const infoRes = await fetchWithCreds('/api/member/mari-convert');
-                          if (infoRes.ok) setMariConvertInfo(await infoRes.json() as NonNullable<typeof mariConvertInfo>); // eslint-disable-line @typescript-eslint/no-explicit-any
+                          if (infoRes.ok) setMariConvertInfo(await infoRes.json() as NonNullable<typeof mariConvertInfo>);
                         }
                       } catch {
                         setMariConvertError('Bağlantı hatası');

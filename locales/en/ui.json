@@ -26,5 +26,6 @@
   "settings_dropdown_account_aria": "Account",
   "confirm_dialog_default_title": "Confirm",
   "confirm_dialog_yes": "Yes",
-  "confirm_dialog_cancel": "Cancel"
+  "confirm_dialog_cancel": "Cancel",
+  "session_ended": "Your session has ended"
 }

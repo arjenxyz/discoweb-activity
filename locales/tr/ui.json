@@ -26,5 +26,6 @@
   "settings_dropdown_account_aria": "Hesap",
   "confirm_dialog_default_title": "Onay",
   "confirm_dialog_yes": "Evet",
-  "confirm_dialog_cancel": "İptal"
+  "confirm_dialog_cancel": "İptal",
+  "session_ended": "Oturumunuz sonlandı"
 }

@@ -359,5 +359,16 @@
   "welcome_success_subtitle": "DiscoWeb dünyasına giriş yapılıyor...",
   "leaderboard_fetch_error": "Veri alınamadı.",
   "leaderboard_fetch_error_retry": "Veri çekilemedi. Lütfen tekrar deneyin.",
-  "cart_discount_suffix": "% indirim"
+  "cart_discount_suffix": "% indirim",
+  "transfer_error_maintenance": "Papel gönderme bakımdadır.",
+  "transfer_error_no_recipient": "Alıcı ID zorunlu.",
+  "transfer_error_invalid_amount": "Geçerli bir miktar girin.",
+  "transfer_error_invalid_amount_api": "Geçersiz miktar.",
+  "transfer_error_self": "Kendinize transfer yapamazsınız.",
+  "transfer_error_insufficient": "Yetersiz bakiye.",
+  "transfer_error_daily_limit": "Günlük transfer limiti aşıldı.",
+  "transfer_error_invalid_payload": "Eksik bilgi gönderildi.",
+  "transfer_error_unauthorized": "Oturum gerekli.",
+  "transfer_error_generic": "Transfer başarısız.",
+  "transfer_success": "Transfer tamamlandı. Kesinti: {amount} papel."
 }

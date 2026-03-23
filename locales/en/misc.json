@@ -359,5 +359,16 @@
   "welcome_success_subtitle": "Logging into the DiscoWeb world...",
   "leaderboard_fetch_error": "Could not retrieve data.",
   "leaderboard_fetch_error_retry": "Failed to fetch data. Please try again.",
-  "cart_discount_suffix": "% off"
+  "cart_discount_suffix": "% off",
+  "transfer_error_maintenance": "Papel sending is under maintenance.",
+  "transfer_error_no_recipient": "Recipient ID is required.",
+  "transfer_error_invalid_amount": "Enter a valid amount.",
+  "transfer_error_invalid_amount_api": "Invalid amount.",
+  "transfer_error_self": "You cannot transfer to yourself.",
+  "transfer_error_insufficient": "Insufficient balance.",
+  "transfer_error_daily_limit": "Daily transfer limit exceeded.",
+  "transfer_error_invalid_payload": "Missing required information.",
+  "transfer_error_unauthorized": "Session required.",
+  "transfer_error_generic": "Transfer failed.",
+  "transfer_success": "Transfer complete. Fee: {amount} papel."
 }
