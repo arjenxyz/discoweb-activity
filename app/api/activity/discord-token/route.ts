@@ -58,7 +58,7 @@ export async function GET(request: Request) {
   if (guildId) {
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
     const { count } = await supabase
-      .from('activity_sessions')
+      .from('activity_online_sessions')
       .select('*', { count: 'exact', head: true })
       .eq('guild_id', guildId)
       .gte('last_seen', fiveMinutesAgo);

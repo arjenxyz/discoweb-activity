@@ -22,7 +22,7 @@ export async function POST(request: Request) {
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (supabaseUrl && serviceRoleKey && session.ok && guildId) {
     const supabase = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
-    await supabase.from('activity_sessions')
+    await supabase.from('activity_online_sessions')
       .delete()
       .match({ user_id: session.userId, guild_id: guildId });
   }

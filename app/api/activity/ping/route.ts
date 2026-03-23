@@ -30,7 +30,7 @@ export async function POST(request: Request) {
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (supabaseUrl && serviceRoleKey && guildId) {
     const supabase = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
-    await supabase.from('activity_sessions').upsert(
+    await supabase.from('activity_online_sessions').upsert(
       { user_id: session.userId, guild_id: guildId, last_seen: new Date().toISOString() },
       { onConflict: 'user_id,guild_id' }
     );
