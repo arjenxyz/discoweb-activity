@@ -114,7 +114,13 @@ export default function DashboardPage() {
   const [maintenanceUpdaters, setMaintenanceUpdaters] = useState<Record<string, { id: string; name: string; avatarUrl: string }>>({});
   const [isDeveloper, setIsDeveloper] = useState(false);
   const [promotionsModalOpen, setPromotionsModalOpen] = useState(false);
+  const [promoError, setPromoError] = useState<string | null>(null);
+  const [promoSuccess, setPromoSuccess] = useState<string | null>(null);
+  const [promoLoading, setPromoLoading] = useState(false);
   const [discountsModalOpen, setDiscountsModalOpen] = useState(false);
+  const [discountError, setDiscountError] = useState<string | null>(null);
+  const [discountSuccess, setDiscountSuccess] = useState<string | null>(null);
+  const [discountLoading, setDiscountLoading] = useState(false);
   const [earningsModalOpen, setEarningsModalOpen] = useState(false);
   const [headerServer, setHeaderServer] = useState({
     data: null as { id: string; name: string; iconUrl: string | null } | null,
@@ -127,7 +133,7 @@ export default function DashboardPage() {
   const [mailLoading, setMailLoading] = useState(true);
   const [mailError, setMailError] = useState<string | null>(null);
   const [activeMail, setActiveMail] = useState<MailItem | null>(null);
-  const activeServerName = headerServer.data?.name ?? 'Sunucu bilinmiyor';
+  const activeServerName = headerServer.data?.name ?? t('server_unknown');
   const [activityReadiness, setActivityReadiness] = useState<ActivityReadiness | null>(null);
   const [activityReadinessLoading, setActivityReadinessLoading] = useState(true);
 
@@ -837,8 +843,37 @@ export default function DashboardPage() {
   };
 
 
-  const handleApplyPromoCode = async () => {
-    // TODO: promo code API entegrasyonu
+  const handleApplyPromoCode = async (code: string) => {
+    setPromoLoading(true);
+    setPromoError(null);
+    setPromoSuccess(null);
+    try {
+      const res = await fetchWithCreds('/api/promotion/use', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code }),
+      });
+      const data = await res.json() as { success?: boolean; message?: string; amount?: number; newBalance?: number; error?: string };
+      if (!res.ok) {
+        const errorMap: Record<string, string> = {
+          wrong_server: t('promo_error_wrong_server'),
+          invalid_code: t('promo_error_invalid_code'),
+          expired: t('promo_error_expired'),
+          usage_limit_exceeded: t('promo_error_usage_limit'),
+          already_used: t('promo_error_already_used'),
+          profile_not_found: t('promo_error_profile_not_found'),
+          wallet_update_failed: t('promo_error_wallet_failed'),
+        };
+        setPromoError(errorMap[data.error ?? ''] ?? t('promo_error_generic'));
+      } else {
+        setPromoSuccess(t('promo_success', { amount: data.amount ?? 0 }));
+        if (typeof data.newBalance === 'number') setWalletBalance(data.newBalance);
+        setTimeout(() => { setPromoSuccess(null); setPromotionsModalOpen(false); }, 2000);
+      }
+    } catch {
+      setPromoError(t('promo_error_generic'));
+    }
+    setPromoLoading(false);
   };
 
   const handlePurchase = async (itemId: string) => {
@@ -1159,7 +1194,7 @@ export default function DashboardPage() {
 
             {effectiveSection === 'settings' && !isSiteMaintenance && isPromotionsMaintenance && (
               <section className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-6 text-sm text-amber-100/80">
-                {promotionsReason ?? 'Promosyon ve indirim kodlarÄ± ÅŸu anda bakÄ±mdadÄ±r.'}
+                {promotionsReason ?? t('promotions_maintenance_fallback')}
                 {promotionsUpdater && (
                   <div className="mt-3 flex items-center gap-2 text-xs text-amber-100/70">
                     <Image
@@ -1169,7 +1204,7 @@ export default function DashboardPage() {
                       height={20}
                       className="h-5 w-5 rounded-full border border-amber-200/40"
                     />
-                    <span>Yetkili: {promotionsUpdater.name}</span>
+                    <span>{t('promotions_maintenance_authority', { name: promotionsUpdater.name })}</span>
                   </div>
                 )}
               </section>
@@ -1270,11 +1305,11 @@ export default function DashboardPage() {
       />
       <PromotionsModal
         isOpen={promotionsModalOpen}
-        onClose={() => setPromotionsModalOpen(false)}
+        onClose={() => { setPromotionsModalOpen(false); setPromoError(null); setPromoSuccess(null); }}
         onApply={handleApplyPromoCode}
-        loading={false}
-        error={null}
-        success={null}
+        loading={promoLoading}
+        error={promoError}
+        success={promoSuccess}
       />
 
       {activeMail && (
@@ -1321,9 +1356,9 @@ export default function DashboardPage() {
               <div>
                 <div className="flex items-center gap-2">
                   <Image src="/Mari.gif" alt="Mari" width={20} height={20} className="h-5 w-5" unoptimized />
-                  <p className="text-sm font-bold text-white">Papel → Mari Dönüştür</p>
+                  <p className="text-sm font-bold text-white">{t('mari_convert_title')}</p>
                 </div>
-                <p className="text-[11px] text-white/40 mt-0.5">Papel harcayarak global rezerv para birimi edin</p>
+                <p className="text-[11px] text-white/40 mt-0.5">{t('mari_convert_subtitle')}</p>
               </div>
               <button type="button" onClick={() => setMariConvertOpen(false)} className="text-white/30 hover:text-white/70 text-lg leading-none">✕</button>
             </div>
@@ -1333,22 +1368,22 @@ export default function DashboardPage() {
                   {/* Kur ve limit bilgisi */}
                   <div className="grid grid-cols-2 gap-2">
                     <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] px-3 py-2.5">
-                      <p className="text-[10px] text-white/35 uppercase tracking-wider">Kur</p>
+                      <p className="text-[10px] text-white/35 uppercase tracking-wider">{t('mari_convert_rate_label')}</p>
                       <div className="flex items-center gap-1.5 mt-0.5">
                         <Image src="/Mari.gif" alt="Mari" width={14} height={14} className="h-3.5 w-3.5" unoptimized />
-                        <p className="text-sm font-bold text-white">= {mariConvertInfo.mari_rate.toLocaleString('tr-TR')} P</p>
+                        <p className="text-sm font-bold text-white">= {mariConvertInfo.mari_rate.toLocaleString()} P</p>
                       </div>
                     </div>
                     <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] px-3 py-2.5">
-                      <p className="text-[10px] text-white/35 uppercase tracking-wider">Papel Bakiye</p>
-                      <p className="text-sm font-bold text-white mt-0.5">{mariConvertInfo.papel_balance.toLocaleString('tr-TR')} P</p>
+                      <p className="text-[10px] text-white/35 uppercase tracking-wider">{t('mari_convert_balance_label')}</p>
+                      <p className="text-sm font-bold text-white mt-0.5">{mariConvertInfo.papel_balance.toLocaleString()} P</p>
                     </div>
                   </div>
                   {/* Limitler */}
                   <div className="space-y-2">
                     <div>
                       <div className="flex justify-between text-[10px] text-white/40 mb-1">
-                        <span>Sunucu günlük limit</span>
+                        <span>{t('mari_convert_server_limit')}</span>
                         <span className="flex items-center gap-1">{mariConvertInfo.server_used_today.toFixed(3)} / {mariConvertInfo.server_limit} <Image src="/Mari.gif" alt="" width={10} height={10} className="h-2.5 w-2.5 inline" unoptimized /></span>
                       </div>
                       <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
@@ -1357,7 +1392,7 @@ export default function DashboardPage() {
                     </div>
                     <div>
                       <div className="flex justify-between text-[10px] text-white/40 mb-1">
-                        <span>Global günlük limit</span>
+                        <span>{t('mari_convert_global_limit')}</span>
                         <span className="flex items-center gap-1">{mariConvertInfo.global_used_today.toFixed(3)} / {mariConvertInfo.global_limit} <Image src="/Mari.gif" alt="" width={10} height={10} className="h-2.5 w-2.5 inline" unoptimized /></span>
                       </div>
                       <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
@@ -1367,7 +1402,7 @@ export default function DashboardPage() {
                   </div>
                   {/* Input */}
                   <div>
-                    <label className="block text-[11px] text-white/40 mb-1.5">Dönüştürmek istediğin papel miktarı</label>
+                    <label className="block text-[11px] text-white/40 mb-1.5">{t('mari_convert_input_label')}</label>
                     <div className="flex gap-2">
                       <input
                         type="number"
@@ -1385,7 +1420,7 @@ export default function DashboardPage() {
                     </div>
                     {mariConvertInput && Number(mariConvertInput) > 0 && (
                       <p className="text-[11px] text-violet-400 mt-1.5">
-                        ≈ {(Number(mariConvertInput) / mariConvertInfo.mari_rate).toFixed(6)} <Image src="/Mari.gif" alt="Mari" width={12} height={12} className="h-3 w-3 inline" unoptimized /> alacaksın
+                        {t('mari_convert_will_receive', { amount: (Number(mariConvertInput) / mariConvertInfo.mari_rate).toFixed(6) })} <Image src="/Mari.gif" alt="Mari" width={12} height={12} className="h-3 w-3 inline" unoptimized />
                       </p>
                     )}
                   </div>
@@ -1407,33 +1442,33 @@ export default function DashboardPage() {
                         const d = await res.json() as { error?: string; mari_received?: number; new_mari_balance?: number };
                         if (!res.ok) {
                           const errorMap: Record<string, string> = {
-                            economy_not_approved: 'Bu sunucuda Yüksek Ekonomi aktif değil. Mari dönüşümü yalnızca Yüksek Ekonomi onaylı sunucularda yapılabilir.',
-                            insufficient_papel: 'Yetersiz Papel bakiyesi.',
-                            server_daily_limit: 'Bugün bu sunucudan daha fazla dönüşüm yapamazsın.',
-                            global_daily_limit: 'Günlük global Mari limitine ulaştın.',
-                            amount_too_small: 'Miktar çok küçük.',
-                            no_selected_guild: 'Sunucu seçili değil.',
+                            economy_not_approved: t('mari_convert_error_economy_not_approved'),
+                            insufficient_papel: t('mari_convert_error_insufficient_papel'),
+                            server_daily_limit: t('mari_convert_error_server_daily_limit'),
+                            global_daily_limit: t('mari_convert_error_global_daily_limit'),
+                            amount_too_small: t('mari_convert_error_amount_too_small'),
+                            no_selected_guild: t('mari_convert_error_no_guild'),
                           };
-                          setMariConvertError(errorMap[d.error ?? ''] ?? d.error ?? 'Dönüşüm başarısız');
+                          setMariConvertError(errorMap[d.error ?? ''] ?? t('mari_convert_error_generic'));
                         } else {
-                          setMariConvertSuccess(`${(d.mari_received ?? 0).toFixed(6)} Mari edinildi!`);
+                          setMariConvertSuccess(t('mari_convert_success', { amount: (d.mari_received ?? 0).toFixed(6) }));
                           setMariBalance(d.new_mari_balance ?? mariBalance);
                           setMariConvertInput('');
                           const infoRes = await fetchWithCreds('/api/member/mari-convert');
                           if (infoRes.ok) setMariConvertInfo(await infoRes.json() as NonNullable<typeof mariConvertInfo>);
                         }
                       } catch {
-                        setMariConvertError('Bağlantı hatası');
+                        setMariConvertError(t('mari_convert_error_connection'));
                       }
                       setMariConvertLoading(false);
                     }}
                     className="w-full rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-40 disabled:cursor-not-allowed py-2.5 text-sm font-bold text-white transition"
                   >
-                    {mariConvertLoading ? 'Dönüştürülüyor...' : 'Dönüştür'}
+                    {mariConvertLoading ? t('mari_convert_loading') : t('mari_convert_button')}
                   </button>
                 </>
               ) : (
-                <div className="py-8 text-center text-sm text-white/30">Yükleniyor...</div>
+                <div className="py-8 text-center text-sm text-white/30">{t('mari_convert_loading_info')}</div>
               )}
             </div>
           </div>
@@ -1442,20 +1477,39 @@ export default function DashboardPage() {
 
       <DiscountsModal
         isOpen={discountsModalOpen}
-        onClose={() => setDiscountsModalOpen(false)}
+        onClose={() => { setDiscountsModalOpen(false); setDiscountError(null); setDiscountSuccess(null); }}
         onApply={async (code: string) => {
-          // minimal handler: attempt to post and close
+          setDiscountLoading(true);
+          setDiscountError(null);
+          setDiscountSuccess(null);
           try {
-            await fetch(apiUrl('/api/discount/validate'), {
+            const res = await fetchWithCreds('/api/discount/validate', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ code }),
             });
+            const data = await res.json() as { success?: boolean; error?: string };
+            if (!res.ok) {
+              const errorMap: Record<string, string> = {
+                wrong_server: t('discount_error_wrong_server'),
+                invalid_code: t('discount_error_invalid_code'),
+                expired: t('discount_error_expired'),
+                usage_limit_exceeded: t('discount_error_usage_limit'),
+                item_not_found: t('discount_error_item_not_found'),
+              };
+              setDiscountError(errorMap[data.error ?? ''] ?? t('discount_error_generic'));
+            } else {
+              setDiscountSuccess(t('coupon_applied_success'));
+              setTimeout(() => { setDiscountSuccess(null); setDiscountsModalOpen(false); }, 2000);
+            }
           } catch {
-            // ignore
+            setDiscountError(t('discount_error_generic'));
           }
-          setDiscountsModalOpen(false);
+          setDiscountLoading(false);
         }}
+        loading={discountLoading}
+        error={discountError}
+        success={discountSuccess}
       />
       </div>
     </div>

@@ -63,18 +63,18 @@ export async function POST(request: Request) {
         .maybeSingle();
 
       if (otherPromo) {
-        return NextResponse.json({ error: 'Bu promosyon kodu bu sunucuya ait değil' }, { status: 400 });
+        return NextResponse.json({ error: 'wrong_server' }, { status: 400 });
       }
 
-      return NextResponse.json({ error: 'Geçersiz promosyon kodu' }, { status: 400 });
+      return NextResponse.json({ error: 'invalid_code' }, { status: 400 });
     }
 
     if (promotion.expires_at && new Date(promotion.expires_at) < new Date()) {
-      return NextResponse.json({ error: 'Promosyon kodu süresi dolmuş' }, { status: 400 });
+      return NextResponse.json({ error: 'expired' }, { status: 400 });
     }
 
     if (promotion.max_uses && promotion.used_count >= promotion.max_uses) {
-      return NextResponse.json({ error: 'Promosyon kodu kullanım limiti dolmuş' }, { status: 400 });
+      return NextResponse.json({ error: 'usage_limit_exceeded' }, { status: 400 });
     }
 
     const { data: existingPromotionUsage } = await supabase
@@ -85,7 +85,7 @@ export async function POST(request: Request) {
       .maybeSingle();
 
     if (existingPromotionUsage) {
-      return NextResponse.json({ error: 'Bu promosyon kodunu zaten kullandınız' }, { status: 400 });
+      return NextResponse.json({ error: 'already_used' }, { status: 400 });
     }
 
     // Get user profile
@@ -97,7 +97,7 @@ export async function POST(request: Request) {
       .maybeSingle();
 
     if (!profile) {
-      return NextResponse.json({ error: 'Profil bulunamadı' }, { status: 404 });
+      return NextResponse.json({ error: 'profile_not_found' }, { status: 404 });
     }
 
     // Apply promotion
@@ -112,7 +112,7 @@ export async function POST(request: Request) {
 
     if (walletError) {
       console.error('Wallet update error:', walletError);
-      return NextResponse.json({ error: 'Cüzdan güncellenirken hata oluştu' }, { status: 500 });
+      return NextResponse.json({ error: 'wallet_update_failed' }, { status: 500 });
     }
 
     // Record usage
@@ -142,12 +142,13 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      message: `${promotion.value} Papel hesabınıza eklendi!`,
+      message: 'promotion_applied',
+      amount: promotion.value,
       newBalance,
     });
 
   } catch (error) {
     console.error('Promotion usage error:', error);
-    return NextResponse.json({ error: 'Bir hata oluştu' }, { status: 500 });
+    return NextResponse.json({ error: 'server_error' }, { status: 500 });
   }
 }

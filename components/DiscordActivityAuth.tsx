@@ -244,6 +244,14 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
       // Rich Presence ayarla
       try {
         const rpGuildName = result.user?.guildName ?? null;
+        let rpActiveCount = 0;
+        try {
+          const rpTokenRes = await fetchWithCreds(apiUrl(`/api/activity/discord-token?guild_id=${encodeURIComponent(guildId)}`));
+          if (rpTokenRes.ok) {
+            const rpData = await rpTokenRes.json() as { active_count?: number };
+            rpActiveCount = rpData.active_count ?? 0;
+          }
+        } catch { /* opsiyonel */ }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await (sdk.commands as any).setActivity({
           activity: {
@@ -252,7 +260,7 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
             state: 'Economy & Role Management',
             timestamps: { start: Date.now() },
             assets: { large_image: 'discoweb', large_text: 'DiscoWeb' },
-            buttons: [{ label: 'Open DiscoWeb', url: 'https://discoweb.tech' }],
+            party: rpActiveCount > 0 ? { id: guildId, size: [rpActiveCount, 9999] } : undefined,
           },
         });
         addLog('Rich Presence ayarlandı');
@@ -353,13 +361,15 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
                 );
                 const savedGuildName = (() => { try { return localStorage.getItem(`discord_guild_name_${guildId}`); } catch { return null; } })();
                 let guildName: string | null = savedGuildName;
+                let activeCount = 0;
                 if (tokenRes.ok) {
-                  const tokenData = await tokenRes.json() as { access_token: string; guild_name?: string | null };
-                  addLog(`discord-token guild_name: ${JSON.stringify(tokenData.guild_name)}`);
+                  const tokenData = await tokenRes.json() as { access_token: string; guild_name?: string | null; active_count?: number };
+                  addLog(`discord-token guild_name: ${JSON.stringify(tokenData.guild_name)}, active: ${tokenData.active_count}`);
                   if (tokenData.guild_name) {
                     guildName = tokenData.guild_name;
                     try { localStorage.setItem(`discord_guild_name_${guildId}`, guildName); } catch {}
                   }
+                  activeCount = tokenData.active_count ?? 0;
                   await withTimeout(
                     fastSdk.commands.authenticate({ access_token: tokenData.access_token }),
                     10000, 'authenticate_fast_timeout'
@@ -376,6 +386,7 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
                     state: 'Economy & Role Management',
                     timestamps: { start: Date.now() },
                     assets: { large_image: 'discoweb', large_text: 'DiscoWeb' },
+                    party: activeCount > 0 ? { id: guildId, size: [activeCount, 9999] } : undefined,
                   },
                 });
                 addLog('Rich Presence ayarlandı (hızlı yol)');

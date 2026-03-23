@@ -6,6 +6,7 @@ import { NextResponse } from 'next/server';
 import { requireSessionUser } from '@/lib/auth';
 import { logActivityLogin } from '@/lib/activityLogger';
 import { getSelectedGuildId } from '@/lib/guild';
+import { createClient } from '@supabase/supabase-js';
 
 export async function POST(request: Request) {
   const session = await requireSessionUser(request);
@@ -23,6 +24,17 @@ export async function POST(request: Request) {
     username = body?.username ?? username;
     avatar = body?.avatar ?? null;
   } catch { /* opsiyonel */ }
+
+  // Aktif session'ı upsert et
+  const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (supabaseUrl && serviceRoleKey && guildId) {
+    const supabase = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
+    await supabase.from('activity_sessions').upsert(
+      { user_id: session.userId, guild_id: guildId, last_seen: new Date().toISOString() },
+      { onConflict: 'user_id,guild_id' }
+    );
+  }
 
   await logActivityLogin({
     userId: session.userId,

@@ -66,20 +66,20 @@ export async function POST(request: Request) {
         .maybeSingle();
 
       if (other && !otherErr) {
-        return NextResponse.json({ error: 'Bu indirim kodu bu sunucuya ait değil' }, { status: 400 });
+        return NextResponse.json({ error: 'wrong_server' }, { status: 400 });
       }
 
-      return NextResponse.json({ error: 'Geçersiz indirim kodu' }, { status: 400 });
+      return NextResponse.json({ error: 'invalid_code' }, { status: 400 });
     }
 
     // Check expiration
     if (discount.expires_at && new Date(discount.expires_at) < new Date()) {
-      return NextResponse.json({ error: 'İndirim kodu süresi dolmuş' }, { status: 400 });
+      return NextResponse.json({ error: 'expired' }, { status: 400 });
     }
 
     // Check usage limit
     if (discount.max_uses && discount.used_count >= discount.max_uses) {
-      return NextResponse.json({ error: 'İndirim kodu kullanım limiti dolmuş' }, { status: 400 });
+      return NextResponse.json({ error: 'usage_limit_exceeded' }, { status: 400 });
     }
 
     // check per-user usage limit
@@ -110,7 +110,7 @@ export async function POST(request: Request) {
         .single();
 
       if (!item) {
-        return NextResponse.json({ error: 'Ürün bulunamadı' }, { status: 404 });
+        return NextResponse.json({ error: 'item_not_found' }, { status: 404 });
       }
 
       totalAmount = Number(item.price || 0);
@@ -142,6 +142,6 @@ export async function POST(request: Request) {
 
   } catch (error) {
     console.error('Discount validation error:', error);
-    return NextResponse.json({ error: 'Bir hata oluştu' }, { status: 500 });
+    return NextResponse.json({ error: 'server_error' }, { status: 500 });
   }
 }

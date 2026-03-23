@@ -53,5 +53,17 @@ export async function GET(request: Request) {
     }
   }
 
-  return NextResponse.json({ access_token: data.oauth_access_token, guild_name: guildName });
+  // Son 5 dakikada aktif session sayısı
+  let activeCount = 0;
+  if (guildId) {
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+    const { count } = await supabase
+      .from('activity_sessions')
+      .select('*', { count: 'exact', head: true })
+      .eq('guild_id', guildId)
+      .gte('last_seen', fiveMinutesAgo);
+    activeCount = count ?? 0;
+  }
+
+  return NextResponse.json({ access_token: data.oauth_access_token, guild_name: guildName, active_count: activeCount });
 }
