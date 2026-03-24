@@ -99,7 +99,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'history_failed' }, { status: 500 });
     }
 
-    const reward = 500;
+    // Read reward from server settings (admin-configurable), default 500
+    const { data: serverRow } = await supabase
+      .from('servers')
+      .select('referral_reward')
+      .eq('discord_id', selectedGuildId)
+      .maybeSingle();
+    const reward = Math.max(0, Number(serverRow?.referral_reward ?? 500));
 
     // Increment inviter's total_invites and credit both wallets.
     const { error: incrementError } = await supabase

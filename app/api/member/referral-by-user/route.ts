@@ -76,7 +76,14 @@ export async function POST(request: Request) {
     }
 
     const now = new Date().toISOString();
-    const reward = 500;
+
+    // Read reward from server settings (admin-configurable), default 500
+    const { data: serverRow } = await supabase
+      .from('servers')
+      .select('referral_reward')
+      .eq('discord_id', selectedGuildId)
+      .maybeSingle();
+    const reward = Math.max(0, Number(serverRow?.referral_reward ?? 500));
 
     await supabase
       .from('member_profiles')

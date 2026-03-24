@@ -21,6 +21,7 @@ export default function ReferralSection() {
   const [referralCode, setReferralCode] = useState<string>('');
   const [referredBy, setReferredBy] = useState<string | null>(null);
   const [totalInvites, setTotalInvites] = useState<number>(0);
+  const [referralReward, setReferralReward] = useState<number>(500);
   const [status, setStatus] = useState<ReferralStatus | null>(null);
   const [refSubmitted, setRefSubmitted] = useState(false);
   const [inviteAvailable, setInviteAvailable] = useState(false);
@@ -93,6 +94,7 @@ export default function ReferralSection() {
         setReferralCode(String(data.referral_code ?? ''));
         setReferredBy(data.referred_by ?? null);
         setTotalInvites(Number(data.total_invites ?? 0));
+        setReferralReward(Number(data.referral_reward ?? 500));
       } catch {
         // ignore
       }
@@ -351,6 +353,17 @@ export default function ReferralSection() {
             <p className="text-sm font-medium text-white/60">{t('referral_your_code_label')}</p>
             <h1 className="mt-1 text-3xl font-extrabold tracking-wide text-white">{referralCode || '—'}</h1>
             <p className="mt-1 text-xs text-white/40">{t('referral_share_hint')}</p>
+            {referralReward > 0 && (
+              <div className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-300">
+                <span>🎁</span>
+                <span>Her davet → her iki kişiye +{referralReward.toLocaleString('tr-TR')} Papel</span>
+              </div>
+            )}
+            {referralReward === 0 && (
+              <div className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-white/30">
+                Şu an ödül verilmiyor
+              </div>
+            )}
           </div>
           <button
             type="button"

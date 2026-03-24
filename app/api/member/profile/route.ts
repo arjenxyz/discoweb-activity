@@ -214,6 +214,16 @@ export async function GET(request: Request) {
         referral_code: profile.referral_code ?? null,
         referred_by: profile.referred_by ?? null,
         total_invites: profile.total_invites ?? 0,
+        referral_reward: await (async () => {
+          try {
+            const { data: srv } = await supabase
+              .from('servers')
+              .select('referral_reward')
+              .eq('discord_id', selectedGuildId)
+              .maybeSingle();
+            return srv?.referral_reward ?? 500;
+          } catch { return 500; }
+        })(),
       });
     }
 
