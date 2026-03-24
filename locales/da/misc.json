@@ -371,5 +371,9 @@
   "transfer_error_unauthorized": "Session påkrævet.",
   "transfer_error_generic": "Overførsel mislykkedes.",
   "transfer_success": "Overførsel gennemført. Fradrag: {amount} papel.",
-  "server_unknown": "Server ukendt"
+  "server_unknown": "Server ukendt",
+  "nav_group_borsa": "Børs",
+  "nav_borsa": "Børs",
+  "nav_portfolio": "Portefølje",
+  "nav_dividend": "Udbytte"
 }

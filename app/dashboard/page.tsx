@@ -18,6 +18,10 @@ import RafflesSection from './components/RafflesSection';
 import DiscoverSection from './components/DiscoverSection';
 import MarketSection from './components/MarketSection';
 import TreasuryCard from './components/TreasuryCard';
+import BorsaSection from './components/BorsaSection';
+import BorsaDetailSection from './components/BorsaDetailSection';
+import PortfolioSection from './components/PortfolioSection';
+import DividendSection from './components/DividendSection';
 import NotificationDetailModal from './components/NotificationDetailModal';
 import NotificationsModal from './components/NotificationsModal';
 import TransferModal from './components/TransferModal';
@@ -76,6 +80,20 @@ export default function DashboardPage() {
   const [storeHasMore, setStoreHasMore] = useState(true);
   const [storeLoadingMore, setStoreLoadingMore] = useState(false);
   const [activeSection, setActiveSection] = useState<Section>('overview');
+  const [borsaDetailGuildId, setBorsaDetailGuildId] = useState<string | null>(null);
+  const [dividendGuildId, setDividendGuildId] = useState<string | null>(null);
+
+  const handleBorsaNavigate = useCallback((section: Section, extra?: unknown) => {
+    if (section === 'borsa-detail' && typeof extra === 'string') {
+      setBorsaDetailGuildId(extra);
+      setActiveSection('borsa-detail');
+    } else if (section === 'dividend' && typeof extra === 'string') {
+      setDividendGuildId(extra);
+      setActiveSection('dividend');
+    } else {
+      setActiveSection(section);
+    }
+  }, []);
   const [leaderboardOpen, setLeaderboardOpen] = useState(false);
   const [isActivityEmbed, setIsActivityEmbed] = useState(false);
   const [, setSearchParams] = useState<URLSearchParams | null>(null);
@@ -1273,6 +1291,34 @@ export default function DashboardPage() {
             {effectiveSection === 'treasury' && (
               <div className="p-4 sm:p-6 lg:p-8">
                 <TreasuryCard />
+              </div>
+            )}
+
+            {effectiveSection === 'borsa' && (
+              <div className="p-4 sm:p-6 lg:p-8">
+                <BorsaSection onNavigate={handleBorsaNavigate} />
+              </div>
+            )}
+
+            {effectiveSection === 'borsa-detail' && borsaDetailGuildId && (
+              <div className="p-4 sm:p-6 lg:p-8">
+                <BorsaDetailSection
+                  guildId={borsaDetailGuildId}
+                  onBack={() => setActiveSection('borsa')}
+                  onNavigate={handleBorsaNavigate}
+                />
+              </div>
+            )}
+
+            {effectiveSection === 'portfolio' && (
+              <div className="p-4 sm:p-6 lg:p-8">
+                <PortfolioSection onNavigate={handleBorsaNavigate} />
+              </div>
+            )}
+
+            {effectiveSection === 'dividend' && (
+              <div className="p-4 sm:p-6 lg:p-8">
+                <DividendSection guildId={dividendGuildId ?? undefined} />
               </div>
             )}
           </main>

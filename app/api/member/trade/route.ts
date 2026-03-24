@@ -36,20 +36,21 @@ const getTodayStartIso = () => {
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())).toISOString();
 };
 
-// Mari bakiyesi (global — guild_id = user_id için mari_wallet tablosu veya member_wallets platform guild)
+// Mari bakiyesi (member_wallets tablosu — guild_id = PLATFORM_GUILD_ID)
 const getMariBalance = async (supabase: SupabaseClient, userId: string): Promise<number> => {
   const { data } = await supabase
-    .from('mari_wallets')
-    .select('balance')
+    .from('member_wallets')
+    .select('mari_balance')
     .eq('user_id', userId)
+    .eq('guild_id', PLATFORM_GUILD_ID)
     .maybeSingle();
-  return Number(data?.balance ?? 0);
+  return Number(data?.mari_balance ?? 0);
 };
 
 const setMariBalance = async (supabase: SupabaseClient, userId: string, balance: number) => {
-  await supabase.from('mari_wallets').upsert(
-    { user_id: userId, balance, updated_at: new Date().toISOString() },
-    { onConflict: 'user_id' },
+  await supabase.from('member_wallets').upsert(
+    { user_id: userId, guild_id: PLATFORM_GUILD_ID, mari_balance: balance, updated_at: new Date().toISOString() },
+    { onConflict: 'user_id,guild_id' },
   );
 };
 
@@ -256,24 +257,39 @@ export async function POST(request: Request) {
     })
     .eq('guild_id', guildId);
 
-  // ── 8. price_history kaydı ────────────────────────────────────────────
-  await supabase.from('price_history').insert({
-    guild_id: guildId,
-    price: newPrice,
-    volume: lotCount,
-    recorded_at: now,
-  });
+  // ── 8. price_history kaydı (OHLCV günlük — upsert ile today) ─────────
+  const todayDate = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  const { data: existingPH } = await supabase
+    .from('price_history')
+    .select('open_price, high_price, low_price, volume_lots')
+    .eq('guild_id', guildId)
+    .eq('date', todayDate)
+    .maybeSingle();
+
+  await supabase.from('price_history').upsert(
+    {
+      guild_id: guildId,
+      date: todayDate,
+      open_price: existingPH ? existingPH.open_price : marketPrice,
+      close_price: newPrice,
+      high_price: existingPH ? Math.max(Number(existingPH.high_price), newPrice) : newPrice,
+      low_price: existingPH ? Math.min(Number(existingPH.low_price), newPrice) : newPrice,
+      volume_lots: (Number(existingPH?.volume_lots ?? 0)) + lotCount,
+    },
+    { onConflict: 'guild_id,date' },
+  );
 
   // ── 9. trades kaydı ───────────────────────────────────────────────────
   await supabase.from('trades').insert({
     guild_id: guildId,
-    user_id: userId,
-    action,
+    buyer_id: action === 'buy' ? userId : null,
+    seller_id: action === 'sell' ? userId : null,
     lot_count: lotCount,
     price_per_lot: marketPrice,
-    fee_amount: feeAmount,
-    total_value: grossValue,
-    created_at: now,
+    total_mari: grossValue,
+    fee_mari: feeAmount,
+    trade_type: action,
+    traded_at: now,
   });
 
   // ── 10. Fee dağıtımı: server_mari_treasury + dividend_pool ───────────
@@ -289,25 +305,31 @@ export async function POST(request: Request) {
     ) / 100;
 
     await supabase.from('server_mari_treasury').upsert(
-      { guild_id: guildId, balance: newTreasuryBalance, updated_at: now },
+      { guild_id: guildId, balance: newTreasuryBalance, last_updated: now },
       { onConflict: 'guild_id' },
     );
   }
 
   if (dividendFee > 0) {
+    // dividend_pool is keyed by (guild_id, week_start)
+    const weekStart = new Date();
+    weekStart.setUTCDate(weekStart.getUTCDate() - weekStart.getUTCDay() + 1); // Monday
+    const weekStartDate = weekStart.toISOString().slice(0, 10);
+
     const { data: existingPool } = await supabase
       .from('dividend_pool')
-      .select('balance')
+      .select('total_mari')
       .eq('guild_id', guildId)
+      .eq('week_start', weekStartDate)
       .maybeSingle();
 
-    const newPoolBalance = Math.round(
-      (Number(existingPool?.balance ?? 0) + dividendFee) * 100,
+    const newPoolTotal = Math.round(
+      (Number(existingPool?.total_mari ?? 0) + dividendFee) * 100,
     ) / 100;
 
     await supabase.from('dividend_pool').upsert(
-      { guild_id: guildId, balance: newPoolBalance, updated_at: now },
-      { onConflict: 'guild_id' },
+      { guild_id: guildId, week_start: weekStartDate, total_mari: newPoolTotal },
+      { onConflict: 'guild_id,week_start' },
     );
   }
 

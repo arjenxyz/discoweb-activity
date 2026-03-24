@@ -371,5 +371,9 @@
   "transfer_error_unauthorized": "Session requise.",
   "transfer_error_generic": "Échec du transfert.",
   "transfer_success": "Transfert complété. Déduction : {amount} Papel.",
-  "server_unknown": "Serveur inconnu"
+  "server_unknown": "Serveur inconnu",
+  "nav_group_borsa": "Bourse",
+  "nav_borsa": "Bourse",
+  "nav_portfolio": "Portefeuille",
+  "nav_dividend": "Dividendes"
 }

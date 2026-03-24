@@ -371,5 +371,9 @@
   "transfer_error_unauthorized": "सत्र आवश्यक।",
   "transfer_error_generic": "ट्रांसफर विफल।",
   "transfer_success": "ट्रांसफर पूरा हुआ। कटौती: {amount} papel।",
-  "server_unknown": "सर्वर अज्ञात"
+  "server_unknown": "सर्वर अज्ञात",
+  "nav_group_borsa": "Exchange",
+  "nav_borsa": "Exchange",
+  "nav_portfolio": "Portfolio",
+  "nav_dividend": "Dividends"
 }

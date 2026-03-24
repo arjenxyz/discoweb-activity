@@ -371,5 +371,9 @@
   "transfer_error_unauthorized": "Oturum gerekli.",
   "transfer_error_generic": "Transfer başarısız.",
   "transfer_success": "Transfer tamamlandı. Kesinti: {amount} papel.",
-  "server_unknown": "Sunucu bilinmiyor"
+  "server_unknown": "Sunucu bilinmiyor",
+  "nav_group_borsa": "Borsa",
+  "nav_borsa": "Borsa",
+  "nav_portfolio": "Portföy",
+  "nav_dividend": "Temettü"
 }

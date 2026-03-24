@@ -371,5 +371,9 @@
   "transfer_error_unauthorized": "Sitzung erforderlich.",
   "transfer_error_generic": "Überweisung fehlgeschlagen.",
   "transfer_success": "Überweisung abgeschlossen. Abzug: {amount} Papel.",
-  "server_unknown": "Server unbekannt"
+  "server_unknown": "Server unbekannt",
+  "nav_group_borsa": "Börse",
+  "nav_borsa": "Börse",
+  "nav_portfolio": "Portfolio",
+  "nav_dividend": "Dividenden"
 }

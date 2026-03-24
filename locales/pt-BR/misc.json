@@ -371,5 +371,9 @@
   "transfer_error_unauthorized": "Sessão necessária.",
   "transfer_error_generic": "Transferência falhou.",
   "transfer_success": "Transferência concluída. Dedução: {amount} papel.",
-  "server_unknown": "Servidor desconhecido"
+  "server_unknown": "Servidor desconhecido",
+  "nav_group_borsa": "Bolsa",
+  "nav_borsa": "Bolsa",
+  "nav_portfolio": "Portfólio",
+  "nav_dividend": "Dividendos"
 }

@@ -371,5 +371,9 @@
   "transfer_error_unauthorized": "Session required.",
   "transfer_error_generic": "Transfer failed.",
   "transfer_success": "Transfer complete. Fee: {amount} papel.",
-  "server_unknown": "Unknown server"
+  "server_unknown": "Unknown server",
+  "nav_group_borsa": "Exchange",
+  "nav_borsa": "Exchange",
+  "nav_portfolio": "Portfolio",
+  "nav_dividend": "Dividends"
 }
