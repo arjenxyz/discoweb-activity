@@ -428,12 +428,12 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
                 addLog(`Rich Presence ayarlanamadı (hızlı yol): ${JSON.stringify(e)}`);
               }
             }
-            // Handle incoming referral on fast path (session already valid)
+            // Handle incoming referral on fast path — reuse the fastSdk already initialized above
+            // (fastSdk is in scope from the try block above; if that failed, skip silently)
             try {
-              const fastSdkForRef = new DiscordSDK(fastClientId);
-              await withTimeout(fastSdkForRef.ready(), 5000, 'sdk_ready_ref_check');
-              const incomingCustomId: string | null = (fastSdkForRef as unknown as { customId?: string | null }).customId ?? null;
-              const incomingReferrerId: string | null = (fastSdkForRef as unknown as { referrerId?: string | null }).referrerId ?? null;
+              const urlParams2 = new URLSearchParams(window.location.search);
+              const incomingCustomId: string | null = urlParams2.get('custom_id');
+              const incomingReferrerId: string | null = urlParams2.get('referrer_id');
               const meData2 = await meRes.clone().json() as { id?: string };
               const myId = meData2?.id ?? null;
               if (incomingCustomId?.startsWith('ref:') && myId) {
