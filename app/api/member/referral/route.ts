@@ -182,14 +182,14 @@ export async function POST(request: Request) {
           await ensureWalletAdd(supabase, selectedGuildId, ownerProfile.user_id, milestoneForCount);
 
           // Wallet ledger entry (fire-and-forget, table may not exist)
-          supabase.from('wallet_ledger').insert({
+          void Promise.resolve(supabase.from('wallet_ledger').insert({
             guild_id: selectedGuildId,
             user_id: ownerProfile.user_id,
             amount: milestoneForCount,
             type: 'referral_milestone',
             description: `Referral milestone: ${newInviteCount} davet`,
             created_at: now,
-          }).then(() => {}).catch(() => {});
+          })).catch(() => {});
 
           milestoneReached = newInviteCount;
           milestoneBonus = milestoneForCount;
@@ -199,14 +199,14 @@ export async function POST(request: Request) {
 
     // Wallet ledger entries for base reward (fire-and-forget)
     for (const uid of [userId, ownerProfile.user_id]) {
-      supabase.from('wallet_ledger').insert({
+      void Promise.resolve(supabase.from('wallet_ledger').insert({
         guild_id: selectedGuildId,
         user_id: uid,
         amount: reward,
         type: 'referral_reward',
         description: 'Referral kodu kullanım ödülü',
         created_at: now,
-      }).then(() => {}).catch(() => {});
+      })).catch(() => {});
     }
 
     return NextResponse.json({ success: true, reward, milestone_reached: milestoneReached, milestone_bonus: milestoneBonus });
