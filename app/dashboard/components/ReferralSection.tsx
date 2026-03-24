@@ -51,6 +51,7 @@ export default function ReferralSection() {
   const [status, setStatus] = useState<ReferralStatus | null>(null);
   const [refSubmitted, setRefSubmitted] = useState(false);
   const [inviteAvailable, setInviteAvailable] = useState(false);
+  const [sdkChecking, setSdkChecking] = useState(true);
   const [inviteFallbackUrl, setInviteFallbackUrl] = useState<string | null>(null);
   const [shareLoading, setShareLoading] = useState(false);
   const [shareStatus, setShareStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -193,33 +194,43 @@ export default function ReferralSection() {
     };
 
     const checkSdk = async () => {
-      const frameId = getFrameId();
-      if (!frameId && !isInIframe()) return;
-
       try {
-        const { getDiscordSdk } = await import('@/lib/discordSdk');
-        for (let i = 0; i < 10; i++) {
-          const existingSdk = getDiscordSdk();
-          if (existingSdk) {
-            discordSdkRef.current = existingSdk;
+        const frameId = getFrameId();
+        if (!frameId && !isInIframe()) {
+          // Kesinlikle Discord dışı — hemen bitir
+          setSdkChecking(false);
+          return;
+        }
+
+        try {
+          const { getDiscordSdk } = await import('@/lib/discordSdk');
+          for (let i = 0; i < 10; i++) {
+            const existingSdk = getDiscordSdk();
+            if (existingSdk) {
+              discordSdkRef.current = existingSdk;
+              sdkReadyRef.current = true;
+              setInviteAvailable(true);
+              setSdkChecking(false);
+              return;
+            }
+            await new Promise(r => setTimeout(r, 500));
+          }
+        } catch { /* lib yoksa devam */ }
+
+        const clientId = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
+        if (clientId && frameId) {
+          try {
+            const { DiscordSDK } = await import('@discord/embedded-app-sdk');
+            const sdk = new DiscordSDK(clientId);
+            await sdk.ready();
+            discordSdkRef.current = sdk;
             sdkReadyRef.current = true;
             setInviteAvailable(true);
-            return;
-          }
-          await new Promise(r => setTimeout(r, 500));
+          } catch { /* SDK başlatılamadı */ }
         }
-      } catch { /* lib yoksa devam */ }
-
-      const clientId = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
-      if (!clientId || !frameId) return;
-      try {
-        const { DiscordSDK } = await import('@discord/embedded-app-sdk');
-        const sdk = new DiscordSDK(clientId);
-        await sdk.ready();
-        discordSdkRef.current = sdk;
-        sdkReadyRef.current = true;
-        setInviteAvailable(true);
-      } catch { setInviteAvailable(false); }
+      } finally {
+        setSdkChecking(false);
+      }
     };
     void checkSdk();
   }, []);
@@ -577,7 +588,9 @@ export default function ReferralSection() {
             <div className="flex flex-col gap-2">
               <p className="text-sm font-semibold text-white">{t('referral_invite_section_title')}</p>
               <p className="text-sm text-white/60">{t('referral_invite_description')}</p>
-              {inviteAvailable ? (
+              {sdkChecking ? (
+                <div className="h-11 w-full rounded-2xl bg-white/5 animate-pulse" />
+              ) : inviteAvailable ? (
                 <>
                   <button
                     type="button"
