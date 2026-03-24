@@ -3,6 +3,14 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { requireSessionUser } from '@/lib/auth';
 import { getSelectedGuildId } from '@/lib/guild';
 
+const MILESTONE_REWARDS: Record<number, number> = {
+  5: 500,
+  10: 1500,
+  20: 3000,
+  50: 10000,
+  100: 25000,
+};
+
 const getSupabase = (): SupabaseClient | null => {
   const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -10,6 +18,31 @@ const getSupabase = (): SupabaseClient | null => {
     return null;
   }
   return createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
+};
+
+const ensureWalletAdd = async (
+  supabase: SupabaseClient,
+  guildId: string,
+  uid: string,
+  amount: number,
+): Promise<void> => {
+  if (amount <= 0) return;
+  const { data: wallet } = await supabase
+    .from('member_wallets')
+    .select('balance')
+    .eq('guild_id', guildId)
+    .eq('user_id', uid)
+    .maybeSingle();
+
+  if (!wallet) {
+    await supabase.from('member_wallets').insert({ guild_id: guildId, user_id: uid, balance: amount });
+  } else {
+    await supabase
+      .from('member_wallets')
+      .update({ balance: (wallet.balance ?? 0) + amount })
+      .eq('guild_id', guildId)
+      .eq('user_id', uid);
+  }
 };
 
 export async function POST(request: Request) {
@@ -37,10 +70,9 @@ export async function POST(request: Request) {
     }
 
     // Reject very new accounts to prevent fake / throwaway referrals.
-    // Snowflake timestamp: (id >> 22) + 1420070400000
     const accountCreationMs = Number((BigInt(userId) >> BigInt(22)) + BigInt('1420070400000'));
     const ageMs = Date.now() - accountCreationMs;
-    const minAgeMs = Number(process.env.REFERRAL_MIN_ACCOUNT_AGE_MS ?? 1000 * 60 * 60 * 24 * 3); // 3 days default
+    const minAgeMs = Number(process.env.REFERRAL_MIN_ACCOUNT_AGE_MS ?? 1000 * 60 * 60 * 24 * 3);
     if (ageMs < minAgeMs) {
       return NextResponse.json({ error: 'new_account' }, { status: 400 });
     }
@@ -73,7 +105,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'cannot_use_own_code' }, { status: 400 });
     }
 
-    // Mark this user as referred, and create a history row.
     const now = new Date().toISOString();
 
     const { error: updateProfileError } = await supabase
@@ -107,10 +138,11 @@ export async function POST(request: Request) {
       .maybeSingle();
     const reward = Math.max(0, Number(serverRow?.referral_reward ?? 500));
 
-    // Increment inviter's total_invites and credit both wallets.
+    // Increment inviter's total_invites
+    const newInviteCount = (ownerProfile.total_invites ?? 0) + 1;
     const { error: incrementError } = await supabase
       .from('member_profiles')
-      .update({ total_invites: (ownerProfile.total_invites ?? 0) + 1 })
+      .update({ total_invites: newInviteCount })
       .eq('guild_id', selectedGuildId)
       .eq('user_id', ownerProfile.user_id);
 
@@ -118,33 +150,66 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'increment_failed' }, { status: 500 });
     }
 
-    const ensureWallet = async (uid: string) => {
-      const { data: wallet } = await supabase
-        .from('member_wallets')
-        .select('balance')
+    // Credit both wallets
+    await ensureWalletAdd(supabase, selectedGuildId, userId, reward);
+    await ensureWalletAdd(supabase, selectedGuildId, ownerProfile.user_id, reward);
+
+    // Milestone check for inviter
+    let milestoneReached: number | null = null;
+    let milestoneBonus = 0;
+
+    const milestoneForCount = MILESTONE_REWARDS[newInviteCount];
+    if (milestoneForCount !== undefined) {
+      // Check if already claimed
+      const { data: existing } = await supabase
+        .from('referral_milestone_claims')
+        .select('id')
         .eq('guild_id', selectedGuildId)
-        .eq('user_id', uid)
+        .eq('user_id', ownerProfile.user_id)
+        .eq('milestone', newInviteCount)
         .maybeSingle();
 
-      if (!wallet) {
-        await supabase.from('member_wallets').insert({
+      if (!existing) {
+        const { error: claimError } = await supabase.from('referral_milestone_claims').insert({
           guild_id: selectedGuildId,
-          user_id: uid,
-          balance: reward,
+          user_id: ownerProfile.user_id,
+          milestone: newInviteCount,
+          bonus: milestoneForCount,
+          claimed_at: now,
         });
-      } else {
-        await supabase
-          .from('member_wallets')
-          .update({ balance: (wallet.balance ?? 0) + reward })
-          .eq('guild_id', selectedGuildId)
-          .eq('user_id', uid);
+
+        if (!claimError) {
+          await ensureWalletAdd(supabase, selectedGuildId, ownerProfile.user_id, milestoneForCount);
+
+          // Wallet ledger entry (fire-and-forget, table may not exist)
+          supabase.from('wallet_ledger').insert({
+            guild_id: selectedGuildId,
+            user_id: ownerProfile.user_id,
+            amount: milestoneForCount,
+            type: 'referral_milestone',
+            description: `Referral milestone: ${newInviteCount} davet`,
+            created_at: now,
+          }).then(() => {}).catch(() => {});
+
+          milestoneReached = newInviteCount;
+          milestoneBonus = milestoneForCount;
+        }
       }
-    };
+    }
 
-    await ensureWallet(userId);
-    await ensureWallet(ownerProfile.user_id);
+    // Wallet ledger entries for base reward (fire-and-forget)
+    for (const uid of [userId, ownerProfile.user_id]) {
+      supabase.from('wallet_ledger').insert({
+        guild_id: selectedGuildId,
+        user_id: uid,
+        amount: reward,
+        type: 'referral_reward',
+        description: 'Referral kodu kullanım ödülü',
+        created_at: now,
+      }).then(() => {}).catch(() => {});
+    }
 
-    return NextResponse.json({ success: true, reward });
+    return NextResponse.json({ success: true, reward, milestone_reached: milestoneReached, milestone_bonus: milestoneBonus });
   } catch (err) {
     console.error('referral route error', err);
     return NextResponse.json({ error: 'internal_error' }, { status: 500 });

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { LuCoins, LuUsers, LuClock, LuTrophy, LuStar } from 'react-icons/lu';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { siteConfig } from '@/config/site';
 import { apiUrl } from '@/lib/api';
@@ -12,6 +13,31 @@ type ReferralStatus = {
   message: string;
 };
 
+type ReferralStats = {
+  total_invites: number;
+  total_earned_papel: number;
+  claimed_milestones: number[];
+  next_milestone: number | null;
+  next_milestone_bonus: number;
+  invite_history: { invitee_masked: string; status: string; created_at: string }[];
+  advanced: { active_referrals: number; pending_amount: number; total_passive_earned: number } | null;
+};
+
+type LeaderboardEntry = {
+  rank: number;
+  user_label: string;
+  total_invites: number;
+  total_earned: number;
+  is_me: boolean;
+};
+
+const MILESTONE_REWARDS: Record<number, number> = {
+  5: 500,
+  10: 1500,
+  20: 3000,
+  50: 10000,
+  100: 25000,
+};
 const MILESTONES = [5, 10, 20, 50, 100];
 
 export default function ReferralSection() {
@@ -25,10 +51,19 @@ export default function ReferralSection() {
   const [status, setStatus] = useState<ReferralStatus | null>(null);
   const [refSubmitted, setRefSubmitted] = useState(false);
   const [inviteAvailable, setInviteAvailable] = useState(false);
-  const [inviteError, setInviteError] = useState<string | null>(null);
   const [inviteFallbackUrl, setInviteFallbackUrl] = useState<string | null>(null);
   const [shareLoading, setShareLoading] = useState(false);
   const [shareStatus, setShareStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [showCelebration, setShowCelebration] = useState(false);
+
+  // Stats & leaderboard
+  const [stats, setStats] = useState<ReferralStats | null>(null);
+  const [statsLoading, setStatsLoading] = useState(false);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [myRank, setMyRank] = useState<number | null>(null);
+  const [myInvites, setMyInvites] = useState<number>(0);
+  const [leaderboardLoading, setLeaderboardLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<'stats' | 'leaderboard'>('stats');
 
   // Yüksek Ekonomi pasif gelir referral state'leri
   const [advancedCode, setAdvancedCode] = useState<string | null>(null);
@@ -41,7 +76,20 @@ export default function ReferralSection() {
   const discordSdkRef = useRef<any | null>(null);
   const sdkReadyRef = useRef(false);
 
-  // Yüksek Ekonomi referral kodunu yükle
+  // Load profile
+  useEffect(() => {
+    fetchWithCreds('/api/member/profile')
+      .then((r) => r.json())
+      .then((data) => {
+        setReferralCode(String(data.referral_code ?? ''));
+        setReferredBy(data.referred_by ?? null);
+        setTotalInvites(Number(data.total_invites ?? 0));
+        setReferralReward(Number(data.referral_reward ?? 500));
+      })
+      .catch(() => {});
+  }, []);
+
+  // Load advanced code
   useEffect(() => {
     fetch(apiUrl('/api/member/referral-code'))
       .then((r) => r.json())
@@ -53,6 +101,206 @@ export default function ReferralSection() {
       })
       .catch(() => {});
   }, []);
+
+  // Load stats
+  useEffect(() => {
+    if (activeTab !== 'stats') return;
+    setStatsLoading(true);
+    fetchWithCreds('/api/member/referral-stats')
+      .then((r) => r.json())
+      .then((data) => {
+        if (!data.error) setStats(data);
+      })
+      .catch(() => {})
+      .finally(() => setStatsLoading(false));
+  }, [activeTab]);
+
+  // Load leaderboard
+  useEffect(() => {
+    if (activeTab !== 'leaderboard') return;
+    setLeaderboardLoading(true);
+    fetchWithCreds('/api/member/referral-leaderboard')
+      .then((r) => r.json())
+      .then((data) => {
+        if (!data.error) {
+          setLeaderboard(data.entries ?? []);
+          setMyRank(data.my_rank ?? null);
+          setMyInvites(data.my_invites ?? 0);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLeaderboardLoading(false));
+  }, [activeTab]);
+
+  // Auto-apply referral from URL
+  useEffect(() => {
+    const refCode = searchParams.get('ref');
+    if (!refCode || refSubmitted) return;
+
+    const submitRef = async () => {
+      setStatus(null);
+      try {
+        const res = await fetchWithCreds('/api/member/referral', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: refCode.trim().toUpperCase() }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          const messages: Record<string, string> = {
+            already_referred: t('referral_error_already_referred'),
+            code_not_found: t('referral_error_code_not_found'),
+            cannot_use_own_code: t('referral_error_own_code'),
+            invalid_code: t('referral_error_invalid_code'),
+            update_failed: t('referral_error_update_failed'),
+            history_failed: t('referral_error_history_failed'),
+            increment_failed: t('referral_error_increment_failed'),
+            new_account: t('referral_error_new_account'),
+          };
+          setStatus({ type: 'error', message: messages[data.error] ?? t('referral_error_validation_failed') });
+        } else {
+          setStatus({ type: 'success', message: t('referral_success_added') });
+          setReferredBy(refCode.trim().toUpperCase());
+          setTotalInvites((prev) => prev + 1);
+          setShowCelebration(true);
+          setTimeout(() => setShowCelebration(false), 3000);
+        }
+      } catch {
+        setStatus({ type: 'error', message: t('referral_error_server') });
+      } finally {
+        setRefSubmitted(true);
+      }
+    };
+    void submitRef();
+  }, [searchParams, refSubmitted]);
+
+  // Discord SDK init
+  useEffect(() => {
+    const getFrameId = (): string | null => {
+      if (typeof window === 'undefined') return null;
+      const params = new URLSearchParams(window.location.search);
+      const frameIdFromUrl = params.get('frame_id');
+      if (frameIdFromUrl) {
+        try { localStorage.setItem('discord_frame_id', frameIdFromUrl); } catch { /* ignore */ }
+        return frameIdFromUrl;
+      }
+      try { return localStorage.getItem('discord_frame_id'); } catch { return null; }
+    };
+
+    const isInIframe = () => {
+      if (typeof window === 'undefined') return false;
+      try { return window.self !== window.top; } catch { return true; }
+    };
+
+    const checkSdk = async () => {
+      const frameId = getFrameId();
+      if (!frameId && !isInIframe()) return;
+
+      try {
+        const { getDiscordSdk } = await import('@/lib/discordSdk');
+        for (let i = 0; i < 10; i++) {
+          const existingSdk = getDiscordSdk();
+          if (existingSdk) {
+            discordSdkRef.current = existingSdk;
+            sdkReadyRef.current = true;
+            setInviteAvailable(true);
+            return;
+          }
+          await new Promise(r => setTimeout(r, 500));
+        }
+      } catch { /* lib yoksa devam */ }
+
+      const clientId = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
+      if (!clientId || !frameId) return;
+      try {
+        const { DiscordSDK } = await import('@discord/embedded-app-sdk');
+        const sdk = new DiscordSDK(clientId);
+        await sdk.ready();
+        discordSdkRef.current = sdk;
+        sdkReadyRef.current = true;
+        setInviteAvailable(true);
+      } catch { setInviteAvailable(false); }
+    };
+    void checkSdk();
+  }, []);
+
+  const nextMilestone = useMemo(() => MILESTONES.find((m) => m > totalInvites) ?? MILESTONES[MILESTONES.length - 1], [totalInvites]);
+  const progressPercent = useMemo(() => Math.min(100, Math.round((totalInvites / nextMilestone) * 100)), [totalInvites, nextMilestone]);
+  const milestoneText = totalInvites >= nextMilestone
+    ? t('referral_milestone_reached')
+    : t('referral_milestone_next', { target: nextMilestone, remaining: nextMilestone - totalInvites });
+
+  const copyToClipboard = async () => {
+    if (!referralCode) return;
+    try {
+      await navigator.clipboard.writeText(referralCode);
+      setStatus({ type: 'success', message: t('referral_copied') });
+    } catch {
+      setStatus({ type: 'error', message: t('referral_copy_failed') });
+    }
+    window.setTimeout(() => setStatus(null), 2500);
+  };
+
+  const shareWithReferral = async () => {
+    if (!discordSdkRef.current || !sdkReadyRef.current) {
+      setShareStatus({ type: 'error', message: 'Discord SDK bağlantısı hazır değil.' });
+      return;
+    }
+    setShareLoading(true);
+    setShareStatus(null);
+    try {
+      let linkId: string | null = null;
+      try {
+        const res = await fetchWithCreds(apiUrl('/api/member/discord-share-link'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            custom_id: referralCode ? `ref:${referralCode}` : undefined,
+            title: 'DiscoWeb — Sunucu Paneli',
+            description: 'Sunucu ekonomisi, mağaza ve borsa yönetimi!',
+          }),
+        });
+        if (res.ok) {
+          const d = await res.json();
+          linkId = d.link_id ?? null;
+        }
+      } catch { /* fall through */ }
+
+      const args = linkId
+        ? { message: 'DiscoWeb ile sunucu yönetimini keşfet! 🚀', link_id: linkId }
+        : { message: 'DiscoWeb ile sunucu yönetimini keşfet! 🚀', custom_id: referralCode ? `ref:${referralCode}` : undefined };
+
+      const result = await discordSdkRef.current.commands.shareLink(args);
+      if (result?.success) {
+        setShareStatus({ type: 'success', message: 'Bağlantı paylaşıldı! 🎉' });
+      } else {
+        setShareStatus({ type: 'error', message: 'Paylaşım iptal edildi.' });
+      }
+    } catch (e: unknown) {
+      setShareStatus({ type: 'error', message: (e instanceof Error ? e.message : null) ?? 'Paylaşım başarısız.' });
+    } finally {
+      setShareLoading(false);
+      window.setTimeout(() => setShareStatus(null), 4000);
+    }
+  };
+
+  const openInviteDialog = async () => {
+    const inviteUrl = siteConfig.bot.inviteUrl;
+    const frameId = (() => {
+      if (typeof window === 'undefined') return null;
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get('frame_id');
+      if (id) { try { localStorage.setItem('discord_frame_id', id); } catch { /* ignore */ } return id; }
+      try { return localStorage.getItem('discord_frame_id'); } catch { return null; }
+    })();
+    if (!frameId) { setInviteFallbackUrl(inviteUrl); return; }
+    if (!sdkReadyRef.current || !discordSdkRef.current) { setInviteFallbackUrl(inviteUrl); return; }
+    try {
+      await discordSdkRef.current.commands.openInviteDialog();
+    } catch {
+      setInviteFallbackUrl(inviteUrl);
+    }
+  };
 
   const handleAdvancedCodeSubmit = async () => {
     const code = advancedInput.trim().toUpperCase();
@@ -84,272 +332,29 @@ export default function ReferralSection() {
     }
   };
 
-  useEffect(() => {
-    const loadProfile = async () => {
-      try {
-        const res = await fetchWithCreds('/api/member/profile');
-        if (!res.ok) return;
-        const data = await res.json();
-
-        setReferralCode(String(data.referral_code ?? ''));
-        setReferredBy(data.referred_by ?? null);
-        setTotalInvites(Number(data.total_invites ?? 0));
-        setReferralReward(Number(data.referral_reward ?? 500));
-      } catch {
-        // ignore
-      }
-    };
-
-    loadProfile();
-  }, []);
-
-  useEffect(() => {
-    const refCode = searchParams.get('ref');
-    if (!refCode || refSubmitted) return;
-
-    const submitRef = async () => {
-      setStatus(null);
-
-      try {
-        const res = await fetchWithCreds('/api/member/referral', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code: refCode.trim().toUpperCase() }),
-        });
-
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) {
-          const messages: Record<string, string> = {
-            already_referred: t('referral_error_already_referred'),
-            code_not_found: t('referral_error_code_not_found'),
-            cannot_use_own_code: t('referral_error_own_code'),
-            invalid_code: t('referral_error_invalid_code'),
-            update_failed: t('referral_error_update_failed'),
-            history_failed: t('referral_error_history_failed'),
-            increment_failed: t('referral_error_increment_failed'),
-            new_account: t('referral_error_new_account'),
-          };
-          setStatus({ type: 'error', message: messages[data.error] ?? t('referral_error_validation_failed') });
-        } else {
-          setStatus({ type: 'success', message: t('referral_success_added') });
-          setReferredBy(refCode.trim().toUpperCase());
-          setTotalInvites((prev) => prev + 1);
-        }
-      } catch {
-        setStatus({ type: 'error', message: t('referral_error_server') });
-      } finally {
-        setRefSubmitted(true);
-      }
-    };
-
-    void submitRef();
-  }, [searchParams, refSubmitted]);
-
-  useEffect(() => {
-    const getFrameId = (): string | null => {
-      if (typeof window === 'undefined') return null;
-      const params = new URLSearchParams(window.location.search);
-      const frameIdFromUrl = params.get('frame_id');
-      if (frameIdFromUrl) {
-        try {
-          localStorage.setItem('discord_frame_id', frameIdFromUrl);
-        } catch {
-          // ignore storage failures
-        }
-        return frameIdFromUrl;
-      }
-
-      try {
-        return localStorage.getItem('discord_frame_id');
-      } catch {
-        return null;
-      }
-    };
-
-    const isInIframe = () => {
-      if (typeof window === 'undefined') return false;
-      try {
-        return window.self !== window.top;
-      } catch {
-        return true; // cross-origin iframe
-      }
-    };
-
-    const checkSdk = async () => {
-      const frameId = getFrameId();
-      if (!frameId && !isInIframe()) {
-        // Tarayıcıda açılıyor, Discord Activity değil — sessizce çık
-        return;
-      }
-
-      // DiscordActivityAuth tarafından zaten init edilmiş SDK'yı kullan
-      // Birkaç kez dene — auth biraz geç bitmiş olabilir
-      try {
-        const { getDiscordSdk } = await import('@/lib/discordSdk');
-        for (let i = 0; i < 10; i++) {
-          const existingSdk = getDiscordSdk();
-          if (existingSdk) {
-            discordSdkRef.current = existingSdk;
-            sdkReadyRef.current = true;
-            setInviteAvailable(true);
-            setInviteError(null);
-            return;
-          }
-          await new Promise(r => setTimeout(r, 500));
-        }
-      } catch { /* lib yoksa devam */ }
-
-      // Fallback: frame_id varsa kendi instance'ımızı oluştur
-      const clientId = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
-      if (!clientId || !frameId) return;
-
-      try {
-        const { DiscordSDK } = await import('@discord/embedded-app-sdk');
-        const sdk = new DiscordSDK(clientId);
-        await sdk.ready();
-        discordSdkRef.current = sdk;
-        sdkReadyRef.current = true;
-        setInviteAvailable(true);
-        setInviteError(null);
-      } catch (error) {
-        setInviteAvailable(false);
-        setInviteError((error as Error)?.message ?? 'Discord SDK yüklenemedi.');
-      }
-    };
-
-    void checkSdk();
-  }, []);
-
-  const nextMilestone = useMemo(() => {
-    return MILESTONES.find((m) => m > totalInvites) ?? MILESTONES[MILESTONES.length - 1];
-  }, [totalInvites]);
-
-  const progressPercent = useMemo(() => {
-    const target = nextMilestone;
-    const percent = Math.min(100, Math.round((totalInvites / target) * 100));
-    return percent;
-  }, [totalInvites, nextMilestone]);
-
-  const copyToClipboard = async () => {
-    if (!referralCode) return;
-    try {
-      await navigator.clipboard.writeText(referralCode);
-      setStatus({ type: 'success', message: t('referral_copied') });
-    } catch {
-      setStatus({ type: 'error', message: t('referral_copy_failed') });
-    }
-    window.setTimeout(() => setStatus(null), 2500);
-  };
-
-  const shareWithReferral = async () => {
-    if (!discordSdkRef.current || !sdkReadyRef.current) {
-      setShareStatus({ type: 'error', message: 'Discord SDK bağlantısı hazır değil.' });
-      return;
-    }
-    setShareLoading(true);
-    setShareStatus(null);
-    try {
-      // 1. Generate ephemeral quick-link from backend
-      let linkId: string | null = null;
-      try {
-        const res = await fetchWithCreds(apiUrl('/api/member/discord-share-link'), {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            custom_id: referralCode ? `ref:${referralCode}` : undefined,
-            title: 'DiscoWeb — Sunucu Paneli',
-            description: 'Sunucu ekonomisi, mağaza ve borsa yönetimi!',
-          }),
-        });
-        if (res.ok) {
-          const d = await res.json();
-          linkId = d.link_id ?? null;
-        }
-      } catch {
-        // fall through to custom_id fallback
-      }
-
-      // 2. Call shareLink — prefer link_id, fallback to custom_id
-      const args = linkId
-        ? { message: 'DiscoWeb ile sunucu yönetimini keşfet! 🚀', link_id: linkId }
-        : { message: 'DiscoWeb ile sunucu yönetimini keşfet! 🚀', custom_id: referralCode ? `ref:${referralCode}` : undefined };
-
-      const result = await discordSdkRef.current.commands.shareLink(args);
-      if (result?.success) {
-        setShareStatus({ type: 'success', message: 'Bağlantı paylaşıldı! 🎉' });
-      } else {
-        setShareStatus({ type: 'error', message: 'Paylaşım iptal edildi.' });
-      }
-    } catch (e: unknown) {
-      setShareStatus({ type: 'error', message: (e instanceof Error ? e.message : null) ?? 'Paylaşım başarısız.' });
-    } finally {
-      setShareLoading(false);
-      window.setTimeout(() => setShareStatus(null), 4000);
-    }
-  };
-
-  const openInviteDialog = async () => {
-    const inviteUrl = siteConfig.bot.inviteUrl;
-
-    const frameId = (() => {
-      if (typeof window === 'undefined') return null;
-      const params = new URLSearchParams(window.location.search);
-      const frameIdFromUrl = params.get('frame_id');
-      if (frameIdFromUrl) {
-        try {
-          localStorage.setItem('discord_frame_id', frameIdFromUrl);
-        } catch {
-          // ignore
-        }
-        return frameIdFromUrl;
-      }
-      try {
-        return localStorage.getItem('discord_frame_id');
-      } catch {
-        return null;
-      }
-    })();
-
-    if (!frameId) {
-      // Discord embed içinde değilsek SDK openInviteDialog kesinlikle çalışmaz,
-      // ayrıca sandboxed iframe'lerde popup açma yetkisi yok.
-      console.warn('frame_id bulunamadı; SDK invite fonksiyonu atlanıyor');
-      setInviteFallbackUrl(inviteUrl);
-      return;
-    }
-
-    if (!sdkReadyRef.current || !discordSdkRef.current) {
-      setInviteFallbackUrl(inviteUrl);
-      setInviteError('Discord SDK bağlantısı hazır değil; davet penceresi açılamıyor.');
-      return;
-    }
-
-    try {
-      await discordSdkRef.current.commands.openInviteDialog();
-    } catch (err) {
-      console.warn('Davet penceresi açılamadı, alternatif URL kullanılacak', err);
-      setInviteFallbackUrl(inviteUrl);
-      setInviteError(
-        (err as Error)?.message ? `Davet penceresi açılamadı: ${(err as Error).message}` : 'Davet penceresi açılamadı.',
-      );
-    }
-  };
-
   const inviteButtonClass = useMemo(() => {
-    const base =
-      'w-full inline-flex items-center justify-center gap-2 rounded-2xl px-6 py-3 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-indigo-400';
+    const base = 'w-full inline-flex items-center justify-center gap-2 rounded-2xl px-6 py-3 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-indigo-400';
     const active = 'bg-indigo-500 text-white hover:bg-indigo-400 shadow-lg shadow-indigo-500/30';
     const disabled = 'bg-white/10 text-white/50 cursor-not-allowed';
     return `${base} ${inviteAvailable ? active : disabled}`;
   }, [inviteAvailable]);
 
-  const milestoneText = totalInvites >= nextMilestone
-    ? t('referral_milestone_reached')
-    : t('referral_milestone_next', { target: nextMilestone, remaining: nextMilestone - totalInvites });
+  // Display stats to use (from API or fallback to profile data)
+  const displayTotalInvites = stats?.total_invites ?? totalInvites;
+  const displayTotalEarned = stats?.total_earned_papel ?? 0;
+  const claimedMilestones = stats?.claimed_milestones ?? [];
 
   return (
     <section id="referral-section" className="space-y-6">
-      {/* Davet Kodun */}
+      {/* Celebration Toast */}
+      {showCelebration && (
+        <div className="fixed inset-x-4 top-4 z-50 rounded-2xl border border-emerald-500/30 bg-emerald-500/15 px-5 py-4 shadow-2xl backdrop-blur animate-bounce">
+          <p className="text-base font-bold text-emerald-300">{t('referral_celebration_title')}</p>
+          <p className="text-sm text-emerald-200/70">{t('referral_celebration_body', { reward: referralReward })}</p>
+        </div>
+      )}
+
+      {/* Davet Kodun Kartı */}
       <div className="rounded-3xl border border-white/15 bg-gradient-to-br from-[#0b0d12]/70 via-[#0b0d12]/50 to-[#111827]/70 p-6 shadow-2xl backdrop-blur">
         <div className="flex flex-col gap-3 sm:items-end sm:flex-row sm:justify-between">
           <div>
@@ -379,154 +384,344 @@ export default function ReferralSection() {
         </div>
       </div>
 
-      {/* Davet Eden */}
-      <div className="rounded-3xl border border-white/15 bg-white/5 p-6 shadow-inner">
-        <p className="text-sm font-medium text-white/60">{t('referral_who_invited_label')}</p>
-        {referredBy ? (
-          <div className="mt-3 flex flex-col gap-2 rounded-2xl bg-white/5 p-4">
-            <p className="text-sm font-semibold text-white">{t('referral_invited_by', { code: referredBy })}</p>
-            <p className="text-xs text-white/40">{t('referral_invited_by_note')}</p>
+      {/* Stats Row — 3 chip */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col gap-1">
+          <div className="flex items-center gap-1.5 text-white/50">
+            <LuCoins className="h-3.5 w-3.5" />
+            <span className="text-[10px] font-semibold uppercase tracking-wider">{t('referral_stats_total_earned')}</span>
+          </div>
+          <p className="text-lg font-black text-white">{displayTotalEarned.toLocaleString()}</p>
+          <p className="text-[10px] text-white/30">Papel</p>
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-4 flex flex-col gap-1">
+          <div className="flex items-center gap-1.5 text-white/50">
+            <LuUsers className="h-3.5 w-3.5" />
+            <span className="text-[10px] font-semibold uppercase tracking-wider">{t('referral_stats_active_referrals')}</span>
+          </div>
+          <p className="text-lg font-black text-white">{displayTotalInvites}</p>
+          <p className="text-[10px] text-white/30">Davet</p>
+        </div>
+
+        {stats?.advanced ? (
+          <div className="rounded-2xl border border-blue-500/20 bg-blue-500/5 p-4 flex flex-col gap-1">
+            <div className="flex items-center gap-1.5 text-blue-400/70">
+              <LuClock className="h-3.5 w-3.5" />
+              <span className="text-[10px] font-semibold uppercase tracking-wider">{t('referral_stats_pending')}</span>
+            </div>
+            <p className="text-lg font-black text-white">{stats.advanced.pending_amount.toLocaleString()}</p>
+            <p className="text-[10px] text-blue-300/40">MRI</p>
           </div>
         ) : (
-          <div className="mt-3 rounded-2xl bg-white/5 p-4">
-            <p className="text-sm font-semibold text-white">{t('referral_auto_running')}</p>
-            <p className="text-xs text-white/40">{t('referral_no_code_hint')}</p>
-          </div>
-        )}
-
-        {status && (
-          <div
-            className={`mt-4 rounded-2xl px-4 py-3 text-sm font-medium ${
-              status.type === 'success' ? 'bg-emerald-500/20 text-emerald-200' : 'bg-rose-500/20 text-rose-200'
-            }`}
-          >
-            {status.message}
+          <div className="rounded-2xl border border-indigo-500/15 bg-indigo-500/5 p-4 flex flex-col gap-1">
+            <div className="flex items-center gap-1.5 text-indigo-400/60">
+              <LuTrophy className="h-3.5 w-3.5" />
+              <span className="text-[10px] font-semibold uppercase tracking-wider">Sonraki Hedef</span>
+            </div>
+            <p className="text-lg font-black text-white">{stats?.next_milestone ?? nextMilestone}</p>
+            <p className="text-[10px] text-indigo-300/40">Davet</p>
           </div>
         )}
       </div>
 
-      {/* Görev İlerleme */}
-      <div className="rounded-3xl border border-white/15 bg-white/5 p-6 shadow-inner">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-white/60">{t('referral_progress_label')}</p>
-            <p className="text-xs text-white/40">{milestoneText}</p>
-          </div>
-          <span className="text-sm font-bold text-white/80">{totalInvites} / {nextMilestone}</span>
-        </div>
-
-        <div className="mt-4 h-3 w-full overflow-hidden rounded-full bg-white/10">
-          <div
-            className="h-full rounded-full bg-gradient-to-r from-indigo-400 via-indigo-500 to-purple-500 transition-all"
-            style={{ width: `${progressPercent}%` }}
-          />
-        </div>
+      {/* Tab Bar */}
+      <div className="flex gap-1 rounded-2xl border border-white/10 bg-white/5 p-1">
+        <button
+          type="button"
+          onClick={() => setActiveTab('stats')}
+          className={`flex-1 rounded-xl px-4 py-2 text-sm font-semibold transition ${activeTab === 'stats' ? 'bg-indigo-500 text-white shadow' : 'text-white/50 hover:text-white/80'}`}
+        >
+          {t('referral_tab_stats')}
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('leaderboard')}
+          className={`flex-1 rounded-xl px-4 py-2 text-sm font-semibold transition ${activeTab === 'leaderboard' ? 'bg-indigo-500 text-white shadow' : 'text-white/50 hover:text-white/80'}`}
+        >
+          {t('referral_tab_leaderboard')}
+        </button>
       </div>
 
-      {/* Davet Ekranı */}
-      <div className="rounded-3xl border border-white/15 bg-gradient-to-br from-[#0b0d12]/60 via-[#0b0d12]/50 to-[#111827]/50 p-6 shadow-2xl">
-        <div className="flex flex-col gap-2">
-          <p className="text-sm font-semibold text-white">{t('referral_invite_section_title')}</p>
-          <p className="text-sm text-white/60">{t('referral_invite_description')}</p>
-
-          {inviteAvailable ? (
-            <>
-              {/* Discord Incentivized Share Link */}
-              <button
-                type="button"
-                onClick={shareWithReferral}
-                disabled={shareLoading}
-                className="w-full inline-flex items-center justify-center gap-2 rounded-2xl px-6 py-3 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-[#5865F2] bg-[#5865F2] text-white hover:bg-[#4752C4] shadow-lg shadow-[#5865F2]/30 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {shareLoading ? (
-                  <span className="inline-flex h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                ) : (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.015.04.029.05a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.04.001-.088-.041-.104a13.1 13.1 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.105c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/>
-                  </svg>
-                )}
-                Discord&apos;da Paylaş
-              </button>
-
-              {shareStatus && (
-                <p className={`text-xs text-center ${shareStatus.type === 'success' ? 'text-emerald-400' : 'text-red-400'}`}>
-                  {shareStatus.message}
-                </p>
-              )}
-
-              {/* Classic invite dialog */}
-              <button
-                type="button"
-                onClick={openInviteDialog}
-                className={inviteButtonClass}
-              >
-                <span className="flex items-center gap-2">
-                  <span className="inline-flex h-3 w-3 rounded-full bg-emerald-300 animate-pulse" />
-                  {t('referral_invite_button')}
-                </span>
-              </button>
-            </>
-          ) : (
-            <div className="rounded-2xl border border-white/8 bg-white/4 px-4 py-3 text-xs text-white/35">
-              Paylaş butonu yalnızca Discord Activity içinde çalışır.
-            </div>
-          )}
-        </div>
-      </div>
-      {/* Yüksek Ekonomi Pasif Gelir Referral */}
-      {advancedCode !== null && (
-        <div className="rounded-3xl border border-blue-500/20 bg-blue-500/[0.04] p-6">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-blue-400 mb-1">Yüksek Ekonomi · Pasif Gelir</p>
-          <h2 className="text-lg font-black text-white">Davet Kodu</h2>
-          <p className="mt-1 text-sm text-white/40">
-            Arkadaşların bu kodu kullanırsa, ilk 3 ay boyunca yaptıkları harcamaların <span className="text-blue-300 font-semibold">%10'u</span> sunucu hazinesinden sana akar.
-          </p>
-
-          <div className="mt-4 flex items-center gap-3">
-            <div className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
-              <p className="text-xl font-black tracking-widest text-white">{advancedCode}</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                navigator.clipboard.writeText(advancedCode).catch(() => {});
-                setAdvancedCodeCopied(true);
-                setTimeout(() => setAdvancedCodeCopied(false), 2000);
-              }}
-              className="rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-blue-500"
-            >
-              {advancedCodeCopied ? '✓ Kopyalandı' : 'Kopyala'}
-            </button>
-          </div>
-
-          <p className="mt-2 text-xs text-white/25">{advancedCodeUsage} kişi bu kodu kullandı</p>
-
-          <div className="mt-4 border-t border-white/[0.06] pt-4">
-            <p className="text-sm font-semibold text-white mb-2">Davet Kodu Kullan</p>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={advancedInput}
-                onChange={(e) => setAdvancedInput(e.target.value.toUpperCase())}
-                placeholder="Kod girin"
-                maxLength={8}
-                className="flex-1 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/20 outline-none focus:border-blue-500/50 uppercase"
-              />
-              <button
-                type="button"
-                disabled={advancedSubmitting || !advancedInput}
-                onClick={handleAdvancedCodeSubmit}
-                className="rounded-xl bg-white/10 px-4 py-2 text-sm font-bold text-white transition hover:bg-white/15 disabled:opacity-40"
-              >
-                {advancedSubmitting ? '...' : 'Kullan'}
-              </button>
-            </div>
-            {advancedStatus && (
-              <p className={`mt-2 text-xs ${advancedStatus.type === 'success' ? 'text-emerald-400' : 'text-red-400'}`}>
-                {advancedStatus.message}
-              </p>
+      {/* ── İSTATİSTİKLER SEKMESİ ── */}
+      {activeTab === 'stats' && (
+        <>
+          {/* Davet Eden */}
+          <div className="rounded-3xl border border-white/15 bg-white/5 p-6 shadow-inner">
+            <p className="text-sm font-medium text-white/60">{t('referral_who_invited_label')}</p>
+            {referredBy ? (
+              <div className="mt-3 flex flex-col gap-2 rounded-2xl bg-white/5 p-4">
+                <p className="text-sm font-semibold text-white">{t('referral_invited_by', { code: referredBy })}</p>
+                <p className="text-xs text-white/40">{t('referral_invited_by_note')}</p>
+              </div>
+            ) : (
+              <div className="mt-3 rounded-2xl bg-white/5 p-4">
+                <p className="text-sm font-semibold text-white">{t('referral_auto_running')}</p>
+                <p className="text-xs text-white/40">{t('referral_no_code_hint')}</p>
+              </div>
+            )}
+            {status && (
+              <div className={`mt-4 rounded-2xl px-4 py-3 text-sm font-medium ${status.type === 'success' ? 'bg-emerald-500/20 text-emerald-200' : 'bg-rose-500/20 text-rose-200'}`}>
+                {status.message}
+              </div>
             )}
           </div>
+
+          {/* Milestone Şeridi */}
+          <div className="rounded-3xl border border-white/15 bg-white/5 p-5">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-white/40">Ödül Seviyeleri</p>
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {MILESTONES.map((m) => {
+                const claimed = claimedMilestones.includes(m);
+                const isCurrent = !claimed && m > displayTotalInvites && (MILESTONES.find(ms => ms > displayTotalInvites) === m);
+                return (
+                  <div
+                    key={m}
+                    className={`flex-shrink-0 flex flex-col items-center gap-1 rounded-2xl border px-4 py-3 min-w-[80px] transition
+                      ${claimed
+                        ? 'border-amber-500/40 bg-amber-500/10 text-amber-300'
+                        : isCurrent
+                        ? 'border-indigo-500/50 bg-indigo-500/10 text-indigo-300'
+                        : 'border-white/8 bg-white/3 text-white/30'
+                      }`}
+                  >
+                    {claimed ? (
+                      <LuStar className="h-4 w-4 text-amber-400" />
+                    ) : (
+                      <span className="text-xs font-bold">{m}</span>
+                    )}
+                    <span className="text-[10px] font-semibold">{m} davet</span>
+                    <span className={`text-[10px] font-black ${claimed ? 'text-amber-300' : isCurrent ? 'text-indigo-300' : 'text-white/20'}`}>
+                      +{(MILESTONE_REWARDS[m] ?? 0).toLocaleString()}
+                    </span>
+                    {claimed && <span className="text-[9px] text-amber-400/70">{t('referral_milestone_badge_reached')}</span>}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Progress Bar */}
+          <div className="rounded-3xl border border-white/15 bg-white/5 p-6 shadow-inner">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-white/60">{t('referral_progress_label')}</p>
+                <p className="text-xs text-white/40">{milestoneText}</p>
+              </div>
+              <span className="text-sm font-bold text-white/80">{totalInvites} / {nextMilestone}</span>
+            </div>
+            <div className="mt-4 h-3 w-full overflow-hidden rounded-full bg-white/10">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-indigo-400 via-indigo-500 to-purple-500 transition-all"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Davet Geçmişi */}
+          <div className="rounded-3xl border border-white/15 bg-white/5 p-5">
+            <p className="mb-3 text-sm font-semibold text-white">{t('referral_invite_history_title')}</p>
+            {statsLoading ? (
+              <div className="space-y-2">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="h-10 rounded-xl bg-white/5 animate-pulse" />
+                ))}
+              </div>
+            ) : (stats?.invite_history?.length ?? 0) === 0 ? (
+              <p className="text-sm text-white/30">{t('referral_invite_history_empty')}</p>
+            ) : (
+              <div className="space-y-2">
+                {(stats?.invite_history ?? []).map((row, i) => (
+                  <div key={i} className="flex items-center gap-3 rounded-xl bg-white/5 px-3 py-2">
+                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-indigo-500/20 text-xs font-bold text-indigo-300">
+                      {row.invitee_masked.slice(-1)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-white truncate">{row.invitee_masked}</p>
+                    </div>
+                    <p className="text-[10px] text-white/30 shrink-0">
+                      {new Date(row.created_at).toLocaleDateString('tr-TR')}
+                    </p>
+                    <span className="shrink-0 rounded-lg bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-300">
+                      {t('referral_status_accepted')}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Advanced Pasif Gelir Özeti */}
+          {stats?.advanced && (
+            <div className="rounded-3xl border border-blue-500/20 bg-blue-500/[0.04] p-5">
+              <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-blue-400">Yüksek Ekonomi · Pasif Gelir</p>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="flex flex-col gap-0.5">
+                  <p className="text-[10px] text-white/40">{t('referral_passive_total_earned')}</p>
+                  <p className="text-base font-black text-white">{stats.advanced.total_passive_earned.toLocaleString()}</p>
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  <p className="text-[10px] text-white/40">{t('referral_passive_pending')}</p>
+                  <p className="text-base font-black text-blue-300">{stats.advanced.pending_amount.toLocaleString()}</p>
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  <p className="text-[10px] text-white/40">{t('referral_stats_active_referrals')}</p>
+                  <p className="text-base font-black text-white">{stats.advanced.active_referrals}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Davet Ekranı */}
+          <div className="rounded-3xl border border-white/15 bg-gradient-to-br from-[#0b0d12]/60 via-[#0b0d12]/50 to-[#111827]/50 p-6 shadow-2xl">
+            <div className="flex flex-col gap-2">
+              <p className="text-sm font-semibold text-white">{t('referral_invite_section_title')}</p>
+              <p className="text-sm text-white/60">{t('referral_invite_description')}</p>
+              {inviteAvailable ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={shareWithReferral}
+                    disabled={shareLoading}
+                    className="w-full inline-flex items-center justify-center gap-2 rounded-2xl px-6 py-3 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-[#5865F2] bg-[#5865F2] text-white hover:bg-[#4752C4] shadow-lg shadow-[#5865F2]/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {shareLoading ? (
+                      <span className="inline-flex h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    ) : (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.015.04.029.05a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.04.001-.088-.041-.104a13.1 13.1 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.105c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/>
+                      </svg>
+                    )}
+                    Discord&apos;da Paylaş
+                  </button>
+                  {shareStatus && (
+                    <p className={`text-xs text-center ${shareStatus.type === 'success' ? 'text-emerald-400' : 'text-red-400'}`}>
+                      {shareStatus.message}
+                    </p>
+                  )}
+                  <button type="button" onClick={openInviteDialog} className={inviteButtonClass}>
+                    <span className="flex items-center gap-2">
+                      <span className="inline-flex h-3 w-3 rounded-full bg-emerald-300 animate-pulse" />
+                      {t('referral_invite_button')}
+                    </span>
+                  </button>
+                </>
+              ) : (
+                <div className="rounded-2xl border border-white/8 bg-white/4 px-4 py-3 text-xs text-white/35">
+                  Paylaş butonu yalnızca Discord Activity içinde çalışır.
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Yüksek Ekonomi Pasif Gelir Referral */}
+          {advancedCode !== null && (
+            <div className="rounded-3xl border border-blue-500/20 bg-blue-500/[0.04] p-6">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-blue-400 mb-1">Yüksek Ekonomi · Pasif Gelir</p>
+              <h2 className="text-lg font-black text-white">Davet Kodu</h2>
+              <p className="mt-1 text-sm text-white/40">
+                Arkadaşların bu kodu kullanırsa, ilk 3 ay boyunca yaptıkları harcamaların{' '}
+                <span className="text-blue-300 font-semibold">%10&apos;u</span> sunucu hazinesinden sana akar.
+              </p>
+              <div className="mt-4 flex items-center gap-3">
+                <div className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+                  <p className="text-xl font-black tracking-widest text-white">{advancedCode}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(advancedCode).catch(() => {});
+                    setAdvancedCodeCopied(true);
+                    setTimeout(() => setAdvancedCodeCopied(false), 2000);
+                  }}
+                  className="rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-blue-500"
+                >
+                  {advancedCodeCopied ? '✓ Kopyalandı' : 'Kopyala'}
+                </button>
+              </div>
+              <p className="mt-2 text-xs text-white/25">{advancedCodeUsage} kişi bu kodu kullandı</p>
+              <div className="mt-4 border-t border-white/[0.06] pt-4">
+                <p className="text-sm font-semibold text-white mb-2">Davet Kodu Kullan</p>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={advancedInput}
+                    onChange={(e) => setAdvancedInput(e.target.value.toUpperCase())}
+                    placeholder="Kod girin"
+                    maxLength={8}
+                    className="flex-1 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/20 outline-none focus:border-blue-500/50 uppercase"
+                  />
+                  <button
+                    type="button"
+                    disabled={advancedSubmitting || !advancedInput}
+                    onClick={handleAdvancedCodeSubmit}
+                    className="rounded-xl bg-white/10 px-4 py-2 text-sm font-bold text-white transition hover:bg-white/15 disabled:opacity-40"
+                  >
+                    {advancedSubmitting ? '...' : 'Kullan'}
+                  </button>
+                </div>
+                {advancedStatus && (
+                  <p className={`mt-2 text-xs ${advancedStatus.type === 'success' ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {advancedStatus.message}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ── LİDERLİK SEKMESİ ── */}
+      {activeTab === 'leaderboard' && (
+        <div className="rounded-3xl border border-white/15 bg-white/5 p-5">
+          <p className="mb-4 text-sm font-semibold text-white">{t('referral_leaderboard_title')}</p>
+          {leaderboardLoading ? (
+            <div className="space-y-2">
+              {[1, 2, 3, 4, 5].map(i => (
+                <div key={i} className="h-12 rounded-xl bg-white/5 animate-pulse" />
+              ))}
+            </div>
+          ) : leaderboard.length === 0 ? (
+            <p className="text-sm text-white/30">Henüz kimse davet yapmamış.</p>
+          ) : (
+            <>
+              {/* Header */}
+              <div className="mb-2 grid grid-cols-[2rem_1fr_4rem_5rem] gap-2 px-3 text-[10px] font-semibold uppercase tracking-wider text-white/30">
+                <span>#</span>
+                <span>Kullanıcı</span>
+                <span className="text-right">Davet</span>
+                <span className="text-right">Kazanılan</span>
+              </div>
+              <div className="space-y-1.5">
+                {leaderboard.map((entry) => (
+                  <div
+                    key={entry.rank}
+                    className={`grid grid-cols-[2rem_1fr_4rem_5rem] items-center gap-2 rounded-xl px-3 py-2.5 transition
+                      ${entry.is_me
+                        ? 'border border-indigo-500/40 bg-indigo-500/10'
+                        : 'bg-white/5 hover:bg-white/8'
+                      }`}
+                  >
+                    <span className={`text-sm font-bold ${entry.rank <= 3 ? 'text-amber-400' : 'text-white/40'}`}>
+                      {entry.rank <= 3 ? ['🥇','🥈','🥉'][entry.rank - 1] : `#${entry.rank}`}
+                    </span>
+                    <span className={`text-sm truncate ${entry.is_me ? 'font-bold text-indigo-200' : 'text-white/80'}`}>
+                      {entry.user_label}{entry.is_me && ' (Sen)'}
+                    </span>
+                    <span className="text-right text-sm font-semibold text-white">{entry.total_invites}</span>
+                    <span className="text-right text-xs text-white/50">{entry.total_earned.toLocaleString()} P</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Kendi sırası top 10 dışındaysa */}
+              {myRank !== null && !leaderboard.some((e) => e.is_me) && (
+                <div className="mt-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white/60">
+                  {t('referral_leaderboard_rank', { rank: myRank })} · {myInvites} davet
+                </div>
+              )}
+            </>
+          )}
         </div>
       )}
     </section>

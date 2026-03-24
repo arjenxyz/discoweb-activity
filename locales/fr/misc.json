@@ -378,5 +378,22 @@
   "nav_dividend": "Dividendes",
   "nav_ipo_apply": "Demande IPO",
   "nav_economy_apply": "Économie Avancée",
-  "nav_market_news": "Actualités Boursières"
+  "nav_market_news": "Actualités Boursières",
+  "referral_stats_total_earned": "Total gagné",
+  "referral_stats_active_referrals": "Parrainages actifs",
+  "referral_stats_pending": "En attente",
+  "referral_invite_history_title": "Historique des invitations",
+  "referral_invite_history_empty": "Vous n'avez encore invité personne.",
+  "referral_leaderboard_title": "Classement des parrainages",
+  "referral_leaderboard_rank": "Votre rang : #{rank}",
+  "referral_milestone_badge_reached": "Atteint !",
+  "referral_milestone_bonus": "+{bonus} Papel",
+  "referral_celebration_title": "🎉 Parrainage réussi !",
+  "referral_celebration_body": "Les deux parties ont reçu +{reward} Papel.",
+  "referral_invitee_label": "Utilisateur #{id}",
+  "referral_status_accepted": "Accepté",
+  "referral_tab_stats": "Statistiques",
+  "referral_tab_leaderboard": "Classement",
+  "referral_passive_total_earned": "Total passif gagné",
+  "referral_passive_pending": "Passif en attente"
 }

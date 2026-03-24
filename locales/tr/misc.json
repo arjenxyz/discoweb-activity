@@ -378,5 +378,22 @@
   "nav_dividend": "Temettü",
   "nav_ipo_apply": "Borsaya Listele",
   "nav_economy_apply": "Yüksek Ekonomi",
-  "nav_market_news": "Borsa Haberleri"
+  "nav_market_news": "Borsa Haberleri",
+  "referral_stats_total_earned": "Toplam Kazanılan",
+  "referral_stats_active_referrals": "Aktif Davetliler",
+  "referral_stats_pending": "Bekleyen",
+  "referral_invite_history_title": "Davet Geçmişi",
+  "referral_invite_history_empty": "Henüz davet ettiğin kimse yok.",
+  "referral_leaderboard_title": "Davet Liderleri",
+  "referral_leaderboard_rank": "Sıran: #{rank}",
+  "referral_milestone_badge_reached": "Ulaşıldı!",
+  "referral_milestone_bonus": "+{bonus} Papel",
+  "referral_celebration_title": "🎉 Davet başarılı!",
+  "referral_celebration_body": "Her iki tarafa +{reward} Papel ödülü verildi.",
+  "referral_invitee_label": "Kullanıcı #{id}",
+  "referral_status_accepted": "Kabul Edildi",
+  "referral_tab_stats": "İstatistikler",
+  "referral_tab_leaderboard": "Liderlik",
+  "referral_passive_total_earned": "Toplam Pasif Kazanç",
+  "referral_passive_pending": "Bekleyen Pasif"
 }

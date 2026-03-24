@@ -378,5 +378,22 @@
   "nav_dividend": "Udbytte",
   "nav_ipo_apply": "Børsnotering",
   "nav_economy_apply": "Økonomi Ansøg",
-  "nav_market_news": "Markedsnyheder"
+  "nav_market_news": "Markedsnyheder",
+  "referral_stats_total_earned": "Total Earned",
+  "referral_stats_active_referrals": "Active Referrals",
+  "referral_stats_pending": "Pending",
+  "referral_invite_history_title": "Invite History",
+  "referral_invite_history_empty": "You haven't invited anyone yet.",
+  "referral_leaderboard_title": "Referral Leaderboard",
+  "referral_leaderboard_rank": "Your rank: #{rank}",
+  "referral_milestone_badge_reached": "Reached!",
+  "referral_milestone_bonus": "+{bonus} Papel",
+  "referral_celebration_title": "🎉 Referral successful!",
+  "referral_celebration_body": "Both parties received +{reward} Papel.",
+  "referral_invitee_label": "User #{id}",
+  "referral_status_accepted": "Accepted",
+  "referral_tab_stats": "Stats",
+  "referral_tab_leaderboard": "Leaderboard",
+  "referral_passive_total_earned": "Total Passive Earned",
+  "referral_passive_pending": "Pending Passive"
 }
