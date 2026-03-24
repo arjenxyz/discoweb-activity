@@ -1,17 +1,47 @@
 -- Referral milestone ödüllerini takip etmek için tablo
 -- Her kullanıcı her milestone'u yalnızca bir kez talep edebilir (guild bazlı)
-CREATE TABLE IF NOT EXISTS public.referral_milestone_claims (
-  id         uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
-  guild_id   text        NOT NULL,
-  user_id    text        NOT NULL,
-  milestone  integer     NOT NULL,   -- 5, 10, 20, 50, 100
-  bonus      integer     NOT NULL,
-  claimed_at timestamptz NOT NULL DEFAULT now(),
-  CONSTRAINT referral_milestone_claims_unique UNIQUE (guild_id, user_id, milestone)
-);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'referral_milestone_claims'
+  ) THEN
+    CREATE TABLE public.referral_milestone_claims (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      guild_id text NOT NULL,
+      user_id text NOT NULL,
+      milestone integer NOT NULL,
+      bonus integer NOT NULL,
+      claimed_at timestamptz NOT NULL DEFAULT now(),
+      CONSTRAINT referral_milestone_claims_unique UNIQUE (guild_id, user_id, milestone)
+    );
+  END IF;
 
-CREATE INDEX IF NOT EXISTS referral_milestone_claims_user_idx
-  ON public.referral_milestone_claims (guild_id, user_id);
+  -- Mevcut tabloda kolonu yoksa ekle (idempotent)
+  ALTER TABLE public.referral_milestone_claims
+    ADD COLUMN IF NOT EXISTS id uuid DEFAULT gen_random_uuid(),
+    ADD COLUMN IF NOT EXISTS guild_id text,
+    ADD COLUMN IF NOT EXISTS user_id text,
+    ADD COLUMN IF NOT EXISTS milestone integer,
+    ADD COLUMN IF NOT EXISTS bonus integer,
+    ADD COLUMN IF NOT EXISTS claimed_at timestamptz DEFAULT now();
+
+  -- Mevcut veritabanı versiyonlarında unique constraint varsa önce bu kontrol edilir, yoksa index eklenir.
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.table_constraints
+    WHERE table_schema = 'public'
+      AND table_name = 'referral_milestone_claims'
+      AND constraint_type = 'UNIQUE'
+      AND constraint_name = 'referral_milestone_claims_unique'
+  ) THEN
+    ALTER TABLE public.referral_milestone_claims
+      ADD CONSTRAINT referral_milestone_claims_unique UNIQUE (guild_id, user_id, milestone);
+  END IF;
+
+  CREATE INDEX IF NOT EXISTS referral_milestone_claims_user_idx
+    ON public.referral_milestone_claims (guild_id, user_id);
+END;
+$$;
 
 COMMENT ON TABLE public.referral_milestone_claims IS
   'Referral milestone ödülleri — her (guild, user, milestone) kombinasyonu yalnızca bir kez işlenir';

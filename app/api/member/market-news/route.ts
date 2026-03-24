@@ -16,7 +16,8 @@ export async function GET(req: NextRequest) {
 
   let query = supabase
     .from('market_events')
-    .select('id, event_type, guild_id, actor_id, headline, body, metadata, created_at', { count: 'exact' })
+    // İki şemayı da destekle: yeni event_type veya eski type
+    .select('id, event_type, type, guild_id, actor_id, headline, body, metadata, created_at', { count: 'exact' })
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1);
 
@@ -30,5 +31,15 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ events: data ?? [], total: count ?? 0 });
+  const eventsWithType = (data ?? []).map((row: any) => {
+    const resolvedEventType = row.event_type ?? row.type ?? 'news';
+    return {
+      ...row,
+      event_type: resolvedEventType,
+      // For compatibility, remove old field if present
+      type: undefined,
+    };
+  });
+
+  return NextResponse.json({ events: eventsWithType, total: count ?? 0 });
 }
