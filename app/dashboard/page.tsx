@@ -22,6 +22,9 @@ import BorsaSection from './components/BorsaSection';
 import BorsaDetailSection from './components/BorsaDetailSection';
 import PortfolioSection from './components/PortfolioSection';
 import DividendSection from './components/DividendSection';
+import IpoSection from './components/IpoSection';
+import EconomyApplySection from './components/EconomyApplySection';
+import IpoApplySection from './components/IpoApplySection';
 import NotificationDetailModal from './components/NotificationDetailModal';
 import NotificationsModal from './components/NotificationsModal';
 import TransferModal from './components/TransferModal';
@@ -1319,6 +1322,28 @@ export default function DashboardPage() {
             {effectiveSection === 'dividend' && (
               <div className="p-4 sm:p-6 lg:p-8">
                 <DividendSection guildId={dividendGuildId ?? undefined} />
+              </div>
+            )}
+
+            {effectiveSection === 'ipo' && borsaDetailGuildId && (
+              <div className="p-4 sm:p-6 lg:p-8">
+                <IpoSection
+                  guildId={borsaDetailGuildId}
+                  onBack={() => setActiveSection('borsa')}
+                  onNavigate={handleBorsaNavigate}
+                />
+              </div>
+            )}
+
+            {effectiveSection === 'ipo-apply' && (
+              <div className="p-4 sm:p-6 lg:p-8">
+                <IpoApplySection />
+              </div>
+            )}
+
+            {effectiveSection === 'economy-apply' && (
+              <div className="p-4 sm:p-6 lg:p-8">
+                <EconomyApplySection />
               </div>
             )}
           </main>

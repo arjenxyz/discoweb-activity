@@ -375,5 +375,7 @@
   "nav_group_borsa": "Exchange",
   "nav_borsa": "Exchange",
   "nav_portfolio": "Portfolio",
-  "nav_dividend": "Dividends"
+  "nav_dividend": "Dividends",
+  "nav_ipo_apply": "Exchange Listing",
+  "nav_economy_apply": "Advanced Economy"
 }

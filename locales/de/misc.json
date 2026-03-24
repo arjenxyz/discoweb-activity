@@ -375,5 +375,7 @@
   "nav_group_borsa": "Börse",
   "nav_borsa": "Börse",
   "nav_portfolio": "Portfolio",
-  "nav_dividend": "Dividenden"
+  "nav_dividend": "Dividenden",
+  "nav_ipo_apply": "IPO Beantragen",
+  "nav_economy_apply": "Wirtschaft Beantragen"
 }

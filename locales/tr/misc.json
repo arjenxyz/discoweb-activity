@@ -375,5 +375,7 @@
   "nav_group_borsa": "Borsa",
   "nav_borsa": "Borsa",
   "nav_portfolio": "Portföy",
-  "nav_dividend": "Temettü"
+  "nav_dividend": "Temettü",
+  "nav_ipo_apply": "Borsaya Listele",
+  "nav_economy_apply": "Yüksek Ekonomi"
 }

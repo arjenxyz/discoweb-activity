@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { LuChevronRight, LuGift, LuHouse, LuMail, LuStore, LuCompass, LuTrendingUp, LuVault, LuChartBar, LuWallet, LuCoins } from 'react-icons/lu';
+import { LuChevronRight, LuGift, LuHouse, LuMail, LuStore, LuCompass, LuTrendingUp, LuVault, LuChartBar, LuWallet, LuCoins, LuRocket, LuBadgePlus } from 'react-icons/lu';
 import type { MemberProfile, Section } from '../types';
 import { useT } from '@/contexts/LocaleContext';
 
@@ -40,6 +40,8 @@ export default function SidebarNav({
         { key: 'borsa' as Section, label: t('nav_borsa'), icon: LuChartBar },
         { key: 'portfolio' as Section, label: t('nav_portfolio'), icon: LuWallet },
         { key: 'dividend' as Section, label: t('nav_dividend'), icon: LuCoins },
+        { key: 'ipo-apply' as Section, label: t('nav_ipo_apply'), icon: LuRocket },
+        { key: 'economy-apply' as Section, label: t('nav_economy_apply'), icon: LuBadgePlus },
       ],
     },
     {

@@ -375,5 +375,7 @@
   "nav_group_borsa": "Børs",
   "nav_borsa": "Børs",
   "nav_portfolio": "Portefølje",
-  "nav_dividend": "Udbytte"
+  "nav_dividend": "Udbytte",
+  "nav_ipo_apply": "Børsnotering",
+  "nav_economy_apply": "Økonomi Ansøg"
 }
