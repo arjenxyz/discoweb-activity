@@ -39,7 +39,7 @@ export async function GET(request: Request) {
 
       supabase
         .from('market_events')
-        .select('id, type, severity, title, description, price_impact, created_at, expires_at')
+        .select('id, event_type, type, severity, title, description, price_impact, created_at, expires_at')
         .eq('guild_id', guildId)
         .eq('is_active', true),
 
@@ -53,7 +53,10 @@ export async function GET(request: Request) {
     return NextResponse.json({
       listing: listingRes.data,
       penalties: penaltiesRes.data ?? [],
-      events: eventsRes.data ?? [],
+      events: (eventsRes.data ?? []).map((ev: any) => ({
+        ...ev,
+        event_type: ev.event_type ?? ev.type ?? 'news',
+      })),
       treasury: treasuryRes.data,
     });
   }

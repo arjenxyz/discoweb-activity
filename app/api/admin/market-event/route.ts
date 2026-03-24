@@ -70,6 +70,7 @@ export async function POST(request: Request) {
     .from('market_events')
     .insert({
       guild_id: body.guild_id ?? null,
+      event_type: body.type,
       type: body.type,
       severity: body.severity ?? 'info',
       title: body.title,
