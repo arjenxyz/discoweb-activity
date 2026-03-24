@@ -25,6 +25,7 @@ import DividendSection from './components/DividendSection';
 import IpoSection from './components/IpoSection';
 import EconomyApplySection from './components/EconomyApplySection';
 import IpoApplySection from './components/IpoApplySection';
+import MarketNewsSection from './components/MarketNewsSection';
 import NotificationDetailModal from './components/NotificationDetailModal';
 import NotificationsModal from './components/NotificationsModal';
 import TransferModal from './components/TransferModal';
@@ -1344,6 +1345,12 @@ export default function DashboardPage() {
             {effectiveSection === 'economy-apply' && (
               <div className="p-4 sm:p-6 lg:p-8">
                 <EconomyApplySection />
+              </div>
+            )}
+
+            {effectiveSection === 'market-news' && (
+              <div className="p-4 sm:p-6 lg:p-8">
+                <MarketNewsSection />
               </div>
             )}
           </main>
