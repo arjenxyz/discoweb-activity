@@ -52,10 +52,19 @@ export default function ReferralSection() {
   const [refSubmitted, setRefSubmitted] = useState(false);
   const [inviteAvailable, setInviteAvailable] = useState(false);
   const [sdkChecking, setSdkChecking] = useState(true);
-  const [inviteFallbackUrl, setInviteFallbackUrl] = useState<string | null>(null);
   const [shareLoading, setShareLoading] = useState(false);
   const [shareStatus, setShareStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [manualCode, setManualCode] = useState('');
+  const [manualSubmitting, setManualSubmitting] = useState(false);
+  const [manualStatus, setManualStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  // Pending referral — Discord SDK'dan gelen, onay bekleyen davet
+  const [pendingReferrer, setPendingReferrerState] = useState<
+    { type: 'by_user'; referrer_discord_id: string } | { type: 'by_code'; code: string } | null
+  >(null);
+  const [pendingSubmitting, setPendingSubmitting] = useState(false);
+  const [pendingStatus, setPendingStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   // Stats & leaderboard
   const [stats, setStats] = useState<ReferralStats | null>(null);
@@ -88,6 +97,17 @@ export default function ReferralSection() {
         setReferralReward(Number(data.referral_reward ?? 500));
       })
       .catch(() => {});
+  }, []);
+
+  // Pending referral listener
+  useEffect(() => {
+    import('@/lib/pendingReferral').then(({ getPendingReferral, onPendingReferralChange }) => {
+      const current = getPendingReferral();
+      if (current) setPendingReferrerState(current);
+      return onPendingReferralChange((r) => setPendingReferrerState(r));
+    }).then((unsub) => {
+      return () => { if (typeof unsub === 'function') unsub(); };
+    }).catch(() => {});
   }, []);
 
   // Load advanced code
@@ -295,21 +315,107 @@ export default function ReferralSection() {
     }
   };
 
+
   const openInviteDialog = async () => {
-    const inviteUrl = siteConfig.bot.inviteUrl;
-    const frameId = (() => {
-      if (typeof window === 'undefined') return null;
-      const params = new URLSearchParams(window.location.search);
-      const id = params.get('frame_id');
-      if (id) { try { localStorage.setItem('discord_frame_id', id); } catch { /* ignore */ } return id; }
-      try { return localStorage.getItem('discord_frame_id'); } catch { return null; }
-    })();
-    if (!frameId) { setInviteFallbackUrl(inviteUrl); return; }
-    if (!sdkReadyRef.current || !discordSdkRef.current) { setInviteFallbackUrl(inviteUrl); return; }
+    if (!sdkReadyRef.current || !discordSdkRef.current) {
+      // Discord dışında — bot invite URL'sine yönlendir
+      const inviteUrl = siteConfig.bot.inviteUrl;
+      if (inviteUrl) window.open(inviteUrl, '_blank');
+      return;
+    }
     try {
       await discordSdkRef.current.commands.openInviteDialog();
     } catch {
-      setInviteFallbackUrl(inviteUrl);
+      // Başarısız olursa sessizce geç
+    }
+  };
+
+  const acceptPendingReferral = async () => {
+    if (!pendingReferrer) return;
+    setPendingSubmitting(true);
+    setPendingStatus(null);
+    try {
+      let res: Response;
+      if (pendingReferrer.type === 'by_code') {
+        res = await fetchWithCreds('/api/member/referral', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: pendingReferrer.code }),
+        });
+      } else {
+        res = await fetchWithCreds('/api/member/referral-by-user', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ referrer_discord_id: pendingReferrer.referrer_discord_id }),
+        });
+      }
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const msgs: Record<string, string> = {
+          already_referred: 'Bu hesap zaten davet edilmiş.',
+          new_account: 'Hesabın çok yeni (en az 3 gün olmalı).',
+          self_referral: 'Kendi davetini kabul edemezsin.',
+          referrer_not_found: 'Davet eden bulunamadı.',
+          code_not_found: 'Kod geçersiz.',
+        };
+        setPendingStatus({ type: 'error', message: msgs[data.error] ?? `Hata: ${data.error ?? 'bilinmiyor'}` });
+      } else {
+        const reward = data.reward ?? referralReward;
+        setPendingStatus({ type: 'success', message: `Davet kabul edildi! Her ikinize +${reward} Papel verildi. 🎉` });
+        setReferredBy(
+          pendingReferrer.type === 'by_code'
+            ? pendingReferrer.code
+            : pendingReferrer.referrer_discord_id,
+        );
+        setShowCelebration(true);
+        setTimeout(() => setShowCelebration(false), 3500);
+        // Clear pending
+        import('@/lib/pendingReferral').then(({ setPendingReferral }) => setPendingReferral(null)).catch(() => {});
+        setPendingReferrerState(null);
+      }
+    } catch {
+      setPendingStatus({ type: 'error', message: 'Sunucu hatası, tekrar dene.' });
+    } finally {
+      setPendingSubmitting(false);
+    }
+  };
+
+  const submitManualCode = async () => {
+    const code = manualCode.trim().toUpperCase();
+    if (!code || code.length !== 6) {
+      setManualStatus({ type: 'error', message: 'Kod 6 karakter olmalıdır.' });
+      return;
+    }
+    setManualSubmitting(true);
+    setManualStatus(null);
+    try {
+      const res = await fetchWithCreds('/api/member/referral', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const msgs: Record<string, string> = {
+          already_referred: 'Bu hesap zaten bir kodla davet edilmiş.',
+          code_not_found: 'Bu kod bulunamadı.',
+          cannot_use_own_code: 'Kendi kodunu kullanamazsın.',
+          invalid_code: 'Geçersiz kod.',
+          new_account: 'Hesabın çok yeni (en az 3 gün olmalı).',
+          update_failed: 'Kayıt başarısız, tekrar dene.',
+        };
+        setManualStatus({ type: 'error', message: msgs[data.error] ?? `Hata: ${data.error ?? 'bilinmiyor'}` });
+      } else {
+        setManualStatus({ type: 'success', message: `Kod uygulandı! Her ikinize +${data.reward ?? referralReward} Papel verildi. 🎉` });
+        setReferredBy(code);
+        setManualCode('');
+        setShowCelebration(true);
+        setTimeout(() => setShowCelebration(false), 3500);
+      }
+    } catch {
+      setManualStatus({ type: 'error', message: 'Sunucu hatası, tekrar dene.' });
+    } finally {
+      setManualSubmitting(false);
     }
   };
 
@@ -343,12 +449,6 @@ export default function ReferralSection() {
     }
   };
 
-  const inviteButtonClass = useMemo(() => {
-    const base = 'w-full inline-flex items-center justify-center gap-2 rounded-2xl px-6 py-3 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-indigo-400';
-    const active = 'bg-indigo-500 text-white hover:bg-indigo-400 shadow-lg shadow-indigo-500/30';
-    const disabled = 'bg-white/10 text-white/50 cursor-not-allowed';
-    return `${base} ${inviteAvailable ? active : disabled}`;
-  }, [inviteAvailable]);
 
   // Display stats to use (from API or fallback to profile data)
   const displayTotalInvites = stats?.total_invites ?? totalInvites;
@@ -362,6 +462,55 @@ export default function ReferralSection() {
         <div className="fixed inset-x-4 top-4 z-50 rounded-2xl border border-emerald-500/30 bg-emerald-500/15 px-5 py-4 shadow-2xl backdrop-blur animate-bounce">
           <p className="text-base font-bold text-emerald-300">{t('referral_celebration_title')}</p>
           <p className="text-sm text-emerald-200/70">{t('referral_celebration_body', { reward: referralReward })}</p>
+        </div>
+      )}
+
+      {/* Pending Referral Banner — Discord shareLink'ten geldi, onay bekliyor */}
+      {pendingReferrer && !referredBy && (
+        <div className="rounded-3xl border border-indigo-500/40 bg-indigo-500/10 p-5 shadow-xl">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl">🎁</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-indigo-200">Seni biri davet etti!</p>
+              <p className="mt-0.5 text-xs text-indigo-300/70">
+                {pendingReferrer.type === 'by_code'
+                  ? `Davet kodu: ${pendingReferrer.code}`
+                  : `Davet eden ID: ...${pendingReferrer.referrer_discord_id.slice(-4)}`}
+              </p>
+              <p className="mt-1 text-xs text-white/50">
+                Kabul edersen her ikinize <span className="font-bold text-indigo-200">+{referralReward.toLocaleString()} Papel</span> verilir.
+              </p>
+              {pendingStatus && (
+                <p className={`mt-2 text-sm font-semibold ${pendingStatus.type === 'success' ? 'text-emerald-300' : 'text-rose-300'}`}>
+                  {pendingStatus.message}
+                </p>
+              )}
+            </div>
+          </div>
+          {!pendingStatus?.type || pendingStatus.type === 'error' ? (
+            <div className="mt-3 flex gap-2">
+              <button
+                type="button"
+                disabled={pendingSubmitting}
+                onClick={acceptPendingReferral}
+                className="flex-1 rounded-xl bg-indigo-500 py-2.5 text-sm font-bold text-white transition hover:bg-indigo-400 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {pendingSubmitting ? (
+                  <span className="inline-flex h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent mx-auto" />
+                ) : '🎉 Daveti Kabul Et'}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  import('@/lib/pendingReferral').then(({ setPendingReferral }) => setPendingReferral(null)).catch(() => {});
+                  setPendingReferrerState(null);
+                }}
+                className="rounded-xl bg-white/8 px-4 py-2.5 text-sm text-white/50 transition hover:bg-white/12"
+              >
+                Reddet
+              </button>
+            </div>
+          ) : null}
         </div>
       )}
 
@@ -584,8 +733,9 @@ export default function ReferralSection() {
           )}
 
           {/* Davet Ekranı */}
+          {/* Arkadaşını Davet Et — sadece Discord Activity içindeyken */}
           <div className="rounded-3xl border border-white/15 bg-gradient-to-br from-[#0b0d12]/60 via-[#0b0d12]/50 to-[#111827]/50 p-6 shadow-2xl">
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-3">
               <p className="text-sm font-semibold text-white">{t('referral_invite_section_title')}</p>
               <p className="text-sm text-white/60">{t('referral_invite_description')}</p>
               {sdkChecking ? (
@@ -612,11 +762,13 @@ export default function ReferralSection() {
                       {shareStatus.message}
                     </p>
                   )}
-                  <button type="button" onClick={openInviteDialog} className={inviteButtonClass}>
-                    <span className="flex items-center gap-2">
-                      <span className="inline-flex h-3 w-3 rounded-full bg-emerald-300 animate-pulse" />
-                      {t('referral_invite_button')}
-                    </span>
+                  <button
+                    type="button"
+                    onClick={openInviteDialog}
+                    className="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  >
+                    <span className="inline-flex h-3 w-3 rounded-full bg-emerald-300 animate-pulse" />
+                    {t('referral_invite_button')}
                   </button>
                 </>
               ) : (
@@ -626,6 +778,40 @@ export default function ReferralSection() {
               )}
             </div>
           </div>
+
+          {/* Manuel Kod Girişi — zaten davet edilmemişse göster */}
+          {!referredBy && (
+            <div className="rounded-3xl border border-white/15 bg-white/5 p-6">
+              <p className="text-sm font-semibold text-white mb-1">Davet Kodun var mı?</p>
+              <p className="text-xs text-white/40 mb-3">Arkadaşının 6 haneli kodunu girerek her ikiniz +{referralReward.toLocaleString()} Papel kazanırsınız.</p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={manualCode}
+                  onChange={(e) => setManualCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
+                  placeholder="ABC123"
+                  maxLength={6}
+                  disabled={manualSubmitting}
+                  className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-mono font-bold tracking-widest text-white placeholder-white/20 outline-none focus:border-indigo-500/50 uppercase disabled:opacity-40"
+                />
+                <button
+                  type="button"
+                  disabled={manualSubmitting || manualCode.length !== 6}
+                  onClick={submitManualCode}
+                  className="rounded-xl bg-indigo-500 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-indigo-400 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {manualSubmitting ? (
+                    <span className="inline-flex h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  ) : 'Uygula'}
+                </button>
+              </div>
+              {manualStatus && (
+                <p className={`mt-2 text-sm font-medium ${manualStatus.type === 'success' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  {manualStatus.message}
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Yüksek Ekonomi Pasif Gelir Referral */}
           {advancedCode !== null && (

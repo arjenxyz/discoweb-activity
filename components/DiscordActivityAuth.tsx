@@ -279,22 +279,15 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
 
         if (incomingCustomId?.startsWith('ref:') && currentUserId) {
           const refCode = incomingCustomId.slice(4).toUpperCase();
-          addLog(`Incoming referral custom_id: ref:${refCode}`);
-          // Apply referral code (silently — ignore errors so auth never blocks)
-          fetch(apiUrl('/api/member/referral'), {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ code: refCode }),
+          addLog(`Incoming referral custom_id: ref:${refCode} — pending confirmation`);
+          // Otomatik uygulamak yerine kullanıcıya göster (ReferralSection okur)
+          import('@/lib/pendingReferral').then(({ setPendingReferral }) => {
+            setPendingReferral({ type: 'by_code', code: refCode });
           }).catch(() => {});
         } else if (incomingReferrerId && currentUserId && incomingReferrerId !== currentUserId) {
-          // referrerId is a Discord user ID — look up their referral code and apply
-          addLog(`Incoming referrerId: ${incomingReferrerId}`);
-          fetch(apiUrl('/api/member/referral-by-user'), {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ referrer_discord_id: incomingReferrerId }),
+          addLog(`Incoming referrerId: ${incomingReferrerId} — pending confirmation`);
+          import('@/lib/pendingReferral').then(({ setPendingReferral }) => {
+            setPendingReferral({ type: 'by_user', referrer_discord_id: incomingReferrerId });
           }).catch(() => {});
         }
       } catch {
@@ -438,14 +431,12 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
               const myId = meData2?.id ?? null;
               if (incomingCustomId?.startsWith('ref:') && myId) {
                 const refCode = incomingCustomId.slice(4).toUpperCase();
-                fetch(apiUrl('/api/member/referral'), {
-                  method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-                  body: JSON.stringify({ code: refCode }),
+                import('@/lib/pendingReferral').then(({ setPendingReferral }) => {
+                  setPendingReferral({ type: 'by_code', code: refCode });
                 }).catch(() => {});
               } else if (incomingReferrerId && myId && incomingReferrerId !== myId) {
-                fetch(apiUrl('/api/member/referral-by-user'), {
-                  method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-                  body: JSON.stringify({ referrer_discord_id: incomingReferrerId }),
+                import('@/lib/pendingReferral').then(({ setPendingReferral }) => {
+                  setPendingReferral({ type: 'by_user', referrer_discord_id: incomingReferrerId });
                 }).catch(() => {});
               }
             } catch { /* non-critical */ }
