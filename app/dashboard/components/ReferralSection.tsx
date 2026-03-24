@@ -176,32 +176,35 @@ export default function ReferralSection() {
     };
 
     const checkSdk = async () => {
-      const clientId = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
-      if (!clientId) {
-        setInviteAvailable(false);
-        setInviteError('Discord client ID bulunamadı. Lütfen `NEXT_PUBLIC_DISCORD_CLIENT_ID` çevre değişkenini ayarlayın.');
+      const frameId = getFrameId();
+      if (!frameId && !isInIframe()) {
+        // Tarayıcıda açılıyor, Discord Activity değil — sessizce çık
         return;
       }
 
-      const frameId = getFrameId();
-      if (!frameId) {
-        setInviteError(
-          isInIframe()
-            ? 'Discord Activity içinde çalışıyor ancak `frame_id` URL parametresi bulunamadı. Bu durumda davet penceresi açılamayabilir.'
-            : 'Uygulama Discord içinde açılmıyor. Davet penceresi yalnızca Discord Activity içinde açılabilir.',
-        );
-        return;
-      }
+      // DiscordActivityAuth tarafından zaten init edilmiş SDK'yı kullan
+      // Birkaç kez dene — auth biraz geç bitmiş olabilir
+      try {
+        const { getDiscordSdk } = await import('@/lib/discordSdk');
+        for (let i = 0; i < 10; i++) {
+          const existingSdk = getDiscordSdk();
+          if (existingSdk) {
+            discordSdkRef.current = existingSdk;
+            sdkReadyRef.current = true;
+            setInviteAvailable(true);
+            setInviteError(null);
+            return;
+          }
+          await new Promise(r => setTimeout(r, 500));
+        }
+      } catch { /* lib yoksa devam */ }
+
+      // Fallback: frame_id varsa kendi instance'ımızı oluştur
+      const clientId = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
+      if (!clientId || !frameId) return;
 
       try {
-        const discordSdkModule = await import('@discord/embedded-app-sdk');
-        const DiscordSDK = discordSdkModule?.DiscordSDK;
-        if (!DiscordSDK) {
-          setInviteAvailable(false);
-          setInviteError('Discord SDK modülü yüklendi ancak DiscordSDK tanımlı değil.');
-          return;
-        }
-
+        const { DiscordSDK } = await import('@discord/embedded-app-sdk');
         const sdk = new DiscordSDK(clientId);
         await sdk.ready();
         discordSdkRef.current = sdk;
