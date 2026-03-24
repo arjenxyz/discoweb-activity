@@ -2,7 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react';
 import type { ActivityReadiness } from './ActivityReadinessGate';
+import DeveloperPanel from './DeveloperPanel';
 import fetchWithCreds from '@/lib/fetchWithCreds';
+import { apiUrl } from '@/lib/api';
 import { VideoBackground, MuteButton } from './VideoBackground';
 import { useT } from '@/contexts/LocaleContext';
 
@@ -20,6 +22,10 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const [reported, setReported] = useState(false);
   const [muted, setMuted] = useState(true);
+  const [isDeveloper, setIsDeveloper] = useState(false);
+  const [isDeveloperChecked, setIsDeveloperChecked] = useState(false);
+  const [devPanelOpen, setDevPanelOpen] = useState(false);
+  const [maintenance, setMaintenance] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const toggleMute = () => {
@@ -36,6 +42,19 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
       return () => clearTimeout(timer);
     }
   }, [phase, onRetry]);
+
+  useEffect(() => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('discord_bearer_token') : null;
+    fetch(apiUrl('/api/activity/is-developer'), {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+      .then(r => r.json())
+      .then((d: { isDeveloper?: boolean }) => {
+        if (d?.isDeveloper) setIsDeveloper(true);
+      })
+      .catch(() => {})
+      .finally(() => setIsDeveloperChecked(true));
+  }, []);
 
   const handleStart = async () => {
     if (!readiness.guildId) {
@@ -70,7 +89,19 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
       <VideoBackground videoRef={videoRef} src="/cdn/Storage/Test1.mp4" />
 
       {/* Ses butonu — masaüstünde sağ üst */}
-      <div className="hidden sm:block absolute z-20 top-6 right-6">
+      <div className="hidden sm:flex absolute z-20 top-6 right-6 items-center gap-2">
+        {isDeveloper && (
+          <button
+            type="button"
+            onClick={() => setDevPanelOpen(true)}
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white hover:bg-black/60"
+            aria-label="Developer Panel"
+          >
+            <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4">
+              <path d="M3.72 3.72a.75.75 0 011.06 0L8 6.94l3.22-3.22a.75.75 0 111.06 1.06L9.06 8l3.22 3.22a.75.75 0 11-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 01-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 010-1.06z" />
+            </svg>
+          </button>
+        )}
         <MuteButton muted={muted} onToggle={toggleMute} src="/cdn/Storage/Test1.mp4" />
       </div>
 
@@ -154,6 +185,13 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
           </div>
         )}
       </main>
+      {devPanelOpen && (
+        <DeveloperPanel
+          maintenance={maintenance}
+          onMaintenanceChange={setMaintenance}
+          onClose={() => setDevPanelOpen(false)}
+        />
+      )}
     </div>
   );
 }
