@@ -54,9 +54,8 @@ export default function DmScreen() {
             <p className="text-xs font-semibold text-white/50 uppercase tracking-wider">Nasıl Çalışır:</p>
             {[
               "Discord sunucusuna katıl veya kendi sunucunu oluştur.",
-              "Aktiviteler bölümünü aç <img src='/activity-icon.png' className='inline h-4 w-4' /> ve arama yap.",
+              "Aktiviteler bölümünü aç.",
               "Arama kutusuna 'DiscoWeb' yaz ve aktiviteyi başlat.",
-              "İster ses kanalından ister doğrudan başlatarak mağazayı kullanmaya başla.",
             ].map((step, i) => (
               <div
                 key={i}
