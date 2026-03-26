@@ -1,4 +1,12 @@
 {
+  "dm_badge": "DM veya Grup Sohbeti",
+  "dm_title": "Sunucu Gerekli",
+  "dm_subtitle": "DM veya grup sohbetlerinden açılan Activity'lerde sunucu bilgisi bulunmadığı için sistem çalışamaz.",
+  "dm_steps_title": "Nasıl Çalışır:",
+  "dm_step_1": "Discord sunucusuna katıl veya kendi sunucunu oluştur.",
+  "dm_step_2": "Aktiviteler bölümünü aç.",
+  "dm_step_3": "Arama kutusuna 'DiscoWeb' yaz ve aktiviteyi başlat.",
+  "dm_close_hint": "Bu pencereyi kapatabilirsiniz.",
   "market_title": "DiscoWeb Piyasası",
   "market_subtitle_live": "P2P · Anlık fiyatlar · {count} sunucu",
   "market_back_button": "Geri",

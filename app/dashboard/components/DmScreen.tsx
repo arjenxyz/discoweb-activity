@@ -34,7 +34,7 @@ export default function DmScreen() {
         <div className="flex flex-col gap-5 max-w-lg">
           {/* DM/Grup Badge */}
           <div className="w-fit rounded-full border border-red-500/30 bg-red-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-red-400 backdrop-blur-md">
-            DM veya Grup Sohbeti
+            {t('dm_badge')}
           </div>
 
           <div className="flex flex-col gap-3">
@@ -42,20 +42,20 @@ export default function DmScreen() {
               className="text-4xl font-black leading-tight tracking-tight text-white"
               style={{ textShadow: '0 0 60px rgba(255,255,255,0.15), 0 2px 20px rgba(0,0,0,1)' }}
             >
-              Sunucu Gerekli
+              {t('dm_title')}
             </h1>
             <p className="text-sm text-white/70 leading-relaxed max-w-sm" style={{ textShadow: '0 1px 8px rgba(0,0,0,1)' }}>
-              DM veya grup sohbetlerinden açılan Activity'lerde sunucu bilgisi bulunmadığı için sistem çalışamaz.
+              {t('dm_subtitle')}
             </p>
           </div>
 
           {/* Steps */}
           <div className="flex flex-col gap-2 pt-2">
-            <p className="text-xs font-semibold text-white/50 uppercase tracking-wider">Nasıl Çalışır:</p>
+            <p className="text-xs font-semibold text-white/50 uppercase tracking-wider">{t('dm_steps_title')}</p>
             {[
-              "Discord sunucusuna katıl veya kendi sunucunu oluştur.",
-              "Aktiviteler bölümünü aç.",
-              "Arama kutusuna 'DiscoWeb' yaz ve aktiviteyi başlat.",
+              t('dm_step_1'),
+              t('dm_step_2'),
+              t('dm_step_3'),
             ].map((step, i) => (
               <div
                 key={i}
@@ -71,7 +71,7 @@ export default function DmScreen() {
 
           {/* Close hint */}
           <p className="text-xs text-white/30 pt-2">
-            Bu pencereyi kapatabilirsiniz.
+            {t('dm_close_hint')}
           </p>
         </div>
 
