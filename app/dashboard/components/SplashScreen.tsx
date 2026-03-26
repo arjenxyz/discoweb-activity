@@ -282,5 +282,4 @@ export default function SplashScreen({ onEnter }: Props) {
       )}
     </div>
   );
-  );
 }
