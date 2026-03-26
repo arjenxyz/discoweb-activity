@@ -76,6 +76,25 @@ export default function DmScreen() {
           <p className="text-xs text-white/30 pt-2">
             Bu pencereyi kapatabilirsiniz.
           </p>
+
+          {/* Terms and Privacy */}
+          <div className="flex items-center justify-center gap-2 pt-4">
+            <button 
+              type="button" 
+              onClick={() => window.open('https://discoweb.tech/terms', '_blank')} 
+              className="text-xs text-white/50 hover:text-white/75 transition-colors"
+            >
+              Kullanım Şartları
+            </button>
+            <span className="text-white/30 text-xs">·</span>
+            <button 
+              type="button" 
+              onClick={() => window.open('https://discoweb.tech/privacy', '_blank')} 
+              className="text-xs text-white/50 hover:text-white/75 transition-colors"
+            >
+              Gizlilik Politikası
+            </button>
+          </div>
         </div>
 
         {/* Mobilde ses butonu butonun sağında */}
