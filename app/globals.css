@@ -81,6 +81,34 @@ img {
   height: auto;
 }
 
+/* Discord Activity mini mode (compact UI) */
+body[data-discord-mini="1"] {
+  font-size: 13px;
+}
+
+body[data-discord-mini="1"] [class*="animate-"] {
+  animation: none !important;
+}
+
+body[data-discord-mini="1"] .bg-discord-radial {
+  background-image: none !important;
+  background-color: #0b0d12 !important;
+}
+
+body[data-discord-mini="1"] .backdrop-blur,
+body[data-discord-mini="1"] .backdrop-blur-md,
+body[data-discord-mini="1"] .backdrop-blur-lg {
+  backdrop-filter: none !important;
+}
+
+body[data-discord-mini="1"] .splash-full-ui {
+  display: none !important;
+}
+
+body[data-discord-mini="1"] .splash-mini-logo {
+  display: flex !important;
+}
+
 /* Activity-specific modal optimizations */
 .modal-activity {
   max-height: 90vh;

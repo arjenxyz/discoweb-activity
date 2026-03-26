@@ -192,65 +192,49 @@ export default function SplashScreen({ onEnter }: Props) {
   );
 
   return (
-    <div className="relative isolate flex min-h-screen w-full flex-col overflow-hidden bg-[#0b0d12]">
+    <div className="splash-screen relative isolate flex min-h-screen w-full flex-col overflow-hidden bg-[#0b0d12]">
       <VideoBackground videoRef={videoRef} />
 
-      {/* ── DESKTOP: üst bar — logo sol, mute sağ ── */}
-      <div
-        className="relative z-10 hidden lg:flex items-start justify-between px-10 pt-8"
-        style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.7s ease' }}
-      >
-        <LogoBlock size="md" />
-        <MuteButton muted={muted} onToggle={toggleMute} />
-      </div>
-
-      {/* ── MOBİL: merkez logo ── */}
-      <div
-        className="lg:hidden relative z-10 flex flex-col items-center justify-start flex-1 gap-1 pointer-events-none pt-6"
-        style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.7s ease' }}
-      >
+      {/* Mini player: only centered logo text */}
+      <div className="splash-mini-logo pointer-events-none absolute inset-0 z-20 hidden items-center justify-center">
         <div className="pointer-events-auto">
           <LogoBlock size="sm" centered />
         </div>
       </div>
 
-      {/* ── FOOTER — absolute alta sabitli, bağımsız katman ── */}
-      <div
-        className="hidden lg:block absolute z-10 bottom-10 left-10"
-        style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.7s ease' }}
-      >
-        <FooterLine />
-      </div>
-
-      {/* ── SAĞ ALTA — hoş geldin + buton, bağımsız ── */}
-      <div
-        className="hidden lg:flex absolute z-10 bottom-10 right-14 items-center gap-3"
-        style={{ opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(18px)', transition: 'opacity 0.7s ease, transform 0.7s ease' }}
-      >
-        {user && !(maintenance && !isDeveloper) && (
-          <div className="flex items-center gap-2">
-            {user.avatarUrl && <img src={user.avatarUrl} alt={user.username} className="h-6 w-6 rounded-full opacity-70" />}
-            <span className="text-sm text-white/50">
-              {t('splash_welcome_user', { username: user.username })}
-            </span>
-          </div>
-        )}
-        <div className="flex items-center gap-3">
-          {isDeveloper && <DevButton />}
-          <EnterButton />
+      <div className="splash-full-ui">
+        {/* ?????? DESKTOP: ??st bar ??? logo sol, mute sa?? ?????? */}
+        <div
+          className="relative z-10 hidden lg:flex items-start justify-between px-10 pt-8"
+          style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.7s ease' }}
+        >
+          <LogoBlock size="md" />
+          <MuteButton muted={muted} onToggle={toggleMute} />
         </div>
-      </div>
 
-      {/* ── ALT ALAN — mobil ── */}
-      <div
-        className="relative z-10 mt-auto w-full flex flex-col gap-3 px-6 pb-8 sm:px-10 sm:pb-10"
-        style={{ opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(18px)', transition: 'opacity 0.7s ease, transform 0.7s ease' }}
-      >
-        {/* Masaüstü placeholder — boş, gerçek içerik absolute'ta */}
-        <div className="hidden lg:block" />
+        {/* ?????? MOB??L: merkez logo ?????? */}
+        <div
+          className="lg:hidden relative z-10 flex flex-col items-center justify-start flex-1 gap-1 pointer-events-none pt-6"
+          style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.7s ease' }}
+        >
+          <div className="pointer-events-auto">
+            <LogoBlock size="sm" centered />
+          </div>
+        </div>
 
-        {/* Mobil: dikey, ortada */}
-        <div className="lg:hidden flex flex-col items-center gap-3">
+        {/* ?????? FOOTER ??? absolute alta sabitli, ba????ms??z katman ?????? */}
+        <div
+          className="hidden lg:block absolute z-10 bottom-10 left-10"
+          style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.7s ease' }}
+        >
+          <FooterLine />
+        </div>
+
+        {/* ?????? SA?? ALTA ??? ho?? geldin + buton, ba????ms??z ?????? */}
+        <div
+          className="hidden lg:flex absolute z-10 bottom-10 right-14 items-center gap-3"
+          style={{ opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(18px)', transition: 'opacity 0.7s ease, transform 0.7s ease' }}
+        >
           {user && !(maintenance && !isDeveloper) && (
             <div className="flex items-center gap-2">
               {user.avatarUrl && <img src={user.avatarUrl} alt={user.username} className="h-6 w-6 rounded-full opacity-70" />}
@@ -260,11 +244,36 @@ export default function SplashScreen({ onEnter }: Props) {
             </div>
           )}
           <div className="flex items-center gap-3">
-            <MuteButton muted={muted} onToggle={toggleMute} />
             {isDeveloper && <DevButton />}
             <EnterButton />
           </div>
-          <FooterLine centered />
+        </div>
+
+        {/* ?????? ALT ALAN ??? mobil ?????? */}
+        <div
+          className="relative z-10 mt-auto w-full flex flex-col gap-3 px-6 pb-8 sm:px-10 sm:pb-10"
+          style={{ opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(18px)', transition: 'opacity 0.7s ease, transform 0.7s ease' }}
+        >
+          {/* Masa??st?? placeholder ??? bo??, ger??ek i??erik absolute'ta */}
+          <div className="hidden lg:block" />
+
+          {/* Mobil: dikey, ortada */}
+          <div className="lg:hidden flex flex-col items-center gap-3">
+            {user && !(maintenance && !isDeveloper) && (
+              <div className="flex items-center gap-2">
+                {user.avatarUrl && <img src={user.avatarUrl} alt={user.username} className="h-6 w-6 rounded-full opacity-70" />}
+                <span className="text-sm text-white/50">
+                  {t('splash_welcome_user', { username: user.username })}
+                </span>
+              </div>
+            )}
+            <div className="flex items-center gap-3">
+              <MuteButton muted={muted} onToggle={toggleMute} />
+              {isDeveloper && <DevButton />}
+              <EnterButton />
+            </div>
+            <FooterLine centered />
+          </div>
         </div>
       </div>
 
@@ -272,5 +281,6 @@ export default function SplashScreen({ onEnter }: Props) {
         <DeveloperPanel maintenance={maintenance} onMaintenanceChange={setMaintenance} onClose={() => setDevPanelOpen(false)} />
       )}
     </div>
+  );
   );
 }

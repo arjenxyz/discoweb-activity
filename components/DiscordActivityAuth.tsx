@@ -66,6 +66,33 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
   }, []);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const inDiscordRuntime = isDiscordEmbedRuntime();
+    if (!inDiscordRuntime) return;
+
+    const updateMiniMode = () => {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      const isMini = w <= 520 || h <= 420;
+      if (isMini) {
+        document.body.dataset.discordMini = '1';
+      } else {
+        delete document.body.dataset.discordMini;
+      }
+    };
+
+    updateMiniMode();
+    window.addEventListener('resize', updateMiniMode);
+    window.visualViewport?.addEventListener('resize', updateMiniMode);
+
+    return () => {
+      window.removeEventListener('resize', updateMiniMode);
+      window.visualViewport?.removeEventListener('resize', updateMiniMode);
+      delete document.body.dataset.discordMini;
+    };
+  }, []);
+
+  useEffect(() => {
     const clearActivitySessionData = () => {
       try {
         localStorage.removeItem('selectedGuildId');
