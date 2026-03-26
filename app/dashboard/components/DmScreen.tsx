@@ -102,6 +102,25 @@ export default function DmScreen() {
           <MuteButton muted={muted} onToggle={toggleMute} src="/cdn/Storage/Test1.mp4" />
         </div>
       </main>
+      
+      {/* Terms and Privacy - Full page centered */}
+      <div className="fixed bottom-0 left-0 right-0 flex items-center justify-center gap-2 p-4 bg-gradient-to-t from-[#0b0d12] to-transparent">
+        <button 
+          type="button" 
+          onClick={() => window.open('https://discoweb.tech/terms', '_blank')} 
+          className="text-xs text-white/50 hover:text-white/75 transition-colors"
+        >
+          Kullanım Şartları
+        </button>
+        <span className="text-white/30 text-xs">·</span>
+        <button 
+          type="button" 
+          onClick={() => window.open('https://discoweb.tech/privacy', '_blank')} 
+          className="text-xs text-white/50 hover:text-white/75 transition-colors"
+        >
+          Gizlilik Politikası
+        </button>
+      </div>
     </div>
   );
 }
