@@ -10,7 +10,7 @@ interface LocaleContextValue {
 }
 
 const LocaleContext = createContext<LocaleContextValue>({
-  locale: 'en',
+  locale: 'tr',
   setDiscordLocale: () => {},
   t: (key) => key,
 });
@@ -27,7 +27,7 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
 
   const t = useCallback(
     (key: string, vars?: Record<string, string | number>): string => {
-      const raw = translations[locale][key] ?? translations['en'][key] ?? key;
+      const raw = translations[locale][key] ?? key;
       if (!vars) return raw;
       return Object.entries(vars).reduce<string>(
         (acc, [k, v]) => acc.replace(new RegExp(`\\{${k}\\}`, 'g'), String(v)),
