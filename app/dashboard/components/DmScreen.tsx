@@ -59,7 +59,7 @@ export default function DmScreen() {
                   </svg>
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-bold text-white">Örnek Sunucu</h3>
+                  <h3 className="font-bold text-white">Merky | Art Hive</h3>
                   <p className="text-xs text-white/60">DiscoWeb deneyimini test et</p>
                 </div>
               </div>
@@ -82,8 +82,7 @@ export default function DmScreen() {
             <p className="text-xs font-semibold text-white/50 uppercase tracking-wider">Nasıl Çalışır:</p>
             {[
               "Discord sunucusuna katıl",
-              "Sesli kanala katıl", 
-              "Sesli kanaldan Activity'i başlat"
+              "Sesli kanalda veya metin kanalında Activity'i başlat", 
             ].map((step, i) => (
               <div
                 key={i}
