@@ -53,8 +53,10 @@ export default function DmScreen() {
           <div className="flex flex-col gap-2 pt-2">
             <p className="text-xs font-semibold text-white/50 uppercase tracking-wider">Nasıl Çalışır:</p>
             {[
-              "Discord sunucusuna katıl",
-              "Sesli kanalda veya metin kanalında Activity'i başlat", 
+              "Discord sunucusuna katıl veya kendi sunucunu oluştur.",
+              "Aktiviteler bölümünü aç <img src='/activity-icon.png' className='inline h-4 w-4' /> ve arama yap.",
+              "Arama kutusuna 'DiscoWeb' yaz ve aktiviteyi başlat.",
+              "İster ses kanalından ister doğrudan başlatarak mağazayı kullanmaya başla.",
             ].map((step, i) => (
               <div
                 key={i}
@@ -63,7 +65,10 @@ export default function DmScreen() {
                 <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/20 text-xs font-bold text-white">
                   {i + 1}
                 </span>
-                <span className="text-sm text-white/80">{step}</span>
+                <span 
+                  className="text-sm text-white/80" 
+                  dangerouslySetInnerHTML={{ __html: step }}
+                />
               </div>
             ))}
           </div>
