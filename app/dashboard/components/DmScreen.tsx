@@ -49,16 +49,6 @@ export default function DmScreen() {
             </p>
           </div>
 
-          {/* Server invitation card */}
-          <div className="rounded-xl border border-white/20 bg-white/5 p-4 backdrop-blur-md">
-            <button
-              onClick={handleJoinServer}
-              className="w-full rounded-full border border-[#5865F2]/30 bg-[#5865F2]/10 px-4 py-2.5 text-sm font-bold text-[#5865F2] backdrop-blur-md transition hover:bg-[#5865F2]/20 hover:border-[#5865F2]/50"
-            >
-              Sunucuya Katıl
-            </button>
-          </div>
-
           {/* Steps */}
           <div className="flex flex-col gap-2 pt-2">
             <p className="text-xs font-semibold text-white/50 uppercase tracking-wider">Nasıl Çalışır:</p>
