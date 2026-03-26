@@ -64,36 +64,9 @@ export default function DmScreen() {
                 <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/20 text-xs font-bold text-white">
                   {i + 1}
                 </span>
-                <span 
-                  className="text-sm text-white/80" 
-                  dangerouslySetInnerHTML={{ __html: step }}
-                />
+                <span className="text-sm text-white/80">{step}</span>
               </div>
             ))}
-          </div>
-
-          {/* Close hint */}
-          <p className="text-xs text-white/30 pt-2">
-            Bu pencereyi kapatabilirsiniz.
-          </p>
-
-          {/* Terms and Privacy */}
-          <div className="flex items-center justify-center gap-2 pt-4 w-full">
-            <button 
-              type="button" 
-              onClick={() => window.open('https://discoweb.tech/terms', '_blank')} 
-              className="text-xs text-white/50 hover:text-white/75 transition-colors"
-            >
-              Kullanım Şartları
-            </button>
-            <span className="text-white/30 text-xs">·</span>
-            <button 
-              type="button" 
-              onClick={() => window.open('https://discoweb.tech/privacy', '_blank')} 
-              className="text-xs text-white/50 hover:text-white/75 transition-colors"
-            >
-              Gizlilik Politikası
-            </button>
           </div>
         </div>
 
