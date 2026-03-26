@@ -1,0 +1,19 @@
+{
+  "welcome_title": "Hoş geldin!",
+  "welcome_subtitle": "Platformumuza katılmak için bir profil oluşturman gerekiyor.",
+  "welcome_create_profile_button": "Profil Oluştur",
+  "welcome_loading": "Yükleniyor...",
+  "welcome_success_title": "Hazırsın!",
+  "welcome_success_subtitle": "Dashboard'a yönlendiriliyorsun...",
+  "welcome_error_no_guild": "Sunucu bilgisi bulunamadı, lütfen yeniden deneyin.",
+  "welcome_error_profile_create": "Profil oluşturma başarısız.",
+  "welcome_error_generic": "Bir hata oluştu, lütfen tekrar dene.",
+  "verify_role_title": "Erişim Gerekli",
+  "verify_role_subtitle": "Doğrulanmış üye rolüne sahip olman gerekiyor.",
+  "verify_role_button": "Rolü Al",
+  "verify_role_assigning": "Atanıyor...",
+  "verify_role_success_title": "Doğrulandın!",
+  "verify_role_success_subtitle": "Dashboard'a yönlendiriliyorsun...",
+  "verify_role_error_assign": "Rol ataması başarısız oldu.",
+  "verify_role_error_generic": "Bir hata oluştu, lütfen tekrar dene."
+}
