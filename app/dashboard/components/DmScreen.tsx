@@ -30,8 +30,8 @@ export default function DmScreen() {
         <MuteButton muted={muted} onToggle={toggleMute} src="/cdn/Storage/Test1.mp4" />
       </div>
 
-      <main className="relative z-10 flex min-h-screen w-full flex-col items-center justify-center gap-0 px-8 sm:px-16">
-        <div className="flex flex-col gap-5 max-w-lg items-center text-center">
+      <main className="relative z-10 flex min-h-screen w-full flex-col items-start justify-center gap-0 px-8 sm:px-16">
+        <div className="flex flex-col gap-5 max-w-lg">
           {/* DM/Grup Badge */}
           <div className="w-fit rounded-full border border-red-500/30 bg-red-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-red-400 backdrop-blur-md">
             DM veya Grup Sohbeti
@@ -50,8 +50,8 @@ export default function DmScreen() {
           </div>
 
           {/* Steps */}
-          <div className="flex flex-col gap-2 pt-2 w-full max-w-md">
-            <p className="text-xs font-semibold text-white/50 uppercase tracking-wider text-center">Nasıl Çalışır:</p>
+          <div className="flex flex-col gap-2 pt-2">
+            <p className="text-xs font-semibold text-white/50 uppercase tracking-wider">Nasıl Çalışır:</p>
             {[
               "Discord sunucusuna katıl veya kendi sunucunu oluştur.",
               "Aktiviteler bölümünü aç.",
@@ -78,7 +78,7 @@ export default function DmScreen() {
           </p>
 
           {/* Terms and Privacy */}
-          <div className="flex items-center justify-center gap-2 pt-4">
+          <div className="flex items-center justify-center gap-2 pt-4 w-full">
             <button 
               type="button" 
               onClick={() => window.open('https://discoweb.tech/terms', '_blank')} 
