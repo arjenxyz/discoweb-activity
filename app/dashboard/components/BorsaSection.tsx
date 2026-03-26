@@ -41,7 +41,12 @@ export default function BorsaSection({ onNavigate }: BorsaSectionProps) {
       const res = await fetchWithCreds(apiUrl('/api/member/market-listings'));
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
-      setListings(json.listings ?? json ?? []);
+      const next = Array.isArray(json?.listings)
+        ? json.listings
+        : Array.isArray(json)
+          ? json
+          : [];
+      setListings(next);
     } catch (e) {
       setError(String(e));
     } finally {
