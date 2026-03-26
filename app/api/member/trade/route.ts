@@ -13,6 +13,7 @@ import { NextResponse } from 'next/server';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { requireSessionUser } from '@/lib/auth';
 import { checkMaintenance } from '@/lib/maintenance';
+import { insertMarketEvent, BIG_TRADE_LOT_THRESHOLD, FULL_EXIT_REMAINING } from '@/lib/marketEvents';
 
 export const dynamic = 'force-dynamic';
 
@@ -349,6 +350,57 @@ export async function POST(request: Request) {
         .upsert({ id: 1, balance: newPlatformBalance, updated_at: now }, { onConflict: 'id' });
     }
   }
+
+  // ── 11. Market event (fire-and-forget) ───────────────────────────────────
+  void (async () => {
+    try {
+      // Büyük alım
+      if (action === 'buy' && lotCount >= BIG_TRADE_LOT_THRESHOLD) {
+        await insertMarketEvent(supabase, {
+          eventType: 'big_buy',
+          guildId,
+          actorId: userId,
+          meta: { lot_count: lotCount, price: newPrice, server_name: guildId },
+        });
+      }
+      // Büyük satış
+      if (action === 'sell' && lotCount >= BIG_TRADE_LOT_THRESHOLD) {
+        const remainingLots = holding ? holding.lot_count - lotCount : 0;
+        if (remainingLots <= FULL_EXIT_REMAINING) {
+          await insertMarketEvent(supabase, {
+            eventType: 'full_exit',
+            guildId,
+            actorId: userId,
+            meta: { lot_count: lotCount, price: newPrice, server_name: guildId },
+          });
+        } else {
+          await insertMarketEvent(supabase, {
+            eventType: 'big_sell',
+            guildId,
+            actorId: userId,
+            meta: { lot_count: lotCount, price: newPrice, server_name: guildId },
+          });
+        }
+      }
+      // ATH kontrolü
+      if (newPrice > marketPrice && newDayHigh === newPrice) {
+        const { data: prevPH } = await supabase
+          .from('price_history')
+          .select('high_price')
+          .eq('guild_id', guildId)
+          .order('date', { ascending: false })
+          .limit(30);
+        const allTimeHigh = Math.max(...(prevPH ?? []).map((r: { high_price: number }) => Number(r.high_price)), 0);
+        if (newPrice > allTimeHigh) {
+          await insertMarketEvent(supabase, {
+            eventType: 'ath',
+            guildId,
+            meta: { price: newPrice, server_name: guildId },
+          });
+        }
+      }
+    } catch { /* event hatası trade'i etkilemesin */ }
+  })();
 
   return NextResponse.json({
     status: 'ok',
