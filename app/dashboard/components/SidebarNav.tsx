@@ -24,6 +24,22 @@ export default function SidebarNav({
   const t = useT();
   const [collapsed, setCollapsed] = useState(false);
 
+  const SECTION_BG: Partial<Record<Section, string>> = {
+    overview:        '/menu-background/menu.jpg',
+    store:           '/menu-background/menu2.jpg',
+    raffles:         '/menu-background/menu3.jpg',
+    discover:        '/menu-background/menu4.jpg',
+    market:          '/menu-background/menu5.jpg',
+    treasury:        '/menu-background/menu6.jpg',
+    borsa:           '/menu-background/menu.jpg',
+    portfolio:       '/menu-background/menu2.jpg',
+    dividend:        '/menu-background/menu3.jpg',
+    'ipo-apply':     '/menu-background/menu4.jpg',
+    'market-news':   '/menu-background/menu5.jpg',
+    'economy-apply': '/menu-background/menu6.jpg',
+    mail:            '/menu-background/menu.jpg',
+  };
+
   const NAV_GROUPS = [
     {
       label: t('nav_group_discover'),
@@ -123,29 +139,50 @@ export default function SidebarNav({
                   key={key}
                   type="button"
                   onClick={() => onNavigate(key)}
-                  className={`group flex w-full items-center rounded-xl transition-all duration-150 ${
+                  className={`group relative flex w-full items-center overflow-hidden rounded-xl transition-all duration-150 ${
                     collapsed
                       ? 'h-10 w-10 justify-center mx-auto'
                       : 'gap-3 px-3 py-2.5'
                   } ${
                     active
-                      ? 'bg-white/10 text-white'
-                      : 'text-white/45 hover:bg-white/[0.06] hover:text-white/80'
+                      ? 'text-white'
+                      : 'text-white/45 hover:text-white/80'
                   }`}
                   title={collapsed ? label : undefined}
                 >
-                  <span className={`flex shrink-0 items-center justify-center rounded-lg transition-all ${
+                  {/* Buton arkaplan görseli */}
+                  {SECTION_BG[key] && (
+                    <>
+                      <img
+                        src={SECTION_BG[key]}
+                        alt=""
+                        className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-0 group-hover:opacity-30 transition-opacity duration-300"
+                      />
+                      {active && (
+                        <img
+                          src={SECTION_BG[key]}
+                          alt=""
+                          className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-20"
+                        />
+                      )}
+                    </>
+                  )}
+                  {/* Overlay */}
+                  <div className={`pointer-events-none absolute inset-0 rounded-xl transition-all duration-150 ${
+                    active ? 'bg-white/10' : 'group-hover:bg-white/[0.06]'
+                  }`} />
+                  <span className={`relative flex shrink-0 items-center justify-center rounded-lg transition-all ${
                     collapsed ? 'h-10 w-10' : 'h-7 w-7'
                   } ${active ? 'text-white' : 'text-white/45 group-hover:text-white/70'}`}>
                     <Icon className="h-4 w-4" />
                   </span>
                   {!collapsed && (
-                    <span className={`text-sm font-medium leading-none ${active ? 'text-white' : ''}`}>
+                    <span className={`relative text-sm font-medium leading-none ${active ? 'text-white' : ''}`}>
                       {label}
                     </span>
                   )}
                   {!collapsed && active && (
-                    <span className="ml-auto h-1.5 w-1.5 rounded-full bg-white/60" />
+                    <span className="relative ml-auto h-1.5 w-1.5 rounded-full bg-white/60" />
                   )}
                 </button>
               );
