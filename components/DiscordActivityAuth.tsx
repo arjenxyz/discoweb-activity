@@ -4,8 +4,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { apiUrl } from '@/lib/api';
 import { setDiscordSdk } from '@/lib/discordSdk';
-import { useLocale } from '@/contexts/LocaleContext';
+import { useLocale, useT } from '@/contexts/LocaleContext';
 import DmScreen from '@/app/dashboard/components/DmScreen';
+import { VideoBackground, MuteButton } from '@/app/dashboard/components/VideoBackground';
 import {
   DiscordSdkRichPresenceProvider,
   applyRichPresence,
@@ -560,34 +561,113 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
       window.location.reload();
     };
 
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-[#0b0d12]">
-        <div className="text-white text-center max-w-sm px-4 space-y-4">
-          <p className="text-red-400 text-sm">{error}</p>
-          <div className="flex flex-col gap-2">
-            <button
-              onClick={() => window.location.reload()}
-              className="bg-[#5865F2] hover:bg-[#4752C4] px-5 py-2.5 rounded-full text-sm font-semibold transition"
-            >
-              Tekrar Dene
-            </button>
-            <button
-              onClick={resetAndRetry}
-              className="bg-white/10 hover:bg-white/20 px-5 py-2.5 rounded-full text-sm font-semibold transition"
-            >
-              Oturumu Sıfırla
-            </button>
-          </div>
-          <div className="text-left text-xs text-white/30 bg-black/40 rounded-xl p-3 max-h-40 overflow-y-auto">
-            <p className="text-white/50 font-bold mb-1">Debug:</p>
-            <p>iframe: {String(isInIframe())}</p>
-            <p>url: {typeof window !== 'undefined' ? window.location.href : ''}</p>
-            {debugLogs.map((log, i) => <p key={i} className="break-all">{log}</p>)}
-          </div>
-        </div>
-      </div>
-    );
+    return <AuthErrorScreen
+      error={error}
+      debugLogs={debugLogs}
+      onRetry={() => window.location.reload()}
+      onReset={resetAndRetry}
+    />;
   }
 
   return <>{children}</>;
+}
+
+function AuthErrorScreen({
+  error,
+  debugLogs,
+  onRetry,
+  onReset,
+}: {
+  error: string;
+  debugLogs: string[];
+  onRetry: () => void;
+  onReset: () => void;
+}) {
+  const t = useT();
+  const [muted, setMuted] = useState(true);
+  const [debugOpen, setDebugOpen] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  const toggleMute = () => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (v.muted) { v.muted = false; v.volume = 1; v.play().catch(() => {}); }
+    else { v.muted = true; }
+    setMuted(v.muted);
+  };
+
+  return (
+    <div className="relative isolate min-h-screen overflow-hidden bg-[#0b0d12] text-white">
+      <VideoBackground videoRef={videoRef} src="/cdn/Storage/Test3.mp4" />
+
+      <div className="hidden sm:flex absolute z-20 top-6 right-6 items-center gap-2">
+        <MuteButton muted={muted} onToggle={toggleMute} src="/cdn/Storage/Test3.mp4" />
+      </div>
+
+      <main className="relative z-10 flex min-h-screen w-full flex-col items-start justify-center gap-0 px-8 sm:px-16">
+        <div className="flex flex-col gap-5 max-w-lg">
+          {/* Badge */}
+          <div className="w-fit rounded-full border border-red-500/30 bg-red-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-red-400 backdrop-blur-md">
+            {t('auth_error_badge')}
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <h1
+              className="text-4xl font-black leading-tight tracking-tight text-white"
+              style={{ textShadow: '0 0 60px rgba(255,255,255,0.15), 0 2px 20px rgba(0,0,0,1)' }}
+            >
+              {t('auth_error_title')}
+            </h1>
+            <p className="text-sm text-white/70 leading-relaxed max-w-sm" style={{ textShadow: '0 1px 8px rgba(0,0,0,1)' }}>
+              {t('auth_error_subtitle')}
+            </p>
+            <p className="text-xs text-white/35 leading-relaxed max-w-sm font-mono bg-black/30 rounded-lg px-3 py-2 backdrop-blur-sm border border-white/5">
+              {error}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            <div className="sm:hidden">
+              <MuteButton muted={muted} onToggle={toggleMute} src="/cdn/Storage/Test3.mp4" />
+            </div>
+            <button
+              type="button"
+              onClick={onRetry}
+              className="rounded-full border border-white/30 bg-white/10 px-8 py-3.5 text-sm font-bold text-white backdrop-blur-md transition hover:bg-white/20 hover:border-white/50"
+            >
+              {t('auth_retry_button')}
+            </button>
+            <button
+              type="button"
+              onClick={onReset}
+              className="rounded-full border border-red-400/25 bg-red-500/15 px-6 py-3.5 text-sm font-bold text-red-200 backdrop-blur-md transition hover:bg-red-500/25"
+            >
+              {t('auth_reset_session_button')}
+            </button>
+          </div>
+
+          <p className="text-xs text-white/30 pt-1">{t('auth_error_hint')}</p>
+
+          {/* Debug — collapsible */}
+          <button
+            type="button"
+            onClick={() => setDebugOpen(v => !v)}
+            className="self-start text-[10px] text-white/20 hover:text-white/40 transition flex items-center gap-1"
+          >
+            <svg viewBox="0 0 16 16" fill="currentColor" className={`h-2.5 w-2.5 transition-transform ${debugOpen ? 'rotate-90' : ''}`}>
+              <path d="M6 4l4 4-4 4V4z" />
+            </svg>
+            {t('auth_debug_label')}
+          </button>
+          {debugOpen && (
+            <div className="text-left text-xs text-white/30 bg-black/40 rounded-xl p-3 max-h-40 overflow-y-auto border border-white/5 backdrop-blur-md">
+              <p>iframe: {String(typeof window !== 'undefined' ? window.self !== window.top : false)}</p>
+              <p className="break-all">url: {typeof window !== 'undefined' ? window.location.href : ''}</p>
+              {debugLogs.map((log, i) => <p key={i} className="break-all">{log}</p>)}
+            </div>
+          )}
+        </div>
+      </main>
+    </div>
+  );
 }
