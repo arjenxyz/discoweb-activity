@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import type { ActivityReadiness } from './ActivityReadinessGate';
-import DeveloperPanel from './DeveloperPanel';
 import DeveloperAboutModal from './DeveloperAboutModal';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { apiUrl } from '@/lib/api';
@@ -19,6 +19,7 @@ type Phase = 'intro' | 'loading' | 'success';
 
 export default function WelcomeScreen({ readiness, onRetry }: Props) {
   const t = useT();
+  const router = useRouter();
   const [phase, setPhase] = useState<Phase>('intro');
   const [error, setError] = useState<string | null>(null);
   const [errorCode, setErrorCode] = useState<string | null>(null);
@@ -26,9 +27,7 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
   const [muted, setMuted] = useState(true);
   const [isDeveloper, setIsDeveloper] = useState(false);
   const [isDeveloperChecked, setIsDeveloperChecked] = useState(false);
-  const [devPanelOpen, setDevPanelOpen] = useState(false);
   const [devAboutOpen, setDevAboutOpen] = useState(false);
-  const [maintenance, setMaintenance] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const linkSdkRef = useRef<InstanceType<Awaited<typeof import('@discord/embedded-app-sdk')>['DiscordSDK']> | null>(null);
 
@@ -111,7 +110,7 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
         {isDeveloper && (
           <button
             type="button"
-            onClick={() => setDevPanelOpen(true)}
+            onClick={() => router.push('/activity/developer')}
             className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white hover:bg-black/60"
             aria-label="Developer Panel"
           >
@@ -212,13 +211,6 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
         <button type="button" onClick={() => setDevAboutOpen(true)} className="text-xs text-white/50 hover:text-white/75 transition-colors">Developer</button>
       </div>
 
-      {devPanelOpen && (
-        <DeveloperPanel
-          maintenance={maintenance}
-          onMaintenanceChange={setMaintenance}
-          onClose={() => setDevPanelOpen(false)}
-        />
-      )}
       {devAboutOpen && <DeveloperAboutModal onClose={() => setDevAboutOpen(false)} />}
     </div>
   );
