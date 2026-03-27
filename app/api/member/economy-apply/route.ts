@@ -196,8 +196,8 @@ export async function POST(request: Request) {
         new_status: nextStatus,
         scheduled_open_at: scheduledOpen.toISOString(),
         message: nextStatus === 'approved'
-          ? 'E?i?e ula??ld? ve otomatik onayland?.'
-          : 'E?i?e ula??ld?! Ba?vurunuz incelemeye al?nd?.',
+          ? 'Eşiğe ulaşıldı ve otomatik onaylandı.'
+          : 'Eşiğe ulaşıldı! Başvurunuz incelemeye alındı.',
       });
     }
 
