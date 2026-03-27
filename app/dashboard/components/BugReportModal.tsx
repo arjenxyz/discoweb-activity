@@ -80,7 +80,7 @@ export default function BugReportModal({ onClose }: Props) {
       guildId: ls('selectedGuildId'),
       frameId: ls('discord_frame_id'),
       instanceId: ls('discord_instance_id'),
-      hasToken: !!ls('discord_bearer_token'),
+      authMethod: ls('discord_bearer_token') ? 'bearer_token' : 'cookie_session',
       theme: ls('uiTheme') ?? ls('mailSectionTheme'),
     };
 

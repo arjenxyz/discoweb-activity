@@ -74,7 +74,7 @@ export async function POST(request: Request) {
     field('🎮 Guild ID', s.guildId),
     field('🖼️ Frame ID', s.frameId),
     field('📋 Instance ID', s.instanceId),
-    field('🔑 Token Var mı', s.hasToken != null ? (s.hasToken ? '✅ Evet' : '❌ Hayır') : null),
+    field('🔑 Auth Yöntemi', s.authMethod),
     field('🎨 Tema', s.theme),
 
     // Ekran & viewport
