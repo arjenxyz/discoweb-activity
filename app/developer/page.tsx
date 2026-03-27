@@ -45,13 +45,11 @@ export default function DeveloperPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0b0d12] text-white">
-      <DeveloperPanel
-        maintenance={maintenance}
-        onMaintenanceChange={setMaintenance}
-        onClose={() => router.back()}
-        variant="page"
-      />
-    </div>
+    <DeveloperPanel
+      maintenance={maintenance}
+      onMaintenanceChange={setMaintenance}
+      onClose={() => router.back()}
+      variant="page"
+    />
   );
 }
