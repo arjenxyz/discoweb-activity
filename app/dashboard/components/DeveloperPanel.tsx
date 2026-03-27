@@ -124,9 +124,9 @@ type ProfileRow = {
 };
 
 const formatDate = (value?: string | null) => {
-  if (!value) return '—';
+  if (!value) return 'Â—';
   const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return '—';
+  if (Number.isNaN(d.getTime())) return 'Â—';
   return d.toLocaleString('tr-TR');
 };
 
@@ -213,14 +213,14 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
     setAdError(null);
     try {
       const res = await fetch(`https://discord.com/api/v10/invites/${code}?with_counts=true`);
-      if (!res.ok) throw new Error('Geçersiz davet linki');
+      if (!res.ok) throw new Error('GeÃ§ersiz davet linki');
       const data = await res.json() as {
         guild?: { name?: string; description?: string | null; icon?: string | null; id?: string };
         approximate_member_count?: number;
         approximate_presence_count?: number;
       };
       const guild = data.guild;
-      if (!guild) throw new Error('Sunucu bilgisi alýnamadý');
+      if (!guild) throw new Error('Sunucu bilgisi alÃ½namadÃ½');
       setPreview({
         invite_url: url,
         server_name: guild.name ?? '',
@@ -232,7 +232,7 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
         online_count: data.approximate_presence_count ?? null,
       });
     } catch (e) {
-      setAdError(e instanceof Error ? e.message : 'Davet bilgisi alýnamadý');
+      setAdError(e instanceof Error ? e.message : 'Davet bilgisi alÃ½namadÃ½');
       setPreview(null);
     } finally {
       setAdFetching(false);
@@ -396,19 +396,19 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
     <div className="grid gap-3 md:grid-cols-4">
       <div className="rounded-xl border border-white/10 bg-white/5 p-4">
         <p className="text-xs text-white/40">{t('developer_stat_users')}</p>
-        <p className="mt-1 text-xl font-semibold text-white">{overview?.userCount ?? '—'}</p>
+        <p className="mt-1 text-xl font-semibold text-white">{overview?.userCount ?? 'Â—'}</p>
       </div>
       <div className="rounded-xl border border-white/10 bg-white/5 p-4">
         <p className="text-xs text-white/40">{t('developer_stat_servers')}</p>
-        <p className="mt-1 text-xl font-semibold text-white">{overview?.serverCount ?? '—'}</p>
+        <p className="mt-1 text-xl font-semibold text-white">{overview?.serverCount ?? 'Â—'}</p>
       </div>
       <div className="rounded-xl border border-white/10 bg-white/5 p-4">
         <p className="text-xs text-white/40">{t('developer_stat_profiles')}</p>
-        <p className="mt-1 text-xl font-semibold text-white">{overview?.profileCount ?? '—'}</p>
+        <p className="mt-1 text-xl font-semibold text-white">{overview?.profileCount ?? 'Â—'}</p>
       </div>
       <div className="rounded-xl border border-white/10 bg-white/5 p-4">
         <p className="text-xs text-white/40">{t('developer_stat_advanced')}</p>
-        <p className="mt-1 text-xl font-semibold text-white">{overview?.advancedServerCount ?? '—'}</p>
+        <p className="mt-1 text-xl font-semibold text-white">{overview?.advancedServerCount ?? 'Â—'}</p>
       </div>
     </div>
   );
@@ -551,10 +551,10 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
               </div>
               <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-white/60">
                 <span>Durum: <strong className="text-white">{app.status}</strong></span>
-                <span>Üye: <strong className="text-white">{app.criteria?.memberCount ?? 0}</strong></span>
+                <span>Ãœye: <strong className="text-white">{app.criteria?.memberCount ?? 0}</strong></span>
                 <span>Oy: <strong className="text-white">{app.criteria?.voteCount ?? 0}</strong> / {app.criteria?.voteThreshold ?? 120}</span>
                 <span>Kurulum: <strong className="text-white">{app.criteria?.isSetup ? 'var' : 'yok'}</strong></span>
-                <span>Uygun: <strong className="text-white">{app.criteria?.eligible ? 'evet' : 'hayýr'}</strong></span>
+                <span>Uygun: <strong className="text-white">{app.criteria?.eligible ? 'evet' : 'hayÃ½r'}</strong></span>
               </div>
               <div className="mt-3 flex gap-2">
                 <button
@@ -591,7 +591,7 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
                 <span className="text-[10px] text-white/50">{formatDate(app.created_at)}</span>
               </div>
               <div className="mt-2 text-[11px] text-white/60">
-                <span>Baþvuran: <strong className="text-white">{app.applicant_user_id}</strong></span>
+                <span>BaÃ¾vuran: <strong className="text-white">{app.applicant_user_id}</strong></span>
                 <span className="ml-3">Durum: <strong className="text-white">{app.status}</strong></span>
               </div>
               <div className="mt-3 flex gap-2">
@@ -637,7 +637,7 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
                 <span className="text-[10px] text-white/40">{formatDate(server.created_at)}</span>
               </div>
               <p className="mt-1 text-[11px] text-white/40">{server.discord_id}</p>
-              <p className="mt-1 text-[11px] text-white/50">Tier: {server.economy_tier} · Üye: {server.member_count ?? 0} · Kurulum: {server.is_setup ? 'var' : 'yok'}</p>
+              <p className="mt-1 text-[11px] text-white/50">Tier: {server.economy_tier} Â· Ãœye: {server.member_count ?? 0} Â· Kurulum: {server.is_setup ? 'var' : 'yok'}</p>
             </button>
           ))}
           {servers.length === 0 && (
@@ -652,13 +652,13 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
             <p className="text-sm font-semibold text-white">{selectedServer.name}</p>
             <p className="text-[11px] text-white/40">{selectedServer.discord_id}</p>
             <div className="mt-3 text-[11px] text-white/60 space-y-1">
-              <div>Üye: <strong className="text-white">{selectedServer.member_count ?? 0}</strong></div>
+              <div>Ãœye: <strong className="text-white">{selectedServer.member_count ?? 0}</strong></div>
               <div>Kurulum: <strong className="text-white">{selectedServer.is_setup ? 'var' : 'yok'}</strong></div>
               <div>Ekonomi: <strong className="text-white">{selectedServer.economy_tier}</strong></div>
-              <div>Admin Rol: <strong className="text-white">{selectedServer.admin_role_id ?? '—'}</strong></div>
-              <div>Verify Rol: <strong className="text-white">{selectedServer.verify_role_id ?? '—'}</strong></div>
-              <div>Market Saatleri: <strong className="text-white">{selectedServer.market_hours_enabled ? `${selectedServer.market_open_time ?? '—'} - ${selectedServer.market_close_time ?? '—'}` : 'kapalý'}</strong></div>
-              <div>Zaman Dilimi: <strong className="text-white">{selectedServer.market_timezone ?? '—'}</strong></div>
+              <div>Admin Rol: <strong className="text-white">{selectedServer.admin_role_id ?? 'Â—'}</strong></div>
+              <div>Verify Rol: <strong className="text-white">{selectedServer.verify_role_id ?? 'Â—'}</strong></div>
+              <div>Market Saatleri: <strong className="text-white">{selectedServer.market_hours_enabled ? `${selectedServer.market_open_time ?? 'Â—'} - ${selectedServer.market_close_time ?? 'Â—'}` : 'kapalÃ½'}</strong></div>
+              <div>Zaman Dilimi: <strong className="text-white">{selectedServer.market_timezone ?? 'Â—'}</strong></div>
             </div>
           </>
         ) : (
@@ -703,10 +703,10 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
             <div className="mt-3 text-[11px] text-white/60 space-y-1">
               <div>Sunucu: <strong className="text-white">{selectedProfile.guild_id}</strong></div>
               <div>Etiket: <strong className="text-white">{selectedProfile.has_tag ? 'var' : 'yok'}</strong></div>
-              <div>Booster: <strong className="text-white">{selectedProfile.is_booster ? 'evet' : 'hayýr'}</strong></div>
+              <div>Booster: <strong className="text-white">{selectedProfile.is_booster ? 'evet' : 'hayÃ½r'}</strong></div>
               <div>Davet: <strong className="text-white">{selectedProfile.total_invites ?? 0}</strong></div>
-              <div>Referral: <strong className="text-white">{selectedProfile.referral_code ?? '—'}</strong></div>
-              <div>Hakkýnda: <strong className="text-white">{selectedProfile.about ?? '—'}</strong></div>
+              <div>Referral: <strong className="text-white">{selectedProfile.referral_code ?? 'Â—'}</strong></div>
+              <div>HakkÃ½nda: <strong className="text-white">{selectedProfile.about ?? 'Â—'}</strong></div>
             </div>
             <div className="mt-3 rounded-lg bg-black/30 p-3 text-[11px] text-white/60 whitespace-pre-wrap">
               <pre className="whitespace-pre-wrap">{prettyJson(selectedProfile)}</pre>
@@ -747,7 +747,7 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
 
       {preview && (
         <div className="mt-3 rounded-xl border border-[#5865F2]/20 bg-[#5865F2]/5 p-3">
-          <p className="text-[10px] text-white/30 uppercase tracking-wider mb-2">Önizleme</p>
+          <p className="text-[10px] text-white/30 uppercase tracking-wider mb-2">Ã–nizleme</p>
           <div className="flex items-center gap-3">
             {preview.server_icon ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -763,8 +763,8 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
                 <p className="text-[10px] text-white/40 truncate">{preview.server_description}</p>
               )}
               <div className="mt-0.5 flex items-center gap-2 text-[10px] text-white/30">
-                {preview.online_count != null && <span>?? {preview.online_count.toLocaleString()} çevrimiçi</span>}
-                {preview.member_count != null && <span>?? {preview.member_count.toLocaleString()} üye</span>}
+                {preview.online_count != null && <span>?? {preview.online_count.toLocaleString()} Ã§evrimiÃ§i</span>}
+                {preview.member_count != null && <span>?? {preview.member_count.toLocaleString()} Ã¼ye</span>}
               </div>
             </div>
           </div>
@@ -772,7 +772,7 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
       )}
 
       {adError && <p className="mt-2 text-xs text-red-400">{adError}</p>}
-      {adSuccess && <p className="mt-2 text-xs text-emerald-400">Reklam yayýnlandý!</p>}
+      {adSuccess && <p className="mt-2 text-xs text-emerald-400">Reklam yayÃ½nlandÃ½!</p>}
 
       {preview && (
         <button
@@ -780,7 +780,7 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
           disabled={adLoading}
           className="mt-3 w-full rounded-lg bg-[#5865F2]/20 hover:bg-[#5865F2]/30 border border-[#5865F2]/30 px-3 py-2 text-xs font-semibold text-indigo-300 transition disabled:opacity-40"
         >
-          {adLoading ? 'Yayýnlanýyor...' : 'Reklam Ver'}
+          {adLoading ? 'YayÃ½nlanÃ½yor...' : 'Reklam Ver'}
         </button>
       )}
 
@@ -791,7 +791,7 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
             <div key={a.id} className="flex items-center justify-between gap-2 rounded-lg border border-white/[0.06] bg-black/20 px-3 py-2">
               <div className="min-w-0 flex-1">
                 <p className="truncate text-xs font-semibold text-white">{a.server_name}</p>
-                <p className="text-[10px] text-white/30">{a.active ? '?? Görüntüleniyor' : '? Gizlendi'}</p>
+                <p className="text-[10px] text-white/30">{a.active ? '?? GÃ¶rÃ¼ntÃ¼leniyor' : '? Gizlendi'}</p>
               </div>
               <button
                 onClick={() => deleteAd(a.id)}
