@@ -73,7 +73,7 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
     const updateMiniMode = () => {
       const w = window.innerWidth;
       const h = window.innerHeight;
-      const isMini = w <= 520 || h <= 420;
+      const isMini = w <= 320 || h <= 280;
       if (isMini) {
         document.body.dataset.discordMini = '1';
       } else {

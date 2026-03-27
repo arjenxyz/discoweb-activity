@@ -227,7 +227,7 @@ export default function SplashScreen({ onEnter }: Props) {
             >
               Disco<span style={logoBlueStyle}>Web</span>
             </span>
-            <span className="text-[10px] font-medium text-white/50 tracking-wide">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/50">
               {t('splash_platform_name')}
             </span>
           </div>
