@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import {
-  LuLayoutDashboard, LuScrollText, LuAlertTriangle, LuClipboardList,
+  LuLayoutDashboard, LuScrollText, LuTriangleAlert, LuClipboardList,
   LuServer, LuUsers, LuMegaphone, LuChevronLeft, LuRefreshCw,
   LuShield, LuSearch, LuTrash2, LuCheck, LuX, LuCopy, LuLink,
 } from 'react-icons/lu';
@@ -160,7 +160,7 @@ type TabId = 'overview' | 'logs' | 'apps' | 'servers' | 'profiles' | 'ads' | 'su
 const NAV_ITEMS: { id: TabId; label: string; Icon: React.ElementType; accent: string }[] = [
   { id: 'overview',   label: 'Genel Bakış',   Icon: LuLayoutDashboard, accent: 'text-[#7289da]' },
   { id: 'logs',       label: 'Loglar',         Icon: LuScrollText,      accent: 'text-emerald-400' },
-  { id: 'suspicious', label: 'Şüpheli',        Icon: LuAlertTriangle,   accent: 'text-red-400' },
+  { id: 'suspicious', label: 'Şüpheli',        Icon: LuTriangleAlert,   accent: 'text-red-400' },
   { id: 'apps',       label: 'Başvurular',     Icon: LuClipboardList,   accent: 'text-amber-400' },
   { id: 'servers',    label: 'Sunucular',      Icon: LuServer,          accent: 'text-violet-400' },
   { id: 'profiles',   label: 'Profiller',      Icon: LuUsers,           accent: 'text-sky-400' },
@@ -990,7 +990,7 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
 
           {error && (
             <div className="mb-4 flex items-center gap-2.5 rounded-xl border border-red-500/20 bg-red-500/8 px-4 py-3">
-              <LuAlertTriangle className="h-4 w-4 shrink-0 text-red-400" />
+              <LuTriangleAlert className="h-4 w-4 shrink-0 text-red-400" />
               <p className="text-xs text-red-400">{error}</p>
             </div>
           )}
