@@ -77,6 +77,18 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
     setMuted(v.muted);
   };
 
+  const STATUS_TO_CODE: Partial<Record<ActivityReadinessStatus, string>> = {
+    server_not_registered: 'DW-2001',
+    server_setup_required: 'DW-2002',
+    bot_not_in_guild: 'DW-2003',
+    discord_api_error: 'DW-2004',
+    missing_service_role: 'DW-2005',
+    missing_bot_token: 'DW-2006',
+    unauthorized: 'DW-3001',
+    user_not_in_guild: 'DW-3002',
+    missing_user_profile: 'DW-3003',
+  };
+
   const REPORTABLE = new Set(['discord_api_error', 'missing_service_role', 'missing_bot_token', 'server_not_registered', 'server_setup_required']);
   const alreadyReported = reportedStatus === readiness.status;
 
@@ -210,7 +222,10 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
           {REPORTABLE.has(readiness.status) && (
             <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 backdrop-blur-md flex flex-col gap-2">
               <p className="text-xs font-mono text-red-300">
-                hata: <span className="font-bold">{readiness.status}</span>
+                {STATUS_TO_CODE[readiness.status] && (
+                  <span className="font-bold text-red-200">{STATUS_TO_CODE[readiness.status]} · </span>
+                )}
+                <span className="font-bold">{readiness.status}</span>
                 {readiness.debug && <> · {JSON.stringify(readiness.debug)}</>}
               </p>
               <button

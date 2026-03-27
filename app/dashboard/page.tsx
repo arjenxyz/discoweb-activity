@@ -980,15 +980,12 @@ export default function DashboardPage() {
     await refreshStoreItems(storePage + 1, true);
   };
 
-  const mainWrapperClass = effectiveSection === 'mail'
-    ? 'mx-0 w-full max-w-full px-0'
-    : effectiveSection === 'market'
-      ? 'mx-0 w-full max-w-full px-0'
-      : effectiveSection === 'store'
-        ? isActivityEmbed
-          ? 'mx-0 w-full max-w-full px-0'
-          : 'w-full max-w-4xl px-0 sm:px-6'
-        : 'w-full max-w-4xl px-4 sm:px-6';
+  const FULL_WIDTH_SECTIONS = ['mail', 'market', 'store', 'raffles'];
+  const mainWrapperClass = FULL_WIDTH_SECTIONS.includes(effectiveSection)
+    ? (effectiveSection === 'store' && !isActivityEmbed)
+      ? 'w-full max-w-4xl px-0 sm:px-6'
+      : 'mx-0 w-full max-w-full px-0'
+    : 'w-full max-w-4xl px-4 sm:px-6';
   const mainSpacingClass = effectiveSection === 'mail'
     ? 'py-0 gap-0'
     : effectiveSection === 'market'
@@ -997,7 +994,9 @@ export default function DashboardPage() {
         ? isActivityEmbed
           ? 'md:pt-20 pb-28 gap-0 md:pb-0'
           : 'md:pt-20 pb-28 sm:pb-10 gap-0 sm:gap-6 md:pb-0'
-        : 'md:pt-24 pb-6 gap-6';
+        : effectiveSection === 'raffles'
+          ? 'md:pt-20 pb-6 gap-0'
+          : 'md:pt-24 pb-6 gap-6';
 
   // Splash — readiness sorgulanmadan önce gösterilir
   if (!splashDone) {
@@ -1127,7 +1126,7 @@ export default function DashboardPage() {
         />
         )}
 
-        <main className={`${mainWrapperClass} flex-1 ${mainSpacingClass} overflow-y-auto custom-scrollbar`}>
+        <main className={`${mainWrapperClass} flex flex-col flex-1 ${mainSpacingClass} overflow-y-auto custom-scrollbar`}>
             {!maintenanceLoading && isSiteMaintenance && (
               <section className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-6">
                 <p className="text-sm font-semibold text-amber-200">Site bakÄ±mda</p>
@@ -1609,6 +1608,5 @@ export default function DashboardPage() {
     </div>
   );
 }
-
 
 

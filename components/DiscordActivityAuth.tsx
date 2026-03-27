@@ -138,7 +138,7 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
 
     const hardTimeoutId = window.setTimeout(() => {
       if (!signal.aborted) {
-        setError('Authentication timeout. Lütfen Activity penceresini kapatıp tekrar açın.');
+        setError('[DW-1002] Authentication timeout. Lütfen Activity penceresini kapatıp tekrar açın.');
         setIsLoading(false);
       }
     }, 90000);
@@ -489,14 +489,14 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
       // --- SDK AUTH ---
       const clientId = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
       if (!clientId) {
-        setError('NEXT_PUBLIC_DISCORD_CLIENT_ID tanımlı değil.');
+        setError('[DW-1003] NEXT_PUBLIC_DISCORD_CLIENT_ID tanımlı değil.');
         setIsLoading(false);
         return;
       }
 
       // Production'da frame_id zorunlu
       if (inDiscordRuntime && !currentFrameId) {
-        setError('Discord frame_id parametresi bulunamadı. Activity penceresini kapatıp tekrar açın.');
+        setError('[DW-1001] Discord frame_id parametresi bulunamadı. Activity penceresini kapatıp tekrar açın.');
         setIsLoading(false);
         return;
       }
@@ -526,14 +526,14 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
         if (signal.aborted) return;
         const msg = err instanceof Error ? err.message : String(err);
         addLog(`SDK auth hatası: ${msg}`);
-        setError(`Discord yetkilendirmesi başarısız: ${msg}`);
+        setError(`[DW-1004] Discord yetkilendirmesi başarısız: ${msg}`);
         setIsLoading(false);
       }
     }
 
     authenticate().catch((err) => {
       if (signal.aborted) return;
-      setError(`Beklenmeyen hata: ${err instanceof Error ? err.message : String(err)}`);
+      setError(`[DW-9001] Beklenmeyen hata: ${err instanceof Error ? err.message : String(err)}`);
       setIsLoading(false);
     }).finally(() => {
       window.clearTimeout(hardTimeoutId);
