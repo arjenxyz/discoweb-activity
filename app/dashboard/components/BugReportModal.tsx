@@ -47,7 +47,9 @@ export default function BugReportModal({ onClose }: Props) {
       fd.append('errorLog', JSON.stringify(errorLog));
       if (imageFile) fd.append('image', imageFile);
 
-      const res = await fetch('/api/support/bug-report', { method: 'POST', body: fd });
+      const token = (() => { try { return localStorage.getItem('discord_bearer_token'); } catch { return null; } })();
+      const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await fetch('/api/support/bug-report', { method: 'POST', headers, body: fd });
       if (!res.ok) throw new Error('failed');
       setStatus('success');
       setTimeout(onClose, 2000);
