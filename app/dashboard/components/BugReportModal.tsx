@@ -31,12 +31,57 @@ export default function BugReportModal({ onClose }: Props) {
     if (!description.trim() || status === 'sending') return;
     setStatus('sending');
 
+    const ls = (key: string) => { try { return localStorage.getItem(key); } catch { return null; } };
+
+    const nav = typeof navigator !== 'undefined' ? navigator : null;
+    const win = typeof window !== 'undefined' ? window : null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const conn = (nav as any)?.connection ?? (nav as any)?.mozConnection ?? (nav as any)?.webkitConnection;
+    const perf = win?.performance;
+    const navEntry = perf?.getEntriesByType?.('navigation')?.[0] as PerformanceNavigationTiming | undefined;
+
     const sessionInfo = {
-      url: typeof window !== 'undefined' ? window.location.href : '',
-      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
-      screenSize: typeof window !== 'undefined' ? `${window.screen.width}×${window.screen.height}` : '',
-      guildId: (() => { try { return localStorage.getItem('selectedGuildId') ?? undefined; } catch { return undefined; } })(),
+      // Sayfa
+      url: win?.location.href ?? '',
       timestamp: new Date().toISOString(),
+      locale: nav?.language ?? '',
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      online: nav?.onLine ?? true,
+
+      // Ekran & Viewport
+      screenSize: win ? `${win.screen.width}×${win.screen.height}` : '',
+      viewport: win ? `${win.innerWidth}×${win.innerHeight}` : '',
+      devicePixelRatio: win?.devicePixelRatio ?? 1,
+      colorDepth: win?.screen.colorDepth ?? 0,
+
+      // Tarayıcı
+      userAgent: nav?.userAgent ?? '',
+      platform: nav?.platform ?? '',
+      cookiesEnabled: nav?.cookieEnabled ?? false,
+      doNotTrack: nav?.doNotTrack ?? null,
+
+      // Bellek (Chrome only)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      memoryMB: (perf as any)?.memory
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ? `${Math.round((perf as any).memory.usedJSHeapSize / 1048576)}MB / ${Math.round((perf as any).memory.jsHeapSizeLimit / 1048576)}MB`
+        : null,
+
+      // Ağ
+      connectionType: conn?.effectiveType ?? null,
+      downlink: conn?.downlink ? `${conn.downlink} Mbps` : null,
+      rtt: conn?.rtt ? `${conn.rtt}ms` : null,
+
+      // Performans
+      pageLoadMs: navEntry ? Math.round(navEntry.loadEventEnd - navEntry.startTime) : null,
+      domInteractiveMs: navEntry ? Math.round(navEntry.domInteractive - navEntry.startTime) : null,
+
+      // Discord / Session
+      guildId: ls('selectedGuildId'),
+      frameId: ls('discord_frame_id'),
+      instanceId: ls('discord_instance_id'),
+      hasToken: !!ls('discord_bearer_token'),
+      theme: ls('uiTheme') ?? ls('mailSectionTheme'),
     };
 
     const errorLog = getClientErrors();

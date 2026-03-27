@@ -53,26 +53,67 @@ export async function POST(request: Request) {
 
   const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? 'Bilinmiyor';
 
+  const s = sessionInfo;
+  const str = (v: unknown) => v != null ? String(v) : null;
+  const field = (name: string, value: unknown, inline = true) =>
+    str(value) ? { name, value: str(value)!, inline } : null;
+
+  const fields = [
+    // Kim
+    { name: '👤 Kullanıcı', value: `<@${session.userId}>`, inline: true },
+    field('🌐 IP', ip),
+    field('⏰ Zaman', new Date().toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' })),
+
+    // Sayfa
+    s.url ? { name: '🔗 URL', value: String(s.url).slice(0, 500), inline: false } : null,
+    field('🗺️ Timezone', s.timezone),
+    field('🌍 Locale', s.locale),
+    field('🌐 Online', s.online != null ? (s.online ? 'Evet' : 'Hayır') : null),
+
+    // Discord session
+    field('🎮 Guild ID', s.guildId),
+    field('🖼️ Frame ID', s.frameId),
+    field('📋 Instance ID', s.instanceId),
+    field('🔑 Token Var mı', s.hasToken != null ? (s.hasToken ? '✅ Evet' : '❌ Hayır') : null),
+    field('🎨 Tema', s.theme),
+
+    // Ekran & viewport
+    field('🖥️ Ekran', s.screenSize),
+    field('📐 Viewport', s.viewport),
+    field('🔍 DPR', s.devicePixelRatio),
+    field('🎨 Renk Derinliği', s.colorDepth ? `${s.colorDepth}-bit` : null),
+
+    // Ağ
+    field('📶 Bağlantı', s.connectionType),
+    field('⬇️ Downlink', s.downlink),
+    field('📡 RTT', s.rtt),
+
+    // Performans
+    field('⚡ Sayfa Yükleme', s.pageLoadMs != null ? `${s.pageLoadMs}ms` : null),
+    field('🏃 DOM Interactive', s.domInteractiveMs != null ? `${s.domInteractiveMs}ms` : null),
+    field('🧠 Bellek', s.memoryMB),
+
+    // Tarayıcı
+    s.userAgent ? { name: '🌐 User Agent', value: `\`${String(s.userAgent).slice(0, 200)}\``, inline: false } : null,
+    field('💻 Platform', s.platform),
+    field('🍪 Cookie', s.cookiesEnabled != null ? (s.cookiesEnabled ? 'Açık' : 'Kapalı') : null),
+
+    // Hata logları
+    errorLog.length > 0 ? {
+      name: `🪲 Son Hatalar (${errorLog.length} adet)`,
+      value: '```json\n' + JSON.stringify(errorLog.slice(-5), null, 2).slice(0, 1000) + '\n```',
+      inline: false,
+    } : { name: '🪲 Hata Logu', value: '`Kayıtlı hata yok`', inline: true },
+
+  ].filter(Boolean) as { name: string; value: string; inline: boolean }[];
+
   const embed = {
     title: '🐛 Hata Bildirimi',
     color: 0xED4245,
     description: description.slice(0, 2000),
-    fields: [
-      { name: 'Kullanıcı', value: `<@${session.userId}>`, inline: true },
-      { name: 'IP', value: ip, inline: true },
-      { name: 'Zaman', value: new Date().toISOString(), inline: true },
-      ...(sessionInfo.url ? [{ name: 'URL', value: String(sessionInfo.url), inline: false }] : []),
-      ...(sessionInfo.userAgent ? [{ name: 'User Agent', value: `\`${String(sessionInfo.userAgent).slice(0, 200)}\``, inline: false }] : []),
-      ...(sessionInfo.screenSize ? [{ name: 'Ekran', value: String(sessionInfo.screenSize), inline: true }] : []),
-      ...(sessionInfo.guildId ? [{ name: 'Guild', value: String(sessionInfo.guildId), inline: true }] : []),
-      ...(errorLog.length > 0 ? [{
-        name: `Son Hatalar (${errorLog.length})`,
-        value: '```json\n' + JSON.stringify(errorLog.slice(-3), null, 2).slice(0, 900) + '\n```',
-        inline: false,
-      }] : []),
-    ],
+    fields: fields.slice(0, 25), // Discord max 25 field
     timestamp: new Date().toISOString(),
-    footer: { text: 'DiscoWeb Destek Sistemi' },
+    footer: { text: `DiscoWeb Destek · User: ${session.userId}` },
   };
 
   if (!imageBase64) {
