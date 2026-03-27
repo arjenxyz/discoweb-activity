@@ -9,6 +9,7 @@ import ThemeBootstrap from "./components/ThemeBootstrap";
 import DiscordUrlPatch from "../components/DiscordUrlPatch";
 import ErrorCollector from "./components/ErrorCollector";
 import { LocaleProvider } from "@/contexts/LocaleContext";
+import GlobalErrorReporter from "@/components/GlobalErrorReporter";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -46,6 +47,7 @@ export default function RootLayout({
             <FrameIdTracker />
             {children}
             <CartDrawer />
+            <GlobalErrorReporter />
           </CartProvider>
         </LocaleProvider>
       </body>

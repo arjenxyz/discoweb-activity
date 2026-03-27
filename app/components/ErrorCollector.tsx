@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { pushClientError } from '@/lib/clientErrorStore';
+import { reportError } from '@/components/GlobalErrorReporter';
 
 const DEBOUNCE_MS = 5000; // aynı hatayı 5 saniyede bir kez gönder
 const sent = new Set<string>(); // session boyunca duplicate'leri önle
@@ -57,6 +58,11 @@ export default function ErrorCollector() {
         timestamp: new Date().toISOString(),
       };
       pushClientError(payload);
+      reportError({
+        message: event.message,
+        stack: event.error?.stack,
+        context: `${event.filename ?? ''}:${event.lineno ?? ''}:${event.colno ?? ''}`,
+      });
       if (!shouldSend(key)) return;
       sendError({ ...payload, col: event.colno, ...meta() });
     };
@@ -74,6 +80,11 @@ export default function ErrorCollector() {
         timestamp: new Date().toISOString(),
       };
       pushClientError(payload);
+      reportError({
+        message,
+        stack: event.reason instanceof Error ? event.reason.stack : undefined,
+        context: 'Unhandled Promise Rejection',
+      });
       if (!shouldSend(key)) return;
       sendError({ ...payload, ...meta() });
     };
