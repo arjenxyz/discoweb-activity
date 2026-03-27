@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { getClientErrors } from '@/lib/clientErrorStore';
 import { apiUrl } from '@/lib/api';
 
@@ -151,9 +152,9 @@ export default function BugReportModal({ onClose, section }: Props) {
 
   const cfg = STATUS_CONFIG[reportStatus];
 
-  return (
+  const content = (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
@@ -308,4 +309,7 @@ export default function BugReportModal({ onClose, section }: Props) {
       </div>
     </div>
   );
+
+  if (typeof document === 'undefined') return null;
+  return createPortal(content, document.body);
 }
