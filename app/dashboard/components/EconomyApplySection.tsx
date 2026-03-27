@@ -25,6 +25,14 @@ export default function EconomyApplySection() {
   const [submitting, setSubmitting] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
+  const [step, setStep] = useState(0);
+  const [acknowledged, setAcknowledged] = useState(false);
+
+  const getGuildId = () => {
+    try { return localStorage.getItem('selectedGuildId'); } catch { return null; }
+  };
+  const getStepKey = (gid: string | null) => gid ? `economy_apply_step_${gid}` : 'economy_apply_step';
+  const getAckKey = (gid: string | null) => gid ? `economy_apply_ack_${gid}` : 'economy_apply_ack';
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -41,6 +49,27 @@ export default function EconomyApplySection() {
   }, []);
 
   useEffect(() => { void load(); }, [load]);
+
+  useEffect(() => {
+    const gid = getGuildId();
+    try {
+      const savedStep = localStorage.getItem(getStepKey(gid));
+      const savedAck = localStorage.getItem(getAckKey(gid));
+      if (savedStep) {
+        const parsed = Number(savedStep);
+        if (Number.isFinite(parsed)) setStep(parsed);
+      }
+      if (savedAck) setAcknowledged(savedAck === '1');
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    const gid = getGuildId();
+    try {
+      localStorage.setItem(getStepKey(gid), String(step));
+      localStorage.setItem(getAckKey(gid), acknowledged ? '1' : '0');
+    } catch {}
+  }, [step, acknowledged]);
 
   const handleApply = async (type: 'direct' | 'vote') => {
     setSubmitting(true);
@@ -103,6 +132,13 @@ export default function EconomyApplySection() {
 
   return (
     <div className="space-y-6">
+      <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0b0d12] p-6">
+        <div
+          className="absolute inset-0 bg-cover bg-center opacity-20"
+          style={{ backgroundImage: "url('/background/background.jpg')" }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black/80" />
+        <div className="relative z-10 space-y-6">
       <div>
         <h2 className="text-xl font-bold text-white">{t('economy_apply_title')}</h2>
         <p className="text-sm text-white/40 mt-0.5">{t('economy_apply_subtitle')}</p>
@@ -139,7 +175,41 @@ export default function EconomyApplySection() {
           )}
 
           {/* Action panel */}
-          {app?.status === 'none' && (
+          {app?.status === 'none' && step === 0 && (
+            <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5 space-y-4">
+              <h3 className="text-sm font-semibold text-white">{t('economy_apply_step1_title')}</h3>
+              <p className="text-sm text-white/50">{t('economy_apply_step1_desc')}</p>
+              <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-4 text-xs text-amber-200 space-y-2">
+                <p>{t('economy_apply_warning_title')}</p>
+                <ul className="list-disc pl-4 space-y-1">
+                  <li>{t('economy_apply_warning_item_1')}</li>
+                  <li>{t('economy_apply_warning_item_2')}</li>
+                  <li>{t('economy_apply_warning_item_3')}</li>
+                </ul>
+              </div>
+              <label className="flex items-start gap-2 text-xs text-white/60">
+                <input
+                  type="checkbox"
+                  className="mt-0.5"
+                  checked={acknowledged}
+                  onChange={(e) => setAcknowledged(e.target.checked)}
+                />
+                <span>{t('economy_apply_ack_label')}</span>
+              </label>
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setStep(1)}
+                  disabled={!acknowledged}
+                  className="rounded-xl bg-indigo-500/20 px-4 py-2 text-sm font-semibold text-indigo-200 transition hover:bg-indigo-500/30 disabled:opacity-40"
+                >
+                  {t('economy_apply_next')}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {app?.status === 'none' && step === 1 && (
             <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5 space-y-4">
               <h3 className="text-sm font-semibold text-white">{t('economy_apply_panel_title')}</h3>
               <p className="text-sm text-white/50">{t('economy_apply_panel_desc')}</p>
@@ -171,6 +241,15 @@ export default function EconomyApplySection() {
                   className="flex-1 rounded-xl border border-white/10 bg-white/5 py-2.5 text-sm font-medium text-white/70 transition hover:bg-white/10 hover:text-white disabled:opacity-40"
                 >
                   {t('economy_apply_vote_button')}
+                </button>
+              </div>
+              <div className="flex justify-between">
+                <button
+                  type="button"
+                  onClick={() => setStep(0)}
+                  className="text-xs text-white/50 hover:text-white"
+                >
+                  {t('economy_apply_back')}
                 </button>
               </div>
             </div>
@@ -222,6 +301,8 @@ export default function EconomyApplySection() {
           )}
         </>
       )}
+        </div>
+      </div>
     </div>
   );
 }

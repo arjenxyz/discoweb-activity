@@ -319,4 +319,14 @@
   "economy_apply_error_no_active_voting": "Aktif oylama kampanyas? yok.",
   "economy_apply_error_vote_age": "Oyun say?lmad?: hesap en az 30 g?nl?k olmal? (sizde: {days} g?n).",
   "economy_apply_success_vote_cast": "Oyunuz ba?ar?yla kaydedildi!"
+  ,
+  "economy_apply_step1_title": "Ba?vuru ?ncesi Bilgilendirme",
+  "economy_apply_step1_desc": "Ba?vuruya ge?meden ?nce a?a??daki kurallar? okudu?unuzu onaylaman?z gerekir.",
+  "economy_apply_warning_title": "?nemli Uyar?",
+  "economy_apply_warning_item_1": "Bu sistem ger?ek para kazand?rmay? ama?lamaz; yaln?zca topluluk i?i etkile?im i?indir.",
+  "economy_apply_warning_item_2": "Sunucuda Mari veya lot gibi ??elerin ger?ek para kar??l??? al?m-sat?m? kesinlikle yasakt?r.",
+  "economy_apply_warning_item_3": "Bu kural?n ihlali hesap yapt?r?mlar?na ve hukuki s?re?lere yol a?abilir.",
+  "economy_apply_ack_label": "Bu uyar?lar? okudum ve kabul ediyorum.",
+  "economy_apply_next": "Devam Et",
+  "economy_apply_back": "Geri D?n"
 }
