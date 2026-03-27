@@ -68,5 +68,10 @@
   "overview_raffle_eligible": "Uygunsun",
   "overview_raffle_required_days": "{days}g gerekli",
   "splash_welcome_user": "Hoş geldin, {username}",
-  "splash_welcome_subtitle": "Sunucunun istatistiklerini keşfetmeye hazır mısın?"
+  "splash_welcome_subtitle": "Sunucunun istatistiklerini keşfetmeye hazır mısın?",
+  "splash_platform_name": "Discord Activity",
+  "splash_start_button": "Platforma Gir",
+  "splash_maintenance_title": "Bakımda",
+  "splash_terms": "Kullanım Şartları",
+  "splash_privacy": "Gizlilik Politikası"
 }

@@ -309,8 +309,6 @@ export default function SplashScreen({ onEnter }: Props) {
                   className={`group relative overflow-hidden rounded-full px-8 py-3.5 text-sm font-bold text-white transition-all duration-300 active:scale-95 backdrop-blur-md ${
                     blocked
                       ? 'cursor-not-allowed bg-white/10'
-                      : maintenance
-                      ? 'bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/30'
                       : 'bg-white/10 hover:bg-white/15 border border-white/20'
                   }`}
                 >
