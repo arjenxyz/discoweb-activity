@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import type { ActivityReadiness } from './ActivityReadinessGate';
 import DeveloperPanel from './DeveloperPanel';
+import DeveloperAboutModal from './DeveloperAboutModal';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { apiUrl } from '@/lib/api';
 import { VideoBackground, MuteButton } from './VideoBackground';
@@ -26,6 +27,7 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
   const [isDeveloper, setIsDeveloper] = useState(false);
   const [isDeveloperChecked, setIsDeveloperChecked] = useState(false);
   const [devPanelOpen, setDevPanelOpen] = useState(false);
+  const [devAboutOpen, setDevAboutOpen] = useState(false);
   const [maintenance, setMaintenance] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const linkSdkRef = useRef<InstanceType<Awaited<typeof import('@discord/embedded-app-sdk')>['DiscordSDK']> | null>(null);
@@ -201,19 +203,13 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
           </div>
         )}
       </main>
-      {/* Sol alt footer */}
-      <div className="absolute z-10 bottom-8 left-8 flex flex-col gap-1">
-        <div className="flex items-center gap-2">
-          <button type="button" onClick={() => openLink('https://discoweb.tech/terms')} className="text-xs text-white/50 hover:text-white/75 transition-colors">{t('splash_terms')}</button>
-          <span className="text-white/30 text-xs">·</span>
-          <button type="button" onClick={() => openLink('https://discoweb.tech/privacy')} className="text-xs text-white/50 hover:text-white/75 transition-colors">{t('splash_privacy')}</button>
-          {isDeveloper && (
-            <>
-              <span className="text-white/30 text-xs">·</span>
-              <button type="button" onClick={() => setDevPanelOpen(true)} className="text-xs text-white/50 hover:text-white/75 transition-colors">Developer</button>
-            </>
-          )}
-        </div>
+      {/* Orta alt footer */}
+      <div className="absolute z-10 bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-2">
+        <button type="button" onClick={() => openLink('https://discoweb.tech/terms')} className="text-xs text-white/50 hover:text-white/75 transition-colors">{t('splash_terms')}</button>
+        <span className="text-white/30 text-xs">·</span>
+        <button type="button" onClick={() => openLink('https://discoweb.tech/privacy')} className="text-xs text-white/50 hover:text-white/75 transition-colors">{t('splash_privacy')}</button>
+        <span className="text-white/30 text-xs">·</span>
+        <button type="button" onClick={() => setDevAboutOpen(true)} className="text-xs text-white/50 hover:text-white/75 transition-colors">Developer</button>
       </div>
 
       {devPanelOpen && (
@@ -223,6 +219,7 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
           onClose={() => setDevPanelOpen(false)}
         />
       )}
+      {devAboutOpen && <DeveloperAboutModal onClose={() => setDevAboutOpen(false)} />}
     </div>
   );
 }

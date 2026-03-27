@@ -3,6 +3,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { MuteButton, VideoBackground } from './VideoBackground';
 import DeveloperPanel from './DeveloperPanel';
+import DeveloperAboutModal from './DeveloperAboutModal';
 import { apiUrl } from '@/lib/api';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { getDiscordSdk } from '@/lib/discordSdk';
@@ -22,6 +23,7 @@ export default function SplashScreen({ onEnter }: Props) {
   const [isDeveloper, setIsDeveloper] = useState(false);
   const [isDeveloperChecked, setIsDeveloperChecked] = useState(false);
   const [devPanelOpen, setDevPanelOpen] = useState(false);
+  const [devAboutOpen, setDevAboutOpen] = useState(false);
   const [user, setUser] = useState<{ username: string; avatarUrl: string } | null>(null);
   const linkSdkRef = useRef<InstanceType<Awaited<typeof import('@discord/embedded-app-sdk')>['DiscordSDK']> | null>(null);
 
@@ -177,19 +179,13 @@ export default function SplashScreen({ onEnter }: Props) {
     );
   };
 
-  const FooterLine = ({ centered = false }: { centered?: boolean }) => (
-    <div className={`flex flex-col gap-1 ${centered ? 'items-center' : 'items-start'}`}>
-      <div className="flex items-center gap-2">
-        <button type="button" onClick={() => openLink('https://discoweb.tech/terms')} className="text-xs text-white/50 hover:text-white/75 transition-colors">{t('splash_terms')}</button>
-        <span className="text-white/30 text-xs">·</span>
-        <button type="button" onClick={() => openLink('https://discoweb.tech/privacy')} className="text-xs text-white/50 hover:text-white/75 transition-colors">{t('splash_privacy')}</button>
-        {isDeveloper && (
-          <>
-            <span className="text-white/30 text-xs">·</span>
-            <button type="button" onClick={() => setDevPanelOpen(true)} className="text-xs text-white/50 hover:text-white/75 transition-colors">Developer</button>
-          </>
-        )}
-      </div>
+  const FooterLine = () => (
+    <div className="flex items-center gap-2">
+      <button type="button" onClick={() => openLink('https://discoweb.tech/terms')} className="text-xs text-white/50 hover:text-white/75 transition-colors">{t('splash_terms')}</button>
+      <span className="text-white/30 text-xs">·</span>
+      <button type="button" onClick={() => openLink('https://discoweb.tech/privacy')} className="text-xs text-white/50 hover:text-white/75 transition-colors">{t('splash_privacy')}</button>
+      <span className="text-white/30 text-xs">·</span>
+      <button type="button" onClick={() => setDevAboutOpen(true)} className="text-xs text-white/50 hover:text-white/75 transition-colors">Developer</button>
     </div>
   );
 
@@ -224,30 +220,34 @@ export default function SplashScreen({ onEnter }: Props) {
           </div>
         </div>
 
-        {/* FOOTER — absolute alta sabitli, bağımsız katman */}
+        {/* SOL ALTA — hoş geldin */}
+        {user && !(maintenance && !isDeveloper) && (
+          <div
+            className="hidden lg:flex items-center gap-2 absolute z-10 bottom-10 left-10"
+            style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.7s ease' }}
+          >
+            {user.avatarUrl && <img src={user.avatarUrl} alt={user.username} className="h-5 w-5 rounded-full opacity-70" />}
+            <span className="text-sm text-white/50">
+              {t('splash_welcome_user', { username: user.username })}
+            </span>
+          </div>
+        )}
+
+        {/* ORTA ALTA — footer linkleri */}
         <div
-          className="hidden lg:flex flex-col gap-2 absolute z-10 bottom-10 left-10"
+          className="hidden lg:flex absolute z-10 bottom-10 left-1/2 -translate-x-1/2"
           style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.7s ease' }}
         >
-          {user && !(maintenance && !isDeveloper) && (
-            <div className="flex items-center gap-2">
-              {user.avatarUrl && <img src={user.avatarUrl} alt={user.username} className="h-5 w-5 rounded-full opacity-70" />}
-              <span className="text-sm text-white/50">
-                {t('splash_welcome_user', { username: user.username })}
-              </span>
-            </div>
-          )}
           <FooterLine />
         </div>
 
-        {/* SAĞ ALTA — buton, bağımsız */}
+        {/* SAĞ ALTA — devPanel (sadece developer) + enter butonu */}
         <div
           className="hidden lg:flex absolute z-10 bottom-10 right-14 items-center gap-3"
           style={{ opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(18px)', transition: 'opacity 0.7s ease, transform 0.7s ease' }}
         >
-          <div className="flex items-center gap-3">
-            <EnterButton />
-          </div>
+          {isDeveloper && <DevButton />}
+          <EnterButton />
         </div>
 
         {/* ?????? ALT ALAN ??? mobil ?????? */}
@@ -270,9 +270,10 @@ export default function SplashScreen({ onEnter }: Props) {
             )}
             <div className="flex items-center gap-3">
               <MuteButton muted={muted} onToggle={toggleMute} />
+              {isDeveloper && <DevButton />}
               <EnterButton />
             </div>
-            <FooterLine centered />
+            <FooterLine />
           </div>
         </div>
       </div>
@@ -280,6 +281,7 @@ export default function SplashScreen({ onEnter }: Props) {
       {devPanelOpen && (
         <DeveloperPanel maintenance={maintenance} onMaintenanceChange={setMaintenance} onClose={() => setDevPanelOpen(false)} />
       )}
+      {devAboutOpen && <DeveloperAboutModal onClose={() => setDevAboutOpen(false)} />}
     </div>
   );
 }
