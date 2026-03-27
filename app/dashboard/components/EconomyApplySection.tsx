@@ -132,7 +132,7 @@ export default function EconomyApplySection() {
 
   return (
     <div className="space-y-6">
-      <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0b0d12] p-6">
+      <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0b0d12] w-full p-6">
         <div
           className="absolute inset-0 bg-cover bg-center opacity-20"
           style={{ backgroundImage: "url('/background/background.jpg')" }}
