@@ -337,7 +337,7 @@ export default function SplashScreen({ onEnter }: Props) {
                 {isDeveloper && (
                   <button
                     type="button"
-                    onClick={() => router.push('/developer')}
+                    onClick={() => router.push('/activity/developer')}
                     className="flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3 py-2 text-sm font-semibold text-white/70 hover:bg-white/10 hover:text-white transition"
                     aria-label="Developer Panel"
                   >
