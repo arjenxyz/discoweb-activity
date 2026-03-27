@@ -63,7 +63,7 @@ export default function RafflesSection({ badgeInfo, loading, onJoinRaffle }: Raf
   }
 
   return (
-    <section className="relative overflow-hidden rounded-none border-0 bg-white/5 backdrop-blur-2xl p-3 sm:p-8 shadow-2xl flex flex-col flex-1 min-h-full">
+    <section className="relative overflow-hidden rounded-none border-0 bg-white/5 backdrop-blur-2xl p-3 sm:p-8 shadow-2xl flex flex-col flex-1">
 
       {/* Glow */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-[80px] pointer-events-none" />
