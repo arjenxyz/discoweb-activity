@@ -493,18 +493,26 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
   };
 
   const header = (
-    <div className="flex items-center justify-between border-b border-white/10 px-6 py-4">
-      <div className="flex items-center gap-2">
-        <span className="flex h-2 w-2 rounded-full bg-[#5865F2]" />
-        <span className="text-sm font-bold text-white">{t('developer_panel_title')}</span>
+    <div className="flex items-center justify-between border-b border-white/[0.08] bg-[#0d0f14] px-5 py-3.5 sticky top-0 z-10">
+      <div className="flex items-center gap-3">
+        <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#5865F2]/20 border border-[#5865F2]/30">
+          <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 text-[#7289da]">
+            <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+          </svg>
+        </div>
+        <div>
+          <p className="text-sm font-bold text-white leading-tight">{t('developer_panel_title')}</p>
+          <p className="text-[10px] text-white/30">System Administration</p>
+        </div>
       </div>
       <button
         onClick={onClose}
-        className="flex h-7 w-7 items-center justify-center rounded-full text-white/40 transition hover:bg-white/10 hover:text-white"
+        className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/60 transition hover:bg-white/10 hover:text-white"
       >
-        <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5">
-          <path d="M3.72 3.72a.75.75 0 011.06 0L8 6.94l3.22-3.22a.75.75 0 111.06 1.06L9.06 8l3.22 3.22a.75.75 0 11-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 01-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 010-1.06z" />
+        <svg viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3">
+          <path fillRule="evenodd" d="M7.78 12.53a.75.75 0 01-1.06 0L2.47 8.28a.75.75 0 010-1.06l4.25-4.25a.75.75 0 011.06 1.06L4.81 7h7.44a.75.75 0 010 1.5H4.81l2.97 2.97a.75.75 0 010 1.06z" clipRule="evenodd" />
         </svg>
+        Geri
       </button>
     </div>
   );
@@ -519,24 +527,29 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
     { id: 'ads', label: t('developer_tab_ads') },
   ] as const;
 
+  const STAT_COLORS = [
+    { bg: 'bg-[#5865F2]/10', border: 'border-[#5865F2]/20', text: 'text-[#7289da]' },
+    { bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', text: 'text-emerald-400' },
+    { bg: 'bg-amber-500/10', border: 'border-amber-500/20', text: 'text-amber-400' },
+    { bg: 'bg-violet-500/10', border: 'border-violet-500/20', text: 'text-violet-400' },
+  ];
   const overviewCard = (
-    <div className="grid gap-3 md:grid-cols-4">
-      <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-        <p className="text-xs text-white/40">{t('developer_stat_users')}</p>
-        <p className="mt-1 text-xl font-semibold text-white">{overview?.userCount ?? ''}</p>
-      </div>
-      <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-        <p className="text-xs text-white/40">{t('developer_stat_servers')}</p>
-        <p className="mt-1 text-xl font-semibold text-white">{overview?.serverCount ?? ''}</p>
-      </div>
-      <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-        <p className="text-xs text-white/40">{t('developer_stat_profiles')}</p>
-        <p className="mt-1 text-xl font-semibold text-white">{overview?.profileCount ?? ''}</p>
-      </div>
-      <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-        <p className="text-xs text-white/40">{t('developer_stat_advanced')}</p>
-        <p className="mt-1 text-xl font-semibold text-white">{overview?.advancedServerCount ?? ''}</p>
-      </div>
+    <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4">
+      {([
+        { label: t('developer_stat_users'), value: overview?.userCount },
+        { label: t('developer_stat_servers'), value: overview?.serverCount },
+        { label: t('developer_stat_profiles'), value: overview?.profileCount },
+        { label: t('developer_stat_advanced'), value: overview?.advancedServerCount },
+      ] as const).map((stat, i) => (
+        <div key={stat.label} className={`rounded-xl border ${STAT_COLORS[i]!.border} ${STAT_COLORS[i]!.bg} p-4`}>
+          <p className="text-[11px] text-white/40 font-medium">{stat.label}</p>
+          <p className={`mt-1.5 text-2xl font-bold ${STAT_COLORS[i]!.text}`}>
+            {stat.value != null ? stat.value.toLocaleString('tr-TR') : (
+              <span className="text-white/20">—</span>
+            )}
+          </p>
+        </div>
+      ))}
     </div>
   );
 
@@ -1059,57 +1072,83 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
     </div>
   );
 
+  const TAB_ICONS: Record<string, React.ReactNode> = {
+    overview:   <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5"><path d="M2 2h5v5H2V2zm7 0h5v5H9V2zm-7 7h5v5H2V9zm7 0h5v5H9V9z"/></svg>,
+    logs:       <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5"><path d="M2 3h12v2H2V3zm0 4h12v2H2V7zm0 4h8v2H2v-2z"/></svg>,
+    suspicious: <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5"><path fillRule="evenodd" d="M8 1a7 7 0 100 14A7 7 0 008 1zM7 9V5h2v4H7zm0 2v2h2v-2H7z" clipRule="evenodd"/></svg>,
+    apps:       <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5"><path fillRule="evenodd" d="M3 3a1 1 0 011-1h8a1 1 0 011 1v3a1 1 0 01-1 1H4a1 1 0 01-1-1V3zm1 5a1 1 0 00-1 1v3a1 1 0 001 1h8a1 1 0 001-1V9a1 1 0 00-1-1H4z" clipRule="evenodd"/></svg>,
+    servers:    <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5"><path d="M1 4a2 2 0 012-2h10a2 2 0 012 2v2a2 2 0 01-2 2H3a2 2 0 01-2-2V4zm2 6a2 2 0 00-2 2v0a2 2 0 002 2h10a2 2 0 002-2v0a2 2 0 00-2-2H3z"/></svg>,
+    profiles:   <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5"><path fillRule="evenodd" d="M8 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H1z" clipRule="evenodd"/></svg>,
+    ads:        <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5"><path d="M2 3h12v2H2V3zm0 4h8v2H2V7zm0 4h6v2H2v-2z"/></svg>,
+  };
+
   const content = (
-    <div className="flex flex-col gap-4 p-6">
-      <div className="flex flex-wrap gap-2">
+    <div className="flex flex-col">
+      {/* Tab Bar */}
+      <div className="sticky top-[57px] z-10 flex gap-1 overflow-x-auto border-b border-white/[0.06] bg-[#0d0f14] px-4 py-2 no-scrollbar">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`rounded-full border px-4 py-1.5 text-xs transition ${
+            className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-all ${
               activeTab === tab.id
-                ? 'border-[#5865F2] bg-[#5865F2]/20 text-white'
-                : 'border-white/10 text-white/60 hover:text-white'
+                ? 'bg-[#5865F2]/20 text-white border border-[#5865F2]/40'
+                : 'text-white/45 hover:bg-white/[0.06] hover:text-white/80 border border-transparent'
             }`}
           >
+            <span className={activeTab === tab.id ? 'text-[#7289da]' : 'text-white/30'}>
+              {TAB_ICONS[tab.id]}
+            </span>
             {tab.label}
           </button>
         ))}
       </div>
 
-      {loadingTab && (
-        <p className="text-xs text-white/40">{t('developer_panel_loading')}</p>
-      )}
-
-      {error && (
-        <p className="rounded-lg bg-red-500/10 px-3 py-2 text-xs text-red-400">{error}</p>
-      )}
-
-      {activeTab === 'overview' && (
-        <div className="grid gap-3">
-          {overviewCard}
-          <div className="grid gap-3 lg:grid-cols-2">
-            {maintenanceCard}
-            {clearCard}
+      <div className="flex flex-col gap-4 p-5">
+        {loadingTab && (
+          <div className="flex items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-3">
+            <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/20 border-t-white/70" />
+            <p className="text-xs text-white/40">{t('developer_panel_loading')}</p>
           </div>
-        </div>
-      )}
+        )}
 
-      {activeTab === 'logs' && logsSection}
-      {activeTab === 'apps' && appsSection}
-      {activeTab === 'servers' && serversSection}
-      {activeTab === 'profiles' && profilesSection}
-      {activeTab === 'ads' && adsSection}
-      {activeTab === 'suspicious' && suspiciousSection}
+        {error && (
+          <div className="flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3">
+            <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 shrink-0 text-red-400">
+              <path fillRule="evenodd" d="M8 1a7 7 0 100 14A7 7 0 008 1zM7 9V5h2v4H7zm0 2v2h2v-2H7z" clipRule="evenodd"/>
+            </svg>
+            <p className="text-xs text-red-400">{error}</p>
+          </div>
+        )}
+
+        {activeTab === 'overview' && (
+          <div className="grid gap-3">
+            {overviewCard}
+            <div className="grid gap-3 lg:grid-cols-2">
+              {maintenanceCard}
+              {clearCard}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'logs' && logsSection}
+        {activeTab === 'apps' && appsSection}
+        {activeTab === 'servers' && serversSection}
+        {activeTab === 'profiles' && profilesSection}
+        {activeTab === 'ads' && adsSection}
+        {activeTab === 'suspicious' && suspiciousSection}
+      </div>
     </div>
   );
 
   if (variant === 'page') {
     return (
-      <div className="w-full max-w-6xl px-6 pb-8">
-        <div className="rounded-2xl border border-white/10 bg-[#0f1117] shadow-2xl">
+      <div className="w-full max-w-6xl px-4 sm:px-6 pb-10">
+        <div className="overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0d0f14] shadow-2xl">
           {header}
-          {content}
+          <div className="overflow-y-auto max-h-[calc(100vh-140px)]">
+            {content}
+          </div>
         </div>
       </div>
     );
@@ -1118,12 +1157,17 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
   return (
     <>
       <div
-        className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+        className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="fixed right-0 top-0 z-50 flex h-full w-[520px] flex-col bg-[#0f1117] shadow-2xl">
+      <div
+        className="fixed right-0 top-0 z-50 flex h-full w-full max-w-[560px] flex-col bg-[#0d0f14] shadow-2xl border-l border-white/[0.08]"
+        onClick={(e) => e.stopPropagation()}
+      >
         {header}
-        {content}
+        <div className="flex-1 overflow-y-auto">
+          {content}
+        </div>
       </div>
     </>
   );

@@ -46,9 +46,6 @@ export default function ActivityDeveloperPage() {
 
   return (
     <div className="min-h-screen bg-[#0b0d12] text-white">
-      <div className="px-6 py-5">
-        <h1 className="text-lg font-bold">{t('developer_page_title')}</h1>
-      </div>
       <DeveloperPanel
         maintenance={maintenance}
         onMaintenanceChange={setMaintenance}
