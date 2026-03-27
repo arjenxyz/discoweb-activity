@@ -3,7 +3,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { MuteButton, VideoBackground } from './VideoBackground';
-import DeveloperPanel from './DeveloperPanel';
 import DeveloperAboutModal from './DeveloperAboutModal';
 import SupportMenu from './SupportMenu';
 import { apiUrl } from '@/lib/api';
@@ -103,7 +102,6 @@ export default function SplashScreen({ onEnter }: Props) {
   const [maintenanceChecked, setMaintenanceChecked] = useState(false);
   const [isDeveloper, setIsDeveloper] = useState(false);
   const [isDeveloperChecked, setIsDeveloperChecked] = useState(false);
-  const [devPanelOpen, setDevPanelOpen] = useState(false);
   const [devAboutOpen, setDevAboutOpen] = useState(false);
   const [user, setUser] = useState<{ username: string; avatarUrl: string } | null>(null);
   const [tipIndex, setTipIndex] = useState(0);
@@ -367,9 +365,6 @@ export default function SplashScreen({ onEnter }: Props) {
         </div>
       </div>
 
-      {devPanelOpen && (
-        <DeveloperPanel maintenance={maintenance} onMaintenanceChange={setMaintenance} onClose={() => setDevPanelOpen(false)} />
-      )}
       {devAboutOpen && <DeveloperAboutModal onClose={() => setDevAboutOpen(false)} />}
     </div>
   );
