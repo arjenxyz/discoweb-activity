@@ -10,7 +10,7 @@ type Props = {
 
 export default function SupportMenu({ openLink, section }: Props) {
   const [open, setOpen] = useState(false);
-  const [bugOpen, setBugOpen] = useState(false);
+  const [modalType, setModalType] = useState<'bug' | 'suggestion' | null>(null);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -69,16 +69,26 @@ export default function SupportMenu({ openLink, section }: Props) {
                   </svg>
                 }
                 label="Hata Bildir"
-                sub="Ekran görüntüsü ekle"
+                sub="Bir sorun mu var?"
                 danger
-                onClick={() => { setOpen(false); setBugOpen(true); }}
+                onClick={() => { setOpen(false); setModalType('bug'); }}
+              />
+              <MenuItem
+                icon={
+                  <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 text-violet-400">
+                    <path d="M8 1.5a.75.75 0 01.75.75V7h4.75a.75.75 0 010 1.5H8.75v4.75a.75.75 0 01-1.5 0V8.5H2.5a.75.75 0 010-1.5h4.75V2.25A.75.75 0 018 1.5z" />
+                  </svg>
+                }
+                label="Öneri Gönder"
+                sub="Fikrin mi var?"
+                onClick={() => { setOpen(false); setModalType('suggestion'); }}
               />
             </div>
           </div>
         )}
       </div>
 
-      {bugOpen && <BugReportModal onClose={() => setBugOpen(false)} section={section} />}
+      {modalType && <BugReportModal onClose={() => setModalType(null)} section={section} initialType={modalType} />}
     </>
   );
 }

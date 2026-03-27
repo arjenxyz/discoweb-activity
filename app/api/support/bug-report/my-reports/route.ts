@@ -18,7 +18,7 @@ export async function GET(request: Request) {
 
   const { data } = await supabase
     .from('bug_reports')
-    .select('id, section, description, status, created_at, updated_at')
+    .select('id, type, section, description, status, created_at, updated_at')
     .eq('user_id', session.userId)
     .order('created_at', { ascending: false })
     .limit(20);
