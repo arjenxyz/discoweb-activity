@@ -215,38 +215,42 @@ export default function SplashScreen({ onEnter }: Props) {
         className="splash-full-ui flex flex-col min-h-screen"
         style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.7s ease' }}
       >
-        {/* Top bar */}
-        <div className="relative z-10 flex items-start justify-between px-8 sm:px-14 pt-8 flex-shrink-0">
-          {/* Logo */}
-          <div className="flex flex-col gap-1">
-            <span
-              className="cursor-pointer font-black tracking-tight select-none text-2xl"
-              onClick={openDiscoWeb}
-              style={logoWhiteStyle}
-            >
-              Disco<span style={logoBlueStyle}>Web</span>
-            </span>
-            <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/30">
-              {t('splash_platform_name')}
-            </span>
-          </div>
+        {/* Ses butonu — sağ üst */}
+        <div className="absolute z-10 top-7 right-8 sm:right-10">
           <MuteButton muted={muted} onToggle={toggleMute} />
         </div>
 
         {/* Main content — left aligned, vertically centered */}
         <main className="relative z-10 flex flex-1 w-full flex-col items-start justify-center px-8 sm:px-14">
           <div
-            className="flex flex-col gap-5 max-w-sm w-full"
-            style={{ transform: visible ? 'translateY(0)' : 'translateY(16px)', transition: 'transform 0.7s ease' }}
+            className="flex flex-col gap-6 max-w-md w-full"
+            style={{ transform: visible ? 'translateY(0)' : 'translateY(20px)', transition: 'transform 0.8s ease' }}
           >
+            {/* Hero logo */}
+            <div className="flex flex-col gap-1.5">
+              <span
+                className="cursor-pointer font-black tracking-tight select-none leading-none"
+                onClick={openDiscoWeb}
+                style={{ ...logoWhiteStyle, fontSize: 'clamp(3rem, 6vw, 4.5rem)' }}
+              >
+                Disco<span style={logoBlueStyle}>Web</span>
+              </span>
+              <span className="text-sm font-medium text-white/35 tracking-wide">
+                {t('splash_platform_name')}
+              </span>
+            </div>
+
+            {/* Divider */}
+            <div className="w-12 h-px bg-white/15" />
+
             {/* Welcome */}
             {user && !blocked && (
               <div className="flex items-center gap-2.5">
                 {user.avatarUrl && (
                   <img src={user.avatarUrl} alt={user.username} className="h-7 w-7 rounded-full ring-1 ring-white/10" />
                 )}
-                <div className="flex flex-col">
-                  <span className="text-base font-semibold text-white/80">
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-base font-semibold text-white/85" style={{ textShadow: '0 1px 12px rgba(0,0,0,1)' }}>
                     {t('splash_welcome_user', { username: user.username })}
                   </span>
                   <span className="text-xs text-white/35">
@@ -257,7 +261,7 @@ export default function SplashScreen({ onEnter }: Props) {
             )}
 
             {/* Tip */}
-            <div className="flex flex-col gap-2.5 min-h-[56px]">
+            <div className="flex flex-col gap-2.5 min-h-[52px]">
               <div
                 className="flex items-start gap-3"
                 style={{
@@ -267,11 +271,10 @@ export default function SplashScreen({ onEnter }: Props) {
                 }}
               >
                 <span className="text-[#5865F2] mt-0.5 flex-shrink-0">{TIPS[tipIndex].icon}</span>
-                <p className="text-sm text-white/55 leading-relaxed" style={{ textShadow: '0 1px 8px rgba(0,0,0,0.8)' }}>
+                <p className="text-sm text-white/50 leading-relaxed" style={{ textShadow: '0 1px 10px rgba(0,0,0,0.9)' }}>
                   {TIPS[tipIndex].text}
                 </p>
               </div>
-              {/* Dot indicators */}
               <div className="flex items-center gap-1.5 pl-7">
                 {TIPS.map((_, i) => (
                   <button
@@ -344,8 +347,9 @@ export default function SplashScreen({ onEnter }: Props) {
           </div>
         </main>
 
-        {/* Bottom footer */}
+        {/* Bottom footer — copyright sol, linkler sağ */}
         <div className="relative z-10 flex items-center justify-between px-8 sm:px-14 pb-8 flex-shrink-0">
+          <span className="text-[11px] text-white/25">© {new Date().getFullYear()} DiscoWeb</span>
           <div className="flex items-center gap-2">
             <button type="button" onClick={() => openLink('https://discoweb.tech/terms')} className="text-xs text-white/40 hover:text-white/70 transition-colors">{t('splash_terms')}</button>
             <span className="text-white/20 text-xs">·</span>
@@ -353,7 +357,6 @@ export default function SplashScreen({ onEnter }: Props) {
             <span className="text-white/20 text-xs">·</span>
             <button type="button" onClick={() => setDevAboutOpen(true)} className="text-xs text-white/40 hover:text-white/70 transition-colors">Developer</button>
           </div>
-          <span className="text-[10px] text-white/20">© {new Date().getFullYear()} DiscoWeb</span>
         </div>
       </div>
 
