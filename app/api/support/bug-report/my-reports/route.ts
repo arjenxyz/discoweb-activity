@@ -19,13 +19,27 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const type = searchParams.get('type') ?? 'bug';
 
-  const { data } = await supabase
+  // Try with type filter first; if column doesn't exist fall back without it
+  let query = supabase
     .from('bug_reports')
     .select('id, type, section, description, status, created_at, updated_at')
     .eq('user_id', session.userId)
     .eq('type', type)
     .order('created_at', { ascending: false })
     .limit(20);
+
+  const { data, error } = await query;
+
+  if (error) {
+    // type column might not exist yet — return all reports for this user
+    const { data: fallback } = await supabase
+      .from('bug_reports')
+      .select('id, section, description, status, created_at, updated_at')
+      .eq('user_id', session.userId)
+      .order('created_at', { ascending: false })
+      .limit(20);
+    return NextResponse.json(fallback ?? []);
+  }
 
   return NextResponse.json(data ?? []);
 }

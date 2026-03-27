@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { apiUrl } from '@/lib/api';
 
@@ -62,10 +62,13 @@ export default function SuggestionModal({ onClose, section }: Props) {
   // --- New suggestion state ---
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [sendStatus, setSendStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
   const [activeReportId, setActiveReportId] = useState<string | null>(null);
   const [activeReportStatus, setActiveReportStatus] = useState<ReportStatus>('pending');
-  const pollRef = { current: null as ReturnType<typeof setInterval> | null };
+  const fileRef = useRef<HTMLInputElement>(null);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // --- Reports list state ---
   const [reports, setReports] = useState<Report[]>([]);
@@ -82,13 +85,13 @@ export default function SuggestionModal({ onClose, section }: Props) {
         const data = await res.json() as { status: ReportStatus };
         setActiveReportStatus(data.status);
         if (data.status === 'resolved' || data.status === 'not_found') {
-          if (pollRef.current) clearInterval(pollRef.current);
+          if (pollRef.current) clearInterval(pollRef.current as ReturnType<typeof setInterval>);
         }
       } catch { /* ignore */ }
     };
     poll();
     pollRef.current = setInterval(poll, 15000);
-    return () => { if (pollRef.current) clearInterval(pollRef.current); };
+    return () => { if (pollRef.current) clearInterval(pollRef.current as ReturnType<typeof setInterval>); };
   }, [activeReportId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadReports = useCallback(async () => {
@@ -110,6 +113,20 @@ export default function SuggestionModal({ onClose, section }: Props) {
     if (updated) setSelectedReport(updated);
   }, [reports]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const handleImage = (file: File) => {
+    if (!file.type.startsWith('image/')) return;
+    setImageFile(file);
+    const reader = new FileReader();
+    reader.onload = e => setImagePreview(e.target?.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file) handleImage(file);
+  };
+
   const handleSubmit = async () => {
     if (!description.trim() || sendStatus === 'sending') return;
     setSendStatus('sending');
@@ -120,6 +137,7 @@ export default function SuggestionModal({ onClose, section }: Props) {
       if (section) fd.append('section', section);
       fd.append('sessionInfo', JSON.stringify({}));
       fd.append('errorLog', JSON.stringify([]));
+      if (imageFile) fd.append('image', imageFile);
 
       const res = await fetch(apiUrl('/api/support/bug-report'), { method: 'POST', headers: authHeaders(), body: fd });
       if (!res.ok) throw new Error('failed');
@@ -215,7 +233,7 @@ export default function SuggestionModal({ onClose, section }: Props) {
                   )}
 
                   <button type="button"
-                    onClick={() => { setSendStatus('idle'); setTitle(''); setDescription(''); setActiveReportId(null); }}
+                    onClick={() => { setSendStatus('idle'); setTitle(''); setDescription(''); setImageFile(null); setImagePreview(null); setActiveReportId(null); }}
                     className="text-xs text-white/30 hover:text-white/60 transition text-center">
                     Yeni öneri gönder
                   </button>
@@ -241,6 +259,39 @@ export default function SuggestionModal({ onClose, section }: Props) {
                       rows={4}
                       className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white placeholder-white/25 resize-none focus:outline-none focus:border-white/20 transition"
                     />
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold text-white/50 uppercase tracking-wider">Görsel <span className="text-white/25 normal-case">(isteğe bağlı)</span></label>
+                    <div
+                      onDrop={handleDrop}
+                      onDragOver={e => e.preventDefault()}
+                      onClick={() => fileRef.current?.click()}
+                      className="relative cursor-pointer rounded-xl border border-dashed border-white/15 bg-white/3 hover:bg-white/5 hover:border-white/25 transition flex items-center justify-center min-h-[72px] overflow-hidden"
+                    >
+                      {imagePreview ? (
+                        <div className="relative w-full">
+                          <img src={imagePreview} alt="preview" className="w-full max-h-36 object-contain rounded-xl" />
+                          <button
+                            type="button"
+                            onClick={e => { e.stopPropagation(); setImageFile(null); setImagePreview(null); }}
+                            className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white/70 hover:text-white transition"
+                          >
+                            <svg viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3">
+                              <path d="M3.72 3.72a.75.75 0 011.06 0L8 6.94l3.22-3.22a.75.75 0 111.06 1.06L9.06 8l3.22 3.22a.75.75 0 11-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 01-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 010-1.06z" />
+                            </svg>
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center gap-1.5 py-4 text-center">
+                          <svg viewBox="0 0 16 16" fill="currentColor" className="h-5 w-5 text-white/25">
+                            <path d="M7.75 2a.75.75 0 01.75.75V7h4.25a.75.75 0 010 1.5H8.5v4.25a.75.75 0 01-1.5 0V8.5H2.75a.75.75 0 010-1.5H7V2.75A.75.75 0 017.75 2z" />
+                          </svg>
+                          <span className="text-xs text-white/30">Sürükle bırak veya tıkla</span>
+                        </div>
+                      )}
+                    </div>
+                    <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleImage(f); }} />
                   </div>
 
                   {sendStatus === 'error' && (
