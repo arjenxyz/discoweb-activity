@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { getClientErrors } from '@/lib/clientErrorStore';
+import { apiUrl } from '@/lib/api';
 
 type Props = { onClose: () => void };
 
@@ -49,7 +50,7 @@ export default function BugReportModal({ onClose }: Props) {
 
       const token = (() => { try { return localStorage.getItem('discord_bearer_token'); } catch { return null; } })();
       const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
-      const res = await fetch('/api/support/bug-report', { method: 'POST', headers, body: fd });
+      const res = await fetch(apiUrl('/api/support/bug-report'), { method: 'POST', headers, body: fd });
       if (!res.ok) throw new Error('failed');
       setStatus('success');
       setTimeout(onClose, 2000);
