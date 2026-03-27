@@ -8,6 +8,20 @@ import { getSelectedGuildId } from '@/lib/guild';
 type Database = {
   public: {
     Tables: {
+      users: {
+        Row: {
+          discord_id: string;
+          created_at: string | null;
+        };
+        Insert: {
+          discord_id: string;
+          created_at?: string | null;
+        };
+        Update: {
+          created_at?: string | null;
+        };
+        Relationships: [];
+      };
       system_mails: {
         Row: {
           id: string;
@@ -94,6 +108,22 @@ export async function GET(request: NextRequest) {
 
   const ninetyDaysAgo = new Date();
   ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+  let createdAtCutoff = ninetyDaysAgo;
+
+  if (userId) {
+    const { data: userRow } = await supabase
+      .from('users')
+      .select('created_at')
+      .eq('discord_id', userId)
+      .maybeSingle();
+
+    if (userRow?.created_at) {
+      const userCreated = new Date(userRow.created_at);
+      if (!Number.isNaN(userCreated.getTime()) && userCreated > createdAtCutoff) {
+        createdAtCutoff = userCreated;
+      }
+    }
+  }
 
   const { data, error } = await supabase
     .from('system_mails')
@@ -101,7 +131,7 @@ export async function GET(request: NextRequest) {
     .eq('guild_id', selectedGuildId)
     .eq('status', 'published')
     .or(`user_id.is.null,user_id.eq.${userId}`)
-    .gte('created_at', ninetyDaysAgo.toISOString())
+    .gte('created_at', createdAtCutoff.toISOString())
     .order('created_at', { ascending: false });
 
   if (error) {
