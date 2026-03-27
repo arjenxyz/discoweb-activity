@@ -29,6 +29,7 @@ const getSupabase = () => {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) return null;
   return createClient(url, key, { auth: { persistSession: false } });
+};
 
 async function getAutoApproveFlag(supabase: ReturnType<typeof getSupabase>) {
   if (!supabase) return false;
@@ -39,8 +40,6 @@ async function getAutoApproveFlag(supabase: ReturnType<typeof getSupabase>) {
     .maybeSingle();
   return (data?.value ?? 'false') === 'true';
 }
-
-};
 
 /** Sunucu başvuru durumu */
 export async function GET(request: Request) {
