@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { clearSessionCookies, requireSessionUser } from '@/lib/auth';
 import { logActivityLogout } from '@/lib/activityLogger';
+import { createClient } from '@supabase/supabase-js';
 
 // Çıkış işlemini yapan ana fonksiyon
 function handleLogout(request: NextRequest) {
@@ -54,6 +55,30 @@ export async function POST(request: NextRequest) {
     ip,
     userAgent: ua,
   });
+
+  if (session.ok) {
+    const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (supabaseUrl && serviceRoleKey) {
+      try {
+        const supabase = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
+        await supabase.from('admin_actions').insert({
+          actor_id: session.userId,
+          actor_role: 'user',
+          target_guild_id: guildId ?? 'global',
+          action_type: 'auth_logout',
+          payload_after: {
+            user_id: session.userId,
+            guild_id: guildId,
+            ip,
+            user_agent: ua,
+          },
+        });
+      } catch {
+        // log hatası logout'u durdurmasın
+      }
+    }
+  }
 
   const accept = request.headers.get('accept') ?? '';
   if (accept.includes('application/json')) {

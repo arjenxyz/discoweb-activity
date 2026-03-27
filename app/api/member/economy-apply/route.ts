@@ -3,7 +3,7 @@
  *
  * POST /api/member/economy-apply
  *   - type: 'direct' → 500+ üyeli sunucular direkt başvurur
- *   - type: 'vote'   → Oylama başlatır (100 oy hedefi)
+ *   - type: 'vote'   → Oylama başlatır (120 oy hedefi)
  *
  * POST /api/member/economy-apply/vote
  *   - Oylama sürecindeki sunucu için oy verir
@@ -19,7 +19,7 @@ import { getSelectedGuildId } from '@/lib/guild';
 
 export const dynamic = 'force-dynamic';
 
-const VOTE_THRESHOLD = 100;
+const VOTE_THRESHOLD = 120;
 const DIRECT_MEMBER_THRESHOLD = 500;
 const AUTO_APPROVE_DAYS = 7;
 const MIN_ACCOUNT_AGE_DAYS = 30;
@@ -29,6 +29,17 @@ const getSupabase = () => {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) return null;
   return createClient(url, key, { auth: { persistSession: false } });
+
+async function getAutoApproveFlag(supabase: ReturnType<typeof getSupabase>) {
+  if (!supabase) return false;
+  const { data } = await supabase
+    .from('app_config')
+    .select('value')
+    .eq('key', 'economy_auto_approve')
+    .maybeSingle();
+  return (data?.value ?? 'false') === 'true';
+}
+
 };
 
 /** Sunucu başvuru durumu */
@@ -152,22 +163,42 @@ export async function POST(request: Request) {
       const scheduledOpen = new Date();
       scheduledOpen.setDate(scheduledOpen.getDate() + AUTO_APPROVE_DAYS);
 
+      const autoApprove = await getAutoApproveFlag(supabase);
+      const { data: server } = await supabase
+        .from('servers')
+        .select('member_count, is_setup')
+        .eq('discord_id', guildId)
+        .maybeSingle();
+      const memberCount = server?.member_count ?? 0;
+      const eligible = !!server?.is_setup && (memberCount >= DIRECT_MEMBER_THRESHOLD || newVoteCount >= threshold);
+      const nextStatus = autoApprove && eligible ? 'approved' : 'pending';
+
       await supabase
         .from('economy_applications')
         .update({
           vote_count: newVoteCount,
-          status: 'pending',
+          status: nextStatus,
           submitted_at: new Date().toISOString(),
           scheduled_open_at: scheduledOpen.toISOString(),
+          reviewed_at: nextStatus === 'approved' ? new Date().toISOString() : null,
         })
         .eq('guild_id', guildId);
+
+      if (nextStatus === 'approved') {
+        await supabase
+          .from('servers')
+          .update({ economy_tier: 'advanced', advanced_since: new Date().toISOString() })
+          .eq('discord_id', guildId);
+      }
 
       return NextResponse.json({
         ok: true,
         vote_counted: true,
-        new_status: 'pending',
+        new_status: nextStatus,
         scheduled_open_at: scheduledOpen.toISOString(),
-        message: 'Eşiğe ulaşıldı! Başvurunuz incelemeye alındı.',
+        message: nextStatus === 'approved'
+          ? 'E?i?e ula??ld? ve otomatik onayland?.'
+          : 'E?i?e ula??ld?! Ba?vurunuz incelemeye al?nd?.',
       });
     }
 
@@ -189,11 +220,14 @@ export async function POST(request: Request) {
     // Üye sayısı kontrolü (Discord API veya servers tablosundan)
     const { data: server } = await supabase
       .from('servers')
-      .select('member_count')
+      .select('member_count, is_setup')
       .eq('discord_id', guildId)
       .maybeSingle() as { data: { member_count: number | null } | null };
 
     const memberCount = server?.member_count ?? 0;
+    if (!server?.is_setup) {
+      return NextResponse.json({ error: 'server_not_ready' }, { status: 400 });
+    }
     if (memberCount < DIRECT_MEMBER_THRESHOLD) {
       return NextResponse.json({
         error: 'insufficient_members',
@@ -205,17 +239,28 @@ export async function POST(request: Request) {
     const scheduledOpen = new Date();
     scheduledOpen.setDate(scheduledOpen.getDate() + AUTO_APPROVE_DAYS);
 
+    const autoApprove = await getAutoApproveFlag(supabase);
+    const nextStatus = autoApprove ? 'approved' : 'pending';
+
     await supabase.from('economy_applications').upsert({
       guild_id: guildId,
-      status: 'pending',
+      status: nextStatus,
       application_type: 'direct',
       submitted_at: new Date().toISOString(),
       scheduled_open_at: scheduledOpen.toISOString(),
+      reviewed_at: nextStatus === 'approved' ? new Date().toISOString() : null,
     }, { onConflict: 'guild_id' });
+
+    if (nextStatus === 'approved') {
+      await supabase
+        .from('servers')
+        .update({ economy_tier: 'advanced', advanced_since: new Date().toISOString() })
+        .eq('discord_id', guildId);
+    }
 
     return NextResponse.json({
       ok: true,
-      status: 'pending',
+      status: nextStatus,
       scheduled_open_at: scheduledOpen.toISOString(),
     });
   }

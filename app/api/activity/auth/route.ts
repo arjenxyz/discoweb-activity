@@ -293,6 +293,44 @@ const envFlags = {
 
     const isNewUser = !existingUserForLog;
 
+    if (supabase) {
+      try {
+        await supabase.from('admin_actions').insert({
+          actor_id: user.id,
+          actor_role: 'user',
+          target_guild_id: guildId ?? 'global',
+          action_type: 'auth_login',
+          payload_after: {
+            user_id: user.id,
+            username: user.username,
+            guild_id: guildId,
+            guild_name: activeGuildName,
+            ip,
+            user_agent: ua,
+            is_new_user: isNewUser,
+          },
+        });
+        if (isNewUser) {
+          await supabase.from('admin_actions').insert({
+            actor_id: user.id,
+            actor_role: 'user',
+            target_guild_id: guildId ?? 'global',
+            action_type: 'new_user',
+            payload_after: {
+              user_id: user.id,
+              username: user.username,
+              guild_id: guildId,
+              guild_name: activeGuildName,
+              ip,
+              user_agent: ua,
+            },
+          });
+        }
+      } catch {
+        // log hatası auth'u durdurmasın
+      }
+    }
+
     // Activity için sadece kullanıcı bilgilerini döndür, sunucu seçimi olmadan direkt dashboard'a yönlendir
     const responseBody: Record<string, unknown> = {
       status: 'ok',
