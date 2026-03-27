@@ -311,8 +311,6 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
             )}
           </div>
         </div>
-      </div>
-    </div>
   );
 
   if (variant === 'page') {
