@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { useT } from '@/contexts/LocaleContext';
 import { apiUrl } from '@/lib/api';
 
 type ReportStatus = 'pending' | 'reviewing' | 'resolved' | 'not_found';
@@ -18,31 +19,31 @@ type Report = {
 
 type Props = { onClose: () => void; section?: string };
 
-const STATUS_CONFIG: Record<ReportStatus, { label: string; sub: string; color: string; dot: string; icon: string }> = {
+const STATUS_CONFIG: Record<ReportStatus, { labelKey: string; subKey: string; color: string; dot: string; icon: string }> = {
   pending: {
-    label: 'Beklemede',
-    sub: 'Önerin inceleme sırasına eklendi.',
+    labelKey: 'support_status_pending_label',
+    subKey: 'support_suggestion_status_pending_sub',
     color: 'border-white/10 bg-white/5',
     dot: 'bg-white/30',
     icon: '⏳',
   },
   reviewing: {
-    label: 'İnceleniyor',
-    sub: 'Ekibimiz bu öneriyi değerlendiriyor.',
+    labelKey: 'support_status_reviewing_label',
+    subKey: 'support_suggestion_status_reviewing_sub',
     color: 'border-violet-500/30 bg-violet-500/10',
     dot: 'bg-violet-400',
     icon: '🔍',
   },
   resolved: {
-    label: 'Kabul Edildi!',
-    sub: 'Önerin için teşekkürler, eklenecek.',
+    labelKey: 'support_suggestion_status_resolved_label',
+    subKey: 'support_suggestion_status_resolved_sub',
     color: 'border-green-500/30 bg-green-500/10',
     dot: 'bg-green-400',
     icon: '✅',
   },
   not_found: {
-    label: 'Şimdilik Planlanmıyor',
-    sub: 'Bu öneri şu an planlarımızda yok. Discord\'dan görüşebiliriz.',
+    labelKey: 'support_suggestion_status_not_found_label',
+    subKey: 'support_suggestion_status_not_found_sub',
     color: 'border-red-500/20 bg-red-500/5',
     dot: 'bg-red-400',
     icon: '❌',
@@ -57,6 +58,7 @@ function authHeaders(): HeadersInit {
 }
 
 export default function SuggestionModal({ onClose, section }: Props) {
+  const t = useT();
   const [tab, setTab] = useState<'new' | 'list'>('new');
 
   // --- New suggestion state ---
@@ -179,8 +181,8 @@ export default function SuggestionModal({ onClose, section }: Props) {
               </svg>
             </div>
             <div>
-              <h2 className="text-sm font-bold text-white">Öneri & Geri Bildirim</h2>
-              <p className="text-xs text-white/40">Fikirlerini bizimle paylaş</p>
+              <h2 className="text-sm font-bold text-white">{t('support_suggestion_title')}</h2>
+              <p className="text-xs text-white/40">{t('support_suggestion_subtitle')}</p>
             </div>
           </div>
 
@@ -188,11 +190,11 @@ export default function SuggestionModal({ onClose, section }: Props) {
           <div className="flex gap-1 rounded-xl border border-white/8 bg-white/[0.03] p-1">
             <button type="button" onClick={() => setTab('new')}
               className={`flex-1 rounded-lg py-1.5 text-xs font-semibold transition ${tab === 'new' ? 'bg-violet-500/15 text-violet-300' : 'text-white/40 hover:text-white/70'}`}>
-              Öneri Gönder
+              {t('support_suggestion_tab_new')}
             </button>
             <button type="button" onClick={() => setTab('list')}
               className={`flex-1 rounded-lg py-1.5 text-xs font-semibold transition ${tab === 'list' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white/70'}`}>
-              Önerilerim
+              {t('support_suggestion_tab_list')}
             </button>
           </div>
 
@@ -207,15 +209,15 @@ export default function SuggestionModal({ onClose, section }: Props) {
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                       </svg>
                     </div>
-                    <p className="text-sm font-semibold text-white">Önerin alındı, teşekkürler!</p>
-                    <p className="text-xs text-white/40">Önerilerim sekmesinden durumunu takip edebilirsin.</p>
+                    <p className="text-sm font-semibold text-white">{t('support_suggestion_success_title')}</p>
+                    <p className="text-xs text-white/40">{t('support_suggestion_success_subtitle')}</p>
                   </div>
 
                   <div className={`rounded-xl border px-4 py-3 flex items-start gap-3 transition-colors ${cfg.color}`}>
                     <span className="text-lg leading-none mt-0.5">{cfg.icon}</span>
                     <div className="flex flex-col gap-0.5 flex-1">
-                      <span className="text-sm font-semibold text-white">{cfg.label}</span>
-                      <span className="text-xs text-white/50">{cfg.sub}</span>
+                      <span className="text-sm font-semibold text-white">{t(cfg.labelKey)}</span>
+                      <span className="text-xs text-white/50">{t(cfg.subKey)}</span>
                     </div>
                     {activeReportStatus === 'reviewing' && (
                       <svg className="h-4 w-4 animate-spin text-violet-400 flex-shrink-0 mt-0.5" viewBox="0 0 16 16" fill="none">
@@ -228,41 +230,41 @@ export default function SuggestionModal({ onClose, section }: Props) {
                   {activeReportStatus === 'not_found' && (
                     <button type="button" onClick={() => window.open('https://discord.gg/fDPsYhvKmu', '_blank', 'noopener,noreferrer')}
                       className="w-full rounded-xl border border-[#5865F2]/30 bg-[#5865F2]/10 py-2.5 text-sm font-semibold text-[#5865F2] hover:bg-[#5865F2]/20 transition flex items-center justify-center gap-2">
-                      Discord Destek Sunucusu
+                      {t('support_discord_button')}
                     </button>
                   )}
 
                   <button type="button"
                     onClick={() => { setSendStatus('idle'); setTitle(''); setDescription(''); setImageFile(null); setImagePreview(null); setActiveReportId(null); }}
                     className="text-xs text-white/30 hover:text-white/60 transition text-center">
-                    Yeni öneri gönder
+                    {t('support_suggestion_submit_new')}
                   </button>
                 </div>
               ) : (
                 <>
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-white/50 uppercase tracking-wider">Başlık <span className="text-white/25 normal-case">(isteğe bağlı)</span></label>
+                    <label className="text-xs font-semibold text-white/50 uppercase tracking-wider">{t('support_suggestion_title_label')} <span className="text-white/25 normal-case">{t('support_suggestion_title_optional')}</span></label>
                     <input
                       value={title}
                       onChange={e => setTitle(e.target.value)}
-                      placeholder="Önerinin kısa başlığı"
+                      placeholder={t('support_suggestion_title_placeholder')}
                       className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white placeholder-white/25 focus:outline-none focus:border-white/20 transition"
                     />
                   </div>
 
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-white/50 uppercase tracking-wider">Açıklama</label>
+                    <label className="text-xs font-semibold text-white/50 uppercase tracking-wider">{t('support_suggestion_description_label')}</label>
                     <textarea
                       value={description}
                       onChange={e => setDescription(e.target.value)}
-                      placeholder="Hangi özelliği eklemememizi ya da neyi geliştirmemizi istersin?"
+                      placeholder={t('support_suggestion_description_placeholder')}
                       rows={4}
                       className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white placeholder-white/25 resize-none focus:outline-none focus:border-white/20 transition"
                     />
                   </div>
 
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-white/50 uppercase tracking-wider">Görsel <span className="text-white/25 normal-case">(isteğe bağlı)</span></label>
+                    <label className="text-xs font-semibold text-white/50 uppercase tracking-wider">{t('support_image_label')} <span className="text-white/25 normal-case">{t('support_screenshot_optional')}</span></label>
                     <div
                       onDrop={handleDrop}
                       onDragOver={e => e.preventDefault()}
@@ -287,7 +289,7 @@ export default function SuggestionModal({ onClose, section }: Props) {
                           <svg viewBox="0 0 16 16" fill="currentColor" className="h-5 w-5 text-white/25">
                             <path d="M7.75 2a.75.75 0 01.75.75V7h4.25a.75.75 0 010 1.5H8.5v4.25a.75.75 0 01-1.5 0V8.5H2.75a.75.75 0 010-1.5H7V2.75A.75.75 0 017.75 2z" />
                           </svg>
-                          <span className="text-xs text-white/30">Sürükle bırak veya tıkla</span>
+                          <span className="text-xs text-white/30">{t('support_screenshot_drop')}</span>
                         </div>
                       )}
                     </div>
@@ -295,7 +297,7 @@ export default function SuggestionModal({ onClose, section }: Props) {
                   </div>
 
                   {sendStatus === 'error' && (
-                    <p className="text-xs text-red-400 text-center">Gönderim başarısız, tekrar dene.</p>
+                    <p className="text-xs text-red-400 text-center">{t('support_send_error')}</p>
                   )}
 
                   <button type="button" onClick={handleSubmit}
@@ -307,9 +309,9 @@ export default function SuggestionModal({ onClose, section }: Props) {
                           <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="2" strokeOpacity="0.3" />
                           <path d="M8 2a6 6 0 016 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                         </svg>
-                        Gönderiliyor...
+                        {t('support_sending')}
                       </>
-                    ) : 'Öneriyi Gönder'}
+                    ) : t('support_suggestion_submit')}
                   </button>
                 </>
               )}
@@ -326,7 +328,7 @@ export default function SuggestionModal({ onClose, section }: Props) {
                     <svg viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3">
                       <path fillRule="evenodd" d="M9.78 4.22a.75.75 0 010 1.06L7.06 8l2.72 2.72a.75.75 0 11-1.06 1.06L5.47 8.53a.75.75 0 010-1.06l3.25-3.25a.75.75 0 011.06 0z" />
                     </svg>
-                    Geri
+                    {t('support_back')}
                   </button>
 
                   {(() => {
@@ -335,8 +337,8 @@ export default function SuggestionModal({ onClose, section }: Props) {
                       <div className={`rounded-xl border px-4 py-3 flex items-start gap-3 ${c.color}`}>
                         <span className="text-xl leading-none mt-0.5">{c.icon}</span>
                         <div className="flex flex-col gap-0.5 flex-1">
-                          <span className="text-sm font-bold text-white">{c.label}</span>
-                          <span className="text-xs text-white/50">{c.sub}</span>
+                          <span className="text-sm font-bold text-white">{t(c.labelKey)}</span>
+                          <span className="text-xs text-white/50">{t(c.subKey)}</span>
                         </div>
                         {selectedReport.status === 'reviewing' && (
                           <svg className="h-4 w-4 animate-spin text-violet-400 flex-shrink-0 mt-0.5" viewBox="0 0 16 16" fill="none">
@@ -350,30 +352,30 @@ export default function SuggestionModal({ onClose, section }: Props) {
 
                   <div className="rounded-xl border border-white/8 bg-white/[0.03] px-4 py-3 flex flex-col gap-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-white/40">Öneri No</span>
+                      <span className="text-xs text-white/40">{t('support_suggestion_meta_id')}</span>
                       <span className="text-xs font-mono text-white/70">{selectedReport.id.slice(0, 8).toUpperCase()}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-white/40">Gönderildi</span>
+                      <span className="text-xs text-white/40">{t('support_meta_created')}</span>
                       <span className="text-xs text-white/70">{new Date(selectedReport.created_at).toLocaleString('tr-TR')}</span>
                     </div>
                     {selectedReport.updated_at !== selectedReport.created_at && (
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-white/40">Güncellendi</span>
+                        <span className="text-xs text-white/40">{t('support_meta_updated')}</span>
                         <span className="text-xs text-white/70">{new Date(selectedReport.updated_at).toLocaleString('tr-TR')}</span>
                       </div>
                     )}
                   </div>
 
                   <div className="rounded-xl border border-white/8 bg-white/[0.03] px-4 py-3">
-                    <p className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-2">Öneri</p>
+                    <p className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-2">{t('support_suggestion_report_label')}</p>
                     <p className="text-sm text-white/80 leading-relaxed whitespace-pre-wrap">{selectedReport.description}</p>
                   </div>
 
                   {selectedReport.status === 'not_found' && (
                     <button type="button" onClick={() => window.open('https://discord.gg/fDPsYhvKmu', '_blank', 'noopener,noreferrer')}
                       className="w-full rounded-xl border border-[#5865F2]/30 bg-[#5865F2]/10 py-2.5 text-sm font-semibold text-[#5865F2] hover:bg-[#5865F2]/20 transition flex items-center justify-center gap-2">
-                      Discord Destek Sunucusu
+                      {t('support_discord_button')}
                     </button>
                   )}
                 </div>
@@ -391,7 +393,7 @@ export default function SuggestionModal({ onClose, section }: Props) {
                       <svg viewBox="0 0 16 16" fill="currentColor" className="h-8 w-8 text-white/10">
                         <path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm3.75-1.5a.75.75 0 000 1.5h5.5a.75.75 0 000-1.5h-5.5zm0 3a.75.75 0 000 1.5h3.5a.75.75 0 000-1.5h-3.5z" />
                       </svg>
-                      <p className="text-sm text-white/30">Henüz öneri göndermedin</p>
+                      <p className="text-sm text-white/30">{t('support_suggestion_empty')}</p>
                     </div>
                   ) : (
                     <>
@@ -410,14 +412,14 @@ export default function SuggestionModal({ onClose, section }: Props) {
                               r.status === 'resolved'  ? 'text-green-400 border-green-500/30 bg-green-500/10' :
                               r.status === 'not_found' ? 'text-red-400 border-red-500/20 bg-red-500/5' :
                               'text-white/40 border-white/10 bg-white/5'
-                            }`}>{c.label}</span>
+                            }`}>{t(c.labelKey)}</span>
                             <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5 text-white/20 group-hover:text-white/50 transition flex-shrink-0">
                               <path fillRule="evenodd" d="M6.22 4.22a.75.75 0 011.06 0l3.25 3.25a.75.75 0 010 1.06L7.28 11.78a.75.75 0 01-1.06-1.06L8.94 8 6.22 5.28a.75.75 0 010-1.06z" />
                             </svg>
                           </button>
                         );
                       })}
-                      <button type="button" onClick={loadReports} className="text-xs text-white/25 hover:text-white/50 transition text-center pt-1">Yenile</button>
+                      <button type="button" onClick={loadReports} className="text-xs text-white/25 hover:text-white/50 transition text-center pt-1">{t('support_refresh')}</button>
                     </>
                   )}
                 </div>

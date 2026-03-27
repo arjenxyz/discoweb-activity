@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
+import { useT } from '@/contexts/LocaleContext';
 import { getClientErrors } from '@/lib/clientErrorStore';
 import { apiUrl } from '@/lib/api';
 
@@ -19,31 +20,31 @@ type Report = {
 
 type Props = { onClose: () => void; section?: string };
 
-const STATUS_CONFIG: Record<ReportStatus, { label: string; sub: string; color: string; dot: string; icon: string }> = {
+const STATUS_CONFIG: Record<ReportStatus, { labelKey: string; subKey: string; color: string; dot: string; icon: string }> = {
   pending: {
-    label: 'Beklemede',
-    sub: 'Raporun inceleme sırasına eklendi.',
+    labelKey: 'support_status_pending_label',
+    subKey: 'support_bug_status_pending_sub',
     color: 'border-white/10 bg-white/5',
     dot: 'bg-white/30',
     icon: '⏳',
   },
   reviewing: {
-    label: 'İnceleniyor',
-    sub: 'Ekibimiz bu hatayı inceliyor.',
+    labelKey: 'support_status_reviewing_label',
+    subKey: 'support_bug_status_reviewing_sub',
     color: 'border-amber-500/30 bg-amber-500/10',
     dot: 'bg-amber-400',
     icon: '🔍',
   },
   resolved: {
-    label: 'Çözüldü',
-    sub: 'Raporun için teşekkürler, sorun giderildi.',
+    labelKey: 'support_status_resolved_label',
+    subKey: 'support_bug_status_resolved_sub',
     color: 'border-green-500/30 bg-green-500/10',
     dot: 'bg-green-400',
     icon: '✅',
   },
   not_found: {
-    label: 'Tespit Edilemedi',
-    sub: 'Sorunu yeniden üretemedi. Discord\'dan destek alabilirsin.',
+    labelKey: 'support_status_not_found_label',
+    subKey: 'support_bug_status_not_found_sub',
     color: 'border-red-500/20 bg-red-500/5',
     dot: 'bg-red-400',
     icon: '❓',
@@ -58,6 +59,7 @@ function authHeaders(): HeadersInit {
 }
 
 export default function BugReportModal({ onClose, section }: Props) {
+  const t = useT();
   const [tab, setTab] = useState<'new' | 'list'>('new');
 
   // --- New report state ---
@@ -201,8 +203,8 @@ export default function BugReportModal({ onClose, section }: Props) {
         </svg>
       </div>
       <div>
-        <h2 className="text-sm font-bold text-white">Hata Bildir</h2>
-        <p className="text-xs text-white/40">Oturum logları otomatik eklenecek</p>
+        <h2 className="text-sm font-bold text-white">{t('support_bug_title')}</h2>
+        <p className="text-xs text-white/40">{t('support_bug_subtitle')}</p>
       </div>
     </div>
   );
@@ -238,14 +240,14 @@ export default function BugReportModal({ onClose, section }: Props) {
               onClick={() => setTab('new')}
               className={`flex-1 rounded-lg py-1.5 text-xs font-semibold transition ${tab === 'new' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white/70'}`}
             >
-              Hata Bildir
+              {t('support_bug_tab_new')}
             </button>
             <button
               type="button"
               onClick={() => setTab('list')}
               className={`flex-1 rounded-lg py-1.5 text-xs font-semibold transition ${tab === 'list' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white/70'}`}
             >
-              Raporlarım
+              {t('support_bug_tab_list')}
             </button>
           </div>
 
@@ -260,16 +262,16 @@ export default function BugReportModal({ onClose, section }: Props) {
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                       </svg>
                     </div>
-                    <p className="text-sm font-semibold text-white">Rapor gönderildi!</p>
-                    <p className="text-xs text-white/40">Raporlarım sekmesinden durumunu takip edebilirsin.</p>
+                    <p className="text-sm font-semibold text-white">{t('support_bug_success_title')}</p>
+                    <p className="text-xs text-white/40">{t('support_bug_success_subtitle')}</p>
                   </div>
 
                   {/* Status card */}
                   <div className={`rounded-xl border px-4 py-3 flex items-start gap-3 transition-colors ${cfg.color}`}>
                     <span className="text-lg leading-none mt-0.5">{cfg.icon}</span>
                     <div className="flex flex-col gap-0.5 flex-1">
-                      <span className="text-sm font-semibold text-white">{cfg.label}</span>
-                      <span className="text-xs text-white/50">{cfg.sub}</span>
+                      <span className="text-sm font-semibold text-white">{t(cfg.labelKey)}</span>
+                      <span className="text-xs text-white/50">{t(cfg.subKey)}</span>
                     </div>
                     {activeReportStatus === 'reviewing' && (
                       <svg className="h-4 w-4 animate-spin text-amber-400 flex-shrink-0 mt-0.5" viewBox="0 0 16 16" fill="none">
@@ -288,7 +290,7 @@ export default function BugReportModal({ onClose, section }: Props) {
                       <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4">
                         <path d="M13.545 2.907a13.227 13.227 0 00-3.257-1.011.05.05 0 00-.052.025c-.141.25-.297.577-.406.833a12.19 12.19 0 00-3.658 0 8.258 8.258 0 00-.412-.833.051.051 0 00-.052-.025c-1.125.194-2.22.534-3.257 1.011a.041.041 0 00-.021.018C.356 6.024-.213 9.047.066 12.032c.001.014.01.028.021.037a13.276 13.276 0 003.995 2.02.05.05 0 00.056-.019c.308-.42.582-.863.818-1.329a.05.05 0 00-.01-.059.051.051 0 00-.018-.011 8.875 8.875 0 01-1.248-.595.05.05 0 01-.02-.066.051.051 0 01.015-.019c.084-.063.168-.129.248-.195a.05.05 0 01.051-.007c2.619 1.196 5.454 1.196 8.041 0a.052.052 0 01.053.007c.08.066.164.132.248.195a.051.051 0 01-.004.085 8.254 8.254 0 01-1.249.594.05.05 0 00-.03.03.052.052 0 00.003.041c.24.465.515.909.817 1.329a.05.05 0 00.056.019 13.235 13.235 0 004.001-2.02.049.049 0 00.021-.037c.334-3.451-.559-6.449-2.366-9.106a.034.034 0 00-.02-.019zm-8.198 7.307c-.789 0-1.438-.724-1.438-1.612 0-.889.637-1.613 1.438-1.613.807 0 1.45.73 1.438 1.613 0 .888-.637 1.612-1.438 1.612zm5.316 0c-.788 0-1.438-.724-1.438-1.612 0-.889.637-1.613 1.438-1.613.807 0 1.451.73 1.438 1.613 0 .888-.631 1.612-1.438 1.612z" />
                       </svg>
-                      Discord Destek Sunucusu
+                      {t('support_discord_button')}
                     </button>
                   )}
 
@@ -297,24 +299,24 @@ export default function BugReportModal({ onClose, section }: Props) {
                     onClick={() => { setSendStatus('idle'); setDescription(''); setImageFile(null); setImagePreview(null); setActiveReportId(null); }}
                     className="text-xs text-white/30 hover:text-white/60 transition text-center"
                   >
-                    Yeni rapor gönder
+                    {t('support_bug_submit_new')}
                   </button>
                 </div>
               ) : (
                 <>
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-white/50 uppercase tracking-wider">Açıklama</label>
+                    <label className="text-xs font-semibold text-white/50 uppercase tracking-wider">{t('support_bug_description_label')}</label>
                     <textarea
                       value={description}
                       onChange={e => setDescription(e.target.value)}
-                      placeholder="Ne oldu? Hangi adımları izledin?"
+                      placeholder={t('support_bug_description_placeholder')}
                       rows={4}
                       className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white placeholder-white/25 resize-none focus:outline-none focus:border-white/20 transition"
                     />
                   </div>
 
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-white/50 uppercase tracking-wider">Ekran Görüntüsü <span className="text-white/25 normal-case">(isteğe bağlı)</span></label>
+                    <label className="text-xs font-semibold text-white/50 uppercase tracking-wider">{t('support_screenshot_label')} <span className="text-white/25 normal-case">{t('support_screenshot_optional')}</span></label>
                     <div
                       onDrop={handleDrop}
                       onDragOver={e => e.preventDefault()}
@@ -339,7 +341,7 @@ export default function BugReportModal({ onClose, section }: Props) {
                           <svg viewBox="0 0 16 16" fill="currentColor" className="h-5 w-5 text-white/25">
                             <path d="M7.75 2a.75.75 0 01.75.75V7h4.25a.75.75 0 010 1.5H8.5v4.25a.75.75 0 01-1.5 0V8.5H2.75a.75.75 0 010-1.5H7V2.75A.75.75 0 017.75 2z" />
                           </svg>
-                          <span className="text-xs text-white/30">Sürükle bırak veya tıkla</span>
+                          <span className="text-xs text-white/30">{t('support_screenshot_drop')}</span>
                         </div>
                       )}
                     </div>
@@ -350,11 +352,11 @@ export default function BugReportModal({ onClose, section }: Props) {
                     <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5 text-[#5865F2] flex-shrink-0">
                       <path fillRule="evenodd" d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm9 3a1 1 0 11-2 0 1 1 0 012 0zm-.25-6.25a.75.75 0 00-1.5 0v3.5a.75.75 0 001.5 0v-3.5z" />
                     </svg>
-                    <span className="text-xs text-white/35">URL, ekran boyutu, tarayıcı bilgisi ve hata logları otomatik eklenir.</span>
+                    <span className="text-xs text-white/35">{t('support_bug_info')}</span>
                   </div>
 
                   {sendStatus === 'error' && (
-                    <p className="text-xs text-red-400 text-center">Gönderim başarısız, tekrar dene.</p>
+                    <p className="text-xs text-red-400 text-center">{t('support_send_error')}</p>
                   )}
 
                   <button
@@ -369,9 +371,9 @@ export default function BugReportModal({ onClose, section }: Props) {
                           <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="2" strokeOpacity="0.3" />
                           <path d="M8 2a6 6 0 016 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                         </svg>
-                        Gönderiliyor...
+                        {t('support_sending')}
                       </>
-                    ) : 'Raporu Gönder'}
+                    ) : t('support_bug_submit')}
                   </button>
                 </>
               )}
@@ -392,7 +394,7 @@ export default function BugReportModal({ onClose, section }: Props) {
                     <svg viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3">
                       <path fillRule="evenodd" d="M9.78 4.22a.75.75 0 010 1.06L7.06 8l2.72 2.72a.75.75 0 11-1.06 1.06L5.47 8.53a.75.75 0 010-1.06l3.25-3.25a.75.75 0 011.06 0z" />
                     </svg>
-                    Geri
+                    {t('support_back')}
                   </button>
 
                   {/* Status */}
@@ -402,8 +404,8 @@ export default function BugReportModal({ onClose, section }: Props) {
                       <div className={`rounded-xl border px-4 py-3 flex items-start gap-3 ${c.color}`}>
                         <span className="text-xl leading-none mt-0.5">{c.icon}</span>
                         <div className="flex flex-col gap-0.5 flex-1">
-                          <span className="text-sm font-bold text-white">{c.label}</span>
-                          <span className="text-xs text-white/50">{c.sub}</span>
+                          <span className="text-sm font-bold text-white">{t(c.labelKey)}</span>
+                          <span className="text-xs text-white/50">{t(c.subKey)}</span>
                         </div>
                         {selectedReport.status === 'reviewing' && (
                           <svg className="h-4 w-4 animate-spin text-amber-400 flex-shrink-0 mt-0.5" viewBox="0 0 16 16" fill="none">
@@ -418,22 +420,22 @@ export default function BugReportModal({ onClose, section }: Props) {
                   {/* Meta */}
                   <div className="rounded-xl border border-white/8 bg-white/[0.03] px-4 py-3 flex flex-col gap-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-white/40">Rapor No</span>
+                      <span className="text-xs text-white/40">{t('support_bug_meta_id')}</span>
                       <span className="text-xs font-mono text-white/70">{selectedReport.id.slice(0, 8).toUpperCase()}</span>
                     </div>
                     {selectedReport.section && (
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-white/40">Bölüm</span>
+                        <span className="text-xs text-white/40">{t('support_bug_meta_section')}</span>
                         <span className="text-xs text-white/70 capitalize">{selectedReport.section}</span>
                       </div>
                     )}
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-white/40">Gönderildi</span>
+                      <span className="text-xs text-white/40">{t('support_meta_created')}</span>
                       <span className="text-xs text-white/70">{new Date(selectedReport.created_at).toLocaleString('tr-TR')}</span>
                     </div>
                     {selectedReport.updated_at !== selectedReport.created_at && (
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-white/40">Güncellendi</span>
+                        <span className="text-xs text-white/40">{t('support_meta_updated')}</span>
                         <span className="text-xs text-white/70">{new Date(selectedReport.updated_at).toLocaleString('tr-TR')}</span>
                       </div>
                     )}
@@ -441,7 +443,7 @@ export default function BugReportModal({ onClose, section }: Props) {
 
                   {/* Description */}
                   <div className="rounded-xl border border-white/8 bg-white/[0.03] px-4 py-3">
-                    <p className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-2">Açıklama</p>
+                    <p className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-2">{t('support_bug_report_label')}</p>
                     <p className="text-sm text-white/80 leading-relaxed whitespace-pre-wrap">{selectedReport.description}</p>
                   </div>
 
@@ -454,7 +456,7 @@ export default function BugReportModal({ onClose, section }: Props) {
                       <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4">
                         <path d="M13.545 2.907a13.227 13.227 0 00-3.257-1.011.05.05 0 00-.052.025c-.141.25-.297.577-.406.833a12.19 12.19 0 00-3.658 0 8.258 8.258 0 00-.412-.833.051.051 0 00-.052-.025c-1.125.194-2.22.534-3.257 1.011a.041.041 0 00-.021.018C.356 6.024-.213 9.047.066 12.032c.001.014.01.028.021.037a13.276 13.276 0 003.995 2.02.05.05 0 00.056-.019c.308-.42.582-.863.818-1.329a.05.05 0 00-.01-.059.051.051 0 00-.018-.011 8.875 8.875 0 01-1.248-.595.05.05 0 01-.02-.066.051.051 0 01.015-.019c.084-.063.168-.129.248-.195a.05.05 0 01.051-.007c2.619 1.196 5.454 1.196 8.041 0a.052.052 0 01.053.007c.08.066.164.132.248.195a.051.051 0 01-.004.085 8.254 8.254 0 01-1.249.594.05.05 0 00-.03.03.052.052 0 00.003.041c.24.465.515.909.817 1.329a.05.05 0 00.056.019 13.235 13.235 0 004.001-2.02.049.049 0 00.021-.037c.334-3.451-.559-6.449-2.366-9.106a.034.034 0 00-.02-.019zm-8.198 7.307c-.789 0-1.438-.724-1.438-1.612 0-.889.637-1.613 1.438-1.613.807 0 1.45.73 1.438 1.613 0 .888-.637 1.612-1.438 1.612zm5.316 0c-.788 0-1.438-.724-1.438-1.612 0-.889.637-1.613 1.438-1.613.807 0 1.451.73 1.438 1.613 0 .888-.631 1.612-1.438 1.612z" />
                       </svg>
-                      Discord Destek Sunucusu
+                      {t('support_discord_button')}
                     </button>
                   )}
                 </div>
@@ -473,7 +475,7 @@ export default function BugReportModal({ onClose, section }: Props) {
                       <svg viewBox="0 0 16 16" fill="currentColor" className="h-8 w-8 text-white/10">
                         <path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0114.082 15H1.918a1.75 1.75 0 01-1.543-2.575L6.457 1.047zM9 11a1 1 0 11-2 0 1 1 0 012 0zm-.25-5.25a.75.75 0 00-1.5 0v2.5a.75.75 0 001.5 0v-2.5z" />
                       </svg>
-                      <p className="text-sm text-white/30">Henüz rapor göndermedin</p>
+                      <p className="text-sm text-white/30">{t('support_bug_empty')}</p>
                     </div>
                   ) : (
                     <>
@@ -497,7 +499,7 @@ export default function BugReportModal({ onClose, section }: Props) {
                                 r.status === 'resolved'   ? 'text-green-400 border-green-500/30 bg-green-500/10' :
                                 r.status === 'not_found'  ? 'text-red-400 border-red-500/20 bg-red-500/5' :
                                 'text-white/40 border-white/10 bg-white/5'
-                              }`}>{c.label}</span>
+                              }`}>{t(c.labelKey)}</span>
                             </div>
                             <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5 text-white/20 group-hover:text-white/50 transition flex-shrink-0">
                               <path fillRule="evenodd" d="M6.22 4.22a.75.75 0 011.06 0l3.25 3.25a.75.75 0 010 1.06L7.28 11.78a.75.75 0 01-1.06-1.06L8.94 8 6.22 5.28a.75.75 0 010-1.06z" />
@@ -510,7 +512,7 @@ export default function BugReportModal({ onClose, section }: Props) {
                         onClick={loadReports}
                         className="text-xs text-white/25 hover:text-white/50 transition text-center pt-1"
                       >
-                        Yenile
+                        {t('support_refresh')}
                       </button>
                     </>
                   )}

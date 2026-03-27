@@ -12,6 +12,7 @@ import trStore from '@/locales/tr/store.json';
 import trUI from '@/locales/tr/ui.json';
 import trWallet from '@/locales/tr/wallet.json';
 import trWelcome from '@/locales/tr/welcome.json';
+import trSupport from '@/locales/tr/support.json';
 
 export type SupportedLocale = 'tr';
 
@@ -19,6 +20,7 @@ export const translations: Record<SupportedLocale, Record<string, string>> = {
   tr: {
     ...trAuth, ...trDashboard, ...trDm, ...trDocs, ...trErrors, ...trMail, ...trMisc,
     ...trNotifications, ...trPrivacy, ...trProfile, ...trStore, ...trUI, ...trWallet, ...trWelcome,
+    ...trSupport,
   },
 };
 
