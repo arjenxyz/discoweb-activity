@@ -131,13 +131,16 @@ export default function EconomyApplySection() {
   };
 
   return (
-    <div className="w-full min-h-full">
-      <div className="relative overflow-hidden rounded-none border-0 bg-[#0e1018] w-full min-h-full p-6 sm:p-10">
+    <div className="w-full min-h-full flex flex-col">
+      {/* Full-screen background fixed behind content */}
+      <div className="fixed inset-0 -z-10 bg-[#0e1018]">
         <div
           className="absolute inset-0 bg-cover bg-center opacity-20"
           style={{ backgroundImage: "url('/background/background.jpg')" }}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black/80" />
+      </div>
+      <div className="relative flex-1 w-full p-6 sm:p-10">
         <div className="relative z-10 space-y-6 max-w-3xl mx-auto">
       <div>
         <h2 className="text-xl font-bold text-white">{t('economy_apply_title')}</h2>
