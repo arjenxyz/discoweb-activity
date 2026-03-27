@@ -9,7 +9,7 @@ type ReportStatus = 'pending' | 'reviewing' | 'resolved' | 'not_found';
 
 type Report = {
   id: string;
-  type: ReportType;
+  type: string;
   section: string;
   description: string;
   status: ReportStatus;
@@ -17,9 +17,7 @@ type Report = {
   updated_at: string;
 };
 
-type ReportType = 'bug' | 'suggestion';
-
-type Props = { onClose: () => void; section?: string; initialType?: ReportType };
+type Props = { onClose: () => void; section?: string };
 
 const STATUS_CONFIG: Record<ReportStatus, { label: string; sub: string; color: string; dot: string; icon: string }> = {
   pending: {
@@ -59,25 +57,7 @@ function authHeaders(): HeadersInit {
   } catch { return {}; }
 }
 
-const TYPE_CONFIG: Record<ReportType, { label: string; placeholder: string; icon: string; accent: string; embedColor: string }> = {
-  bug: {
-    label: 'Hata Bildir',
-    placeholder: 'Ne oldu? Hangi adımları izledin?',
-    icon: '🐛',
-    accent: 'text-red-400 border-red-500/20 bg-red-500/15',
-    embedColor: 'via-red-500/30',
-  },
-  suggestion: {
-    label: 'Öneri Gönder',
-    placeholder: 'Hangi özelliği eklemememizi ya da neyi geliştirmemizi istersin?',
-    icon: '💡',
-    accent: 'text-violet-400 border-violet-500/20 bg-violet-500/15',
-    embedColor: 'via-violet-500/30',
-  },
-};
-
-export default function BugReportModal({ onClose, section, initialType = 'bug' }: Props) {
-  const [reportType, setReportType] = useState<ReportType>(initialType);
+export default function BugReportModal({ onClose, section }: Props) {
   const [tab, setTab] = useState<'new' | 'list'>('new');
 
   // --- New report state ---
@@ -117,7 +97,7 @@ export default function BugReportModal({ onClose, section, initialType = 'bug' }
   const loadReports = useCallback(async () => {
     setReportsLoading(true);
     try {
-      const res = await fetch(apiUrl('/api/support/bug-report/my-reports'), { headers: authHeaders() });
+      const res = await fetch(apiUrl('/api/support/bug-report/my-reports?type=bug'), { headers: authHeaders() });
       if (res.ok) setReports(await res.json() as Report[]);
     } catch { /* ignore */ }
     setReportsLoading(false);
@@ -196,7 +176,7 @@ export default function BugReportModal({ onClose, section, initialType = 'bug' }
     try {
       const fd = new FormData();
       fd.append('description', description);
-      fd.append('type', reportType);
+      fd.append('type', 'bug');
       if (section) fd.append('section', section);
       fd.append('sessionInfo', JSON.stringify(sessionInfo));
       fd.append('errorLog', JSON.stringify(errorLog));
@@ -212,26 +192,17 @@ export default function BugReportModal({ onClose, section, initialType = 'bug' }
     }
   };
 
-  const tc = TYPE_CONFIG[reportType];
-
   // Shared header
   const header = (
-    <div className="flex flex-col gap-3 pr-10">
-      {/* Tip seçici */}
-      <div className="flex gap-1 rounded-xl border border-white/8 bg-white/[0.03] p-1">
-        {(['bug', 'suggestion'] as ReportType[]).map(t => (
-          <button
-            key={t}
-            type="button"
-            onClick={() => setReportType(t)}
-            className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-semibold transition ${
-              reportType === t ? (t === 'bug' ? 'bg-red-500/15 text-red-300' : 'bg-violet-500/15 text-violet-300') : 'text-white/40 hover:text-white/70'
-            }`}
-          >
-            <span>{TYPE_CONFIG[t].icon}</span>
-            {TYPE_CONFIG[t].label}
-          </button>
-        ))}
+    <div className="flex items-center gap-3 pr-10">
+      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-500/15 border border-red-500/20 flex-shrink-0">
+        <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 text-red-400">
+          <path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0114.082 15H1.918a1.75 1.75 0 01-1.543-2.575L6.457 1.047zM9 11a1 1 0 11-2 0 1 1 0 012 0zm-.25-5.25a.75.75 0 00-1.5 0v2.5a.75.75 0 001.5 0v-2.5z" />
+        </svg>
+      </div>
+      <div>
+        <h2 className="text-sm font-bold text-white">Hata Bildir</h2>
+        <p className="text-xs text-white/40">Oturum logları otomatik eklenecek</p>
       </div>
     </div>
   );
@@ -245,7 +216,7 @@ export default function BugReportModal({ onClose, section, initialType = 'bug' }
     >
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       <div className="relative w-full max-w-md rounded-2xl border border-white/10 bg-[#0b0d12]/95 backdrop-blur-xl shadow-2xl overflow-hidden">
-        <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent ${tc.embedColor} to-transparent`} />
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-red-500/30 to-transparent" />
 
         <button
           type="button"
@@ -336,7 +307,7 @@ export default function BugReportModal({ onClose, section, initialType = 'bug' }
                     <textarea
                       value={description}
                       onChange={e => setDescription(e.target.value)}
-                      placeholder={tc.placeholder}
+                      placeholder="Ne oldu? Hangi adımları izledin?"
                       rows={4}
                       className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white placeholder-white/25 resize-none focus:outline-none focus:border-white/20 transition"
                     />
@@ -518,7 +489,7 @@ export default function BugReportModal({ onClose, section, initialType = 'bug' }
                             <span className={`h-2 w-2 rounded-full flex-shrink-0 ${c.dot}`} />
                             <div className="flex-1 min-w-0">
                               <p className="text-sm text-white/80 truncate leading-tight">{r.description}</p>
-                              <p className="text-[11px] text-white/30 mt-0.5">{TYPE_CONFIG[r.type ?? 'bug'].icon} {new Date(r.created_at).toLocaleDateString('tr-TR')} · #{r.id.slice(0, 8).toUpperCase()}</p>
+                              <p className="text-[11px] text-white/30 mt-0.5">🐛 {new Date(r.created_at).toLocaleDateString('tr-TR')} · #{r.id.slice(0, 8).toUpperCase()}</p>
                             </div>
                             <div className="flex flex-col items-end gap-1 flex-shrink-0">
                               <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${

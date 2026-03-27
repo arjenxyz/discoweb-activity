@@ -16,10 +16,14 @@ export async function GET(request: Request) {
   const supabase = getSupabase();
   if (!supabase) return NextResponse.json({ error: 'db_unavailable' }, { status: 500 });
 
+  const { searchParams } = new URL(request.url);
+  const type = searchParams.get('type') ?? 'bug';
+
   const { data } = await supabase
     .from('bug_reports')
     .select('id, type, section, description, status, created_at, updated_at')
     .eq('user_id', session.userId)
+    .eq('type', type)
     .order('created_at', { ascending: false })
     .limit(20);
 

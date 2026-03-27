@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import BugReportModal from './BugReportModal';
+import SuggestionModal from './SuggestionModal';
 
 type Props = {
   openLink: (url: string) => Promise<void>;
@@ -10,7 +11,8 @@ type Props = {
 
 export default function SupportMenu({ openLink, section }: Props) {
   const [open, setOpen] = useState(false);
-  const [modalType, setModalType] = useState<'bug' | 'suggestion' | null>(null);
+  const [bugOpen, setBugOpen] = useState(false);
+  const [suggestionOpen, setSuggestionOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -71,7 +73,7 @@ export default function SupportMenu({ openLink, section }: Props) {
                 label="Hata Bildir"
                 sub="Bir sorun mu var?"
                 danger
-                onClick={() => { setOpen(false); setModalType('bug'); }}
+                onClick={() => { setOpen(false); setBugOpen(true); }}
               />
               <MenuItem
                 icon={
@@ -81,14 +83,15 @@ export default function SupportMenu({ openLink, section }: Props) {
                 }
                 label="Öneri Gönder"
                 sub="Fikrin mi var?"
-                onClick={() => { setOpen(false); setModalType('suggestion'); }}
+                onClick={() => { setOpen(false); setSuggestionOpen(true); }}
               />
             </div>
           </div>
         )}
       </div>
 
-      {modalType && <BugReportModal onClose={() => setModalType(null)} section={section} initialType={modalType} />}
+      {bugOpen && <BugReportModal onClose={() => setBugOpen(false)} section={section} />}
+      {suggestionOpen && <SuggestionModal onClose={() => setSuggestionOpen(false)} section={section} />}
     </>
   );
 }
