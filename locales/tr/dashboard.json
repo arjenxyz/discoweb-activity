@@ -273,6 +273,9 @@
   "developer_panel_maintenance_title": "Activity Bakım Modu",
   "developer_panel_maintenance_active": "Tüm sunucularda aktif",
   "developer_panel_maintenance_warning": "Kullanıcılar yalnızca karşılama ekranını görebilir.",
+  "developer_page_title": "Developer Panel",
+  "developer_page_not_authorized": "Bu sayfaya erişim yetkiniz yok.",
+  "developer_page_back": "Geri Dön",
 
   "coupon_applied_success": "Kupon başarıyla uygulandı",
   "server_unknown": "Bilinmeyen Sunucu",

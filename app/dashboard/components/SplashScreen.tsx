@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { MuteButton, VideoBackground } from './VideoBackground';
 import DeveloperPanel from './DeveloperPanel';
 import DeveloperAboutModal from './DeveloperAboutModal';
@@ -94,6 +95,7 @@ const TIPS = [
 
 export default function SplashScreen({ onEnter }: Props) {
   const t = useT();
+  const router = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [muted, setMuted] = useState(true);
   const [visible, setVisible] = useState(false);
@@ -335,7 +337,7 @@ export default function SplashScreen({ onEnter }: Props) {
                 {isDeveloper && (
                   <button
                     type="button"
-                    onClick={() => setDevPanelOpen(true)}
+                    onClick={() => router.push('/developer')}
                     className="flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3 py-2 text-sm font-semibold text-white/70 hover:bg-white/10 hover:text-white transition"
                     aria-label="Developer Panel"
                   >
