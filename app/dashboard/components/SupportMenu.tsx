@@ -5,9 +5,10 @@ import BugReportModal from './BugReportModal';
 
 type Props = {
   openLink: (url: string) => Promise<void>;
+  section?: string;
 };
 
-export default function SupportMenu({ openLink }: Props) {
+export default function SupportMenu({ openLink, section }: Props) {
   const [open, setOpen] = useState(false);
   const [bugOpen, setBugOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -77,7 +78,7 @@ export default function SupportMenu({ openLink }: Props) {
         )}
       </div>
 
-      {bugOpen && <BugReportModal onClose={() => setBugOpen(false)} />}
+      {bugOpen && <BugReportModal onClose={() => setBugOpen(false)} section={section} />}
     </>
   );
 }

@@ -1,7 +1,25 @@
 import { NextResponse } from 'next/server';
 import { requireSessionUser } from '@/lib/auth';
 
-const SUPPORT_CHANNEL_ID = '1486998714823475221';
+const SECTION_CHANNELS: Record<string, string> = {
+  overview:       '1486998714823475221',
+  profile:        '1486998714823475221',
+  store:          '1486998714823475221',
+  settings:       '1486998714823475221',
+  mail:           '1486998714823475221',
+  raffles:        '1486998714823475221',
+  discover:       '1486998714823475221',
+  market:         '1486998714823475221',
+  'market-news':  '1486998714823475221',
+  borsa:          '1486998714823475221',
+  'borsa-detail': '1486998714823475221',
+  portfolio:      '1486998714823475221',
+  dividend:       '1486998714823475221',
+  ipo:            '1486998714823475221',
+  'ipo-apply':    '1486998714823475221',
+  'economy-apply':'1486998714823475221',
+};
+const DEFAULT_CHANNEL_ID = '1486998714823475221';
 
 export async function POST(request: Request) {
   const session = await requireSessionUser(request);
@@ -15,6 +33,7 @@ export async function POST(request: Request) {
   }
 
   let description = '';
+  let section = '';
   let imageBase64: string | null = null;
   let imageMime = 'image/png';
   let sessionInfo: Record<string, unknown> = {};
@@ -26,6 +45,7 @@ export async function POST(request: Request) {
     if (contentType.includes('multipart/form-data')) {
       const form = await request.formData();
       description = (form.get('description') as string) ?? '';
+      section = (form.get('section') as string) ?? '';
       const raw = form.get('sessionInfo');
       if (raw) sessionInfo = JSON.parse(raw as string);
       const rawLog = form.get('errorLog');
@@ -40,6 +60,7 @@ export async function POST(request: Request) {
     } else {
       const body = await request.json();
       description = body.description ?? '';
+      section = body.section ?? '';
       sessionInfo = body.sessionInfo ?? {};
       errorLog = body.errorLog ?? [];
     }
@@ -51,6 +72,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'empty_description' }, { status: 400 });
   }
 
+  const channelId = SECTION_CHANNELS[section] ?? DEFAULT_CHANNEL_ID;
   const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? 'Bilinmiyor';
 
   const s = sessionInfo;
@@ -107,8 +129,9 @@ export async function POST(request: Request) {
 
   ].filter(Boolean) as { name: string; value: string; inline: boolean }[];
 
+  const sectionLabel = section ? ` [${section}]` : '';
   const embed = {
-    title: '🐛 Hata Bildirimi',
+    title: `🐛 Hata Bildirimi${sectionLabel}`,
     color: 0xED4245,
     description: description.slice(0, 2000),
     fields: fields.slice(0, 25), // Discord max 25 field
@@ -118,7 +141,7 @@ export async function POST(request: Request) {
 
   if (!imageBase64) {
     // Sadece embed gönder
-    const res = await fetch(`https://discord.com/api/v10/channels/${SUPPORT_CHANNEL_ID}/messages`, {
+    const res = await fetch(`https://discord.com/api/v10/channels/${channelId}/messages`, {
       method: 'POST',
       headers: {
         Authorization: `Bot ${botToken}`,
@@ -145,7 +168,7 @@ export async function POST(request: Request) {
     fd.append('payload_json', JSON.stringify(payload));
     fd.append('files[0]', new Blob([imgBuf], { type: imageMime }), filename);
 
-    const res = await fetch(`https://discord.com/api/v10/channels/${SUPPORT_CHANNEL_ID}/messages`, {
+    const res = await fetch(`https://discord.com/api/v10/channels/${channelId}/messages`, {
       method: 'POST',
       headers: { Authorization: `Bot ${botToken}` },
       body: fd,

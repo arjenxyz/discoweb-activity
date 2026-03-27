@@ -9,6 +9,7 @@ import DiscordAgreementButton from '@/components/DiscordAgreementButton';
 import type { Notification, Section } from '../types';
 import type { JSX, RefObject } from 'react';
 import { useT } from '@/contexts/LocaleContext';
+import SupportMenu from './SupportMenu';
 
 type DashboardHeaderProps = {
   isActivityEmbed?: boolean;
@@ -62,6 +63,7 @@ type DashboardHeaderProps = {
   };
   mailUnreadCount?: number;
   onOpenLeaderboard?: () => void;
+  openLink?: (url: string) => Promise<void>;
 };
 
 const RANDOM_GIFS = [
@@ -85,6 +87,7 @@ export default function DashboardHeader({
   server,
   mailUnreadCount = 0,
   settings,
+  openLink,
 }: DashboardHeaderProps) {
   const t = useT();
   const router = useRouter();
@@ -199,6 +202,10 @@ export default function DashboardHeader({
                 </span>
               </div>
             </div>
+          )}
+
+          {openLink && (
+            <SupportMenu openLink={openLink} section={navigation.activeSection} />
           )}
 
           {!unauthorized && (

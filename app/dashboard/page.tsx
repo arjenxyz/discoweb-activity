@@ -39,6 +39,7 @@ import SidebarNav from './components/SidebarNav';
 import { sanitizeHtml } from '@/lib/sanitizeHtml';
 import { useRealtimeDashboard } from '@/lib/utils/useRealtimeDashboard';
 import { useT } from '@/contexts/LocaleContext';
+import { getDiscordSdk } from '@/lib/discordSdk';
 import type {
   MemberProfile,
   Notification,
@@ -55,6 +56,14 @@ export default function DashboardPage() {
   const t = useT();
   const cart = useCart();
   const router = useRouter();
+  const openLink = useCallback(async (url: string) => {
+    try {
+      const sdk = getDiscordSdk();
+      if (sdk) { await sdk.commands.openExternalLink({ url }); return; }
+    } catch { /* fallback */ }
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }, []);
+
   const [splashDone, setSplashDone] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1080,6 +1089,7 @@ export default function DashboardPage() {
           }}
           mailUnreadCount={mailUnreadCount}
           onOpenLeaderboard={() => setLeaderboardOpen(true)}
+          openLink={openLink}
           renderNotificationBody={renderNotificationBody}
           settings={{
             open: settingsOpen,

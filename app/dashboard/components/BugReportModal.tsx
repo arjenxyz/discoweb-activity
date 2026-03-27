@@ -4,9 +4,9 @@ import { useState, useRef } from 'react';
 import { getClientErrors } from '@/lib/clientErrorStore';
 import { apiUrl } from '@/lib/api';
 
-type Props = { onClose: () => void };
+type Props = { onClose: () => void; section?: string };
 
-export default function BugReportModal({ onClose }: Props) {
+export default function BugReportModal({ onClose, section }: Props) {
   const [description, setDescription] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -89,6 +89,7 @@ export default function BugReportModal({ onClose }: Props) {
     try {
       const fd = new FormData();
       fd.append('description', description);
+      if (section) fd.append('section', section);
       fd.append('sessionInfo', JSON.stringify(sessionInfo));
       fd.append('errorLog', JSON.stringify(errorLog));
       if (imageFile) fd.append('image', imageFile);
