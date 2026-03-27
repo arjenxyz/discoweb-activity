@@ -90,7 +90,7 @@ export default function StoreSection({
 
   return (
     <>
-      <section className="relative overflow-hidden rounded-none border-0 bg-white/5 backdrop-blur-2xl p-3 sm:p-8 shadow-2xl transition-all flex flex-col flex-1">
+      <section className="relative rounded-none border-0 bg-white/5 backdrop-blur-2xl p-3 sm:p-8 shadow-2xl transition-all flex flex-col min-h-full">
 
         {/* Glow Efektleri */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-[#5865F2]/10 rounded-full blur-[80px] pointer-events-none" />
