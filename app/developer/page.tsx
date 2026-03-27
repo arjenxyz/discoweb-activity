@@ -48,7 +48,7 @@ export default function DeveloperPage() {
     <DeveloperPanel
       maintenance={maintenance}
       onMaintenanceChange={setMaintenance}
-      onClose={() => router.back()}
+      onClose={() => router.push('/dashboard')}
       variant="page"
     />
   );
