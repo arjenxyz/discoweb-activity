@@ -217,11 +217,11 @@ export default function SplashScreen({ onEnter }: Props) {
         className="splash-full-ui flex flex-col min-h-screen"
         style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.7s ease' }}
       >
-        {/* Top bar — logo sağda, ses butonu yanında */}
-        <div className="relative z-20 flex items-start justify-end gap-4 px-8 sm:px-14 pt-7 flex-shrink-0">
-          <div className="flex flex-col items-end gap-0.5" style={{ filter: 'drop-shadow(0 2px 16px rgba(0,0,0,0.9))' }}>
+        {/* Top bar — logo solda, ses butonu sağda */}
+        <div className="relative z-20 flex items-start justify-between px-8 sm:px-14 pt-7 flex-shrink-0">
+          <div className="flex flex-col gap-0.5" style={{ filter: 'drop-shadow(0 2px 16px rgba(0,0,0,0.9))' }}>
             <span
-              className="cursor-pointer font-black tracking-tight select-none leading-none text-2xl"
+              className="cursor-pointer font-black tracking-tight select-none leading-none text-3xl"
               onClick={openDiscoWeb}
               style={logoWhiteStyle}
             >
@@ -242,7 +242,7 @@ export default function SplashScreen({ onEnter }: Props) {
           >
 
             {/* Glassmorphism card — welcome + tip + buttons */}
-            <div className="rounded-2xl border border-white/10 bg-white/8 backdrop-blur-md px-5 py-5 flex flex-col gap-4">
+            <div className="rounded-2xl border border-white/15 bg-black/45 backdrop-blur-md px-5 py-5 flex flex-col gap-4">
               {/* Welcome */}
               {user && !blocked && (
                 <div className="flex items-center gap-2.5">
