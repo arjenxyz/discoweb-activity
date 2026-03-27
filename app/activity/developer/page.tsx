@@ -53,8 +53,8 @@ export default function ActivityDeveloperPage() {
         maintenance={maintenance}
         onMaintenanceChange={setMaintenance}
         onClose={() => router.back()}
+        variant="page"
       />
     </div>
   );
 }
-

@@ -8,6 +8,7 @@ type Props = {
   maintenance: boolean;
   onMaintenanceChange: (value: boolean) => void;
   onClose: () => void;
+  variant?: 'panel' | 'page';
 };
 
 type Ad = {
@@ -21,7 +22,7 @@ type Ad = {
   active: boolean;
 };
 
-export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClose }: Props) {
+export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClose, variant = 'panel' }: Props) {
   const t = useT();
   const [loading, setLoading] = useState(false);
   const [clearLoading, setClearLoading] = useState(false);
@@ -156,34 +157,25 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
     }
   };
 
-  return (
-    <>
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+  const header = (
+    <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
+      <div className="flex items-center gap-2">
+        <span className="flex h-2 w-2 rounded-full bg-[#5865F2]" />
+        <span className="text-sm font-bold text-white">{t('developer_panel_title')}</span>
+      </div>
+      <button
         onClick={onClose}
-      />
+        className="flex h-7 w-7 items-center justify-center rounded-full text-white/40 transition hover:bg-white/10 hover:text-white"
+      >
+        <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5">
+          <path d="M3.72 3.72a.75.75 0 011.06 0L8 6.94l3.22-3.22a.75.75 0 111.06 1.06L9.06 8l3.22 3.22a.75.75 0 11-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 01-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 010-1.06z" />
+        </svg>
+      </button>
+    </div>
+  );
 
-      {/* Panel */}
-      <div className="fixed right-0 top-0 z-50 flex h-full w-72 flex-col bg-[#0f1117] shadow-2xl">
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
-          <div className="flex items-center gap-2">
-            <span className="flex h-2 w-2 rounded-full bg-[#5865F2]" />
-            <span className="text-sm font-bold text-white">{t('developer_panel_title')}</span>
-          </div>
-          <button
-            onClick={onClose}
-            className="flex h-7 w-7 items-center justify-center rounded-full text-white/40 transition hover:bg-white/10 hover:text-white"
-          >
-            <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5">
-              <path d="M3.72 3.72a.75.75 0 011.06 0L8 6.94l3.22-3.22a.75.75 0 111.06 1.06L9.06 8l3.22 3.22a.75.75 0 11-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 01-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 010-1.06z" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="flex flex-col gap-3 p-5">
+  const content = (
+    <div className="flex flex-col gap-3 p-5">
           {/* Maintenance Toggle */}
           <div className="rounded-xl border border-white/10 bg-white/5 p-4">
             <div className="flex items-center justify-between">
@@ -319,6 +311,30 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
             )}
           </div>
         </div>
+      </div>
+    </div>
+  );
+
+  if (variant === 'page') {
+    return (
+      <div className="w-full max-w-3xl px-6 pb-8">
+        <div className="rounded-2xl border border-white/10 bg-[#0f1117] shadow-2xl">
+          {header}
+          {content}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div
+        className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <div className="fixed right-0 top-0 z-50 flex h-full w-72 flex-col bg-[#0f1117] shadow-2xl">
+        {header}
+        {content}
       </div>
     </>
   );
