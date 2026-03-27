@@ -570,16 +570,18 @@ export default function DashboardPage() {
         if (response.ok) {
           const data = (await response.json()) as BadgeInfo;
           setBadgeInfo(data);
+        } else {
+          // API hata döndürdüğünde loading ekranında takılmaması için boş set et
+          setBadgeInfo({ currentBadge: null, nextBadge: null, tagDays: 0, daysToNext: null, hasTag: false, activeRaffles: [], eligibleRaffles: [], joinedRaffles: [] });
         }
       } catch {
-        // badge bilgisi yüklenemezse sessizce geç
+        setBadgeInfo({ currentBadge: null, nextBadge: null, tagDays: 0, daysToNext: null, hasTag: false, activeRaffles: [], eligibleRaffles: [], joinedRaffles: [] });
       }
     };
 
     const run = async () => {
       await loadAccrued();
-      await loadOverview();
-      await loadBadges();
+      await Promise.all([loadOverview(), loadBadges()]);
     };
 
     run();

@@ -67,7 +67,7 @@
   "cart_drawer_clear_aria": "Sepeti boşalt",
   "cart_drawer_close_aria": "Kapat",
   "cart_drawer_empty": "Sepetiniz boş. Mağazadan ürün ekleyin.",
-  "cart_drawer_discount_code": "Kod: {code} • Yeni fiyat: {price} papel",
+  "cart_drawer_discount_code": "İndirim Kodu",
   "cart_drawer_apply_discount": "İndirimi Uygula",
   "cart_drawer_remove": "Kaldır",
   "cart_drawer_subtotal": "Ara Toplam",
