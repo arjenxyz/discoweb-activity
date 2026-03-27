@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireSessionUser } from '@/lib/auth';
+import { createClient } from '@supabase/supabase-js';
 
 const SECTION_CHANNELS: Record<string, string> = {
   overview:       '1486998714823475221',
@@ -20,6 +21,13 @@ const SECTION_CHANNELS: Record<string, string> = {
   'economy-apply':'1486998714823475221',
 };
 const DEFAULT_CHANNEL_ID = '1486998714823475221';
+
+function getSupabase() {
+  const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return null;
+  return createClient(url, key, { auth: { persistSession: false } });
+}
 
 export async function POST(request: Request) {
   const session = await requireSessionUser(request);
@@ -74,6 +82,18 @@ export async function POST(request: Request) {
 
   const channelId = SECTION_CHANNELS[section] ?? DEFAULT_CHANNEL_ID;
   const ip = request.headers.get('x-forwarded-for') ?? request.headers.get('x-real-ip') ?? 'Bilinmiyor';
+
+  // Insert report into DB first to get the ID
+  const supabase = getSupabase();
+  let reportId: string | null = null;
+  if (supabase) {
+    const { data } = await supabase
+      .from('bug_reports')
+      .insert({ user_id: session.userId, section, description, status: 'pending', channel_id: channelId })
+      .select('id')
+      .single();
+    reportId = data?.id ?? null;
+  }
 
   const s = sessionInfo;
   const str = (v: unknown) => v != null ? String(v) : null;
@@ -134,34 +154,50 @@ export async function POST(request: Request) {
     title: `🐛 Hata Bildirimi${sectionLabel}`,
     color: 0xED4245,
     description: description.slice(0, 2000),
-    fields: fields.slice(0, 25), // Discord max 25 field
+    fields: fields.slice(0, 25),
     timestamp: new Date().toISOString(),
-    footer: { text: `DiscoWeb Destek · User: ${session.userId}` },
+    footer: { text: `DiscoWeb Destek · User: ${session.userId}${reportId ? ` · ID: ${reportId.slice(0, 8)}` : ''}` },
   };
 
+  // Action buttons — only if we have a reportId to reference
+  const components = reportId ? [{
+    type: 1,
+    components: [
+      {
+        type: 2,
+        style: 3, // green
+        label: '🔍 İncele',
+        custom_id: `bugreport_review_${reportId}`,
+      },
+    ],
+  }] : [];
+
+  let messageId: string | null = null;
+
   if (!imageBase64) {
-    // Sadece embed gönder
     const res = await fetch(`https://discord.com/api/v10/channels/${channelId}/messages`, {
       method: 'POST',
       headers: {
         Authorization: `Bot ${botToken}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ embeds: [embed] }),
+      body: JSON.stringify({ embeds: [embed], components }),
     });
     if (!res.ok) {
       const err = await res.text();
       console.error('Discord mesaj hatası:', err);
       return NextResponse.json({ error: 'discord_failed' }, { status: 500 });
     }
+    const msg = await res.json() as { id?: string };
+    messageId = msg.id ?? null;
   } else {
-    // Embed + görsel birlikte gönder (multipart)
     const ext = imageMime.split('/')[1] ?? 'png';
     const filename = `screenshot.${ext}`;
     const imgBuf = Buffer.from(imageBase64, 'base64');
 
     const payload = {
       embeds: [{ ...embed, image: { url: `attachment://${filename}` } }],
+      components,
     };
 
     const fd = new FormData();
@@ -178,7 +214,14 @@ export async function POST(request: Request) {
       console.error('Discord mesaj hatası:', err);
       return NextResponse.json({ error: 'discord_failed' }, { status: 500 });
     }
+    const msg = await res.json() as { id?: string };
+    messageId = msg.id ?? null;
   }
 
-  return NextResponse.json({ ok: true });
+  // Store the Discord message ID so the bot can edit it later
+  if (supabase && reportId && messageId) {
+    await supabase.from('bug_reports').update({ message_id: messageId }).eq('id', reportId);
+  }
+
+  return NextResponse.json({ ok: true, reportId });
 }

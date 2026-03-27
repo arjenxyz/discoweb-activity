@@ -1,17 +1,73 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { getClientErrors } from '@/lib/clientErrorStore';
 import { apiUrl } from '@/lib/api';
 
+type ReportStatus = 'pending' | 'reviewing' | 'resolved' | 'not_found';
+
 type Props = { onClose: () => void; section?: string };
+
+const STATUS_CONFIG: Record<ReportStatus, { label: string; sub: string; color: string; icon: string }> = {
+  pending: {
+    label: 'Rapor alındı',
+    sub: 'Raporun inceleme sırasına eklendi.',
+    color: 'border-white/10 bg-white/5',
+    icon: '⏳',
+  },
+  reviewing: {
+    label: 'İnceleniyor...',
+    sub: 'Ekibimiz bu hatayı inceliyor.',
+    color: 'border-amber-500/30 bg-amber-500/10',
+    icon: '🔍',
+  },
+  resolved: {
+    label: 'Sorun çözüldü!',
+    sub: 'Raporun için teşekkürler, sorun giderildi.',
+    color: 'border-green-500/30 bg-green-500/10',
+    icon: '✅',
+  },
+  not_found: {
+    label: 'Sorun tespit edilemedi',
+    sub: 'Daha fazla yardım için Discord sunucumuza katılabilirsin.',
+    color: 'border-red-500/20 bg-red-500/5',
+    icon: '❓',
+  },
+};
 
 export default function BugReportModal({ onClose, section }: Props) {
   const [description, setDescription] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
+  const [reportId, setReportId] = useState<string | null>(null);
+  const [reportStatus, setReportStatus] = useState<ReportStatus>('pending');
   const fileRef = useRef<HTMLInputElement>(null);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Poll for status updates after submission
+  useEffect(() => {
+    if (!reportId) return;
+
+    const poll = async () => {
+      try {
+        const token = (() => { try { return localStorage.getItem('discord_bearer_token'); } catch { return null; } })();
+        const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
+        const res = await fetch(apiUrl(`/api/support/bug-report/status?id=${reportId}`), { headers });
+        if (!res.ok) return;
+        const data = await res.json() as { status: ReportStatus };
+        setReportStatus(data.status);
+        // Stop polling once terminal status reached
+        if (data.status === 'resolved' || data.status === 'not_found') {
+          if (pollRef.current) clearInterval(pollRef.current);
+        }
+      } catch { /* ignore */ }
+    };
+
+    poll(); // immediate first check
+    pollRef.current = setInterval(poll, 15000); // every 15s
+    return () => { if (pollRef.current) clearInterval(pollRef.current); };
+  }, [reportId]);
 
   const handleImage = (file: File) => {
     if (!file.type.startsWith('image/')) return;
@@ -41,42 +97,29 @@ export default function BugReportModal({ onClose, section }: Props) {
     const navEntry = perf?.getEntriesByType?.('navigation')?.[0] as PerformanceNavigationTiming | undefined;
 
     const sessionInfo = {
-      // Sayfa
       url: win?.location.href ?? '',
       timestamp: new Date().toISOString(),
       locale: nav?.language ?? '',
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       online: nav?.onLine ?? true,
-
-      // Ekran & Viewport
       screenSize: win ? `${win.screen.width}×${win.screen.height}` : '',
       viewport: win ? `${win.innerWidth}×${win.innerHeight}` : '',
       devicePixelRatio: win?.devicePixelRatio ?? 1,
       colorDepth: win?.screen.colorDepth ?? 0,
-
-      // Tarayıcı
       userAgent: nav?.userAgent ?? '',
       platform: nav?.platform ?? '',
       cookiesEnabled: nav?.cookieEnabled ?? false,
       doNotTrack: nav?.doNotTrack ?? null,
-
-      // Bellek (Chrome only)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       memoryMB: (perf as any)?.memory
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ? `${Math.round((perf as any).memory.usedJSHeapSize / 1048576)}MB / ${Math.round((perf as any).memory.jsHeapSizeLimit / 1048576)}MB`
         : null,
-
-      // Ağ
       connectionType: conn?.effectiveType ?? null,
       downlink: conn?.downlink ? `${conn.downlink} Mbps` : null,
       rtt: conn?.rtt ? `${conn.rtt}ms` : null,
-
-      // Performans
       pageLoadMs: navEntry ? Math.round(navEntry.loadEventEnd - navEntry.startTime) : null,
       domInteractiveMs: navEntry ? Math.round(navEntry.domInteractive - navEntry.startTime) : null,
-
-      // Discord / Session
       guildId: ls('selectedGuildId'),
       frameId: ls('discord_frame_id'),
       instanceId: ls('discord_instance_id'),
@@ -98,12 +141,15 @@ export default function BugReportModal({ onClose, section }: Props) {
       const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
       const res = await fetch(apiUrl('/api/support/bug-report'), { method: 'POST', headers, body: fd });
       if (!res.ok) throw new Error('failed');
+      const data = await res.json() as { reportId?: string };
+      if (data.reportId) setReportId(data.reportId);
       setStatus('success');
-      setTimeout(onClose, 2000);
     } catch {
       setStatus('error');
     }
   };
+
+  const cfg = STATUS_CONFIG[reportStatus];
 
   return (
     <div
@@ -139,13 +185,46 @@ export default function BugReportModal({ onClose, section }: Props) {
           </div>
 
           {status === 'success' ? (
-            <div className="flex flex-col items-center gap-3 py-6 text-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-500/20">
-                <svg className="h-6 w-6 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
+            <div className="flex flex-col gap-4">
+              {/* Success state */}
+              <div className="flex flex-col items-center gap-3 py-4 text-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-500/20">
+                  <svg className="h-6 w-6 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <p className="text-sm font-semibold text-white">Rapor gönderildi, teşekkürler!</p>
               </div>
-              <p className="text-sm font-semibold text-white">Rapor gönderildi, teşekkürler!</p>
+
+              {/* Status tracker */}
+              {reportId && (
+                <div className={`rounded-xl border px-4 py-3 flex items-start gap-3 transition-colors ${cfg.color}`}>
+                  <span className="text-lg leading-none mt-0.5">{cfg.icon}</span>
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-sm font-semibold text-white">{cfg.label}</span>
+                    <span className="text-xs text-white/50">{cfg.sub}</span>
+                  </div>
+                  {reportStatus === 'reviewing' && (
+                    <svg className="ml-auto h-4 w-4 animate-spin text-amber-400 flex-shrink-0 mt-0.5" viewBox="0 0 16 16" fill="none">
+                      <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="2" strokeOpacity="0.3" />
+                      <path d="M8 2a6 6 0 016 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                    </svg>
+                  )}
+                </div>
+              )}
+
+              {reportStatus === 'not_found' && (
+                <button
+                  type="button"
+                  onClick={() => window.open('https://discord.gg/fDPsYhvKmu', '_blank', 'noopener,noreferrer')}
+                  className="w-full rounded-xl border border-[#5865F2]/30 bg-[#5865F2]/10 py-2.5 text-sm font-semibold text-[#5865F2] hover:bg-[#5865F2]/20 transition flex items-center justify-center gap-2"
+                >
+                  <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4">
+                    <path d="M13.545 2.907a13.227 13.227 0 00-3.257-1.011.05.05 0 00-.052.025c-.141.25-.297.577-.406.833a12.19 12.19 0 00-3.658 0 8.258 8.258 0 00-.412-.833.051.051 0 00-.052-.025c-1.125.194-2.22.534-3.257 1.011a.041.041 0 00-.021.018C.356 6.024-.213 9.047.066 12.032c.001.014.01.028.021.037a13.276 13.276 0 003.995 2.02.05.05 0 00.056-.019c.308-.42.582-.863.818-1.329a.05.05 0 00-.01-.059.051.051 0 00-.018-.011 8.875 8.875 0 01-1.248-.595.05.05 0 01-.02-.066.051.051 0 01.015-.019c.084-.063.168-.129.248-.195a.05.05 0 01.051-.007c2.619 1.196 5.454 1.196 8.041 0a.052.052 0 01.053.007c.08.066.164.132.248.195a.051.051 0 01-.004.085 8.254 8.254 0 01-1.249.594.05.05 0 00-.03.03.052.052 0 00.003.041c.24.465.515.909.817 1.329a.05.05 0 00.056.019 13.235 13.235 0 004.001-2.02.049.049 0 00.021-.037c.334-3.451-.559-6.449-2.366-9.106a.034.034 0 00-.02-.019zm-8.198 7.307c-.789 0-1.438-.724-1.438-1.612 0-.889.637-1.613 1.438-1.613.807 0 1.45.73 1.438 1.613 0 .888-.637 1.612-1.438 1.612zm5.316 0c-.788 0-1.438-.724-1.438-1.612 0-.889.637-1.613 1.438-1.613.807 0 1.451.73 1.438 1.613 0 .888-.631 1.612-1.438 1.612z" />
+                  </svg>
+                  Discord Destek Sunucusu
+                </button>
+              )}
             </div>
           ) : (
             <>
