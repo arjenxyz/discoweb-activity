@@ -256,8 +256,8 @@ export default function SplashScreen({ onEnter }: Props) {
               </div>
             )}
 
-            {/* Tip card */}
-            <div className="rounded-xl border border-white/8 bg-white/4 backdrop-blur-md px-4 py-3.5 min-h-[60px] flex flex-col gap-3">
+            {/* Tip */}
+            <div className="flex flex-col gap-2.5 min-h-[56px]">
               <div
                 className="flex items-start gap-3"
                 style={{
@@ -266,11 +266,13 @@ export default function SplashScreen({ onEnter }: Props) {
                   transition: 'opacity 0.35s ease, transform 0.35s ease',
                 }}
               >
-                <span className="text-[#5865F2] mt-0.5">{TIPS[tipIndex].icon}</span>
-                <p className="text-sm text-white/60 leading-relaxed">{TIPS[tipIndex].text}</p>
+                <span className="text-[#5865F2] mt-0.5 flex-shrink-0">{TIPS[tipIndex].icon}</span>
+                <p className="text-sm text-white/55 leading-relaxed" style={{ textShadow: '0 1px 8px rgba(0,0,0,0.8)' }}>
+                  {TIPS[tipIndex].text}
+                </p>
               </div>
               {/* Dot indicators */}
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 pl-7">
                 {TIPS.map((_, i) => (
                   <button
                     key={i}
@@ -281,7 +283,7 @@ export default function SplashScreen({ onEnter }: Props) {
                       width: i === tipIndex ? '16px' : '4px',
                       height: '4px',
                       borderRadius: '2px',
-                      background: i === tipIndex ? '#5865F2' : 'rgba(255,255,255,0.2)',
+                      background: i === tipIndex ? '#5865F2' : 'rgba(255,255,255,0.18)',
                     }}
                     aria-label={`İpucu ${i + 1}`}
                   />
