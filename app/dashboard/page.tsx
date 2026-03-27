@@ -982,7 +982,7 @@ export default function DashboardPage() {
     await refreshStoreItems(storePage + 1, true);
   };
 
-  const FULL_WIDTH_SECTIONS = ['mail', 'market', 'store', 'raffles'];
+  const FULL_WIDTH_SECTIONS = ['mail', 'market', 'store', 'raffles', 'economy-apply'];
   const mainWrapperClass = FULL_WIDTH_SECTIONS.includes(effectiveSection)
     ? (effectiveSection === 'store' && !isActivityEmbed)
       ? 'w-full max-w-4xl px-0 sm:px-6'
@@ -998,7 +998,9 @@ export default function DashboardPage() {
           : 'md:pt-20 pb-28 sm:pb-10 gap-0 sm:gap-6 md:pb-0'
         : effectiveSection === 'raffles'
           ? 'md:pt-20 pb-6 gap-0'
-          : 'md:pt-24 pb-6 gap-6';
+          : effectiveSection === 'economy-apply'
+            ? 'md:pt-20 pb-6 gap-0'
+            : 'md:pt-24 pb-6 gap-6';
 
   // Splash — readiness sorgulanmadan önce gösterilir
   if (!splashDone) {
@@ -1360,7 +1362,7 @@ export default function DashboardPage() {
             )}
 
             {effectiveSection === 'economy-apply' && (
-              <div className="p-4 sm:p-6 lg:p-8">
+              <div className="w-full min-h-full">
                 <EconomyApplySection />
               </div>
             )}

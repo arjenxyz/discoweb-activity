@@ -131,14 +131,14 @@ export default function EconomyApplySection() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0b0d12] w-full p-6">
+    <div className="w-full min-h-full">
+      <div className="relative overflow-hidden rounded-none border-0 bg-[#0e1018] w-full min-h-full p-6 sm:p-10">
         <div
           className="absolute inset-0 bg-cover bg-center opacity-20"
           style={{ backgroundImage: "url('/background/background.jpg')" }}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black/80" />
-        <div className="relative z-10 space-y-6">
+        <div className="relative z-10 space-y-6 max-w-3xl mx-auto">
       <div>
         <h2 className="text-xl font-bold text-white">{t('economy_apply_title')}</h2>
         <p className="text-sm text-white/40 mt-0.5">{t('economy_apply_subtitle')}</p>
@@ -306,6 +306,7 @@ export default function EconomyApplySection() {
     </div>
   );
 }
+
 
 function StatusBadge({ app }: { app: AppStatus }) {
   const t = useT();
