@@ -11,6 +11,7 @@ type SidebarNavProps = {
   unauthorized: boolean;
   onNavigate: (section: Section) => void;
   profile: MemberProfile | null;
+  isAdvancedEconomy?: boolean;
 };
 
 export default function SidebarNav({
@@ -18,6 +19,7 @@ export default function SidebarNav({
   unauthorized,
   onNavigate,
   profile,
+  isAdvancedEconomy = false,
 }: SidebarNavProps) {
   const t = useT();
   const [collapsed, setCollapsed] = useState(false);
@@ -30,19 +32,22 @@ export default function SidebarNav({
         { key: 'store' as Section, label: t('nav_store'), icon: LuStore },
         { key: 'raffles' as Section, label: t('nav_raffles'), icon: LuGift },
         { key: 'discover' as Section, label: t('nav_community'), icon: LuCompass },
-        { key: 'market' as Section, label: t('nav_exchange'), icon: LuTrendingUp },
-        { key: 'treasury' as Section, label: t('nav_treasury'), icon: LuVault },
+        ...(isAdvancedEconomy ? [
+          { key: 'market' as Section, label: t('nav_exchange'), icon: LuTrendingUp },
+          { key: 'treasury' as Section, label: t('nav_treasury'), icon: LuVault },
+        ] : []),
       ],
     },
     {
       label: t('nav_group_borsa'),
-      items: [
+      items: isAdvancedEconomy ? [
         { key: 'borsa' as Section, label: t('nav_borsa'), icon: LuChartBar },
         { key: 'portfolio' as Section, label: t('nav_portfolio'), icon: LuWallet },
         { key: 'dividend' as Section, label: t('nav_dividend'), icon: LuCoins },
         { key: 'ipo-apply' as Section, label: t('nav_ipo_apply'), icon: LuRocket },
-        { key: 'economy-apply' as Section, label: t('nav_economy_apply'), icon: LuBadgePlus },
         { key: 'market-news' as Section, label: t('nav_market_news'), icon: LuNewspaper },
+      ] : [
+        { key: 'economy-apply' as Section, label: t('nav_economy_apply'), icon: LuBadgePlus },
       ],
     },
     {

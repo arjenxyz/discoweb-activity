@@ -170,7 +170,12 @@ export default function DashboardPage() {
 
   const isBlockedByReadiness = Boolean(activityReadiness?.blocking);
 
-  const effectiveSection = unauthorized && activeSection !== 'store' ? 'overview' : activeSection;
+  const ADVANCED_ONLY_SECTIONS: Section[] = ['borsa', 'borsa-detail', 'portfolio', 'dividend', 'ipo-apply', 'ipo', 'market-news', 'market', 'treasury'];
+  const effectiveSection = unauthorized && activeSection !== 'store'
+    ? 'overview'
+    : (!economyApproved && ADVANCED_ONLY_SECTIONS.includes(activeSection as Section))
+      ? 'economy-apply'
+      : activeSection;
 
   const getCurrentGuildId = () => {
     if (typeof window === 'undefined') return null;
@@ -1049,6 +1054,7 @@ export default function DashboardPage() {
             unauthorized={unauthorized}
             onNavigate={setActiveSection}
             profile={profile}
+            isAdvancedEconomy={economyApproved}
           />
         )}
 
