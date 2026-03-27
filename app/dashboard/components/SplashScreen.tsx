@@ -241,8 +241,8 @@ export default function SplashScreen({ onEnter }: Props) {
             style={{ transform: visible ? 'translateY(0)' : 'translateY(20px)', transition: 'transform 0.8s ease' }}
           >
 
-            {/* Glassmorphism card — welcome + tip + buttons */}
-            <div className="rounded-2xl border border-white/15 bg-black/45 backdrop-blur-md px-5 py-5 flex flex-col gap-4">
+            {/* İçerik — kutu yok, direkt video üzerinde */}
+            <div className="flex flex-col gap-4">
               {/* Welcome */}
               {user && !blocked && (
                 <div className="flex items-center gap-2.5">
@@ -250,10 +250,10 @@ export default function SplashScreen({ onEnter }: Props) {
                     <img src={user.avatarUrl} alt={user.username} className="h-7 w-7 rounded-full ring-1 ring-white/10" />
                   )}
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-base font-semibold text-white/90">
+                    <span className="text-base font-semibold text-white/90" style={{ textShadow: '0 1px 12px rgba(0,0,0,1)' }}>
                       {t('splash_welcome_user', { username: user.username })}
                     </span>
-                    <span className="text-xs text-white/45">
+                    <span className="text-xs text-white/50" style={{ textShadow: '0 1px 8px rgba(0,0,0,1)' }}>
                       {t('splash_welcome_subtitle')}
                     </span>
                   </div>
@@ -271,7 +271,7 @@ export default function SplashScreen({ onEnter }: Props) {
                   }}
                 >
                   <span className="text-[#5865F2] mt-0.5 flex-shrink-0">{TIPS[tipIndex].icon}</span>
-                  <p className="text-sm text-white/60 leading-relaxed">
+                  <p className="text-sm text-white/60 leading-relaxed" style={{ textShadow: '0 1px 10px rgba(0,0,0,1)' }}>
                     {TIPS[tipIndex].text}
                   </p>
                 </div>
@@ -295,7 +295,7 @@ export default function SplashScreen({ onEnter }: Props) {
               </div>
 
               {/* Enter + DevPanel buttons */}
-              <div className="flex items-center gap-2 pt-1 border-t border-white/8">
+              <div className="flex items-center gap-2">
                 {stillLoading ? (
                   <button type="button" disabled className="flex items-center gap-2 rounded-full px-5 py-2 text-sm font-bold text-white cursor-not-allowed bg-white/10 border border-white/10">
                     <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 16 16" fill="none">
