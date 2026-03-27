@@ -13,16 +13,32 @@ import { useT } from '@/contexts/LocaleContext';
 import ProductDetailModal from './ProductDetailModal';
 import { formatDuration } from '../../../lib/formatDuration';
 
-// GIF pool for products — only penguin gifs from public/penguin
-const GIFS = [
-  '/penguin/cryformoney.gif',
-  '/penguin/yuppi.gif',
-  '/penguin/water.gif',
-  '/penguin/vspengu.gif',
-  '/penguin/moneypengu.gif',
-  '/penguin/hopidi.gif',
-  '/penguin/fri.gif',
-  '/penguin/salincak.gif',
+// Background pool for products — from public/store-background
+const STORE_BACKGROUNDS = [
+  '/store-background/sunger-bob/sunger.gif',
+  '/store-background/sunger-bob/sunger2.gif',
+  '/store-background/sunger-bob/sunger3.gif',
+  '/store-background/sunger-bob/sunger4.gif',
+  '/store-background/sunger-bob/sunger5.gif',
+  '/store-background/sunger-bob/sunger6.gif',
+  '/store-background/sunger-bob/sunger7.gif',
+  '/store-background/sunger-bob/sunger8.gif',
+  '/store-background/sunger-bob/sunger9.gif',
+  '/store-background/invincible/invincible.jpg',
+  '/store-background/invincible/invincible2.jpg',
+  '/store-background/invincible/invincible3.jpg',
+  '/store-background/invincible/invincible4.jpg',
+  '/store-background/invincible/invincible5.jpg',
+  '/store-background/invincible/invincible6.jpg',
+  '/store-background/invincible/invincible7.jpg',
+  '/store-background/view/wiew.jpg',
+  '/store-background/view/wiew2.jpg',
+  '/store-background/view/wiew3.jpg',
+  '/store-background/view/wiew4.jpg',
+  '/store-background/view/wiew5.jpg',
+  '/store-background/view/wiew6.jpg',
+  '/store-background/view/wiew7.jpg',
+  '/store-background/view/wiew8.jpg',
 ];
 
 type StoreSectionProps = {
@@ -56,17 +72,17 @@ export default function StoreSection({
   const cart = useCart();
   const [infoOpen, setInfoOpen] = useState(false);
   const [expandedItem, setExpandedItem] = useState<StoreItem | null>(null);
+  const bgOffset = useState(() => Math.floor(Math.random() * STORE_BACKGROUNDS.length))[0];
   const gifMap = useMemo(() => {
     const m = new Map<string, string | undefined>();
     if (items.length === 0) return m;
 
-    // Assign GIFs deterministically based on item index
     items.forEach((it, idx) => {
-      m.set(it.id, idx < GIFS.length ? GIFS[idx] : undefined);
+      m.set(it.id, STORE_BACKGROUNDS[(bgOffset + idx) % STORE_BACKGROUNDS.length]);
     });
 
     return m;
-  }, [items]);
+  }, [items, bgOffset]);
 
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 

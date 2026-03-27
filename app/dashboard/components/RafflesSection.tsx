@@ -10,16 +10,32 @@ import Image from 'next/image';
 import type { BadgeInfo } from '../types';
 import { useT } from '@/contexts/LocaleContext';
 
-// GIF pool — aynı mağazadaki set
-const GIFS = [
-  '/penguin/cryformoney.gif',
-  '/penguin/yuppi.gif',
-  '/penguin/water.gif',
-  '/penguin/vspengu.gif',
-  '/penguin/moneypengu.gif',
-  '/penguin/hopidi.gif',
-  '/penguin/fri.gif',
-  '/penguin/salincak.gif',
+// Background pool — from public/store-background
+const STORE_BACKGROUNDS = [
+  '/store-background/sunger-bob/sunger.gif',
+  '/store-background/sunger-bob/sunger2.gif',
+  '/store-background/sunger-bob/sunger3.gif',
+  '/store-background/sunger-bob/sunger4.gif',
+  '/store-background/sunger-bob/sunger5.gif',
+  '/store-background/sunger-bob/sunger6.gif',
+  '/store-background/sunger-bob/sunger7.gif',
+  '/store-background/sunger-bob/sunger8.gif',
+  '/store-background/sunger-bob/sunger9.gif',
+  '/store-background/invincible/invincible.jpg',
+  '/store-background/invincible/invincible2.jpg',
+  '/store-background/invincible/invincible3.jpg',
+  '/store-background/invincible/invincible4.jpg',
+  '/store-background/invincible/invincible5.jpg',
+  '/store-background/invincible/invincible6.jpg',
+  '/store-background/invincible/invincible7.jpg',
+  '/store-background/view/wiew.jpg',
+  '/store-background/view/wiew2.jpg',
+  '/store-background/view/wiew3.jpg',
+  '/store-background/view/wiew4.jpg',
+  '/store-background/view/wiew5.jpg',
+  '/store-background/view/wiew6.jpg',
+  '/store-background/view/wiew7.jpg',
+  '/store-background/view/wiew8.jpg',
 ];
 
 type RafflesSectionProps = {
@@ -40,13 +56,14 @@ export default function RafflesSection({ badgeInfo, loading, onJoinRaffle }: Raf
   const joined = [...(badgeInfo?.joinedRaffles ?? []), ...joinedLocal];
   const tagDays = badgeInfo?.tagDays ?? 0;
 
+  const bgOffset = useState(() => Math.floor(Math.random() * STORE_BACKGROUNDS.length))[0];
   const gifMap = useMemo(() => {
     const m = new Map<string, string>();
     raffles.forEach((r, idx) => {
-      m.set(r.id, GIFS[idx % GIFS.length]!);
+      m.set(r.id, STORE_BACKGROUNDS[(bgOffset + idx) % STORE_BACKGROUNDS.length]!);
     });
     return m;
-  }, [raffles]);
+  }, [raffles, bgOffset]);
 
   async function handleJoin(raffleId: string) {
     if (!onJoinRaffle) return;
@@ -131,7 +148,7 @@ export default function RafflesSection({ badgeInfo, loading, onJoinRaffle }: Raf
                     <div className="absolute inset-0 bg-[#0b0d12]/40 group-hover:bg-[#0b0d12]/30 transition-colors duration-500 z-10" />
                     <div className="absolute inset-0 z-0 opacity-60 scale-105 group-hover:opacity-90 group-hover:scale-110 transition-all duration-700 ease-out mix-blend-screen brightness-110">
                       <Image
-                        src={gifMap.get(raffle.id) ?? '/penguin/yuppi.gif'}
+                        src={gifMap.get(raffle.id) ?? '/store-background/sunger-bob/sunger2.gif'}
                         alt=""
                         fill
                         className="object-cover"
@@ -278,7 +295,7 @@ export default function RafflesSection({ badgeInfo, loading, onJoinRaffle }: Raf
                   <div className="relative flex-shrink-0 w-28 min-h-[120px] overflow-hidden">
                     <div className="absolute inset-0 bg-[#0b0d12]/20 z-10" />
                     <Image
-                      src={gifMap.get(raffle.id) ?? '/penguin/yuppi.gif'}
+                      src={gifMap.get(raffle.id) ?? '/store-background/sunger-bob/sunger2.gif'}
                       alt=""
                       fill
                       className="object-cover opacity-80"

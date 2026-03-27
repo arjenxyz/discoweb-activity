@@ -177,6 +177,24 @@ export default function DashboardPage() {
       ? 'economy-apply'
       : activeSection;
 
+  const SECTION_BACKGROUNDS = [
+    '/background/background.jpg',
+    '/background/background2.jpg',
+    '/background/background3.jpg',
+    '/background/background4.jpg',
+    '/background/background5.jpg',
+  ];
+  const SECTIONS_WITHOUT_BG: Section[] = ['overview', 'store', 'raffles', 'market'];
+  const [sectionBg, setSectionBg] = useState<string | null>(null);
+  useEffect(() => {
+    if (SECTIONS_WITHOUT_BG.includes(effectiveSection as Section)) {
+      setSectionBg(null);
+    } else {
+      setSectionBg(SECTION_BACKGROUNDS[Math.floor(Math.random() * SECTION_BACKGROUNDS.length)]!);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [effectiveSection]);
+
   const getCurrentGuildId = () => {
     if (typeof window === 'undefined') return null;
 
@@ -1126,7 +1144,17 @@ export default function DashboardPage() {
         />
         )}
 
-        <main className={`${mainWrapperClass} flex flex-col flex-1 ${mainSpacingClass} overflow-y-auto custom-scrollbar bg-[#0e1018]`}>
+        <main className={`${mainWrapperClass} flex flex-col flex-1 ${mainSpacingClass} overflow-y-auto custom-scrollbar bg-[#0e1018] relative`}>
+            {sectionBg && (
+              <>
+                <img
+                  src={sectionBg}
+                  alt=""
+                  className="pointer-events-none absolute inset-0 z-0 h-full w-full object-cover"
+                />
+                <div className="pointer-events-none absolute inset-0 z-0 bg-[#0b0d12]/60" />
+              </>
+            )}
             {!maintenanceLoading && isSiteMaintenance && (
               <section className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-6">
                 <p className="text-sm font-semibold text-amber-200">Site bakÄ±mda</p>
