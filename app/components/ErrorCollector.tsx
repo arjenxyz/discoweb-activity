@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { pushClientError } from '@/lib/clientErrorStore';
 
 const DEBOUNCE_MS = 5000; // aynı hatayı 5 saniyede bir kez gönder
 const sent = new Set<string>(); // session boyunca duplicate'leri önle
@@ -47,16 +48,17 @@ export default function ErrorCollector() {
     // JS hataları
     const onError = (event: ErrorEvent) => {
       const key = buildKey(event.message, event.filename);
-      if (!shouldSend(key)) return;
-      sendError({
+      const payload = {
         type: 'js_error',
         message: event.message,
         source: event.filename,
         line: event.lineno,
-        col: event.colno,
         stack: event.error?.stack?.slice(0, 1000),
-        ...meta(),
-      });
+        timestamp: new Date().toISOString(),
+      };
+      pushClientError(payload);
+      if (!shouldSend(key)) return;
+      sendError({ ...payload, col: event.colno, ...meta() });
     };
 
     // Promise rejection'ları
@@ -65,13 +67,15 @@ export default function ErrorCollector() {
         ? event.reason.message
         : String(event.reason);
       const key = buildKey(message, 'promise');
-      if (!shouldSend(key)) return;
-      sendError({
+      const payload = {
         type: 'unhandled_rejection',
         message,
         stack: event.reason instanceof Error ? event.reason.stack?.slice(0, 1000) : undefined,
-        ...meta(),
-      });
+        timestamp: new Date().toISOString(),
+      };
+      pushClientError(payload);
+      if (!shouldSend(key)) return;
+      sendError({ ...payload, ...meta() });
     };
 
     // console.error intercept

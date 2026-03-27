@@ -4,6 +4,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { MuteButton, VideoBackground } from './VideoBackground';
 import DeveloperPanel from './DeveloperPanel';
 import DeveloperAboutModal from './DeveloperAboutModal';
+import SupportMenu from './SupportMenu';
 import { apiUrl } from '@/lib/api';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { getDiscordSdk } from '@/lib/discordSdk';
@@ -231,7 +232,10 @@ export default function SplashScreen({ onEnter }: Props) {
               {t('splash_platform_name')}
             </span>
           </div>
-          <MuteButton muted={muted} onToggle={toggleMute} />
+          <div className="flex items-center gap-2">
+            <SupportMenu openLink={openLink} />
+            <MuteButton muted={muted} onToggle={toggleMute} />
+          </div>
         </div>
 
         {/* Main content — left aligned, vertically centered */}
