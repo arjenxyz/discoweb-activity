@@ -44,7 +44,7 @@ export function MuteButton({ muted, onToggle, src }: MuteButtonProps & { src?: s
     <button
       type="button"
       onClick={onToggle}
-      className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-black/40 text-white backdrop-blur-md transition hover:bg-black/60"
+      className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-black/20 text-white/70 backdrop-blur-sm transition hover:bg-black/35 hover:text-white"
       aria-label={muted ? 'Sesi aç' : 'Sesi kapat'}
     >
       {muted ? (

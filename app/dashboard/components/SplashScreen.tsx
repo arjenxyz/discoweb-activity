@@ -179,14 +179,16 @@ export default function SplashScreen({ onEnter }: Props) {
 
   const FooterLine = ({ centered = false }: { centered?: boolean }) => (
     <div className={`flex flex-col gap-1 ${centered ? 'items-center' : 'items-start'}`}>
-      <div className="flex items-center gap-1.5">
-        <img src="https://cdn.discordapp.com/avatars/1163500308270436442/8c2eeba5e9c137e4f9375bccb0f0bf40.png?size=128" alt="thearjen" className="h-5 w-5 rounded-full opacity-70" />
-        <span className="text-xs text-white/60">Created by <span className="text-white/90 font-semibold">thearjen</span> · All rights reserved</span>
-      </div>
-      <div className="flex items-center gap-2 pl-[26px]">
+      <div className="flex items-center gap-2">
         <button type="button" onClick={() => openLink('https://discoweb.tech/terms')} className="text-xs text-white/50 hover:text-white/75 transition-colors">{t('splash_terms')}</button>
         <span className="text-white/30 text-xs">·</span>
         <button type="button" onClick={() => openLink('https://discoweb.tech/privacy')} className="text-xs text-white/50 hover:text-white/75 transition-colors">{t('splash_privacy')}</button>
+        {isDeveloper && (
+          <>
+            <span className="text-white/30 text-xs">·</span>
+            <button type="button" onClick={() => setDevPanelOpen(true)} className="text-xs text-white/50 hover:text-white/75 transition-colors">Developer</button>
+          </>
+        )}
       </div>
     </div>
   );
@@ -222,29 +224,28 @@ export default function SplashScreen({ onEnter }: Props) {
           </div>
         </div>
 
-        {/* ?????? FOOTER ??? absolute alta sabitli, ba????ms??z katman ?????? */}
+        {/* FOOTER — absolute alta sabitli, bağımsız katman */}
         <div
-          className="hidden lg:block absolute z-10 bottom-10 left-10"
+          className="hidden lg:flex flex-col gap-2 absolute z-10 bottom-10 left-10"
           style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.7s ease' }}
-        >
-          <FooterLine />
-        </div>
-
-        {/* ?????? SA?? ALTA ??? ho?? geldin + buton, ba????ms??z ?????? */}
-        <div
-          className="hidden lg:flex absolute z-10 bottom-10 right-14 items-center gap-3"
-          style={{ opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(18px)', transition: 'opacity 0.7s ease, transform 0.7s ease' }}
         >
           {user && !(maintenance && !isDeveloper) && (
             <div className="flex items-center gap-2">
-              {user.avatarUrl && <img src={user.avatarUrl} alt={user.username} className="h-6 w-6 rounded-full opacity-70" />}
+              {user.avatarUrl && <img src={user.avatarUrl} alt={user.username} className="h-5 w-5 rounded-full opacity-70" />}
               <span className="text-sm text-white/50">
                 {t('splash_welcome_user', { username: user.username })}
               </span>
             </div>
           )}
+          <FooterLine />
+        </div>
+
+        {/* SAĞ ALTA — buton, bağımsız */}
+        <div
+          className="hidden lg:flex absolute z-10 bottom-10 right-14 items-center gap-3"
+          style={{ opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(18px)', transition: 'opacity 0.7s ease, transform 0.7s ease' }}
+        >
           <div className="flex items-center gap-3">
-            {isDeveloper && <DevButton />}
             <EnterButton />
           </div>
         </div>
@@ -269,7 +270,6 @@ export default function SplashScreen({ onEnter }: Props) {
             )}
             <div className="flex items-center gap-3">
               <MuteButton muted={muted} onToggle={toggleMute} />
-              {isDeveloper && <DevButton />}
               <EnterButton />
             </div>
             <FooterLine centered />

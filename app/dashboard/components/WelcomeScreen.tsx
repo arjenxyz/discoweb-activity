@@ -7,6 +7,7 @@ import fetchWithCreds from '@/lib/fetchWithCreds';
 import { apiUrl } from '@/lib/api';
 import { VideoBackground, MuteButton } from './VideoBackground';
 import { useT } from '@/contexts/LocaleContext';
+import { getDiscordSdk } from '@/lib/discordSdk';
 
 type Props = {
   readiness: ActivityReadiness;
@@ -27,6 +28,21 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
   const [devPanelOpen, setDevPanelOpen] = useState(false);
   const [maintenance, setMaintenance] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const linkSdkRef = useRef<InstanceType<Awaited<typeof import('@discord/embedded-app-sdk')>['DiscordSDK']> | null>(null);
+
+  const openLink = async (url: string) => {
+    try {
+      const existing = getDiscordSdk();
+      if (existing) { await existing.commands.openExternalLink({ url }); return; }
+      if (!linkSdkRef.current) {
+        const { DiscordSDK } = await import('@discord/embedded-app-sdk');
+        const sdk = new DiscordSDK(process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!);
+        await sdk.ready();
+        linkSdkRef.current = sdk;
+      }
+      await linkSdkRef.current.commands.openExternalLink({ url });
+    } catch { window.open(url, '_blank'); }
+  };
 
   const toggleMute = () => {
     const v = videoRef.current;
@@ -185,6 +201,21 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
           </div>
         )}
       </main>
+      {/* Sol alt footer */}
+      <div className="absolute z-10 bottom-8 left-8 flex flex-col gap-1">
+        <div className="flex items-center gap-2">
+          <button type="button" onClick={() => openLink('https://discoweb.tech/terms')} className="text-xs text-white/50 hover:text-white/75 transition-colors">{t('splash_terms')}</button>
+          <span className="text-white/30 text-xs">·</span>
+          <button type="button" onClick={() => openLink('https://discoweb.tech/privacy')} className="text-xs text-white/50 hover:text-white/75 transition-colors">{t('splash_privacy')}</button>
+          {isDeveloper && (
+            <>
+              <span className="text-white/30 text-xs">·</span>
+              <button type="button" onClick={() => setDevPanelOpen(true)} className="text-xs text-white/50 hover:text-white/75 transition-colors">Developer</button>
+            </>
+          )}
+        </div>
+      </div>
+
       {devPanelOpen && (
         <DeveloperPanel
           maintenance={maintenance}
