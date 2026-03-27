@@ -586,7 +586,28 @@ function AuthErrorScreen({
   const t = useT();
   const [muted, setMuted] = useState(true);
   const [debugOpen, setDebugOpen] = useState(false);
+  const [reported, setReported] = useState(false);
+  const [reporting, setReporting] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+
+  const handleReport = async () => {
+    if (reported || reporting) return;
+    setReporting(true);
+    try {
+      await fetch('/api/support/auth-error-report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          error,
+          url: typeof window !== 'undefined' ? window.location.href : '',
+          debugLogs,
+        }),
+      });
+      setReported(true);
+    } catch { /* sessizce geç */ } finally {
+      setReporting(false);
+    }
+  };
 
   const toggleMute = () => {
     const v = videoRef.current;
@@ -643,6 +664,14 @@ function AuthErrorScreen({
               className="rounded-full border border-red-400/25 bg-red-500/15 px-6 py-3.5 text-sm font-bold text-red-200 backdrop-blur-md transition hover:bg-red-500/25"
             >
               {t('auth_reset_session_button')}
+            </button>
+            <button
+              type="button"
+              onClick={handleReport}
+              disabled={reported || reporting}
+              className="rounded-full border border-orange-400/25 bg-orange-500/15 px-6 py-3.5 text-sm font-bold text-orange-200 backdrop-blur-md transition hover:bg-orange-500/25 disabled:opacity-50"
+            >
+              {reported ? t('auth_report_sent') : reporting ? t('auth_report_sending') : t('auth_report_button')}
             </button>
           </div>
 
