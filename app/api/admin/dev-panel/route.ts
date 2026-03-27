@@ -184,7 +184,7 @@ async function getLogs(supabase: ReturnType<typeof getSupabase>, limit: number) 
 async function getApplications(supabase: ReturnType<typeof getSupabase>, limit: number) {
   if (!supabase) return { economy: [], tier: [], autoApprove: false };
 
-  const [{ data: economy }, { data: tier }, { data: autoConfig }] = await Promise.all([
+  const [{ data: economy }, { data: tier }, { data: configs }] = await Promise.all([
     supabase
       .from('economy_applications')
       .select('id, guild_id, status, application_type, vote_count, vote_threshold, submitted_at, reviewed_at, rejection_reason, scheduled_open_at, created_at')
@@ -197,10 +197,11 @@ async function getApplications(supabase: ReturnType<typeof getSupabase>, limit: 
       .limit(limit),
     supabase
       .from('app_config')
-      .select('value')
-      .eq('key', 'economy_auto_approve')
-      .maybeSingle(),
+      .select('key, value')
+      .in('key', ['economy_auto_approve', 'economy_vote_threshold', 'economy_direct_member_threshold', 'economy_auto_approve_days']),
   ]);
+
+  const configMap = new Map((configs ?? []).map((c: { key: string; value: string }) => [c.key, c.value]));
 
   const guildIds = Array.from(new Set([
     ...(economy ?? []).map((i) => i.guild_id),
@@ -215,15 +216,18 @@ async function getApplications(supabase: ReturnType<typeof getSupabase>, limit: 
     : { data: [] as Array<{ discord_id: string; name: string; member_count: number | null; is_setup: boolean; economy_tier: string }> };
 
   const serverMap = new Map((servers ?? []).map((s) => [s.discord_id, s]));
-  const autoApprove = (autoConfig?.value ?? 'false') === 'true';
+  const autoApprove = (configMap.get('economy_auto_approve') ?? 'false') === 'true';
+  const voteThresholdGlobal = parseInt(configMap.get('economy_vote_threshold') ?? '120', 10);
+  const directMemberThreshold = parseInt(configMap.get('economy_direct_member_threshold') ?? '500', 10);
+  const autoApproveDays = parseInt(configMap.get('economy_auto_approve_days') ?? '7', 10);
 
   const enrichedEconomy = (economy ?? []).map((app) => {
     const server = serverMap.get(app.guild_id);
     const memberCount = server?.member_count ?? 0;
     const isSetup = server?.is_setup ?? false;
-    const voteThreshold = app.vote_threshold ?? 120;
+    const voteThreshold = app.vote_threshold ?? voteThresholdGlobal;
     const voteOk = (app.vote_count ?? 0) >= voteThreshold;
-    const memberOk = memberCount >= 500;
+    const memberOk = memberCount >= directMemberThreshold;
     const eligible = isSetup && (memberOk || voteOk);
     return {
       ...app,
@@ -246,7 +250,16 @@ async function getApplications(supabase: ReturnType<typeof getSupabase>, limit: 
     return { ...app, server, autoApprove };
   });
 
-  return { economy: enrichedEconomy, tier: enrichedTier, autoApprove };
+  return {
+    economy: enrichedEconomy,
+    tier: enrichedTier,
+    autoApprove,
+    thresholds: {
+      voteThreshold: voteThresholdGlobal,
+      directMemberThreshold,
+      autoApproveDays,
+    },
+  };
 }
 
 async function getServers(supabase: ReturnType<typeof getSupabase>, limit: number) {
@@ -329,8 +342,10 @@ export async function PATCH(request: NextRequest) {
   if (!supabase) return NextResponse.json({ error: 'missing_service_role' }, { status: 500 });
 
   const body = await request.json() as {
-    action?: 'set_auto_approve' | 'approve' | 'reject';
+    action?: 'set_auto_approve' | 'set_config' | 'approve' | 'reject';
     value?: boolean;
+    configKey?: string;
+    configValue?: string | number;
     table?: 'economy_applications' | 'economy_tier_applications';
     id?: string;
     reason?: string;
@@ -340,6 +355,18 @@ export async function PATCH(request: NextRequest) {
     const value = body.value ? 'true' : 'false';
     await supabase.from('app_config').upsert({ key: 'economy_auto_approve', value }, { onConflict: 'key' });
     return NextResponse.json({ ok: true, economyAutoApprove: value === 'true' });
+  }
+
+  if (body.action === 'set_config' && body.configKey) {
+    const ALLOWED_KEYS = ['economy_vote_threshold', 'economy_direct_member_threshold', 'economy_auto_approve_days'];
+    if (!ALLOWED_KEYS.includes(body.configKey)) {
+      return NextResponse.json({ error: 'invalid_config_key' }, { status: 400 });
+    }
+    const val = String(body.configValue ?? '');
+    const num = parseInt(val, 10);
+    if (isNaN(num) || num < 1) return NextResponse.json({ error: 'invalid_value' }, { status: 400 });
+    await supabase.from('app_config').upsert({ key: body.configKey, value: String(num) }, { onConflict: 'key' });
+    return NextResponse.json({ ok: true, key: body.configKey, value: num });
   }
 
   if ((body.action === 'approve' || body.action === 'reject') && body.id && body.table) {

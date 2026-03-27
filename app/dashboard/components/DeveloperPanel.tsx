@@ -102,6 +102,22 @@ type ServerRow = {
   market_timezone?: string | null;
 };
 
+type SuspiciousFlag = {
+  id: string;
+  guild_id?: string | null;
+  user_id?: string | null;
+  rule_key: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  title: string;
+  description?: string | null;
+  data?: Record<string, unknown> | null;
+  status: string;
+  discord_alerted: boolean;
+  reviewed_by?: string | null;
+  reviewed_at?: string | null;
+  created_at: string;
+};
+
 type ProfileRow = {
   id: string;
   guild_id: string;
@@ -124,9 +140,9 @@ type ProfileRow = {
 };
 
 const formatDate = (value?: string | null) => {
-  if (!value) return '';
+  if (!value) return ' ';
   const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return '';
+  if (Number.isNaN(d.getTime())) return ' ';
   return d.toLocaleString('tr-TR');
 };
 
@@ -140,7 +156,7 @@ const prettyJson = (value: unknown) => {
 
 export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClose, variant = 'panel' }: Props) {
   const t = useT();
-  const [activeTab, setActiveTab] = useState<'overview' | 'logs' | 'apps' | 'servers' | 'profiles' | 'ads'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'logs' | 'apps' | 'servers' | 'profiles' | 'ads' | 'suspicious'>('overview');
   const [loadingTab, setLoadingTab] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [overview, setOverview] = useState<Overview | null>(null);
@@ -150,6 +166,14 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
   const [economyApps, setEconomyApps] = useState<EconomyApp[]>([]);
   const [tierApps, setTierApps] = useState<EconomyTierApp[]>([]);
   const [autoApprove, setAutoApprove] = useState(false);
+  const [thresholds, setThresholds] = useState({ voteThreshold: 120, directMemberThreshold: 500, autoApproveDays: 7 });
+  const [suspiciousFlags, setSuspiciousFlags] = useState<SuspiciousFlag[]>([]);
+  const [suspiciousFilter, setSuspiciousFilter] = useState<string>('open');
+  const [suspiciousScanLoading, setSuspiciousScanLoading] = useState(false);
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [inviteResult, setInviteResult] = useState<{ url: string; expires: string } | null>(null);
+  const [thresholdInputs, setThresholdInputs] = useState({ voteThreshold: '120', directMemberThreshold: '500', autoApproveDays: '7' });
+  const [thresholdSaving, setThresholdSaving] = useState<string | null>(null);
   const [servers, setServers] = useState<ServerRow[]>([]);
   const [profiles, setProfiles] = useState<ProfileRow[]>([]);
   const [selectedServer, setSelectedServer] = useState<ServerRow | null>(null);
@@ -192,12 +216,24 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
         setEconomyApps(data.economy ?? []);
         setTierApps(data.tier ?? []);
         setAutoApprove(Boolean(data.autoApprove));
+        if (data.thresholds) {
+          setThresholds(data.thresholds);
+          setThresholdInputs({
+            voteThreshold: String(data.thresholds.voteThreshold),
+            directMemberThreshold: String(data.thresholds.directMemberThreshold),
+            autoApproveDays: String(data.thresholds.autoApproveDays),
+          });
+        }
       } else if (section === 'servers') {
         setServers(data.servers ?? []);
         setSelectedServer(null);
       } else if (section === 'profiles') {
         setProfiles(data.profiles ?? []);
         setSelectedProfile(null);
+      } else if (section === 'suspicious') {
+        // suspicious has its own fetch via fetchSuspicious
+        await fetchSuspicious(suspiciousFilter);
+        return;
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -220,7 +256,7 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
         approximate_presence_count?: number;
       };
       const guild = data.guild;
-      if (!guild) throw new Error('Sunucu bilgisi alýnamadý');
+      if (!guild) throw new Error('Sunucu bilgisi alınamadı');
       setPreview({
         invite_url: url,
         server_name: guild.name ?? '',
@@ -232,7 +268,7 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
         online_count: data.approximate_presence_count ?? null,
       });
     } catch (e) {
-      setAdError(e instanceof Error ? e.message : 'Davet bilgisi alýnamadý');
+      setAdError(e instanceof Error ? e.message : 'Davet bilgisi alınamadı');
       setPreview(null);
     } finally {
       setAdFetching(false);
@@ -349,6 +385,96 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
     }
   };
 
+  const saveThreshold = async (configKey: string, value: string) => {
+    setThresholdSaving(configKey);
+    try {
+      const res = await fetch(apiUrl('/api/admin/dev-panel'), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ action: 'set_config', configKey, configValue: parseInt(value, 10) }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? String(res.status));
+      setThresholds((prev) => ({ ...prev, [configKey.replace('economy_', '').replace(/_([a-z])/g, (_, c) => c.toUpperCase()) as keyof typeof thresholds]: data.value }));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setThresholdSaving(null);
+    }
+  };
+
+  const fetchSuspicious = async (statusFilter = suspiciousFilter) => {
+    setLoadingTab(true);
+    try {
+      const res = await fetch(apiUrl(`/api/admin/suspicious?status=${statusFilter}&limit=100`), { credentials: 'include' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? String(res.status));
+      setSuspiciousFlags(data.flags ?? []);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setLoadingTab(false);
+    }
+  };
+
+  const runScan = async () => {
+    setSuspiciousScanLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(apiUrl('/api/admin/suspicious'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({}),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? String(res.status));
+      await fetchSuspicious('open');
+      setSuspiciousFilter('open');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setSuspiciousScanLoading(false);
+    }
+  };
+
+  const updateFlagStatus = async (id: string, status: string) => {
+    try {
+      const res = await fetch(apiUrl('/api/admin/suspicious'), {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ id, status }),
+      });
+      if (!res.ok) throw new Error((await res.json()).error);
+      setSuspiciousFlags((prev) => prev.map((f) => f.id === id ? { ...f, status } : f));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
+  };
+
+  const generateInvite = async (guildId: string) => {
+    setInviteLoading(true);
+    setInviteResult(null);
+    setError(null);
+    try {
+      const res = await fetch(apiUrl('/api/admin/dev-panel/invite'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ guild_id: guildId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? String(res.status));
+      setInviteResult({ url: data.invite_url, expires: data.expires_at ?? '' });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setInviteLoading(false);
+    }
+  };
+
   const handleDecision = async (table: 'economy_applications' | 'economy_tier_applications', id: string, action: 'approve' | 'reject') => {
     const reason = action === 'reject' ? window.prompt(t('developer_panel_reject_reason_placeholder')) ?? '' : undefined;
     try {
@@ -386,6 +512,7 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
   const tabs = [
     { id: 'overview', label: t('developer_tab_overview') },
     { id: 'logs', label: t('developer_tab_logs') },
+    { id: 'suspicious', label: 'ð¨ Åüpheli' },
     { id: 'apps', label: t('developer_tab_apps') },
     { id: 'servers', label: t('developer_tab_servers') },
     { id: 'profiles', label: t('developer_tab_profiles') },
@@ -396,19 +523,19 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
     <div className="grid gap-3 md:grid-cols-4">
       <div className="rounded-xl border border-white/10 bg-white/5 p-4">
         <p className="text-xs text-white/40">{t('developer_stat_users')}</p>
-        <p className="mt-1 text-xl font-semibold text-white">{overview?.userCount ?? ''}</p>
+        <p className="mt-1 text-xl font-semibold text-white">{overview?.userCount ?? ''}</p>
       </div>
       <div className="rounded-xl border border-white/10 bg-white/5 p-4">
         <p className="text-xs text-white/40">{t('developer_stat_servers')}</p>
-        <p className="mt-1 text-xl font-semibold text-white">{overview?.serverCount ?? ''}</p>
+        <p className="mt-1 text-xl font-semibold text-white">{overview?.serverCount ?? ''}</p>
       </div>
       <div className="rounded-xl border border-white/10 bg-white/5 p-4">
         <p className="text-xs text-white/40">{t('developer_stat_profiles')}</p>
-        <p className="mt-1 text-xl font-semibold text-white">{overview?.profileCount ?? ''}</p>
+        <p className="mt-1 text-xl font-semibold text-white">{overview?.profileCount ?? ''}</p>
       </div>
       <div className="rounded-xl border border-white/10 bg-white/5 p-4">
         <p className="text-xs text-white/40">{t('developer_stat_advanced')}</p>
-        <p className="mt-1 text-xl font-semibold text-white">{overview?.advancedServerCount ?? ''}</p>
+        <p className="mt-1 text-xl font-semibold text-white">{overview?.advancedServerCount ?? ''}</p>
       </div>
     </div>
   );
@@ -538,6 +665,35 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
       </div>
 
       <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+        <p className="text-sm font-semibold text-white mb-3">EÅik DeÄerleri</p>
+        <div className="grid gap-3">
+          {([
+            { key: 'economy_vote_threshold', label: 'Oy EÅiÄi', stateKey: 'voteThreshold' },
+            { key: 'economy_direct_member_threshold', label: 'Direkt Ãye EÅiÄi', stateKey: 'directMemberThreshold' },
+            { key: 'economy_auto_approve_days', label: 'Otomatik Onay Günü', stateKey: 'autoApproveDays' },
+          ] as const).map(({ key, label, stateKey }) => (
+            <div key={key} className="flex items-center gap-3">
+              <span className="text-xs text-white/60 flex-1">{label}</span>
+              <input
+                type="number"
+                min={1}
+                value={thresholdInputs[stateKey]}
+                onChange={(e) => setThresholdInputs((prev) => ({ ...prev, [stateKey]: e.target.value }))}
+                className="w-24 rounded-md border border-white/20 bg-black/30 px-2 py-1 text-xs text-white focus:border-[#5865F2] focus:outline-none"
+              />
+              <button
+                onClick={() => saveThreshold(key, thresholdInputs[stateKey])}
+                disabled={thresholdSaving === key}
+                className="rounded-md border border-[#5865F2]/40 bg-[#5865F2]/20 px-3 py-1 text-[11px] text-[#7289da] hover:bg-[#5865F2]/30 disabled:opacity-50"
+              >
+                {thresholdSaving === key ? '...' : 'Kaydet'}
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-white/10 bg-white/5 p-4">
         <p className="text-sm font-semibold text-white mb-2">{t('developer_apps_economy_title')}</p>
         <div className="flex flex-col gap-2">
           {economyApps.map((app) => (
@@ -551,10 +707,10 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
               </div>
               <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-white/60">
                 <span>Durum: <strong className="text-white">{app.status}</strong></span>
-                <span>Üye: <strong className="text-white">{app.criteria?.memberCount ?? 0}</strong></span>
+                <span>Ãye: <strong className="text-white">{app.criteria?.memberCount ?? 0}</strong></span>
                 <span>Oy: <strong className="text-white">{app.criteria?.voteCount ?? 0}</strong> / {app.criteria?.voteThreshold ?? 120}</span>
                 <span>Kurulum: <strong className="text-white">{app.criteria?.isSetup ? 'var' : 'yok'}</strong></span>
-                <span>Uygun: <strong className="text-white">{app.criteria?.eligible ? 'evet' : 'hayýr'}</strong></span>
+                <span>Uygun: <strong className="text-white">{app.criteria?.eligible ? 'evet' : 'hayır'}</strong></span>
               </div>
               <div className="mt-3 flex gap-2">
                 <button
@@ -591,7 +747,7 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
                 <span className="text-[10px] text-white/50">{formatDate(app.created_at)}</span>
               </div>
               <div className="mt-2 text-[11px] text-white/60">
-                <span>Baþvuran: <strong className="text-white">{app.applicant_user_id}</strong></span>
+                <span>BaÃ¾vuran: <strong className="text-white">{app.applicant_user_id}</strong></span>
                 <span className="ml-3">Durum: <strong className="text-white">{app.status}</strong></span>
               </div>
               <div className="mt-3 flex gap-2">
@@ -637,7 +793,7 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
                 <span className="text-[10px] text-white/40">{formatDate(server.created_at)}</span>
               </div>
               <p className="mt-1 text-[11px] text-white/40">{server.discord_id}</p>
-              <p className="mt-1 text-[11px] text-white/50">Tier: {server.economy_tier} · Üye: {server.member_count ?? 0} · Kurulum: {server.is_setup ? 'var' : 'yok'}</p>
+              <p className="mt-1 text-[11px] text-white/50">Tier: {server.economy_tier} · Ãye: {server.member_count ?? 0} · Kurulum: {server.is_setup ? 'var' : 'yok'}</p>
             </button>
           ))}
           {servers.length === 0 && (
@@ -652,13 +808,40 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
             <p className="text-sm font-semibold text-white">{selectedServer.name}</p>
             <p className="text-[11px] text-white/40">{selectedServer.discord_id}</p>
             <div className="mt-3 text-[11px] text-white/60 space-y-1">
-              <div>Üye: <strong className="text-white">{selectedServer.member_count ?? 0}</strong></div>
+              <div>Ãye: <strong className="text-white">{selectedServer.member_count ?? 0}</strong></div>
               <div>Kurulum: <strong className="text-white">{selectedServer.is_setup ? 'var' : 'yok'}</strong></div>
               <div>Ekonomi: <strong className="text-white">{selectedServer.economy_tier}</strong></div>
-              <div>Admin Rol: <strong className="text-white">{selectedServer.admin_role_id ?? ''}</strong></div>
-              <div>Verify Rol: <strong className="text-white">{selectedServer.verify_role_id ?? ''}</strong></div>
-              <div>Market Saatleri: <strong className="text-white">{selectedServer.market_hours_enabled ? `${selectedServer.market_open_time ?? ''} - ${selectedServer.market_close_time ?? ''}` : 'kapalý'}</strong></div>
-              <div>Zaman Dilimi: <strong className="text-white">{selectedServer.market_timezone ?? ''}</strong></div>
+              <div>Admin Rol: <strong className="text-white">{selectedServer.admin_role_id ?? ''}</strong></div>
+              <div>Verify Rol: <strong className="text-white">{selectedServer.verify_role_id ?? ''}</strong></div>
+              <div>Market Saatleri: <strong className="text-white">{selectedServer.market_hours_enabled ? `${selectedServer.market_open_time ?? ''} - ${selectedServer.market_close_time ?? ''}` : 'kapalı'}</strong></div>
+              <div>Zaman Dilimi: <strong className="text-white">{selectedServer.market_timezone ?? ''}</strong></div>
+            </div>
+            <div className="mt-4 border-t border-white/10 pt-4">
+              <p className="text-xs text-white/40 mb-2">Sunucuya katıl ve incele</p>
+              <button
+                onClick={() => { setInviteResult(null); generateInvite(selectedServer.discord_id); }}
+                disabled={inviteLoading}
+                className="w-full rounded-lg border border-[#5865F2]/40 bg-[#5865F2]/20 px-3 py-2 text-xs font-semibold text-[#7289da] transition hover:bg-[#5865F2]/30 disabled:opacity-50"
+              >
+                {inviteLoading ? 'Oluşturuluyor...' : '🔗 Davet Oluştur (1 kullanım · 10 dk)'}
+              </button>
+              {inviteResult && (
+                <div className="mt-2 rounded-lg border border-emerald-400/20 bg-emerald-500/10 p-3">
+                  <p className="text-[11px] text-emerald-300 font-semibold mb-1">Davet hazır!</p>
+                  <a href={inviteResult.url} target="_blank" rel="noopener noreferrer" className="text-xs text-emerald-400 underline break-all">
+                    {inviteResult.url}
+                  </a>
+                  {inviteResult.expires && (
+                    <p className="text-[10px] text-white/40 mt-1">Geçerlilik: {formatDate(inviteResult.expires)}</p>
+                  )}
+                  <button
+                    onClick={() => navigator.clipboard.writeText(inviteResult.url)}
+                    className="mt-2 rounded-md bg-white/10 px-2 py-1 text-[10px] text-white/60 hover:bg-white/20"
+                  >
+                    Kopyala
+                  </button>
+                </div>
+              )}
             </div>
           </>
         ) : (
@@ -703,10 +886,10 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
             <div className="mt-3 text-[11px] text-white/60 space-y-1">
               <div>Sunucu: <strong className="text-white">{selectedProfile.guild_id}</strong></div>
               <div>Etiket: <strong className="text-white">{selectedProfile.has_tag ? 'var' : 'yok'}</strong></div>
-              <div>Booster: <strong className="text-white">{selectedProfile.is_booster ? 'evet' : 'hayýr'}</strong></div>
+              <div>Booster: <strong className="text-white">{selectedProfile.is_booster ? 'evet' : 'hayır'}</strong></div>
               <div>Davet: <strong className="text-white">{selectedProfile.total_invites ?? 0}</strong></div>
-              <div>Referral: <strong className="text-white">{selectedProfile.referral_code ?? ''}</strong></div>
-              <div>Hakkýnda: <strong className="text-white">{selectedProfile.about ?? ''}</strong></div>
+              <div>Referral: <strong className="text-white">{selectedProfile.referral_code ?? ''}</strong></div>
+              <div>Hakkında: <strong className="text-white">{selectedProfile.about ?? ''}</strong></div>
             </div>
             <div className="mt-3 rounded-lg bg-black/30 p-3 text-[11px] text-white/60 whitespace-pre-wrap">
               <pre className="whitespace-pre-wrap">{prettyJson(selectedProfile)}</pre>
@@ -718,6 +901,76 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
       </div>
     </div>
   );
+
+  const SEVERITY_COLORS: Record<string, string> = {
+    low:      'border-[#5865F2]/30 bg-[#5865F2]/10 text-[#7289da]',
+    medium:   'border-yellow-500/30 bg-yellow-500/10 text-yellow-300',
+    high:     'border-orange-500/30 bg-orange-500/10 text-orange-300',
+    critical: 'border-red-500/30 bg-red-500/10 text-red-300',
+  };
+  const suspiciousSection = (
+    <div className="grid gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-2">
+          {['open','reviewed','dismissed','actioned','all'].map((s) => (
+            <button key={s} onClick={() => { setSuspiciousFilter(s); fetchSuspicious(s); }}
+              className={`rounded-full border px-3 py-1 text-[11px] transition ${suspiciousFilter === s ? 'border-[#5865F2] bg-[#5865F2]/20 text-white' : 'border-white/10 text-white/60 hover:text-white'}`}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={runScan}
+          disabled={suspiciousScanLoading}
+          className="rounded-lg border border-emerald-400/30 bg-emerald-500/10 px-4 py-1.5 text-xs text-emerald-300 hover:bg-emerald-500/20 disabled:opacity-50"
+        >
+          {suspiciousScanLoading ? 'Taranıyor...' : '🔍 Şimdi Tara'}
+        </button>
+      </div>
+
+      <div className="flex flex-col gap-2 max-h-[600px] overflow-auto pr-1">
+        {suspiciousFlags.map((flag) => (
+          <div key={flag.id} className={`rounded-lg border p-3 ${SEVERITY_COLORS[flag.severity] ?? 'border-white/10 bg-white/5 text-white'}`}>
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase border ${SEVERITY_COLORS[flag.severity] ?? ''}`}>{flag.severity}</span>
+                  <span className="text-[10px] text-white/40">{flag.rule_key}</span>
+                  {flag.discord_alerted && <span className="text-[10px] text-indigo-400">📢 Discord</span>}
+                </div>
+                <p className="mt-1 text-xs font-semibold text-white">{flag.title}</p>
+                <p className="mt-0.5 text-[11px] text-white/60">{flag.description}</p>
+                {flag.guild_id && <p className="mt-1 text-[10px] text-white/40">Sunucu: {flag.guild_id}</p>}
+                {flag.user_id  && <p className="text-[10px] text-white/40">Kullanıcı: {flag.user_id}</p>}
+                <p className="text-[10px] text-white/30">{formatDate(flag.created_at)}</p>
+              </div>
+              {flag.status === 'open' && (
+                <div className="flex flex-col gap-1">
+                  <button onClick={() => updateFlagStatus(flag.id, 'reviewed')}
+                    className="rounded border border-blue-400/30 bg-blue-500/10 px-2 py-0.5 text-[10px] text-blue-300 hover:bg-blue-500/20">
+                    İncelendi
+                  </button>
+                  <button onClick={() => updateFlagStatus(flag.id, 'actioned')}
+                    className="rounded border border-emerald-400/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] text-emerald-300 hover:bg-emerald-500/20">
+                    İşlem Alındı
+                  </button>
+                  <button onClick={() => updateFlagStatus(flag.id, 'dismissed')}
+                    className="rounded border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] text-white/40 hover:bg-white/10">
+                    Yoksay
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+        {suspiciousFlags.length === 0 && (
+          <p className="text-xs text-white/40">Kayıtlı şüpheli hareket yok. Tarama başlatmak için &quot;Şimdi Tara&quot; butonunu kullan.</p>
+        )}
+      </div>
+    </div>
+  );
+
   const adsSection = (
     <div className="rounded-xl border border-white/10 bg-white/5 p-4">
       <p className="text-sm font-semibold text-white mb-3">{t('developer_ads_title')}</p>
@@ -747,7 +1000,7 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
 
       {preview && (
         <div className="mt-3 rounded-xl border border-[#5865F2]/20 bg-[#5865F2]/5 p-3">
-          <p className="text-[10px] text-white/30 uppercase tracking-wider mb-2">Önizleme</p>
+          <p className="text-[10px] text-white/30 uppercase tracking-wider mb-2">Ãnizleme</p>
           <div className="flex items-center gap-3">
             {preview.server_icon ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -772,7 +1025,7 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
       )}
 
       {adError && <p className="mt-2 text-xs text-red-400">{adError}</p>}
-      {adSuccess && <p className="mt-2 text-xs text-emerald-400">Reklam yayýnlandý!</p>}
+      {adSuccess && <p className="mt-2 text-xs text-emerald-400">Reklam yayınlandı!</p>}
 
       {preview && (
         <button
@@ -780,7 +1033,7 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
           disabled={adLoading}
           className="mt-3 w-full rounded-lg bg-[#5865F2]/20 hover:bg-[#5865F2]/30 border border-[#5865F2]/30 px-3 py-2 text-xs font-semibold text-indigo-300 transition disabled:opacity-40"
         >
-          {adLoading ? 'Yayýnlanýyor...' : 'Reklam Ver'}
+          {adLoading ? 'Yayınlanıyor...' : 'Reklam Ver'}
         </button>
       )}
 
@@ -847,6 +1100,7 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
       {activeTab === 'servers' && serversSection}
       {activeTab === 'profiles' && profilesSection}
       {activeTab === 'ads' && adsSection}
+      {activeTab === 'suspicious' && suspiciousSection}
     </div>
   );
 

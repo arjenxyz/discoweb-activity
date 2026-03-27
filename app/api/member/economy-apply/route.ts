@@ -19,10 +19,23 @@ import { getSelectedGuildId } from '@/lib/guild';
 
 export const dynamic = 'force-dynamic';
 
-const VOTE_THRESHOLD = 120;
-const DIRECT_MEMBER_THRESHOLD = 500;
-const AUTO_APPROVE_DAYS = 7;
 const MIN_ACCOUNT_AGE_DAYS = 30;
+
+async function getThresholds(supabase: ReturnType<typeof getSupabase>) {
+  const defaults = { voteThreshold: 120, directMemberThreshold: 500, autoApproveDays: 7 };
+  if (!supabase) return defaults;
+  const { data } = await supabase
+    .from('app_config')
+    .select('key, value')
+    .in('key', ['economy_vote_threshold', 'economy_direct_member_threshold', 'economy_auto_approve_days']);
+  if (!data) return defaults;
+  const map = new Map(data.map((r: { key: string; value: string }) => [r.key, parseInt(r.value, 10)]));
+  return {
+    voteThreshold: map.get('economy_vote_threshold') || defaults.voteThreshold,
+    directMemberThreshold: map.get('economy_direct_member_threshold') || defaults.directMemberThreshold,
+    autoApproveDays: map.get('economy_auto_approve_days') || defaults.autoApproveDays,
+  };
+}
 
 const getSupabase = () => {
   const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -88,6 +101,8 @@ export async function POST(request: Request) {
 
   const guildId = await getSelectedGuildId(request);
   if (!guildId) return NextResponse.json({ error: 'no_selected_guild' }, { status: 400 });
+
+  const { voteThreshold: VOTE_THRESHOLD, directMemberThreshold: DIRECT_MEMBER_THRESHOLD, autoApproveDays: AUTO_APPROVE_DAYS } = await getThresholds(supabase);
 
   const body = (await request.json()) as { type?: 'direct' | 'vote' | 'cast_vote' };
   const { type } = body;
@@ -221,7 +236,7 @@ export async function POST(request: Request) {
       .from('servers')
       .select('member_count, is_setup')
       .eq('discord_id', guildId)
-      .maybeSingle() as { data: { member_count: number | null } | null };
+      .maybeSingle() as { data: { member_count: number | null; is_setup: boolean } | null };
 
     const memberCount = server?.member_count ?? 0;
     if (!server?.is_setup) {
