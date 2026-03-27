@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import { useT } from '@/contexts/LocaleContext';
 import { apiUrl } from '@/lib/api';
 
-type ReportStatus = 'pending' | 'reviewing' | 'resolved' | 'not_found';
+type ReportStatus = 'pending' | 'reviewing' | 'resolved' | 'not_found' | 'need_info' | 'planned_next' | 'long_term' | 'duplicate' | 'invalid';
 
 type Report = {
   id: string;
@@ -34,6 +34,27 @@ const STATUS_CONFIG: Record<ReportStatus, { labelKey: string; subKey: string; co
     dot: 'bg-violet-400',
     icon: '🔍',
   },
+  need_info: {
+    labelKey: 'support_suggestion_status_need_info_label',
+    subKey: 'support_suggestion_status_need_info_sub',
+    color: 'border-blue-500/30 bg-blue-500/10',
+    dot: 'bg-blue-400',
+    icon: '💬',
+  },
+  planned_next: {
+    labelKey: 'support_suggestion_status_planned_next_label',
+    subKey: 'support_suggestion_status_planned_next_sub',
+    color: 'border-cyan-500/30 bg-cyan-500/10',
+    dot: 'bg-cyan-400',
+    icon: '🎯',
+  },
+  long_term: {
+    labelKey: 'support_suggestion_status_long_term_label',
+    subKey: 'support_suggestion_status_long_term_sub',
+    color: 'border-purple-500/30 bg-purple-500/10',
+    dot: 'bg-purple-400',
+    icon: '⏳',
+  },
   resolved: {
     labelKey: 'support_suggestion_status_resolved_label',
     subKey: 'support_suggestion_status_resolved_sub',
@@ -47,6 +68,20 @@ const STATUS_CONFIG: Record<ReportStatus, { labelKey: string; subKey: string; co
     color: 'border-red-500/20 bg-red-500/5',
     dot: 'bg-red-400',
     icon: '❌',
+  },
+  duplicate: {
+    labelKey: 'support_suggestion_status_duplicate_label',
+    subKey: 'support_suggestion_status_duplicate_sub',
+    color: 'border-white/10 bg-white/5',
+    dot: 'bg-white/40',
+    icon: '🔁',
+  },
+  invalid: {
+    labelKey: 'support_suggestion_status_invalid_label',
+    subKey: 'support_suggestion_status_invalid_sub',
+    color: 'border-white/10 bg-white/5',
+    dot: 'bg-white/20',
+    icon: '🚫',
   },
 };
 

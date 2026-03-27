@@ -146,17 +146,40 @@ export async function POST(request: Request) {
     footer: { text: `DiscoWeb Destek · User: ${session.userId}${reportId ? ` · ID: ${reportId.slice(0, 8)}` : ''}` },
   };
 
-  // Action buttons — only if we have a reportId to reference
+  // Select menu — only if we have a reportId to reference
+  const bugOptions = [
+    { label: '🔍 İnceleniyor',         value: 'reviewing',     description: 'Ekip incelemeye aldı' },
+    { label: '💬 Bilgi Gerekiyor',      value: 'need_info',     description: 'Daha fazla bilgi isteniyor' },
+    { label: '⚠️ Kritik',              value: 'critical',      description: 'Öncelikli ele alınacak' },
+    { label: '🔧 Deploy Bekleniyor',    value: 'fixed_pending', description: 'Düzeltildi, yayınlanacak' },
+    { label: '✅ Çözüldü',              value: 'resolved',      description: 'Sorun giderildi' },
+    { label: '❌ Tespit Edilemedi',     value: 'not_found',     description: 'Üretilemedi' },
+    { label: '🔁 Bilinen Sorun',        value: 'duplicate',     description: 'Zaten takip ediliyor' },
+    { label: '🚫 Geçersiz',             value: 'invalid',       description: 'Alakasız veya spam' },
+  ];
+
+  const suggestionOptions = [
+    { label: '🔍 İnceleniyor',          value: 'reviewing',     description: 'Ekip değerlendiriyor' },
+    { label: '💬 Detay Gerekiyor',      value: 'need_info',     description: 'Daha fazla açıklama isteniyor' },
+    { label: '🎯 Sonraki Sürüme Alındı',value: 'planned_next',  description: 'Yakında eklenecek' },
+    { label: '⏳ Uzun Vadeli',          value: 'long_term',     description: 'Uzun vadede düşünülüyor' },
+    { label: '✅ Kabul Edildi',          value: 'resolved',      description: 'Eklenecek' },
+    { label: '❌ Reddedildi',           value: 'not_found',     description: 'Şimdilik planlanmıyor' },
+    { label: '🔁 Zaten Mevcut',         value: 'duplicate',     description: 'Bu özellik zaten var' },
+    { label: '🚫 Kapsam Dışı',          value: 'invalid',       description: 'Projenin odağıyla uyuşmuyor' },
+  ];
+
+  const selectCustomId = isSuggestion ? `suggestion_select_${reportId}` : `bugreport_select_${reportId}`;
+  const selectOptions  = isSuggestion ? suggestionOptions : bugOptions;
+
   const components = reportId ? [{
     type: 1,
-    components: [
-      {
-        type: 2,
-        style: 3, // green
-        label: '🔍 İncele',
-        custom_id: `bugreport_review_${reportId}`,
-      },
-    ],
+    components: [{
+      type: 3,
+      custom_id: selectCustomId,
+      placeholder: '⚙️ Durumu güncelle...',
+      options: selectOptions,
+    }],
   }] : [];
 
   let messageId: string | null = null;

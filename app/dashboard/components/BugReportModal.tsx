@@ -6,7 +6,7 @@ import { useT } from '@/contexts/LocaleContext';
 import { getClientErrors } from '@/lib/clientErrorStore';
 import { apiUrl } from '@/lib/api';
 
-type ReportStatus = 'pending' | 'reviewing' | 'resolved' | 'not_found';
+type ReportStatus = 'pending' | 'reviewing' | 'resolved' | 'not_found' | 'need_info' | 'critical' | 'fixed_pending' | 'duplicate' | 'invalid';
 
 type Report = {
   id: string;
@@ -35,6 +35,27 @@ const STATUS_CONFIG: Record<ReportStatus, { labelKey: string; subKey: string; co
     dot: 'bg-amber-400',
     icon: '🔍',
   },
+  need_info: {
+    labelKey: 'support_bug_status_need_info_label',
+    subKey: 'support_bug_status_need_info_sub',
+    color: 'border-blue-500/30 bg-blue-500/10',
+    dot: 'bg-blue-400',
+    icon: '💬',
+  },
+  critical: {
+    labelKey: 'support_bug_status_critical_label',
+    subKey: 'support_bug_status_critical_sub',
+    color: 'border-red-600/40 bg-red-600/10',
+    dot: 'bg-red-500',
+    icon: '⚠️',
+  },
+  fixed_pending: {
+    labelKey: 'support_bug_status_fixed_pending_label',
+    subKey: 'support_bug_status_fixed_pending_sub',
+    color: 'border-cyan-500/30 bg-cyan-500/10',
+    dot: 'bg-cyan-400',
+    icon: '🔧',
+  },
   resolved: {
     labelKey: 'support_status_resolved_label',
     subKey: 'support_bug_status_resolved_sub',
@@ -47,7 +68,21 @@ const STATUS_CONFIG: Record<ReportStatus, { labelKey: string; subKey: string; co
     subKey: 'support_bug_status_not_found_sub',
     color: 'border-red-500/20 bg-red-500/5',
     dot: 'bg-red-400',
-    icon: '❓',
+    icon: '❌',
+  },
+  duplicate: {
+    labelKey: 'support_bug_status_duplicate_label',
+    subKey: 'support_bug_status_duplicate_sub',
+    color: 'border-white/10 bg-white/5',
+    dot: 'bg-white/40',
+    icon: '🔁',
+  },
+  invalid: {
+    labelKey: 'support_bug_status_invalid_label',
+    subKey: 'support_bug_status_invalid_sub',
+    color: 'border-white/10 bg-white/5',
+    dot: 'bg-white/20',
+    icon: '🚫',
   },
 };
 
