@@ -33,28 +33,33 @@ export async function POST(request: Request) {
 
   const errorText = String(body.error ?? 'Bilinmiyor').slice(0, 500);
   const url = String(body.url ?? '').slice(0, 300);
-  const logs = (body.debugLogs ?? []).slice(-10).join('\n').slice(0, 1500);
+  const logs = (body.debugLogs ?? []).slice(-15).join('\n').slice(0, 1800);
+  const ua = request.headers.get('user-agent') ?? 'Bilinmiyor';
 
   const embed = {
     title: '🔐 Auth Hata Bildirimi',
     color: 0xED4245,
+    description: `\`\`\`${errorText}\`\`\``,
     fields: [
-      { name: '❌ Hata', value: `\`\`\`${errorText}\`\`\``, inline: false },
       ...(url ? [{ name: '🔗 URL', value: url, inline: false }] : []),
-      ...(logs ? [{ name: '📋 Debug Logları', value: `\`\`\`${logs}\`\`\``, inline: false }] : []),
       { name: '🌐 IP', value: ip, inline: true },
+      { name: '🕐 Zaman', value: new Date().toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' }), inline: true },
+      { name: '💻 User Agent', value: `\`${ua.slice(0, 200)}\``, inline: false },
+      ...(logs ? [{ name: '📋 Debug Logları', value: `\`\`\`${logs}\`\`\``, inline: false }] : []),
     ],
     timestamp: new Date().toISOString(),
     footer: { text: 'DiscoWeb · Auth Hata Bildirimi' },
   };
 
-  const res = await fetch(`https://discord.com/api/v10/channels/${CHANNEL_ID}/messages`, {
+  const discordRes = await fetch(`https://discord.com/api/v10/channels/${CHANNEL_ID}/messages`, {
     method: 'POST',
     headers: { Authorization: `Bot ${botToken}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ embeds: [embed] }),
   });
 
-  if (!res.ok) {
+  if (!discordRes.ok) {
+    const errText = await discordRes.text();
+    console.error('[auth-error-report] Discord API hatası:', discordRes.status, errText);
     return NextResponse.json({ error: 'discord_failed' }, { status: 500 });
   }
 

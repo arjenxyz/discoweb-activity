@@ -594,7 +594,7 @@ function AuthErrorScreen({
     if (reported || reporting) return;
     setReporting(true);
     try {
-      await fetch('/api/support/auth-error-report', {
+      const res = await fetch(apiUrl('/api/support/auth-error-report'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -603,7 +603,7 @@ function AuthErrorScreen({
           debugLogs,
         }),
       });
-      setReported(true);
+      if (res.ok) setReported(true);
     } catch { /* sessizce geç */ } finally {
       setReporting(false);
     }
