@@ -217,36 +217,32 @@ export default function SplashScreen({ onEnter }: Props) {
         className="splash-full-ui flex flex-col min-h-screen"
         style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.7s ease' }}
       >
-        {/* Ses butonu — sağ üst */}
-        <div className="absolute z-10 top-7 right-8 sm:right-10">
+        {/* Top bar — logo sağda, ses butonu yanında */}
+        <div className="relative z-20 flex items-start justify-end gap-4 px-8 sm:px-14 pt-7 flex-shrink-0">
+          <div className="flex flex-col items-end gap-0.5" style={{ filter: 'drop-shadow(0 2px 16px rgba(0,0,0,0.9))' }}>
+            <span
+              className="cursor-pointer font-black tracking-tight select-none leading-none text-2xl"
+              onClick={openDiscoWeb}
+              style={logoWhiteStyle}
+            >
+              Disco<span style={logoBlueStyle}>Web</span>
+            </span>
+            <span className="text-[10px] font-medium text-white/50 tracking-wide">
+              {t('splash_platform_name')}
+            </span>
+          </div>
           <MuteButton muted={muted} onToggle={toggleMute} />
         </div>
 
         {/* Main content — left aligned, vertically centered */}
         <main className="relative z-10 flex flex-1 w-full flex-col items-start justify-center px-8 sm:px-14">
           <div
-            className="flex flex-col gap-6 max-w-md w-full"
+            className="flex flex-col gap-5 max-w-sm w-full"
             style={{ transform: visible ? 'translateY(0)' : 'translateY(20px)', transition: 'transform 0.8s ease' }}
           >
-            {/* Hero logo */}
-            <div className="flex flex-col gap-1.5" style={{ filter: 'drop-shadow(0 2px 24px rgba(0,0,0,0.9))' }}>
-              <span
-                className="cursor-pointer font-black tracking-tight select-none leading-none"
-                onClick={openDiscoWeb}
-                style={{ ...logoWhiteStyle, fontSize: 'clamp(2.25rem, 5vw, 3.5rem)' }}
-              >
-                Disco<span style={logoBlueStyle}>Web</span>
-              </span>
-              <span className="text-sm font-medium text-white/60 tracking-wide">
-                {t('splash_platform_name')}
-              </span>
-            </div>
-
-            {/* Divider */}
-            <div className="w-12 h-px bg-white/15" />
 
             {/* Glassmorphism card — welcome + tip + buttons */}
-            <div className="rounded-2xl border border-white/10 bg-black/30 backdrop-blur-md px-5 py-5 flex flex-col gap-5">
+            <div className="rounded-2xl border border-white/10 bg-white/8 backdrop-blur-md px-5 py-5 flex flex-col gap-4">
               {/* Welcome */}
               {user && !blocked && (
                 <div className="flex items-center gap-2.5">
@@ -299,7 +295,7 @@ export default function SplashScreen({ onEnter }: Props) {
               </div>
 
               {/* Enter + DevPanel buttons */}
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2 pt-1 border-t border-white/8">
                 {stillLoading ? (
                   <button type="button" disabled className="flex items-center gap-2 rounded-full px-5 py-2 text-sm font-bold text-white cursor-not-allowed bg-white/10 border border-white/10">
                     <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 16 16" fill="none">
@@ -355,7 +351,7 @@ export default function SplashScreen({ onEnter }: Props) {
           <div className="flex items-center gap-2">
             <span className="text-[11px] text-white/25">© {new Date().getFullYear()} DiscoWeb</span>
             <span className="text-white/20 text-xs">·</span>
-            <button type="button" onClick={() => setDevAboutOpen(true)} className="text-xs text-white/40 hover:text-white/70 transition-colors">Developer</button>
+            <button type="button" onClick={() => setDevAboutOpen(true)} className="text-xs text-white/40 hover:text-white/70 transition-colors">Thank You</button>
           </div>
           <div className="flex items-center gap-2">
             <button type="button" onClick={() => openLink('https://discoweb.tech/terms')} className="text-xs text-white/40 hover:text-white/70 transition-colors">{t('splash_terms')}</button>
