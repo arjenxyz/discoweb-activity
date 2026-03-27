@@ -31,13 +31,13 @@ export default function SidebarNav({
     discover:        '/menu-background/menu4.jpg',
     market:          '/menu-background/menu5.jpg',
     treasury:        '/menu-background/menu6.jpg',
-    borsa:           '/menu-background/menu.jpg',
-    portfolio:       '/menu-background/menu2.jpg',
-    dividend:        '/menu-background/menu3.jpg',
-    'ipo-apply':     '/menu-background/menu4.jpg',
-    'market-news':   '/menu-background/menu5.jpg',
-    'economy-apply': '/menu-background/menu6.jpg',
-    mail:            '/menu-background/menu.jpg',
+    borsa:           '/menu-background/menu7.jpg',
+    portfolio:       '/menu-background/menu8.jpg',
+    dividend:        '/menu-background/menu9.jpg',
+    'ipo-apply':     '/menu-background/menu10.jpg',
+    'market-news':   '/menu-background/menu11.jpg',
+    'economy-apply': '/menu-background/menu7.jpg',
+    mail:            '/menu-background/menu8.jpg',
   };
 
   const NAV_GROUPS = [

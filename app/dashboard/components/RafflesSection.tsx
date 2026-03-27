@@ -28,14 +28,6 @@ const STORE_BACKGROUNDS = [
   '/store-background/invincible/invincible5.jpg',
   '/store-background/invincible/invincible6.jpg',
   '/store-background/invincible/invincible7.jpg',
-  '/store-background/view/wiew.jpg',
-  '/store-background/view/wiew2.jpg',
-  '/store-background/view/wiew3.jpg',
-  '/store-background/view/wiew4.jpg',
-  '/store-background/view/wiew5.jpg',
-  '/store-background/view/wiew6.jpg',
-  '/store-background/view/wiew7.jpg',
-  '/store-background/view/wiew8.jpg',
 ];
 
 type RafflesSectionProps = {
