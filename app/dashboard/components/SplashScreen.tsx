@@ -13,6 +13,84 @@ type Props = {
   onEnter: () => void;
 };
 
+const TIPS = [
+  {
+    icon: (
+      <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 flex-shrink-0">
+        <path d="M8.75 2.75a.75.75 0 00-1.5 0v5.69L5.03 6.22a.75.75 0 00-1.06 1.06l3.5 3.5a.75.75 0 001.06 0l3.5-3.5a.75.75 0 00-1.06-1.06L8.75 8.44V2.75z" />
+        <path d="M3.5 9.75a.75.75 0 00-1.5 0v1.5A2.75 2.75 0 004.75 14h6.5A2.75 2.75 0 0014 11.25v-1.5a.75.75 0 00-1.5 0v1.5c0 .69-.56 1.25-1.25 1.25h-6.5c-.69 0-1.25-.56-1.25-1.25v-1.5z" />
+      </svg>
+    ),
+    text: 'Mesaj atarak ve sesli kanalda vakit geçirerek Papel kazanabilirsin.',
+  },
+  {
+    icon: (
+      <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 flex-shrink-0">
+        <path d="M1.5 2A1.5 1.5 0 000 3.5v2A1.5 1.5 0 001.5 7h13A1.5 1.5 0 0016 5.5v-2A1.5 1.5 0 0014.5 2h-13zM0 10.5A1.5 1.5 0 011.5 9h13a1.5 1.5 0 010 3h-13A1.5 1.5 0 010 10.5z" />
+      </svg>
+    ),
+    text: 'DiscoWeb Market\'te sunucu hisseleri alıp satabilir, portföy oluşturabilirsin.',
+  },
+  {
+    icon: (
+      <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 flex-shrink-0">
+        <path d="M2.5 3A1.5 1.5 0 001 4.5v.793c.026.009.051.02.076.032L7.674 8.51c.206.1.446.1.652 0l6.598-3.185A.755.755 0 0115 5.293V4.5A1.5 1.5 0 0013.5 3h-11z" />
+        <path d="M15 6.954L8.978 9.86a2.25 2.25 0 01-1.956 0L1 6.954V11.5A1.5 1.5 0 002.5 13h11a1.5 1.5 0 001.5-1.5V6.954z" />
+      </svg>
+    ),
+    text: 'Posta kutunda seni bekleyen ödüller ve sistem bildirimleri olabilir.',
+  },
+  {
+    icon: (
+      <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 flex-shrink-0">
+        <path fillRule="evenodd" d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm9 3a1 1 0 11-2 0 1 1 0 012 0zm-.25-6.25a.75.75 0 00-1.5 0v3.5a.75.75 0 001.5 0v-3.5z" />
+      </svg>
+    ),
+    text: 'Papel\'ini evrensel para birimi Mari\'ye dönüştürerek farklı sunucularda kullanabilirsin.',
+  },
+  {
+    icon: (
+      <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 flex-shrink-0">
+        <path d="M3.75 2a.75.75 0 00-.75.75v10.5a.75.75 0 001.28.53L8 10.06l3.72 3.72a.75.75 0 001.28-.53V2.75a.75.75 0 00-.75-.75h-8.5z" />
+      </svg>
+    ),
+    text: 'Aktif olarak rozet günleri biriktirerek özel etiketler ve ödüller kazanabilirsin.',
+  },
+  {
+    icon: (
+      <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 flex-shrink-0">
+        <path d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
+        <path fillRule="evenodd" d="M8 0a8 8 0 100 16A8 8 0 008 0zM1.5 8a6.5 6.5 0 1113 0 6.5 6.5 0 01-13 0z" />
+      </svg>
+    ),
+    text: 'Arkadaşlarını davet et, referans kodun üzerinden ekstra Papel kazan.',
+  },
+  {
+    icon: (
+      <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 flex-shrink-0">
+        <path d="M1 2.75C1 1.784 1.784 1 2.75 1h10.5c.966 0 1.75.784 1.75 1.75v7.5A1.75 1.75 0 0113.25 12H9.06l.038.48.016.2c.017.193.035.327.06.45a.75.75 0 01-.605.894l-.01.001a.75.75 0 01-.848-.532c-.067-.228-.107-.483-.131-.724L7.5 12.5H5a.75.75 0 01-.596-.295L3 10.5H2.75A1.75 1.75 0 011 8.75v-6zM2.75 2.5a.25.25 0 00-.25.25v6.25c0 .138.112.25.25.25h.5a.75.75 0 01.596.295l1.404 1.705H7.5a.75.75 0 01.75.75v.059l.013.191H13.25a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25H2.75z" />
+      </svg>
+    ),
+    text: 'Mağazadan indirim kuponları kullanarak daha avantajlı alışveriş yapabilirsin.',
+  },
+  {
+    icon: (
+      <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 flex-shrink-0">
+        <path d="M7.22 1.63a1 1 0 011.56 0l1.22 1.46 1.86-.38a1 1 0 011.16.9l.17 1.9 1.6 1.04a1 1 0 010 1.7l-1.6 1.04-.17 1.9a1 1 0 01-1.16.9l-1.86-.38-1.22 1.46a1 1 0 01-1.56 0L6 10.21l-1.86.38a1 1 0 01-1.16-.9l-.17-1.9L1.21 6.75a1 1 0 010-1.7l1.6-1.04.17-1.9a1 1 0 011.16-.9L6 1.59l1.22-1.46z" />
+      </svg>
+    ),
+    text: 'Aktif çekilişlere katılarak nadir ödüller ve Papel kazanabilirsin.',
+  },
+  {
+    icon: (
+      <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 flex-shrink-0">
+        <path d="M10.5 3.5a.5.5 0 00-1 0V4h-3v-.5a.5.5 0 00-1 0V4H4a2 2 0 00-2 2v6a2 2 0 002 2h8a2 2 0 002-2V6a2 2 0 00-2-2h-1.5v-.5zM9.5 5v.5a.5.5 0 01-1 0V5h-3v.5a.5.5 0 01-1 0V5H4a1 1 0 00-1 1v1h10V6a1 1 0 00-1-1h-1.5zM3 9h10v3a1 1 0 01-1 1H4a1 1 0 01-1-1V9z" />
+      </svg>
+    ),
+    text: 'Liderlik tablosundan sunucunun en aktif üyelerini ve sıralamanı görebilirsin.',
+  },
+];
+
 export default function SplashScreen({ onEnter }: Props) {
   const t = useT();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -25,17 +103,14 @@ export default function SplashScreen({ onEnter }: Props) {
   const [devPanelOpen, setDevPanelOpen] = useState(false);
   const [devAboutOpen, setDevAboutOpen] = useState(false);
   const [user, setUser] = useState<{ username: string; avatarUrl: string } | null>(null);
+  const [tipIndex, setTipIndex] = useState(0);
+  const [tipVisible, setTipVisible] = useState(true);
   const linkSdkRef = useRef<InstanceType<Awaited<typeof import('@discord/embedded-app-sdk')>['DiscordSDK']> | null>(null);
 
   const openLink = async (url: string) => {
     try {
-      // Önce auth sırasında set edilen singleton'ı dene
       const existing = getDiscordSdk();
-      if (existing) {
-        await existing.commands.openExternalLink({ url });
-        return;
-      }
-      // Yoksa kendi SDK instance'ımızı bir kez oluştur, ref'te sakla
+      if (existing) { await existing.commands.openExternalLink({ url }); return; }
       if (!linkSdkRef.current) {
         const { DiscordSDK } = await import('@discord/embedded-app-sdk');
         const sdk = new DiscordSDK(process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!);
@@ -43,21 +118,16 @@ export default function SplashScreen({ onEnter }: Props) {
         linkSdkRef.current = sdk;
       }
       await linkSdkRef.current.commands.openExternalLink({ url });
-    } catch {
-      window.open(url, '_blank');
-    }
+    } catch { window.open(url, '_blank'); }
   };
 
   useEffect(() => {
     const t2 = setTimeout(() => setVisible(true), 80);
 
-    // Oturum açıksa kullanıcı bilgisini çek
     fetchWithCreds(apiUrl('/api/auth/me'))
       .then(r => r.ok ? r.json() : null)
       .then((d: { username?: string; avatar?: string } | null) => {
-        if (d?.username) {
-          setUser({ username: d.username, avatarUrl: d.avatar ?? '' });
-        }
+        if (d?.username) setUser({ username: d.username, avatarUrl: d.avatar ?? '' });
       })
       .catch(() => {});
 
@@ -68,7 +138,6 @@ export default function SplashScreen({ onEnter }: Props) {
         .catch(() => { if (initial) setMaintenanceChecked(true); });
     };
 
-    // Developer rol kontrolü ve maintenance paralel başlat
     const token = (() => { try { return localStorage.getItem('discord_bearer_token'); } catch { return null; } })();
     fetch(apiUrl('/api/activity/is-developer'), {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -81,6 +150,18 @@ export default function SplashScreen({ onEnter }: Props) {
     const interval = setInterval(() => checkMaintenance(false), 30000);
 
     return () => { clearTimeout(t2); clearInterval(interval); };
+  }, []);
+
+  // Tip rotation
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTipVisible(false);
+      setTimeout(() => {
+        setTipIndex(i => (i + 1) % TIPS.length);
+        setTipVisible(true);
+      }, 350);
+    }, 4500);
+    return () => clearInterval(interval);
   }, []);
 
   const toggleMute = () => {
@@ -108,173 +189,171 @@ export default function SplashScreen({ onEnter }: Props) {
     animation: 'titleShine 4s ease-in-out infinite',
   };
 
-  const openDiscoWeb = async () => {
-    await openLink('https://discoweb.tech');
-  };
+  const openDiscoWeb = async () => { await openLink('https://discoweb.tech'); };
 
-  const LogoBlock = ({ size = 'md', centered = false }: { size?: 'sm' | 'md'; centered?: boolean }) => (
-    <div className={`flex flex-col gap-1 ${centered ? 'items-center text-center' : ''}`}>
-      <style>{`@keyframes titleShine{0%,60%{background-position:100% 0}100%{background-position:-100% 0}}`}</style>
-      <span
-        className={`cursor-pointer font-black tracking-tight select-none ${size === 'sm' ? 'text-3xl' : 'text-2xl'}`}
-        onClick={openDiscoWeb}
-        style={logoWhiteStyle}
-      >
-        Disco<span style={logoBlueStyle}>Web</span>
-      </span>
-      <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/30">
-        {t('splash_platform_name')}
-      </span>
-    </div>
-  );
-
-  const DevButton = () => (
-    <button
-      type="button"
-      onClick={() => setDevPanelOpen(true)}
-      className="flex items-center gap-2 rounded-full border border-white/20 bg-black/50 px-3 py-2 text-sm font-semibold text-white hover:bg-black/70 transition"
-      aria-label="Developer Panel"
-    >
-      <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4">
-        <path d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 01-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311c.446.82.023 1.841-.872 2.105l-.34.1c-1.4.413-1.4 2.397 0 2.81l.34.1a1.464 1.464 0 01.872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 012.105.872l.1.34c.413 1.4 2.397 1.4 2.81 0l.1-.34a1.464 1.464 0 012.105-.872l.31.17c1.283.698 2.686-.705 1.987-1.987l-.169-.311a1.464 1.464 0 01.872-2.105l.34-.1c1.4-.413 1.4-2.397 0-2.81l-.34-.1a1.464 1.464 0 01-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 01-2.105-.872l-.1-.34zM8 10.93a2.929 2.929 0 110-5.858 2.929 2.929 0 010 5.858z" />
-      </svg>
-      Developer
-    </button>
-  );
-
-  const EnterButton = () => {
-    const stillLoading = !maintenanceChecked || (maintenance && !isDeveloperChecked);
-    if (stillLoading) {
-      return (
-        <button type="button" disabled className="group relative overflow-hidden rounded-full px-8 py-3.5 text-sm font-bold text-white transition-all duration-300 cursor-not-allowed bg-white/10 backdrop-blur-md border border-white/10">
-          <span className="relative flex items-center gap-2">
-            <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 16 16" fill="none">
-              <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="2" strokeOpacity="0.3" />
-              <path d="M8 2a6 6 0 016 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            </svg>
-            {t('loading')}
-          </span>
-        </button>
-      );
-    }
-    const blocked = maintenance && !isDeveloper;
-    return (
-      <button
-        type="button"
-        onClick={blocked ? undefined : onEnter}
-        disabled={blocked}
-        className={`group relative overflow-hidden rounded-full px-8 py-3.5 text-sm font-bold text-white transition-all duration-300 active:scale-95 backdrop-blur-md ${blocked ? 'cursor-not-allowed bg-white/10' : maintenance ? 'bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/30' : 'bg-white/10 hover:bg-white/15 border border-white/20'}`}
-        style={{}}
-      >
-        {!blocked && <span className="pointer-events-none absolute inset-0 -translate-x-full skew-x-12 bg-white/20 transition-transform duration-500 group-hover:translate-x-full" />}
-        <span className="relative flex items-center gap-2">
-          {blocked ? t('splash_maintenance_title') : t('splash_start_button')}
-          {!blocked && (
-            <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-0.5">
-              <path d="M3.75 7.25a.75.75 0 000 1.5h6.19l-2.72 2.72a.75.75 0 001.06 1.06l4-4a.75.75 0 000-1.06l-4-4a.75.75 0 00-1.06 1.06l2.72 2.72H3.75z" />
-            </svg>
-          )}
-        </span>
-      </button>
-    );
-  };
-
-  const FooterLine = () => (
-    <div className="flex items-center gap-2">
-      <button type="button" onClick={() => openLink('https://discoweb.tech/terms')} className="text-xs text-white/50 hover:text-white/75 transition-colors">{t('splash_terms')}</button>
-      <span className="text-white/30 text-xs">·</span>
-      <button type="button" onClick={() => openLink('https://discoweb.tech/privacy')} className="text-xs text-white/50 hover:text-white/75 transition-colors">{t('splash_privacy')}</button>
-      <span className="text-white/30 text-xs">·</span>
-      <button type="button" onClick={() => setDevAboutOpen(true)} className="text-xs text-white/50 hover:text-white/75 transition-colors">Developer</button>
-    </div>
-  );
+  const stillLoading = !maintenanceChecked || (maintenance && !isDeveloperChecked);
+  const blocked = maintenance && !isDeveloper;
 
   return (
     <div className="splash-screen relative isolate flex min-h-screen w-full flex-col overflow-hidden bg-[#0b0d12]">
+      <style>{`
+        @keyframes titleShine{0%,60%{background-position:100% 0}100%{background-position:-100% 0}}
+      `}</style>
       <VideoBackground videoRef={videoRef} />
 
-      {/* Mini player: only centered logo text */}
+      {/* Mini player: only centered logo */}
       <div className="splash-mini-logo pointer-events-none absolute inset-0 z-20 hidden items-center justify-center">
-        <div className="pointer-events-auto">
-          <LogoBlock size="sm" centered />
+        <div className="pointer-events-auto flex flex-col items-center gap-1">
+          <span className="cursor-pointer font-black tracking-tight select-none text-3xl" onClick={openDiscoWeb} style={logoWhiteStyle}>
+            Disco<span style={logoBlueStyle}>Web</span>
+          </span>
+          <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/30">{t('splash_platform_name')}</span>
         </div>
       </div>
 
-      <div className="splash-full-ui">
-        {/* ?????? DESKTOP: ??st bar ??? logo sol, mute sa?? ?????? */}
-        <div
-          className="relative z-10 hidden lg:flex items-start justify-between px-10 pt-8"
-          style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.7s ease' }}
-        >
-          <LogoBlock size="md" />
+      <div
+        className="splash-full-ui flex flex-col min-h-screen"
+        style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.7s ease' }}
+      >
+        {/* Top bar */}
+        <div className="relative z-10 flex items-start justify-between px-8 sm:px-14 pt-8 flex-shrink-0">
+          {/* Logo */}
+          <div className="flex flex-col gap-1">
+            <span
+              className="cursor-pointer font-black tracking-tight select-none text-2xl"
+              onClick={openDiscoWeb}
+              style={logoWhiteStyle}
+            >
+              Disco<span style={logoBlueStyle}>Web</span>
+            </span>
+            <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/30">
+              {t('splash_platform_name')}
+            </span>
+          </div>
           <MuteButton muted={muted} onToggle={toggleMute} />
         </div>
 
-        {/* ?????? MOB??L: merkez logo ?????? */}
-        <div
-          className="lg:hidden relative z-10 flex flex-col items-center justify-start flex-1 gap-1 pointer-events-none pt-6"
-          style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.7s ease' }}
-        >
-          <div className="pointer-events-auto">
-            <LogoBlock size="sm" centered />
-          </div>
-        </div>
-
-        {/* SOL ALTA — hoş geldin */}
-        {user && !(maintenance && !isDeveloper) && (
+        {/* Main content — left aligned, vertically centered */}
+        <main className="relative z-10 flex flex-1 w-full flex-col items-start justify-center px-8 sm:px-14">
           <div
-            className="hidden lg:flex items-center gap-2 absolute z-10 bottom-10 left-10"
-            style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.7s ease' }}
+            className="flex flex-col gap-5 max-w-sm w-full"
+            style={{ transform: visible ? 'translateY(0)' : 'translateY(16px)', transition: 'transform 0.7s ease' }}
           >
-            {user.avatarUrl && <img src={user.avatarUrl} alt={user.username} className="h-5 w-5 rounded-full opacity-70" />}
-            <span className="text-sm text-white/50">
-              {t('splash_welcome_user', { username: user.username })}
-            </span>
-          </div>
-        )}
-
-        {/* ORTA ALTA — footer linkleri */}
-        <div
-          className="hidden lg:flex absolute z-10 bottom-10 left-1/2 -translate-x-1/2"
-          style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.7s ease' }}
-        >
-          <FooterLine />
-        </div>
-
-        {/* SAĞ ALTA — devPanel (sadece developer) + enter butonu */}
-        <div
-          className="hidden lg:flex absolute z-10 bottom-10 right-14 items-center gap-3"
-          style={{ opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(18px)', transition: 'opacity 0.7s ease, transform 0.7s ease' }}
-        >
-          {isDeveloper && <DevButton />}
-          <EnterButton />
-        </div>
-
-        {/* ?????? ALT ALAN ??? mobil ?????? */}
-        <div
-          className="relative z-10 mt-auto w-full flex flex-col gap-3 px-6 pb-8 sm:px-10 sm:pb-10"
-          style={{ opacity: visible ? 1 : 0, transform: visible ? 'translateY(0)' : 'translateY(18px)', transition: 'opacity 0.7s ease, transform 0.7s ease' }}
-        >
-          {/* Masa??st?? placeholder ??? bo??, ger??ek i??erik absolute'ta */}
-          <div className="hidden lg:block" />
-
-          {/* Mobil: dikey, ortada */}
-          <div className="lg:hidden flex flex-col items-center gap-3">
-            {user && !(maintenance && !isDeveloper) && (
-              <div className="flex items-center gap-2">
-                {user.avatarUrl && <img src={user.avatarUrl} alt={user.username} className="h-6 w-6 rounded-full opacity-70" />}
-                <span className="text-sm text-white/50">
-                  {t('splash_welcome_user', { username: user.username })}
-                </span>
+            {/* Welcome */}
+            {user && !blocked && (
+              <div className="flex items-center gap-2.5">
+                {user.avatarUrl && (
+                  <img src={user.avatarUrl} alt={user.username} className="h-7 w-7 rounded-full ring-1 ring-white/10" />
+                )}
+                <div className="flex flex-col">
+                  <span className="text-base font-semibold text-white/80">
+                    {t('splash_welcome_user', { username: user.username })}
+                  </span>
+                  <span className="text-xs text-white/35">
+                    {t('splash_welcome_subtitle')}
+                  </span>
+                </div>
               </div>
             )}
-            <div className="flex items-center gap-3">
-              <MuteButton muted={muted} onToggle={toggleMute} />
-              {isDeveloper && <DevButton />}
-              <EnterButton />
+
+            {/* Tip card */}
+            <div className="rounded-xl border border-white/8 bg-white/4 backdrop-blur-md px-4 py-3.5 min-h-[60px] flex flex-col gap-3">
+              <div
+                className="flex items-start gap-3"
+                style={{
+                  opacity: tipVisible ? 1 : 0,
+                  transform: tipVisible ? 'translateY(0)' : 'translateY(4px)',
+                  transition: 'opacity 0.35s ease, transform 0.35s ease',
+                }}
+              >
+                <span className="text-[#5865F2] mt-0.5">{TIPS[tipIndex].icon}</span>
+                <p className="text-sm text-white/60 leading-relaxed">{TIPS[tipIndex].text}</p>
+              </div>
+              {/* Dot indicators */}
+              <div className="flex items-center gap-1.5">
+                {TIPS.map((_, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => { setTipVisible(false); setTimeout(() => { setTipIndex(i); setTipVisible(true); }, 350); }}
+                    className="transition-all duration-300"
+                    style={{
+                      width: i === tipIndex ? '16px' : '4px',
+                      height: '4px',
+                      borderRadius: '2px',
+                      background: i === tipIndex ? '#5865F2' : 'rgba(255,255,255,0.2)',
+                    }}
+                    aria-label={`İpucu ${i + 1}`}
+                  />
+                ))}
+              </div>
             </div>
-            <FooterLine />
+
+            {/* Enter + DevPanel buttons */}
+            <div className="flex items-center gap-3">
+              {stillLoading ? (
+                <button type="button" disabled className="group relative overflow-hidden rounded-full px-8 py-3.5 text-sm font-bold text-white cursor-not-allowed bg-white/10 backdrop-blur-md border border-white/10">
+                  <span className="flex items-center gap-2">
+                    <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 16 16" fill="none">
+                      <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="2" strokeOpacity="0.3" />
+                      <path d="M8 2a6 6 0 016 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                    </svg>
+                    {t('loading')}
+                  </span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={blocked ? undefined : onEnter}
+                  disabled={blocked}
+                  className={`group relative overflow-hidden rounded-full px-8 py-3.5 text-sm font-bold text-white transition-all duration-300 active:scale-95 backdrop-blur-md ${
+                    blocked
+                      ? 'cursor-not-allowed bg-white/10'
+                      : maintenance
+                      ? 'bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/30'
+                      : 'bg-white/10 hover:bg-white/15 border border-white/20'
+                  }`}
+                >
+                  {!blocked && (
+                    <span className="pointer-events-none absolute inset-0 -translate-x-full skew-x-12 bg-white/20 transition-transform duration-500 group-hover:translate-x-full" />
+                  )}
+                  <span className="relative flex items-center gap-2">
+                    {blocked ? t('splash_maintenance_title') : t('splash_start_button')}
+                    {!blocked && (
+                      <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-0.5">
+                        <path d="M3.75 7.25a.75.75 0 000 1.5h6.19l-2.72 2.72a.75.75 0 001.06 1.06l4-4a.75.75 0 000-1.06l-4-4a.75.75 0 00-1.06 1.06l2.72 2.72H3.75z" />
+                      </svg>
+                    )}
+                  </span>
+                </button>
+              )}
+              {isDeveloper && (
+                <button
+                  type="button"
+                  onClick={() => setDevPanelOpen(true)}
+                  className="flex items-center gap-2 rounded-full border border-white/20 bg-black/50 px-3 py-2 text-sm font-semibold text-white hover:bg-black/70 transition"
+                  aria-label="Developer Panel"
+                >
+                  <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4">
+                    <path d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 01-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311c.446.82.023 1.841-.872 2.105l-.34.1c-1.4.413-1.4 2.397 0 2.81l.34.1a1.464 1.464 0 01.872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 012.105.872l.1.34c.413 1.4 2.397 1.4 2.81 0l.1-.34a1.464 1.464 0 012.105-.872l.31.17c1.283.698 2.686-.705 1.987-1.987l-.169-.311a1.464 1.464 0 01.872-2.105l.34-.1c1.4-.413 1.4-2.397 0-2.81l-.34-.1a1.464 1.464 0 01-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 01-2.105-.872l-.1-.34zM8 10.93a2.929 2.929 0 110-5.858 2.929 2.929 0 010 5.858z" />
+                  </svg>
+                  Developer
+                </button>
+              )}
+            </div>
           </div>
+        </main>
+
+        {/* Bottom footer */}
+        <div className="relative z-10 flex items-center justify-between px-8 sm:px-14 pb-8 flex-shrink-0">
+          <div className="flex items-center gap-2">
+            <button type="button" onClick={() => openLink('https://discoweb.tech/terms')} className="text-xs text-white/40 hover:text-white/70 transition-colors">{t('splash_terms')}</button>
+            <span className="text-white/20 text-xs">·</span>
+            <button type="button" onClick={() => openLink('https://discoweb.tech/privacy')} className="text-xs text-white/40 hover:text-white/70 transition-colors">{t('splash_privacy')}</button>
+            <span className="text-white/20 text-xs">·</span>
+            <button type="button" onClick={() => setDevAboutOpen(true)} className="text-xs text-white/40 hover:text-white/70 transition-colors">Developer</button>
+          </div>
+          <span className="text-[10px] text-white/20">© {new Date().getFullYear()} DiscoWeb</span>
         </div>
       </div>
 
