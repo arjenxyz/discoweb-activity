@@ -9,6 +9,7 @@ import {
 import Image from 'next/image';
 import type { BadgeInfo, DrawnRaffle } from '../types';
 import { useT } from '@/contexts/LocaleContext';
+import fetchWithCreds from '@/lib/fetchWithCreds';
 
 const STORE_BACKGROUNDS = [
   '/store-background/sunger-bob/sunger.gif',
@@ -177,7 +178,7 @@ export default function RafflesSection({ badgeInfo, loading, onJoinRaffle }: Raf
     setLeavingId(raffleId);
     setLeaveErrorId(null);
     try {
-      const res = await fetch('/api/member/raffles/leave', {
+      const res = await fetchWithCreds('/api/member/raffles/leave', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ raffle_id: raffleId }),
