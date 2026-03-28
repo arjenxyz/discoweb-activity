@@ -93,6 +93,7 @@ export default function DashboardHeader({
   const router = useRouter();
 
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [currentGif, setCurrentGif] = useState(RANDOM_GIFS[0]);
   const [fetchedIcons, setFetchedIcons] = useState<Record<string, string | null>>({});
   const fetchedIconsSeenRef = useRef<Set<string>>(new Set());
@@ -139,19 +140,19 @@ export default function DashboardHeader({
     <>
       {/* Focus overlay */}
       <div
-        onClick={() => setIsProfileOpen(false)}
+        onClick={() => { setIsProfileOpen(false); setMobileMenuOpen(false); }}
         className={`fixed inset-0 z-[9990] bg-black/50 backdrop-blur-sm transition-all duration-300 ${
-          isProfileOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'
+          (isProfileOpen || mobileMenuOpen) ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'
         }`}
       />
 
-      {/* Header */}
+      {/* Header — desktop full / mobile sadece bakiye */}
       <header className={`md:fixed inset-x-0 top-0 flex items-center bg-[#0e1018]/95 backdrop-blur-xl border-b border-white/[0.06] px-4 sm:px-6 transition-all duration-200 ${
         isActivityEmbed ? 'h-auto pt-[env(safe-area-inset-top,0px)] pb-2 min-h-[4rem]' : 'h-16'
       } ${isProfileOpen ? 'z-[9991]' : 'z-30'}`}>
 
-        {/* Sol — logo */}
-        <div className="flex items-center gap-3 min-w-fit">
+        {/* Sol — logo (sadece desktop) */}
+        <div className="hidden lg:flex items-center gap-3 min-w-fit">
           <div className="h-9 w-9 overflow-hidden rounded-xl border border-white/10 bg-white/5">
             <Image src="/gif/cat.gif" alt="logo" className="h-full w-full object-cover" width={36} height={36} />
           </div>
@@ -192,8 +193,9 @@ export default function DashboardHeader({
             <SupportMenu openLink={openLink} section={navigation.activeSection} />
           )}
 
+          {/* Profil butonu — sadece desktop */}
           {!unauthorized && (
-            <div className="relative">
+            <div className="relative hidden lg:block">
               <button
                 type="button"
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
@@ -216,10 +218,10 @@ export default function DashboardHeader({
                 </div>
               </button>
 
-              {/* Profil dropdown */}
+              {/* Profil dropdown — desktop */}
               <div
                 onClick={e => e.stopPropagation()}
-                className={`absolute right-0 top-14 w-[calc(100vw-24px)] sm:w-[320px] transition-all duration-300 origin-top-right ${
+                className={`absolute right-0 top-14 w-[320px] transition-all duration-300 origin-top-right ${
                   isProfileOpen ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible'
                 }`}
               >
@@ -339,37 +341,155 @@ export default function DashboardHeader({
         </div>
       </header>
 
-      {/* Mobil bottom nav */}
-      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-[#0b0d12]/95 backdrop-blur-xl border-t border-white/[0.06] pb-[env(safe-area-inset-bottom,0px)]">
-        <div className="flex items-stretch">
-          {navItems.filter(item => !item.requiresAuth || !unauthorized).map((item) => {
-            const isActive = navigation.activeSection === item.key;
-            return (
-              <button
-                key={item.key}
-                type="button"
-                onClick={() => handleNavClick(item.key)}
-                className={`relative flex flex-1 flex-col items-center justify-center gap-1 py-2.5 transition-colors ${
-                  isActive ? 'text-white' : 'text-white/35 hover:text-white/60'
-                }`}
-              >
-                {isActive && (
-                  <span className="absolute top-0 left-1/2 -translate-x-1/2 h-0.5 w-6 rounded-full bg-white" />
-                )}
-                <span className={`flex items-center justify-center transition-transform ${isActive ? 'scale-110' : ''}`}>
-                  {item.icon}
-                </span>
-                <span className="text-[9px] font-medium leading-none truncate max-w-[52px]">{item.label}</span>
-                {item.key === 'mail' && mailUnreadCount > 0 && (
-                  <span className="absolute top-1.5 right-[calc(50%-16px)] flex h-3.5 w-3.5 items-center justify-center rounded-full bg-rose-500 text-[8px] font-bold text-white leading-none">
-                    {mailUnreadCount > 9 ? '9+' : mailUnreadCount}
-                  </span>
-                )}
-              </button>
-            );
-          })}
+      {/* Mobil bottom bar */}
+      <div className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-[#0b0d12]/95 backdrop-blur-xl border-t border-white/[0.06] pb-[env(safe-area-inset-bottom,0px)]">
+        <div className="flex items-center justify-between px-4 py-2.5">
+          {/* Sol — DiscoWeb logo (menü açar) */}
+          <button
+            type="button"
+            onClick={() => { setMobileMenuOpen(o => !o); setIsProfileOpen(false); }}
+            className="flex items-center gap-2.5"
+          >
+            <div className="h-8 w-8 overflow-hidden rounded-xl border border-white/10 bg-white/5">
+              <Image src="/gif/cat.gif" alt="logo" width={32} height={32} className="h-full w-full object-cover" />
+            </div>
+            <span className="text-white font-black text-base tracking-tight">DiscoWeb</span>
+          </button>
+
+          {/* Sağ — profil butonu */}
+          {!unauthorized && (
+            <button
+              type="button"
+              onClick={() => { setIsProfileOpen(o => !o); setMobileMenuOpen(false); }}
+              className={`flex items-center gap-2 rounded-full border p-1 pr-3 transition-all ${
+                isProfileOpen ? 'border-white/20 bg-white/10' : 'border-transparent hover:border-white/10 hover:bg-white/5'
+              }`}
+            >
+              <div className="h-8 w-8 overflow-hidden rounded-full border border-white/10">
+                <Image
+                  src={profile?.avatarUrl || '/gif/cat.gif'}
+                  alt="avatar"
+                  width={32}
+                  height={32}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              <p className="text-sm font-semibold text-white leading-tight">{profile?.username || t('dashboard_user_fallback')}</p>
+            </button>
+          )}
         </div>
-      </nav>
+
+        {/* Nav menüsü — yukarı açılır */}
+        {mobileMenuOpen && (
+          <div className="absolute bottom-full left-0 right-0 mb-1 mx-2 rounded-2xl border border-white/10 bg-[#0f1116]/98 backdrop-blur-2xl shadow-2xl overflow-hidden">
+            <div className="p-2 space-y-0.5">
+              {navItems.filter(item => !item.requiresAuth || !unauthorized).map((item) => {
+                const isActive = navigation.activeSection === item.key;
+                return (
+                  <button
+                    key={item.key}
+                    type="button"
+                    onClick={() => { handleNavClick(item.key); setMobileMenuOpen(false); }}
+                    className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
+                      isActive ? 'bg-white/10 text-white' : 'text-white/60 hover:bg-white/5 hover:text-white'
+                    }`}
+                  >
+                    <span className={isActive ? 'text-white' : 'text-white/40'}>{item.icon}</span>
+                    <span>{item.label}</span>
+                    {isActive && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-white" />}
+                    {item.key === 'mail' && mailUnreadCount > 0 && (
+                      <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white">
+                        {mailUnreadCount > 9 ? '9+' : mailUnreadCount}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Profil dropdown — yukarı açılır (mobil) */}
+        {isProfileOpen && !unauthorized && (
+          <div
+            onClick={e => e.stopPropagation()}
+            className="absolute bottom-full right-2 left-2 mb-1 rounded-2xl border border-white/10 bg-[#0f1116] shadow-2xl overflow-hidden"
+          >
+            {/* GIF header */}
+            <div className="relative h-24 overflow-hidden bg-[#5865F2]/15">
+              <Image src={currentGif} alt="" fill className="object-contain scale-110 opacity-50" unoptimized />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0f1116] via-[#0f1116]/40 to-transparent" />
+              <div className="absolute bottom-3 left-4">
+                <p className="text-lg font-black text-white">{t('dashboard_hello_user', { username: profile?.username ?? '' })}</p>
+              </div>
+            </div>
+
+            <div className="p-3 space-y-1.5">
+              {server.data && (
+                <div className="flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.03] px-3 py-2.5">
+                  {server.data.iconUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={server.data.iconUrl} width={32} height={32} className="h-8 w-8 rounded-lg object-cover" alt="" />
+                  ) : (
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-xs font-bold text-white">{server.data.name?.charAt(0)}</div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] text-white/35 uppercase tracking-wider">{t('dashboard_active_server_label')}</p>
+                    <p className="text-sm font-semibold text-white truncate">{server.data.name}</p>
+                  </div>
+                  <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={() => { setIsProfileOpen(false); settings.onOpenSettings(); }}
+                className="flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-white/70 transition hover:bg-white/5 hover:text-white"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/8">
+                    <LuSettings className="h-3.5 w-3.5" />
+                  </div>
+                  <span className="text-sm font-medium">{t('dashboard_account_settings')}</span>
+                </div>
+                <LuChevronRight className="h-3.5 w-3.5 text-white/30" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { setIsProfileOpen(false); settings.onOpenReferral?.(); }}
+                className="flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-white/70 transition hover:bg-white/5 hover:text-white"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/8 text-sm">🎁</div>
+                  <span className="text-sm font-medium">{t('dashboard_invite_earn')}</span>
+                </div>
+                <LuChevronRight className="h-3.5 w-3.5 text-white/30" />
+              </button>
+
+              <div className={`grid gap-1.5 pt-1 ${settings.onOpenMariConvert ? 'grid-cols-5' : 'grid-cols-4'}`}>
+                <button type="button" onClick={() => { setIsProfileOpen(false); settings.onOpenTransfer(); }} className="flex flex-col items-center gap-1 rounded-xl border border-white/[0.06] bg-white/[0.03] py-2.5 text-xs text-white/60 transition hover:bg-white/[0.07] hover:text-white">
+                  <LuSend className="h-3.5 w-3.5" />{t('dashboard_papel_transfer')}
+                </button>
+                <button type="button" onClick={() => { setIsProfileOpen(false); settings.onOpenPromotions(); }} className="flex flex-col items-center gap-1 rounded-xl border border-white/[0.06] bg-white/[0.03] py-2.5 text-xs text-white/60 transition hover:bg-white/[0.07] hover:text-white">
+                  <LuTag className="h-3.5 w-3.5" />{t('dashboard_promotions')}
+                </button>
+                <button type="button" onClick={() => { setIsProfileOpen(false); settings.onOpenEarnings?.(); }} className="flex flex-col items-center gap-1 rounded-xl border border-emerald-500/20 bg-emerald-500/[0.08] py-2.5 text-xs text-emerald-400 transition hover:bg-emerald-500/15">
+                  <LuTrendingUp className="h-3.5 w-3.5" />{t('dashboard_earnings_info')}
+                </button>
+                <button type="button" onClick={() => { setIsProfileOpen(false); onOpenLeaderboard?.(); }} className="flex flex-col items-center gap-1 rounded-xl border border-white/[0.06] bg-white/[0.03] py-2.5 text-xs text-white/60 transition hover:bg-white/[0.07] hover:text-white">
+                  <LuChartBar className="h-3.5 w-3.5" />{t('dashboard_nav_leaderboard')}
+                </button>
+                {settings.onOpenMariConvert && (
+                  <button type="button" onClick={() => { setIsProfileOpen(false); settings.onOpenMariConvert?.(); }} className="flex flex-col items-center gap-1 rounded-xl border border-violet-500/20 bg-violet-500/[0.08] py-2.5 text-xs text-violet-400 transition hover:bg-violet-500/15">
+                    <Image src="/Mari.gif" alt="Mari" width={14} height={14} className="h-3.5 w-3.5" unoptimized />{t('header_convert_to_mari')}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </>
   );
 }
