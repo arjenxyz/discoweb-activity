@@ -230,7 +230,7 @@ export async function GET(request: NextRequest) {
   }));
 
   // Fetch recently drawn raffles (last 14 days) with winner info
-  const cutoff = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
+  const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
   const { data: drawnRafflesRaw } = await supabase
     .from('raffles')
     .select('id,title,drawn_at,prize_type,prize_papel_amount,prize_multiplier_value,prize_multiplier_days,prize_mari_amount,winner_count')

@@ -133,7 +133,6 @@ export default function RafflesSection({ badgeInfo, loading, onJoinRaffle }: Raf
   const [leftLocal, setLeftLocal] = useState<string[]>([]);
   const [errorId, setErrorId] = useState<string | null>(null);
   const [infoOpen, setInfoOpen] = useState(false);
-  const [historyOpen, setHistoryOpen] = useState(false);
   const [now, setNow] = useState(() => Date.now());
 
   // Tick every second for countdowns
@@ -509,56 +508,48 @@ export default function RafflesSection({ badgeInfo, loading, onJoinRaffle }: Raf
 
           {/* Drawn raffles history */}
           {drawnRaffles.length > 0 && (
-            <div className="mt-5 sm:mt-8">
-              <button
-                onClick={() => setHistoryOpen(!historyOpen)}
-                className="w-full flex items-center justify-between p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="p-1.5 bg-violet-500/15 rounded-lg text-violet-400">
-                    <LuTrophy className="w-4 h-4" />
-                  </div>
-                  <div className="text-left">
-                    <p className="text-sm font-bold text-white group-hover:text-violet-400 transition-colors">Son Çekiliş Sonuçları</p>
-                    <p className="text-[10px] text-white/40">{drawnRaffles.length} tamamlanan çekiliş</p>
-                  </div>
+            <div className="mt-6 sm:mt-10">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="p-1.5 bg-violet-500/15 rounded-lg text-violet-400">
+                  <LuTrophy className="w-4 h-4" />
                 </div>
-                {historyOpen ? <LuChevronUp className="text-white/40" /> : <LuChevronDown className="text-white/40" />}
-              </button>
-              <div className={`overflow-hidden transition-all duration-300 ease-in-out ${historyOpen ? 'max-h-[600px] opacity-100 mt-2' : 'max-h-0 opacity-0'}`}>
-                <div className="space-y-2">
-                  {drawnRaffles.map((dr) => (
-                    <div key={dr.id} className={`rounded-xl border p-3 sm:p-4 ${dr.iWon ? 'border-yellow-500/30 bg-yellow-500/5' : 'border-white/8 bg-white/3'}`}>
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <p className="text-sm font-bold text-white/80">{dr.title}</p>
-                            {dr.iWon && (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-yellow-500/20 border border-yellow-500/30 text-[10px] text-yellow-300 font-bold">
-                                🏆 Kazandın!
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-[11px] text-white/40 mt-0.5">
-                            {new Date(dr.drawn_at).toLocaleString('tr-TR', { dateStyle: 'short', timeStyle: 'short' })}
-                          </p>
-                        </div>
-                        <div className="text-right shrink-0">
-                          <p className="text-[10px] text-white/30">{dr.winner_count} kazanan</p>
-                        </div>
-                      </div>
-                      {dr.winners.length > 0 && (
-                        <div className="mt-2 flex flex-wrap gap-1">
-                          {dr.winners.map((w) => (
-                            <span key={w.user_id} className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium border ${w.user_id === (badgeInfo as any)?.userId ? 'bg-yellow-500/15 border-yellow-500/25 text-yellow-300' : 'bg-white/5 border-white/10 text-white/50'}`}>
-                              {w.username}
+                <div>
+                  <p className="text-sm font-bold text-white">Geçmiş Çekilişler</p>
+                  <p className="text-[10px] text-white/40">Son 1 haftadaki tamamlanan çekilişler</p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                {drawnRaffles.map((dr) => (
+                  <div key={dr.id} className={`rounded-xl border p-3 sm:p-4 ${dr.iWon ? 'border-yellow-500/30 bg-yellow-500/5' : 'border-white/8 bg-white/[0.03]'}`}>
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-sm font-semibold text-white/80">{dr.title}</p>
+                          {dr.iWon && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-yellow-500/20 border border-yellow-500/30 text-[10px] text-yellow-300 font-bold">
+                              🏆 Kazandın!
                             </span>
-                          ))}
+                          )}
                         </div>
-                      )}
+                        <p className="text-[11px] text-white/35 mt-0.5">
+                          {new Date(dr.drawn_at).toLocaleString('tr-TR', { dateStyle: 'short', timeStyle: 'short' })}
+                        </p>
+                      </div>
+                      <span className="shrink-0 text-[10px] text-white/30">{dr.winner_count} kazanan</span>
                     </div>
-                  ))}
-                </div>
+                    {dr.winners.length > 0 ? (
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {dr.winners.map((w) => (
+                          <span key={w.user_id} className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium border ${w.user_id === (badgeInfo as any)?.userId ? 'bg-yellow-500/15 border-yellow-500/25 text-yellow-300' : 'bg-white/5 border-white/10 text-white/50'}`}>
+                            {w.username}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="mt-1.5 text-[11px] text-white/25">Kazanan bilgisi henüz yok</p>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
           )}
