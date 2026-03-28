@@ -104,6 +104,7 @@ export default function SplashScreen({ onEnter }: Props) {
   const [isDeveloperChecked, setIsDeveloperChecked] = useState(false);
   const [devAboutOpen, setDevAboutOpen] = useState(false);
   const [user, setUser] = useState<{ username: string; avatarUrl: string } | null>(null);
+  const [userLoading, setUserLoading] = useState(true);
   const [tipIndex, setTipIndex] = useState(0);
   const [tipVisible, setTipVisible] = useState(true);
   const linkSdkRef = useRef<InstanceType<Awaited<typeof import('@discord/embedded-app-sdk')>['DiscordSDK']> | null>(null);
@@ -130,7 +131,8 @@ export default function SplashScreen({ onEnter }: Props) {
       .then((d: { username?: string; avatar?: string } | null) => {
         if (d?.username) setUser({ username: d.username, avatarUrl: d.avatar ?? '' });
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setUserLoading(false));
 
     const checkMaintenance = (initial = false) => {
       fetch(apiUrl('/api/activity/maintenance'))
@@ -248,14 +250,23 @@ export default function SplashScreen({ onEnter }: Props) {
             {/* İçerik — kutu yok, direkt video üzerinde */}
             <div className="flex flex-col gap-4">
               {/* Welcome */}
-              {user && !blocked && (
-                <div className="flex items-center gap-2.5">
-                  {user.avatarUrl && (
-                    <img src={user.avatarUrl} alt={user.username} className="h-7 w-7 rounded-full ring-1 ring-white/10" />
+              {!blocked && (
+                <div
+                  className="flex items-center gap-2.5"
+                  style={{ transition: 'opacity 0.4s ease', opacity: visible ? 1 : 0 }}
+                >
+                  {user?.avatarUrl ? (
+                    <img src={user.avatarUrl} alt={user.username} className="h-7 w-7 rounded-full ring-1 ring-white/10 flex-shrink-0" />
+                  ) : (
+                    <div className="h-7 w-7 rounded-full bg-white/10 flex-shrink-0" />
                   )}
                   <div className="flex flex-col gap-0.5">
                     <span className="text-base font-semibold text-white/90" style={{ textShadow: '0 1px 12px rgba(0,0,0,1)' }}>
-                      {t('splash_welcome_user', { username: user.username })}
+                      {userLoading
+                        ? <span className="inline-block h-3.5 w-28 rounded bg-white/10 animate-pulse" />
+                        : user
+                          ? t('splash_welcome_user', { username: user.username })
+                          : t('splash_welcome_generic')}
                     </span>
                     <span className="text-xs text-white/50" style={{ textShadow: '0 1px 8px rgba(0,0,0,1)' }}>
                       {t('splash_welcome_subtitle')}
@@ -265,7 +276,7 @@ export default function SplashScreen({ onEnter }: Props) {
               )}
 
               {/* Tip */}
-              <div className="flex flex-col gap-2.5 min-h-[52px]">
+              <div className="h-[64px] flex items-start">
                 <div
                   className="flex items-start gap-3"
                   style={{
@@ -279,27 +290,10 @@ export default function SplashScreen({ onEnter }: Props) {
                     {TIPS[tipIndex].text}
                   </p>
                 </div>
-                <div className="flex items-center gap-1.5 pl-7">
-                  {TIPS.map((_, i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      onClick={() => { setTipVisible(false); setTimeout(() => { setTipIndex(i); setTipVisible(true); }, 350); }}
-                      className="transition-all duration-300"
-                      style={{
-                        width: i === tipIndex ? '16px' : '4px',
-                        height: '4px',
-                        borderRadius: '2px',
-                        background: i === tipIndex ? '#5865F2' : 'rgba(255,255,255,0.18)',
-                      }}
-                      aria-label={`İpucu ${i + 1}`}
-                    />
-                  ))}
-                </div>
               </div>
 
-              {/* Enter + DevPanel buttons */}
-              <div className="flex items-center gap-2">
+              {/* Enter button */}
+              <div className="flex items-center">
                 {stillLoading ? (
                   <button type="button" disabled className="flex items-center gap-2 rounded-full px-5 py-2 text-sm font-bold text-white cursor-not-allowed bg-white/10 border border-white/10">
                     <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 16 16" fill="none">
@@ -332,19 +326,6 @@ export default function SplashScreen({ onEnter }: Props) {
                     </span>
                   </button>
                 )}
-                {isDeveloper && (
-                  <button
-                    type="button"
-                    onClick={() => router.push('/activity/developer')}
-                    className="flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3 py-2 text-sm font-semibold text-white/70 hover:bg-white/10 hover:text-white transition"
-                    aria-label="Developer Panel"
-                  >
-                    <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4">
-                      <path d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 01-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311c.446.82.023 1.841-.872 2.105l-.34.1c-1.4.413-1.4 2.397 0 2.81l.34.1a1.464 1.464 0 01.872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 012.105.872l.1.34c.413 1.4 2.397 1.4 2.81 0l.1-.34a1.464 1.464 0 012.105-.872l.31.17c1.283.698 2.686-.705 1.987-1.987l-.169-.311a1.464 1.464 0 01.872-2.105l.34-.1c1.4-.413 1.4-2.397 0-2.81l-.34-.1a1.464 1.464 0 01-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 01-2.105-.872l-.1-.34zM8 10.93a2.929 2.929 0 110-5.858 2.929 2.929 0 010 5.858z" />
-                    </svg>
-                    Developer
-                  </button>
-                )}
               </div>
             </div>
           </div>
@@ -356,6 +337,18 @@ export default function SplashScreen({ onEnter }: Props) {
             <span className="text-[11px] text-white/25">© {new Date().getFullYear()} DiscoWeb</span>
             <span className="text-white/20 text-xs">·</span>
             <button type="button" onClick={() => setDevAboutOpen(true)} className="text-xs text-white/40 hover:text-white/70 transition-colors">Thank You</button>
+            {isDeveloper && (
+              <>
+                <span className="text-white/20 text-xs">·</span>
+                <button
+                  type="button"
+                  onClick={() => router.push('/activity/developer')}
+                  className="text-xs text-white/40 hover:text-white/70 transition-colors"
+                >
+                  Developer
+                </button>
+              </>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <button type="button" onClick={() => openLink('https://discoweb.tech/terms')} className="text-xs text-white/40 hover:text-white/70 transition-colors">{t('splash_terms')}</button>

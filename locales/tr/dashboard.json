@@ -68,6 +68,7 @@
   "overview_raffle_eligible": "Uygunsun",
   "overview_raffle_required_days": "{days}g gerekli",
   "splash_welcome_user": "Hoş geldin, {username}",
+  "splash_welcome_generic": "Hoş geldin 👋",
   "splash_welcome_subtitle": "Sunucunun istatistiklerini keşfetmeye hazır mısın?",
   "splash_platform_name": "Discord Economy Platform",
   "splash_start_button": "Haydi Başlayalım!",
