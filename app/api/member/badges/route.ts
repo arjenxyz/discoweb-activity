@@ -146,6 +146,43 @@ export async function GET(request: NextRequest) {
       .eq('guild_id', selectedGuildId);
   }
 
+  // Fallback (B): if tag is gone, revoke all badge tier roles
+  if (!hasTag) {
+    try {
+      const botToken = process.env.DISCORD_BOT_TOKEN;
+      if (botToken) {
+        const { data: rewards } = await supabase
+          .from('member_badge_rewards')
+          .select('badge_tier_id')
+          .eq('guild_id', selectedGuildId)
+          .eq('user_id', userId);
+        if (rewards && rewards.length > 0) {
+          const tierIds = rewards.map((r: { badge_tier_id: string }) => r.badge_tier_id);
+          const { data: tiers } = await supabase
+            .from('badge_tiers')
+            .select('id,role_id')
+            .in('id', tierIds)
+            .not('role_id', 'is', null);
+          for (const tier of (tiers ?? []) as Array<{ id: string; role_id: string | null }>) {
+            if (!tier.role_id) continue;
+            await fetch(
+              `https://discord.com/api/guilds/${selectedGuildId}/members/${userId}/roles/${tier.role_id}`,
+              { method: 'DELETE', headers: { Authorization: `Bot ${botToken}` } },
+            ).catch(() => {});
+          }
+        }
+        // Clear tag tracking
+        await supabase
+          .from('member_profiles')
+          .update({ current_badge_tier_id: null, tag_granted_at: null })
+          .eq('user_id', userId)
+          .eq('guild_id', selectedGuildId);
+      }
+    } catch {
+      // best-effort
+    }
+  }
+
   const activeRaffles = raffles ?? [];
   const eligibleRaffles = activeRaffles
     .filter((r) => tagDays >= r.min_tag_days)
