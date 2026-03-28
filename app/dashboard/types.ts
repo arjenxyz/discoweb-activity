@@ -163,6 +163,8 @@ export type BadgeTier = {
   reward_papel?: number | null;
   reward_earn_multiplier?: number | null;
   reward_message?: string | null;
+  role_id?: string | null;
+  background_image?: string | null;
 };
 
 export type Raffle = {

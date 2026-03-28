@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
   const [{ data: tiers }, { data: profile }, { data: raffles }] = await Promise.all([
     supabase
       .from('badge_tiers')
-      .select('id,name,emoji,days_required,color,description,sort_order,reward_papel,reward_earn_multiplier,reward_message')
+      .select('id,name,emoji,days_required,color,description,sort_order,reward_papel,reward_earn_multiplier,reward_message,role_id,background_image')
       .eq('guild_id', selectedGuildId)
       .order('sort_order', { ascending: true }),
     supabase
@@ -64,6 +64,7 @@ export async function GET(request: NextRequest) {
     id: string; name: string; emoji: string | null; days_required: number;
     color: string | null; description: string | null; sort_order: number;
     reward_papel: number | null; reward_earn_multiplier: number | null; reward_message: string | null;
+    role_id: string | null; background_image: string | null;
   }>;
   const currentBadge = [...sortedTiers].reverse().find((t) => t.days_required <= tagDays) ?? null;
   const nextBadge = sortedTiers.find((t) => t.days_required > tagDays) ?? null;
@@ -72,8 +73,10 @@ export async function GET(request: NextRequest) {
   // Determine earn multiplier from current badge (default 1.0)
   const earnMultiplier = currentBadge?.reward_earn_multiplier ?? 1.0;
 
-  // Trigger one-time papel rewards for newly unlocked tiers
-  const unlockedTiers = sortedTiers.filter((t) => t.days_required <= tagDays && (t.reward_papel ?? 0) > 0);
+  // Trigger one-time rewards (papel + role) for newly unlocked tiers
+  const unlockedTiers = sortedTiers.filter(
+    (t) => t.days_required <= tagDays && ((t.reward_papel ?? 0) > 0 || t.role_id),
+  );
   if (unlockedTiers.length > 0 && hasTag) {
     // Fetch already-rewarded tiers for this user/guild
     const { data: existingRewards } = await supabase
@@ -114,6 +117,21 @@ export async function GET(request: NextRequest) {
           });
         } catch {
           // wallet credit is best-effort — reward row already inserted to prevent re-trigger
+        }
+      }
+
+      // Assign Discord role if configured
+      if (!insertErr && tier.role_id) {
+        try {
+          const botToken = process.env.DISCORD_BOT_TOKEN;
+          if (botToken) {
+            await fetch(
+              `https://discord.com/api/guilds/${selectedGuildId}/members/${userId}/roles/${tier.role_id}`,
+              { method: 'PUT', headers: { Authorization: `Bot ${botToken}` } },
+            );
+          }
+        } catch {
+          // role assignment is best-effort
         }
       }
     }

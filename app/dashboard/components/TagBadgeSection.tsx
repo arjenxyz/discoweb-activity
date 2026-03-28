@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { LuShieldCheck, LuLock, LuStar, LuCoins, LuZap, LuCircleCheck } from 'react-icons/lu';
 import type { BadgeInfo, BadgeTier } from '../types';
 
@@ -82,7 +83,7 @@ function TierRow({
       {/* Content */}
       <div className={`flex-1 pb-8 ${isLast ? 'pb-0' : ''}`}>
         <div
-          className={`rounded-2xl border p-4 transition-all ${
+          className={`relative overflow-hidden rounded-2xl border p-4 transition-all ${
             isCurrent
               ? 'border-white/20 bg-white/[0.07]'
               : unlocked
@@ -91,8 +92,21 @@ function TierRow({
           }`}
           style={isCurrent ? { boxShadow: `inset 0 0 0 1px ${color}33` } : undefined}
         >
+          {/* Background image */}
+          {tier.background_image && (
+            <div className="absolute inset-0 z-0">
+              <Image
+                src={tier.background_image}
+                alt=""
+                fill
+                className={`object-cover transition-opacity ${unlocked ? 'opacity-15' : 'opacity-5'}`}
+                unoptimized
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent" />
+            </div>
+          )}
           {/* Header row */}
-          <div className="flex items-start justify-between gap-2">
+          <div className="relative z-10 flex items-start justify-between gap-2">
             <div>
               <div className="flex items-center gap-2">
                 <span
@@ -135,12 +149,12 @@ function TierRow({
 
           {/* Description */}
           {tier.description && (
-            <p className="mt-2 text-xs text-white/35 leading-relaxed">{tier.description}</p>
+            <p className="relative z-10 mt-2 text-xs text-white/35 leading-relaxed">{tier.description}</p>
           )}
 
           {/* Rewards */}
           {hasRewards && (
-            <div className="mt-3 flex flex-wrap gap-1.5">
+            <div className="relative z-10 mt-3 flex flex-wrap gap-1.5">
               {(tier.reward_papel ?? 0) > 0 && (
                 <RewardChip
                   icon={<LuCoins className="h-3 w-3" />}
