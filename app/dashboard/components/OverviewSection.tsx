@@ -8,9 +8,6 @@ import {
   LuTag,
   LuZap,
   LuTrendingUp,
-  LuAward,
-  LuGift,
-  LuCheck,
   LuClock,
 } from 'react-icons/lu';
 import type { MemberProfile, OverviewStats, OrderStats, OverviewStatsExpanded, BadgeInfo } from '../types';
@@ -236,120 +233,6 @@ export default function OverviewSection({
             </div>
           )}
 
-          {/* TAG ROZETİ — ana sayfadan kaldırıldı, ayrı sekme var */}
-          {false && badgeInfo !== undefined && badgeInfo?.hasTag && (
-            <div className={card}>
-              <div className="flex items-center gap-2 mb-4">
-                <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-indigo-500/10">
-                  <LuAward className="h-3.5 w-3.5 text-indigo-400" />
-                </div>
-                <span className="text-sm font-semibold text-white">{t('overview_badge_title')}</span>
-              </div>
-
-              {badgeInfo?.hasTag && (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border text-2xl shadow-lg"
-                      style={{
-                        backgroundColor: badgeInfo?.currentBadge?.color ? `${badgeInfo?.currentBadge?.color}18` : 'rgba(99,102,241,0.1)',
-                        borderColor: badgeInfo?.currentBadge?.color ? `${badgeInfo?.currentBadge?.color}40` : 'rgba(99,102,241,0.25)',
-                      }}
-                    >
-                      {badgeInfo.currentBadge?.emoji ?? '🏅'}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-white">{badgeInfo.currentBadge?.name ?? t('overview_badge_no_badge')}</p>
-                      <p className="flex items-center gap-1 text-xs text-white/35">
-                        <LuClock className="h-3 w-3" />
-                        {t('overview_badge_carrying_days', { days: String(badgeInfo.tagDays) })}
-                      </p>
-                    </div>
-                    {!badgeInfo.nextBadge && badgeInfo.currentBadge && (
-                      <span className="shrink-0 flex items-center gap-1 rounded-full border border-amber-400/20 bg-amber-400/10 px-2 py-0.5 text-[10px] font-semibold text-amber-400">
-                        <LuCheck className="h-3 w-3" /> {t('overview_badge_max')}
-                      </span>
-                    )}
-                  </div>
-
-                  {badgeInfo.nextBadge && badgeInfo.daysToNext !== null && (
-                    <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-[10px] text-white/35">{badgeInfo.currentBadge?.name ?? t('overview_badge_start')}</span>
-                        <span className="flex items-center gap-1 text-[10px] text-white/40">
-                          {t('overview_badge_days_left', { days: String(badgeInfo.daysToNext) })} → {badgeInfo.nextBadge.emoji} <span className="font-semibold text-white/60">{badgeInfo.nextBadge.name}</span>
-                        </span>
-                      </div>
-                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/8">
-                        <div
-                          className="h-full rounded-full transition-all duration-700"
-                          style={{
-                            width: `${Math.min(100, Math.round((badgeInfo.tagDays / badgeInfo.nextBadge.days_required) * 100))}%`,
-                            background: badgeInfo.nextBadge.color
-                              ? `linear-gradient(90deg, ${badgeInfo.nextBadge.color}99, ${badgeInfo.nextBadge.color})`
-                              : 'linear-gradient(90deg, #6366f1, #8b5cf6)',
-                          }}
-                        />
-                      </div>
-                      <p className="mt-1.5 text-right text-[10px] text-white/25">
-                        {Math.min(100, Math.round((badgeInfo.tagDays / badgeInfo.nextBadge.days_required) * 100))}%
-                      </p>
-                    </div>
-                  )}
-
-                  {!badgeInfo.nextBadge && badgeInfo.currentBadge && (
-                    <p className="text-xs text-amber-400/60 flex items-center gap-1.5">{t('overview_badge_max_reached')}</p>
-                  )}
-                </div>
-              )}
-
-              {/* Aktif Çekilişler */}
-              {(badgeInfo?.activeRaffles?.length ?? 0) > 0 && (
-                <div className="mt-5">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-500/10">
-                      <LuGift className="h-3.5 w-3.5 text-emerald-400" />
-                    </div>
-                    <span className="text-sm font-semibold text-white">{t('overview_raffles_title')}</span>
-                    <span className="ml-auto rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
-                      {badgeInfo!.activeRaffles.length}
-                    </span>
-                  </div>
-                  <div className="space-y-2">
-                    {badgeInfo!.activeRaffles.map((raffle) => {
-                      const eligible = badgeInfo!.eligibleRaffles.includes(raffle.id);
-                      return (
-                        <div
-                          key={raffle.id}
-                          className={`rounded-xl border p-3 ${eligible ? 'border-emerald-500/20 bg-emerald-500/[0.04]' : 'border-white/[0.06] bg-white/[0.02]'}`}
-                        >
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="min-w-0 flex-1">
-                              <p className="text-sm font-semibold text-white truncate">{raffle.title}</p>
-                              {(raffle.prizes?.length ?? 0) > 0 && (
-                                <p className="mt-0.5 text-[11px] text-white/35 truncate">{(raffle.prizes ?? []).join(' · ')}</p>
-                              )}
-                              {raffle.end_date && (
-                                <p className="mt-0.5 flex items-center gap-1 text-[10px] text-white/20">
-                                  <LuClock className="h-2.5 w-2.5" />
-                                  {new Date(raffle.end_date).toLocaleDateString('tr-TR')}
-                                </p>
-                              )}
-                            </div>
-                            <span className={`shrink-0 flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold ${
-                              eligible ? 'border-emerald-500/25 bg-emerald-500/15 text-emerald-300' : 'border-white/8 bg-white/5 text-white/30'
-                            }`}>
-                              {eligible ? <><LuCheck className="h-2.5 w-2.5" /> {t('overview_raffle_eligible')}</> : <>{t('overview_raffle_required_days', { days: String(raffle.min_tag_days) })}</>}
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
         </>
       )}
 
