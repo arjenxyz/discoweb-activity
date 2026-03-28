@@ -44,9 +44,9 @@ export async function GET(request: NextRequest) {
       .from('raffles')
       .select('id,title,description,prizes,start_date,end_date,min_tag_days,winner_count,prize_type,prize_papel_amount,prize_role_id,prize_multiplier_value,prize_multiplier_days,prize_mari_amount,eligibility_type,required_badge_tier_id,drawn_at')
       .eq('guild_id', selectedGuildId)
-      .eq('is_active', true)
       .is('drawn_at', null)
-      .or('end_date.is.null,end_date.gt.' + new Date().toISOString()),
+      .or('end_date.is.null,end_date.gt.' + new Date().toISOString())
+      .or('is_active.eq.true,start_date.gt.' + new Date().toISOString()),
   ]);
 
   // Same fallback as overview: treat tag as active if tag_granted_at is set, even if has_tag flag lags behind
