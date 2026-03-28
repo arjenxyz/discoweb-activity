@@ -274,9 +274,14 @@ export default function SplashScreen({ onEnter }: Props) {
               </div>
 
               {/* Enter button */}
-              <div className="flex items-center">
+              <div className="flex flex-col gap-1.5">
+                {!blocked && (
+                  <span className="text-xs text-white/40" style={{ textShadow: '0 1px 8px rgba(0,0,0,1)' }}>
+                    {t('splash_welcome_ready')}
+                  </span>
+                )}
                 {stillLoading ? (
-                  <button type="button" disabled className="flex items-center gap-2 rounded-full px-5 py-2 text-sm font-bold text-white cursor-not-allowed bg-white/10 border border-white/10">
+                  <button type="button" disabled className="group inline-flex items-center gap-1.5 text-sm font-semibold text-white/40 cursor-not-allowed">
                     <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 16 16" fill="none">
                       <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="2" strokeOpacity="0.3" />
                       <path d="M8 2a6 6 0 016 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
@@ -288,23 +293,19 @@ export default function SplashScreen({ onEnter }: Props) {
                     type="button"
                     onClick={blocked ? undefined : onEnter}
                     disabled={blocked}
-                    className={`group relative overflow-hidden rounded-full px-5 py-2 text-sm font-bold text-white transition-all duration-300 active:scale-95 ${
+                    className={`group inline-flex items-center gap-1.5 text-sm font-semibold transition-all duration-200 active:scale-95 w-fit ${
                       blocked
-                        ? 'cursor-not-allowed bg-white/10'
-                        : 'bg-white/10 hover:bg-white/18 border border-white/20'
+                        ? 'text-white/30 cursor-not-allowed'
+                        : 'text-white/80 hover:text-white underline-offset-4 hover:underline'
                     }`}
+                    style={{ textShadow: '0 1px 10px rgba(0,0,0,1)' }}
                   >
+                    {blocked ? t('splash_maintenance_title') : t('splash_start_button')}
                     {!blocked && (
-                      <span className="pointer-events-none absolute inset-0 -translate-x-full skew-x-12 bg-white/20 transition-transform duration-500 group-hover:translate-x-full" />
+                      <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5">
+                        <path d="M3.75 7.25a.75.75 0 000 1.5h6.19l-2.72 2.72a.75.75 0 001.06 1.06l4-4a.75.75 0 000-1.06l-4-4a.75.75 0 00-1.06 1.06l2.72 2.72H3.75z" />
+                      </svg>
                     )}
-                    <span className="relative flex items-center gap-2">
-                      {blocked ? t('splash_maintenance_title') : t('splash_start_button')}
-                      {!blocked && (
-                        <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-0.5">
-                          <path d="M3.75 7.25a.75.75 0 000 1.5h6.19l-2.72 2.72a.75.75 0 001.06 1.06l4-4a.75.75 0 000-1.06l-4-4a.75.75 0 00-1.06 1.06l2.72 2.72H3.75z" />
-                        </svg>
-                      )}
-                    </span>
                   </button>
                 )}
               </div>
