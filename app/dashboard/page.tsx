@@ -577,7 +577,7 @@ export default function DashboardPage() {
           setBadgeInfo({ currentBadge: null, nextBadge: null, tagDays: 0, daysToNext: null, hasTag: false, earnMultiplier: 1, allTiers: [], activeRaffles: [], eligibleRaffles: [], joinedRaffles: [], drawnRaffles: [] });
         }
       } catch {
-        setBadgeInfo({ currentBadge: null, nextBadge: null, tagDays: 0, daysToNext: null, hasTag: false, earnMultiplier: 1, allTiers: [], activeRaffles: [], eligibleRaffles: [], joinedRaffles: [] });
+        setBadgeInfo({ currentBadge: null, nextBadge: null, tagDays: 0, daysToNext: null, hasTag: false, earnMultiplier: 1, allTiers: [], activeRaffles: [], eligibleRaffles: [], joinedRaffles: [], drawnRaffles: [] });
       }
     };
 
