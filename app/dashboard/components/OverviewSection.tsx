@@ -252,8 +252,8 @@ export default function OverviewSection({
                     <div
                       className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border text-2xl shadow-lg"
                       style={{
-                        backgroundColor: badgeInfo?.currentBadge?.color ? `${badgeInfo.currentBadge.color}18` : 'rgba(99,102,241,0.1)',
-                        borderColor: badgeInfo?.currentBadge?.color ? `${badgeInfo.currentBadge.color}40` : 'rgba(99,102,241,0.25)',
+                        backgroundColor: badgeInfo?.currentBadge?.color ? `${badgeInfo?.currentBadge?.color}18` : 'rgba(99,102,241,0.1)',
+                        borderColor: badgeInfo?.currentBadge?.color ? `${badgeInfo?.currentBadge?.color}40` : 'rgba(99,102,241,0.25)',
                       }}
                     >
                       {badgeInfo.currentBadge?.emoji ?? '🏅'}
