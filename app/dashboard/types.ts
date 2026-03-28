@@ -199,7 +199,7 @@ export type DrawnRaffle = {
   prize_mari_amount?: number | null;
   winner_count: number;
   iWon: boolean;
-  winners: Array<{ user_id: string; username: string }>;
+  winners: Array<{ user_id: string; username: string; avatar_url?: string | null }>;
 };
 
 export type BadgeInfo = {

@@ -243,12 +243,25 @@ export async function GET(request: NextRequest) {
   let drawnRaffles: any[] = [];
   if (drawnRafflesRaw && drawnRafflesRaw.length > 0) {
     const drawnIds = drawnRafflesRaw.map((r: any) => r.id);
-    const { data: winnerEntries } = await supabase
+
+    // Try is_winner column first; fall back to all entries if column doesn't exist yet
+    const { data: winnerByFlag, error: winnerFlagErr } = await supabase
       .from('raffle_entries')
       .select('raffle_id,user_id')
       .in('raffle_id', drawnIds)
       .eq('is_winner', true);
-    const winnerUserIds = [...new Set((winnerEntries ?? []).map((e: any) => e.user_id))];
+
+    // If column missing (error) fall back to all entries for those raffles
+    const { data: allEntries } = winnerFlagErr
+      ? await supabase
+          .from('raffle_entries')
+          .select('raffle_id,user_id')
+          .in('raffle_id', drawnIds)
+      : { data: null };
+
+    const winnerEntries = winnerByFlag ?? allEntries ?? [];
+
+    const winnerUserIds = [...new Set(winnerEntries.map((e: any) => e.user_id))];
     const { data: memberRows } = winnerUserIds.length
       ? await supabase.from('members').select('user_id,username,avatar_url').in('user_id', winnerUserIds)
       : { data: [] };
@@ -256,10 +269,14 @@ export async function GET(request: NextRequest) {
     for (const m of memberRows ?? []) memberMap[(m as any).user_id] = m as any;
     drawnRaffles = drawnRafflesRaw.map((r: any) => ({
       ...r,
-      iWon: (winnerEntries ?? []).some((e: any) => e.raffle_id === r.id && e.user_id === userId),
-      winners: (winnerEntries ?? [])
+      iWon: winnerEntries.some((e: any) => e.raffle_id === r.id && e.user_id === userId),
+      winners: winnerEntries
         .filter((e: any) => e.raffle_id === r.id)
-        .map((e: any) => ({ user_id: e.user_id, username: memberMap[e.user_id]?.username ?? e.user_id })),
+        .map((e: any) => ({
+          user_id: e.user_id,
+          username: memberMap[e.user_id]?.username ?? e.user_id,
+          avatar_url: memberMap[e.user_id]?.avatar_url ?? null,
+        })),
     }));
   }
 

@@ -99,6 +99,102 @@ function PrizeBadge({ raffle }: { raffle: BadgeInfo['activeRaffles'][0] }) {
   );
 }
 
+// ── Drawn raffles history section ─────────────────────────────────────────────
+function DrawnRafflesSection({ drawnRaffles, currentUserId }: { drawnRaffles: DrawnRaffle[]; currentUserId?: string }) {
+  const [openId, setOpenId] = useState<string | null>(null);
+
+  return (
+    <div className="mt-6 sm:mt-10">
+      <div className="flex items-center gap-2 mb-3">
+        <div className="p-1.5 bg-violet-500/15 rounded-lg text-violet-400">
+          <LuTrophy className="w-4 h-4" />
+        </div>
+        <div>
+          <p className="text-sm font-bold text-white">Geçmiş Çekilişler</p>
+          <p className="text-[10px] text-white/40">Son 1 haftadaki tamamlanan çekilişler</p>
+        </div>
+      </div>
+
+      {drawnRaffles.length === 0 ? (
+        <div className="rounded-xl border border-white/8 bg-white/[0.02] p-4 text-center">
+          <p className="text-xs text-white/30">Son 1 haftada tamamlanan çekiliş yok</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {drawnRaffles.map((dr) => {
+            const isOpen = openId === dr.id;
+            return (
+              <div key={dr.id} className={`rounded-xl border overflow-hidden transition-colors ${dr.iWon ? 'border-yellow-500/30 bg-yellow-500/5' : 'border-white/8 bg-white/[0.03]'}`}>
+                {/* Header row */}
+                <div className="flex items-center justify-between gap-2 p-3 sm:p-4">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-sm font-semibold text-white/80 truncate">{dr.title}</p>
+                      {dr.iWon && (
+                        <span className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-yellow-500/20 border border-yellow-500/30 text-[10px] text-yellow-300 font-bold">
+                          🏆 Kazandın!
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-white/35 mt-0.5">
+                      {new Date(dr.drawn_at).toLocaleString('tr-TR', { dateStyle: 'short', timeStyle: 'short' })}
+                      {' · '}{dr.winner_count} kazanan
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setOpenId(isOpen ? null : dr.id)}
+                    className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 text-[11px] font-medium text-white/50 hover:text-white hover:border-white/20 transition"
+                  >
+                    {isOpen ? <LuChevronUp className="w-3 h-3" /> : <LuChevronDown className="w-3 h-3" />}
+                    {isOpen ? 'Gizle' : 'Kazananlar'}
+                  </button>
+                </div>
+
+                {/* Winners panel */}
+                <div className={`overflow-hidden transition-all duration-300 ${isOpen ? 'max-h-[400px]' : 'max-h-0'}`}>
+                  <div className="px-3 pb-3 sm:px-4 sm:pb-4 border-t border-white/8 pt-3">
+                    {dr.winners.length === 0 ? (
+                      <p className="text-xs text-white/30">Kazanan bilgisi henüz yok</p>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {dr.winners.map((w) => (
+                          <div
+                            key={w.user_id}
+                            className={`flex items-center gap-2 px-2.5 py-1.5 rounded-xl border ${w.user_id === currentUserId ? 'bg-yellow-500/10 border-yellow-500/25' : 'bg-white/5 border-white/10'}`}
+                          >
+                            {w.avatar_url ? (
+                              <Image
+                                src={w.avatar_url}
+                                alt={w.username}
+                                width={24}
+                                height={24}
+                                className="w-6 h-6 rounded-full border border-white/10 shrink-0"
+                                unoptimized
+                              />
+                            ) : (
+                              <div className="w-6 h-6 rounded-full bg-white/10 border border-white/10 shrink-0 flex items-center justify-center text-[10px] text-white/40 font-bold">
+                                {w.username.slice(0, 1).toUpperCase()}
+                              </div>
+                            )}
+                            <span className={`text-xs font-medium ${w.user_id === currentUserId ? 'text-yellow-300' : 'text-white/70'}`}>
+                              {w.username}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Eligibility chip ──────────────────────────────────────────────────────────
 function EligibilityChip({ raffle, tagDays }: { raffle: BadgeInfo['activeRaffles'][0]; tagDays: number }) {
   const elig = (raffle as any).eligibility_type ?? 'tag';
@@ -506,53 +602,8 @@ export default function RafflesSection({ badgeInfo, loading, onJoinRaffle }: Raf
             })}
           </div>
 
-          {/* Drawn raffles history */}
-          {drawnRaffles.length > 0 && (
-            <div className="mt-6 sm:mt-10">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="p-1.5 bg-violet-500/15 rounded-lg text-violet-400">
-                  <LuTrophy className="w-4 h-4" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-white">Geçmiş Çekilişler</p>
-                  <p className="text-[10px] text-white/40">Son 1 haftadaki tamamlanan çekilişler</p>
-                </div>
-              </div>
-              <div className="space-y-2">
-                {drawnRaffles.map((dr) => (
-                  <div key={dr.id} className={`rounded-xl border p-3 sm:p-4 ${dr.iWon ? 'border-yellow-500/30 bg-yellow-500/5' : 'border-white/8 bg-white/[0.03]'}`}>
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <p className="text-sm font-semibold text-white/80">{dr.title}</p>
-                          {dr.iWon && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-yellow-500/20 border border-yellow-500/30 text-[10px] text-yellow-300 font-bold">
-                              🏆 Kazandın!
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-[11px] text-white/35 mt-0.5">
-                          {new Date(dr.drawn_at).toLocaleString('tr-TR', { dateStyle: 'short', timeStyle: 'short' })}
-                        </p>
-                      </div>
-                      <span className="shrink-0 text-[10px] text-white/30">{dr.winner_count} kazanan</span>
-                    </div>
-                    {dr.winners.length > 0 ? (
-                      <div className="mt-2 flex flex-wrap gap-1">
-                        {dr.winners.map((w) => (
-                          <span key={w.user_id} className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium border ${w.user_id === (badgeInfo as any)?.userId ? 'bg-yellow-500/15 border-yellow-500/25 text-yellow-300' : 'bg-white/5 border-white/10 text-white/50'}`}>
-                            {w.username}
-                          </span>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="mt-1.5 text-[11px] text-white/25">Kazanan bilgisi henüz yok</p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          {/* Drawn raffles history — always visible */}
+          <DrawnRafflesSection drawnRaffles={drawnRaffles} currentUserId={(badgeInfo as any)?.userId} />
 
           {/* Info accordion */}
           <div className="mt-5 sm:mt-8 hidden sm:block">
