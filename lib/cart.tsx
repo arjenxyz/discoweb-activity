@@ -59,11 +59,18 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     } catch {}
   }, [items]);
 
+  const getGuildParam = () => {
+    try {
+      const gid = localStorage.getItem('selectedGuildId');
+      return gid ? `?guild_id=${encodeURIComponent(gid)}` : '';
+    } catch { return ''; }
+  };
+
   useEffect(() => {
     // load available coupons for the user
     void (async () => {
       try {
-        const res = await fetchWithCreds('/api/member/coupons');
+        const res = await fetchWithCreds(apiUrl(`/api/member/coupons${getGuildParam()}`));
         if (!res.ok) return;
         const data = (await res.json()) as Coupon[];
         setUserCoupons(data ?? []);
@@ -75,10 +82,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   // Subscribe to discount changes (so clients see new/updated discounts without refresh)
   // DISABLED: Realtime connection causing issues in Discord Activity iframe
-  
+
   const refreshCoupons = async () => {
     try {
-      const res = await fetchWithCreds('/api/member/coupons');
+      const res = await fetchWithCreds(apiUrl(`/api/member/coupons${getGuildParam()}`));
       if (!res.ok) return;
       const data = (await res.json()) as Coupon[];
       setUserCoupons(data ?? []);

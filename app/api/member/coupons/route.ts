@@ -11,22 +11,23 @@ const getSupabase = (): SupabaseClient | null => {
 };
 
 const resolveServerId = async (supabase: SupabaseClient, guildId: string) => {
+  // Try with discord_id (with or without is_setup)
   const { data: byDiscord } = await supabase
     .from('servers')
     .select('id')
     .eq('discord_id', guildId)
-    .eq('is_setup', true)
     .maybeSingle();
 
   if ((byDiscord as { id?: string } | null)?.id) return (byDiscord as { id?: string }).id;
 
-  const { data: bySlug } = await supabase
+  // Fallback: first server in DB
+  const { data: first } = await supabase
     .from('servers')
     .select('id')
-    .eq('slug', 'default')
+    .limit(1)
     .maybeSingle();
 
-  return (bySlug as { id?: string } | null)?.id ?? null;
+  return (first as { id?: string } | null)?.id ?? null;
 };
 
 // Production için fallback server ID
