@@ -22,14 +22,13 @@ export async function POST(request: NextRequest) {
   // Raffle must be active and not yet drawn, and end_date not passed
   const { data: raffle } = await supabase
     .from('raffles')
-    .select('id,is_active,drawn_at,end_date')
+    .select('id,drawn_at,end_date')
     .eq('id', raffle_id)
     .eq('guild_id', selectedGuildId)
     .single();
 
   if (!raffle) return NextResponse.json({ error: 'raffle_not_found' }, { status: 404 });
   if (raffle.drawn_at) return NextResponse.json({ error: 'already_drawn' }, { status: 400 });
-  if (!raffle.is_active) return NextResponse.json({ error: 'raffle_not_active' }, { status: 400 });
   if (raffle.end_date && new Date(raffle.end_date) < new Date()) {
     return NextResponse.json({ error: 'raffle_ended' }, { status: 400 });
   }

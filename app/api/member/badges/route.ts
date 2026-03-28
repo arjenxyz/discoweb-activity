@@ -229,6 +229,40 @@ export async function GET(request: NextRequest) {
     entry_count: entryCounts[r.id] ?? 0,
   }));
 
+  // Fetch recently drawn raffles (last 14 days) with winner info
+  const cutoff = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
+  const { data: drawnRafflesRaw } = await supabase
+    .from('raffles')
+    .select('id,title,drawn_at,prize_type,prize_papel_amount,prize_multiplier_value,prize_multiplier_days,prize_mari_amount,winner_count')
+    .eq('guild_id', selectedGuildId)
+    .not('drawn_at', 'is', null)
+    .gte('drawn_at', cutoff)
+    .order('drawn_at', { ascending: false })
+    .limit(10);
+
+  let drawnRaffles: any[] = [];
+  if (drawnRafflesRaw && drawnRafflesRaw.length > 0) {
+    const drawnIds = drawnRafflesRaw.map((r: any) => r.id);
+    const { data: winnerEntries } = await supabase
+      .from('raffle_entries')
+      .select('raffle_id,user_id')
+      .in('raffle_id', drawnIds)
+      .eq('is_winner', true);
+    const winnerUserIds = [...new Set((winnerEntries ?? []).map((e: any) => e.user_id))];
+    const { data: memberRows } = winnerUserIds.length
+      ? await supabase.from('members').select('user_id,username,avatar_url').in('user_id', winnerUserIds)
+      : { data: [] };
+    const memberMap: Record<string, { username: string; avatar_url?: string }> = {};
+    for (const m of memberRows ?? []) memberMap[(m as any).user_id] = m as any;
+    drawnRaffles = drawnRafflesRaw.map((r: any) => ({
+      ...r,
+      iWon: (winnerEntries ?? []).some((e: any) => e.raffle_id === r.id && e.user_id === userId),
+      winners: (winnerEntries ?? [])
+        .filter((e: any) => e.raffle_id === r.id)
+        .map((e: any) => ({ user_id: e.user_id, username: memberMap[e.user_id]?.username ?? e.user_id })),
+    }));
+  }
+
   return NextResponse.json({
     currentBadge,
     nextBadge,
@@ -240,5 +274,6 @@ export async function GET(request: NextRequest) {
     activeRaffles: activeRafflesWithCount,
     eligibleRaffles,
     joinedRaffles,
+    drawnRaffles,
   });
 }

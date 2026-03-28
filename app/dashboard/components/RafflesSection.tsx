@@ -7,7 +7,7 @@ import {
   LuTrophy, LuUsers, LuCoins, LuShield, LuZap, LuX,
 } from 'react-icons/lu';
 import Image from 'next/image';
-import type { BadgeInfo } from '../types';
+import type { BadgeInfo, DrawnRaffle } from '../types';
 import { useT } from '@/contexts/LocaleContext';
 
 const STORE_BACKGROUNDS = [
@@ -127,10 +127,12 @@ export default function RafflesSection({ badgeInfo, loading, onJoinRaffle }: Raf
   const t = useT();
   const [joiningId, setJoiningId] = useState<string | null>(null);
   const [leavingId, setLeavingId] = useState<string | null>(null);
+  const [leaveErrorId, setLeaveErrorId] = useState<string | null>(null);
   const [joinedLocal, setJoinedLocal] = useState<string[]>([]);
   const [leftLocal, setLeftLocal] = useState<string[]>([]);
   const [errorId, setErrorId] = useState<string | null>(null);
   const [infoOpen, setInfoOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [now, setNow] = useState(() => Date.now());
 
   // Tick every second for countdowns
@@ -140,6 +142,7 @@ export default function RafflesSection({ badgeInfo, loading, onJoinRaffle }: Raf
   }, []);
 
   const raffles = badgeInfo?.activeRaffles ?? [];
+  const drawnRaffles: DrawnRaffle[] = badgeInfo?.drawnRaffles ?? [];
   const eligible = badgeInfo?.eligibleRaffles ?? [];
   const tagDays = badgeInfo?.tagDays ?? 0;
 
@@ -172,6 +175,7 @@ export default function RafflesSection({ badgeInfo, loading, onJoinRaffle }: Raf
 
   async function handleLeave(raffleId: string) {
     setLeavingId(raffleId);
+    setLeaveErrorId(null);
     try {
       const res = await fetch('/api/member/raffles/leave', {
         method: 'POST',
@@ -181,7 +185,11 @@ export default function RafflesSection({ badgeInfo, loading, onJoinRaffle }: Raf
       if (res.ok) {
         setLeftLocal((prev) => [...prev, raffleId]);
         setJoinedLocal((prev) => prev.filter((id) => id !== raffleId));
+      } else {
+        setLeaveErrorId(raffleId);
       }
+    } catch {
+      setLeaveErrorId(raffleId);
     } finally {
       setLeavingId(null);
     }
@@ -200,7 +208,8 @@ export default function RafflesSection({ badgeInfo, loading, onJoinRaffle }: Raf
     const isExpiringSoon = raffle.end_date
       ? new Date(raffle.end_date).getTime() - now < 3 * 24 * 60 * 60 * 1000
       : false;
-    return { isUpcoming, msToStart, isEligible, hasJoined, isJoining, isLeaving, hasError, isExpiringSoon };
+    const hasLeaveError = leaveErrorId === raffle.id;
+    return { isUpcoming, msToStart, isEligible, hasJoined, isJoining, isLeaving, hasError, isExpiringSoon, hasLeaveError };
   }
 
   return (
@@ -247,7 +256,7 @@ export default function RafflesSection({ badgeInfo, loading, onJoinRaffle }: Raf
           {/* Desktop grid */}
           <div className="hidden sm:grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {raffles.map((raffle) => {
-              const { isUpcoming, msToStart, isEligible, hasJoined, isJoining, isLeaving, hasError, isExpiringSoon } = raffleState(raffle);
+              const { isUpcoming, msToStart, isEligible, hasJoined, isJoining, isLeaving, hasError, isExpiringSoon, hasLeaveError } = raffleState(raffle);
 
               return (
                 <div
@@ -341,20 +350,23 @@ export default function RafflesSection({ badgeInfo, loading, onJoinRaffle }: Raf
                         </p>
                       </div>
                     ) : hasJoined ? (
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-2.5 flex-1">
-                          <LuCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-                          <span className="text-xs text-emerald-300 font-medium">{t('raffles_joined_success')}</span>
+                      <div className="flex flex-col gap-1">
+                        {hasLeaveError && <p className="text-[10px] text-red-400/80">İptal edilemedi, tekrar dene.</p>}
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-2.5 flex-1">
+                            <LuCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                            <span className="text-xs text-emerald-300 font-medium">{t('raffles_joined_success')}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => void handleLeave(raffle.id)}
+                            disabled={isLeaving}
+                            title="Katılımı iptal et"
+                            className="flex items-center justify-center w-9 h-9 rounded-xl border border-red-500/20 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition disabled:opacity-50"
+                          >
+                            {isLeaving ? <LuLoader className="w-3.5 h-3.5 animate-spin" /> : <LuX className="w-3.5 h-3.5" />}
+                          </button>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => void handleLeave(raffle.id)}
-                          disabled={isLeaving}
-                          title="Katılımı iptal et"
-                          className="flex items-center justify-center w-9 h-9 rounded-xl border border-red-500/20 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition disabled:opacity-50"
-                        >
-                          {isLeaving ? <LuLoader className="w-3.5 h-3.5 animate-spin" /> : <LuX className="w-3.5 h-3.5" />}
-                        </button>
                       </div>
                     ) : isEligible ? (
                       <>
@@ -389,7 +401,7 @@ export default function RafflesSection({ badgeInfo, loading, onJoinRaffle }: Raf
           {/* Mobile list */}
           <div className="sm:hidden space-y-3 flex-1">
             {raffles.map((raffle) => {
-              const { isUpcoming, msToStart, isEligible, hasJoined, isJoining, isLeaving, hasError } = raffleState(raffle);
+              const { isUpcoming, msToStart, isEligible, hasJoined, isJoining, isLeaving, hasError, hasLeaveError } = raffleState(raffle);
 
               return (
                 <div
@@ -450,19 +462,22 @@ export default function RafflesSection({ badgeInfo, loading, onJoinRaffle }: Raf
                           <p className="text-xs font-bold text-amber-300 tabular-nums">{formatCountdown(msToStart ?? 0)}</p>
                         </div>
                       ) : hasJoined ? (
-                        <div className="flex items-center gap-1.5">
-                          <div className="flex items-center gap-1.5 h-8 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-2.5 flex-1">
-                            <LuCheck className="w-3 h-3 text-emerald-400" />
-                            <span className="text-[11px] text-emerald-300 font-medium">{t('raffles_participated_badge')}</span>
+                        <div className="flex flex-col gap-1">
+                          {hasLeaveError && <p className="text-[9px] text-red-400/80">İptal edilemedi.</p>}
+                          <div className="flex items-center gap-1.5">
+                            <div className="flex items-center gap-1.5 h-8 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-2.5 flex-1">
+                              <LuCheck className="w-3 h-3 text-emerald-400" />
+                              <span className="text-[11px] text-emerald-300 font-medium">{t('raffles_participated_badge')}</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => void handleLeave(raffle.id)}
+                              disabled={isLeaving}
+                              className="flex items-center justify-center w-8 h-8 rounded-lg border border-red-500/20 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition disabled:opacity-50"
+                            >
+                              {isLeaving ? <LuLoader className="w-3 h-3 animate-spin" /> : <LuX className="w-3 h-3" />}
+                            </button>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => void handleLeave(raffle.id)}
-                            disabled={isLeaving}
-                            className="flex items-center justify-center w-8 h-8 rounded-lg border border-red-500/20 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition disabled:opacity-50"
-                          >
-                            {isLeaving ? <LuLoader className="w-3 h-3 animate-spin" /> : <LuX className="w-3 h-3" />}
-                          </button>
                         </div>
                       ) : isEligible ? (
                         <button
@@ -490,6 +505,62 @@ export default function RafflesSection({ badgeInfo, loading, onJoinRaffle }: Raf
               );
             })}
           </div>
+
+          {/* Drawn raffles history */}
+          {drawnRaffles.length > 0 && (
+            <div className="mt-5 sm:mt-8">
+              <button
+                onClick={() => setHistoryOpen(!historyOpen)}
+                className="w-full flex items-center justify-between p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-1.5 bg-violet-500/15 rounded-lg text-violet-400">
+                    <LuTrophy className="w-4 h-4" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-sm font-bold text-white group-hover:text-violet-400 transition-colors">Son Çekiliş Sonuçları</p>
+                    <p className="text-[10px] text-white/40">{drawnRaffles.length} tamamlanan çekiliş</p>
+                  </div>
+                </div>
+                {historyOpen ? <LuChevronUp className="text-white/40" /> : <LuChevronDown className="text-white/40" />}
+              </button>
+              <div className={`overflow-hidden transition-all duration-300 ease-in-out ${historyOpen ? 'max-h-[600px] opacity-100 mt-2' : 'max-h-0 opacity-0'}`}>
+                <div className="space-y-2">
+                  {drawnRaffles.map((dr) => (
+                    <div key={dr.id} className={`rounded-xl border p-3 sm:p-4 ${dr.iWon ? 'border-yellow-500/30 bg-yellow-500/5' : 'border-white/8 bg-white/3'}`}>
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-sm font-bold text-white/80">{dr.title}</p>
+                            {dr.iWon && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-yellow-500/20 border border-yellow-500/30 text-[10px] text-yellow-300 font-bold">
+                                🏆 Kazandın!
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[11px] text-white/40 mt-0.5">
+                            {new Date(dr.drawn_at).toLocaleString('tr-TR', { dateStyle: 'short', timeStyle: 'short' })}
+                          </p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="text-[10px] text-white/30">{dr.winner_count} kazanan</p>
+                        </div>
+                      </div>
+                      {dr.winners.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {dr.winners.map((w) => (
+                            <span key={w.user_id} className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium border ${w.user_id === (badgeInfo as any)?.userId ? 'bg-yellow-500/15 border-yellow-500/25 text-yellow-300' : 'bg-white/5 border-white/10 text-white/50'}`}>
+                              {w.username}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Info accordion */}
           <div className="mt-5 sm:mt-8 hidden sm:block">

@@ -188,6 +188,20 @@ export type Raffle = {
   entry_count?: number;
 };
 
+export type DrawnRaffle = {
+  id: string;
+  title: string;
+  drawn_at: string;
+  prize_type: string;
+  prize_papel_amount?: number | null;
+  prize_multiplier_value?: number | null;
+  prize_multiplier_days?: number | null;
+  prize_mari_amount?: number | null;
+  winner_count: number;
+  iWon: boolean;
+  winners: Array<{ user_id: string; username: string }>;
+};
+
 export type BadgeInfo = {
   currentBadge: BadgeTier | null;
   nextBadge: BadgeTier | null;
@@ -199,4 +213,5 @@ export type BadgeInfo = {
   activeRaffles: Raffle[];
   eligibleRaffles: string[];
   joinedRaffles: string[];
+  drawnRaffles: DrawnRaffle[];
 };
