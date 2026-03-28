@@ -328,20 +328,23 @@ export default function SplashScreen({ onEnter }: Props) {
         </div>
 
         {/* Bottom footer — copyright sol, linkler sağ */}
-        <div className="relative z-10 flex items-center justify-center gap-3 px-8 pb-8 flex-shrink-0 flex-wrap">
-          <span className="text-[11px] text-white/40">© {new Date().getFullYear()} DiscoWeb</span>
-          <span className="text-white/25 text-xs">·</span>
-          <button type="button" onClick={() => openLink('https://discoweb.tech/terms')} className="text-xs text-white/40 hover:text-white/70 transition-colors">{t('splash_terms')}</button>
-          <span className="text-white/25 text-xs">·</span>
-          <button type="button" onClick={() => openLink('https://discoweb.tech/privacy')} className="text-xs text-white/40 hover:text-white/70 transition-colors">{t('splash_privacy')}</button>
-          <span className="text-white/25 text-xs">·</span>
-          <button type="button" onClick={() => setDevAboutOpen(true)} className="text-xs text-white/40 hover:text-white/70 transition-colors">Teşekkürler</button>
-          {isDeveloper && (
-            <>
-              <span className="text-white/25 text-xs">·</span>
-              <button type="button" onClick={() => router.push('/activity/developer')} className="text-xs text-white/40 hover:text-white/70 transition-colors">Developer</button>
-            </>
-          )}
+        <div className="relative z-10 flex items-center justify-between px-8 sm:px-14 pb-8 flex-shrink-0">
+          <div className="flex items-center gap-2.5">
+            <span className="text-[11px] text-white/35">© {new Date().getFullYear()} DiscoWeb</span>
+            <span className="text-white/20 text-xs">·</span>
+            <button type="button" onClick={() => setDevAboutOpen(true)} className="text-xs text-white/35 hover:text-white/65 transition-colors">Teşekkürler</button>
+            {isDeveloper && (
+              <>
+                <span className="text-white/20 text-xs">·</span>
+                <button type="button" onClick={() => router.push('/activity/developer')} className="text-xs text-white/35 hover:text-white/65 transition-colors">Developer</button>
+              </>
+            )}
+          </div>
+          <div className="flex items-center gap-2.5">
+            <button type="button" onClick={() => openLink('https://discoweb.tech/terms')} className="text-xs text-white/35 hover:text-white/65 transition-colors">{t('splash_terms')}</button>
+            <span className="text-white/20 text-xs">·</span>
+            <button type="button" onClick={() => openLink('https://discoweb.tech/privacy')} className="text-xs text-white/35 hover:text-white/65 transition-colors">{t('splash_privacy')}</button>
+          </div>
         </div>
       </div>
 
