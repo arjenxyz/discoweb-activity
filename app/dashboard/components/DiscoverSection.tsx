@@ -34,9 +34,7 @@ export default function DiscoverSection() {
   return (
     <section className="flex flex-col gap-4 p-3 sm:p-6">
       <div className="flex items-center gap-2.5 sm:gap-3">
-        <div className="p-1.5 sm:p-2 bg-gradient-to-br from-violet-500 to-purple-600 rounded-lg sm:rounded-xl shadow-lg shadow-violet-500/20">
-          <img src="/icon/discover.png" alt="" className="w-4 h-4 sm:w-5 sm:h-5 object-contain" />
-        </div>
+        <img src="/icon/discover.png" alt="" className="w-6 h-6 sm:w-7 sm:h-7 object-contain" />
         <div>
           <h2 className="text-base sm:text-lg font-bold text-white tracking-tight">{t('discover_title')}</h2>
           <p className="text-[10px] sm:text-[11px] text-white/50 font-medium hidden sm:block">{t('discover_subtitle')}</p>

@@ -107,9 +107,7 @@ export default function StoreSection({
         {/* --- HEADER --- */}
         <div className="relative z-10 flex items-center justify-between mb-4 sm:mb-6">
           <div className="flex items-center gap-2.5 sm:gap-3">
-            <div className="p-1.5 sm:p-2 bg-gradient-to-br from-[#5865F2] to-indigo-600 rounded-lg sm:rounded-xl shadow-lg shadow-[#5865F2]/20">
-              <img src="/icon/shop.png" alt="" className="w-4 h-4 sm:w-5 sm:h-5 object-contain" />
-            </div>
+            <img src="/icon/shop.png" alt="" className="w-6 h-6 sm:w-7 sm:h-7 object-contain" />
             <div>
               <h2 className="text-base sm:text-lg font-bold text-white tracking-tight">{t('store_title')}</h2>
               <p className="text-[10px] sm:text-[11px] text-white/50 font-medium hidden sm:block">{t('store_subtitle')}</p>
