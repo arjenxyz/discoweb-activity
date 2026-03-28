@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
       .single(),
     supabase
       .from('raffles')
-      .select('id,title,description,prizes,start_date,end_date,min_tag_days,winner_count,prize_type,prize_papel_amount,prize_role_id,drawn_at')
+      .select('id,title,description,prizes,start_date,end_date,min_tag_days,winner_count,prize_type,prize_papel_amount,prize_role_id,prize_multiplier_value,prize_multiplier_days,prize_mari_amount,prize_lot_count,eligibility_type,required_badge_tier_id,drawn_at')
       .eq('guild_id', selectedGuildId)
       .eq('is_active', true)
       .is('drawn_at', null)
@@ -184,9 +184,23 @@ export async function GET(request: NextRequest) {
   }
 
   const activeRaffles = raffles ?? [];
+  // Fetch profile for is_booster check (already have hasTag/tagDays from above)
+  const { data: profileForBooster } = await supabase
+    .from('member_profiles')
+    .select('is_booster')
+    .eq('guild_id', selectedGuildId)
+    .eq('user_id', userId)
+    .maybeSingle();
+  const isBooster = profileForBooster?.is_booster === true;
+
   const eligibleRaffles = activeRaffles
-    .filter((r) => tagDays >= r.min_tag_days)
-    .map((r) => r.id);
+    .filter((r: any) => {
+      const eligType = r.eligibility_type ?? 'tag';
+      if (eligType === 'everyone') return true;
+      if (eligType === 'booster') return isBooster;
+      return tagDays >= r.min_tag_days; // 'tag'
+    })
+    .map((r: any) => r.id);
 
   // Katılım sayıları ve kullanıcının katıldığı çekilişler
   let joinedRaffles: string[] = [];

@@ -54,6 +54,55 @@ function roleWinnerMail(opts: { username: string; raffleTitle: string; drawDate:
 </div>`;
 }
 
+function multiplierWinnerMail(opts: { username: string; raffleTitle: string; value: number; days: number; drawDate: string }): string {
+  return `<div style="font-family:sans-serif;color:#e2e8f0;max-width:600px;margin:0 auto;padding:24px;background:#0b0d12;border-radius:16px;border:1px solid #1e2232">
+  <div style="text-align:center;margin-bottom:24px">
+    <div style="font-size:40px">⚡</div>
+    <h1 style="font-size:22px;font-weight:700;color:#fff;margin:8px 0">Tebrikler, ${opts.username}!</h1>
+    <p style="color:#94a3b8;font-size:14px;margin:0">"${opts.raffleTitle}" çekilişinde kazandınız.</p>
+  </div>
+  <div style="background:#1e2232;border-radius:12px;padding:20px;text-align:center;margin-bottom:20px">
+    <p style="color:#94a3b8;font-size:12px;text-transform:uppercase;letter-spacing:2px;margin:0 0 8px 0">Kazanılan Ödül</p>
+    <p style="font-size:28px;font-weight:700;color:#34d399;margin:0">×${opts.value} Kazanç Çarpanı</p>
+    <p style="color:#64748b;font-size:13px;margin:8px 0 0">${opts.days} gün geçerli</p>
+  </div>
+  <p style="color:#64748b;font-size:13px;text-align:center;margin:0">Çarpan otomatik olarak hesabınıza uygulanmıştır.</p>
+  <p style="color:#334155;font-size:11px;text-align:center;margin:16px 0 0 0">Çekiliş tarihi: ${opts.drawDate} — DiscoWeb Sistemi</p>
+</div>`;
+}
+
+function mariWinnerMail(opts: { username: string; raffleTitle: string; amount: number; drawDate: string }): string {
+  return `<div style="font-family:sans-serif;color:#e2e8f0;max-width:600px;margin:0 auto;padding:24px;background:#0b0d12;border-radius:16px;border:1px solid #1e2232">
+  <div style="text-align:center;margin-bottom:24px">
+    <div style="font-size:40px">💎</div>
+    <h1 style="font-size:22px;font-weight:700;color:#fff;margin:8px 0">Tebrikler, ${opts.username}!</h1>
+    <p style="color:#94a3b8;font-size:14px;margin:0">"${opts.raffleTitle}" çekilişinde kazandınız.</p>
+  </div>
+  <div style="background:#1e2232;border-radius:12px;padding:20px;text-align:center;margin-bottom:20px">
+    <p style="color:#94a3b8;font-size:12px;text-transform:uppercase;letter-spacing:2px;margin:0 0 8px 0">Kazanılan Ödül</p>
+    <p style="font-size:28px;font-weight:700;color:#818cf8;margin:0">${opts.amount.toFixed(4)} Mari</p>
+  </div>
+  <p style="color:#64748b;font-size:13px;text-align:center;margin:0">Mari bakiyenize otomatik olarak eklenmiştir.</p>
+  <p style="color:#334155;font-size:11px;text-align:center;margin:16px 0 0 0">Çekiliş tarihi: ${opts.drawDate} — DiscoWeb Sistemi</p>
+</div>`;
+}
+
+function lotWinnerMail(opts: { username: string; raffleTitle: string; count: number; drawDate: string }): string {
+  return `<div style="font-family:sans-serif;color:#e2e8f0;max-width:600px;margin:0 auto;padding:24px;background:#0b0d12;border-radius:16px;border:1px solid #1e2232">
+  <div style="text-align:center;margin-bottom:24px">
+    <div style="font-size:40px">📈</div>
+    <h1 style="font-size:22px;font-weight:700;color:#fff;margin:8px 0">Tebrikler, ${opts.username}!</h1>
+    <p style="color:#94a3b8;font-size:14px;margin:0">"${opts.raffleTitle}" çekilişinde kazandınız.</p>
+  </div>
+  <div style="background:#1e2232;border-radius:12px;padding:20px;text-align:center;margin-bottom:20px">
+    <p style="color:#94a3b8;font-size:12px;text-transform:uppercase;letter-spacing:2px;margin:0 0 8px 0">Kazanılan Ödül</p>
+    <p style="font-size:28px;font-weight:700;color:#f59e0b;margin:0">${opts.count.toLocaleString('tr-TR')} Lot</p>
+  </div>
+  <p style="color:#64748b;font-size:13px;text-align:center;margin:0">Lotlar portföyünüze otomatik olarak eklenmiştir.</p>
+  <p style="color:#334155;font-size:11px;text-align:center;margin:16px 0 0 0">Çekiliş tarihi: ${opts.drawDate} — DiscoWeb Sistemi</p>
+</div>`;
+}
+
 function customWinnerMail(opts: { username: string; raffleTitle: string; prizes: string[]; drawDate: string }): string {
   return `<div style="font-family:sans-serif;color:#e2e8f0;max-width:600px;margin:0 auto;padding:24px;background:#0b0d12;border-radius:16px;border:1px solid #1e2232">
   <div style="text-align:center;margin-bottom:24px">
@@ -192,6 +241,99 @@ export async function POST(request: NextRequest) {
           user_id: winner.user_id,
           title: `🎖️ Çekiliş Kazandınız! — ${raffle.title}`,
           body: roleWinnerMail({ username, raffleTitle: raffle.title, drawDate: drawDateLabel }),
+          category: 'lottery',
+          status: 'published',
+          author_name: 'DiscoWeb Sistem',
+          created_at: drawnAt,
+        });
+      } else if (raffle.prize_type === 'timed_multiplier' && raffle.prize_multiplier_value && raffle.prize_multiplier_days) {
+        const expiresAt = new Date(Date.now() + raffle.prize_multiplier_days * 24 * 60 * 60 * 1000).toISOString();
+        await supabase.from('member_active_multipliers').insert({
+          user_id: winner.user_id,
+          guild_id: guildId,
+          multiplier_value: raffle.prize_multiplier_value,
+          source: 'raffle',
+          source_id: raffleId,
+          expires_at: expiresAt,
+        });
+        await supabase.from('system_mails').insert({
+          guild_id: guildId,
+          user_id: winner.user_id,
+          title: `⚡ Çekiliş Kazandınız! — ${raffle.title}`,
+          body: multiplierWinnerMail({ username, raffleTitle: raffle.title, value: raffle.prize_multiplier_value, days: raffle.prize_multiplier_days, drawDate: drawDateLabel }),
+          category: 'lottery',
+          status: 'published',
+          author_name: 'DiscoWeb Sistem',
+          created_at: drawnAt,
+        });
+      } else if (raffle.prize_type === 'mari' && raffle.prize_mari_amount) {
+        // Deduct from server_mari_treasury and credit to member wallet
+        const mariAmount = Number(raffle.prize_mari_amount);
+        await supabase.rpc('deduct_mari_treasury', { p_guild_id: guildId, p_amount: mariAmount }).maybeSingle().catch(() => {});
+        const { data: walletRow } = await supabase
+          .from('member_wallets')
+          .select('mari_balance')
+          .eq('guild_id', guildId)
+          .eq('user_id', winner.user_id)
+          .maybeSingle();
+        const newMariBalance = Number((Number((walletRow as any)?.mari_balance ?? 0) + mariAmount).toFixed(6));
+        await (supabase.from('member_wallets') as any).upsert(
+          { guild_id: guildId, user_id: winner.user_id, mari_balance: newMariBalance, updated_at: drawnAt },
+          { onConflict: 'guild_id,user_id' },
+        );
+        await supabase.from('system_mails').insert({
+          guild_id: guildId,
+          user_id: winner.user_id,
+          title: `💎 Çekiliş Kazandınız! — ${raffle.title}`,
+          body: mariWinnerMail({ username, raffleTitle: raffle.title, amount: mariAmount, drawDate: drawDateLabel }),
+          category: 'lottery',
+          status: 'published',
+          author_name: 'DiscoWeb Sistem',
+          created_at: drawnAt,
+        });
+      } else if (raffle.prize_type === 'lot' && raffle.prize_lot_count) {
+        // Deduct from treasury_holdings and credit to investor_holdings
+        const lotCount = Number(raffle.prize_lot_count);
+        await supabase
+          .from('treasury_holdings')
+          .update({ lot_count: supabase.rpc as any })
+          .eq('guild_id', guildId)
+          .maybeSingle()
+          .catch(() => {});
+        // Directly update treasury_holdings lot_count
+        const { data: treasuryRow } = await supabase
+          .from('treasury_holdings')
+          .select('lot_count')
+          .eq('guild_id', guildId)
+          .maybeSingle();
+        if (treasuryRow && treasuryRow.lot_count >= lotCount) {
+          await supabase
+            .from('treasury_holdings')
+            .update({ lot_count: treasuryRow.lot_count - lotCount, last_updated: drawnAt })
+            .eq('guild_id', guildId);
+        }
+        // Credit lots to winner
+        const { data: holdingRow } = await supabase
+          .from('investor_holdings')
+          .select('id,lot_count')
+          .eq('guild_id', guildId)
+          .eq('user_id', winner.user_id)
+          .maybeSingle();
+        if (holdingRow) {
+          await supabase
+            .from('investor_holdings')
+            .update({ lot_count: holdingRow.lot_count + lotCount })
+            .eq('id', holdingRow.id);
+        } else {
+          await supabase.from('investor_holdings').insert({
+            guild_id: guildId, user_id: winner.user_id, lot_count: lotCount, avg_buy_price: 0,
+          });
+        }
+        await supabase.from('system_mails').insert({
+          guild_id: guildId,
+          user_id: winner.user_id,
+          title: `📈 Çekiliş Kazandınız! — ${raffle.title}`,
+          body: lotWinnerMail({ username, raffleTitle: raffle.title, count: lotCount, drawDate: drawDateLabel }),
           category: 'lottery',
           status: 'published',
           author_name: 'DiscoWeb Sistem',

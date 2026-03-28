@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
   // Fetch raffle — must belong to same guild and be active
   const { data: raffle, error: raffleErr } = await supabase
     .from('raffles')
-    .select('id,guild_id,min_tag_days,is_active,end_date')
+    .select('id,guild_id,min_tag_days,is_active,end_date,eligibility_type,required_badge_tier_id')
     .eq('id', raffle_id)
     .eq('guild_id', selectedGuildId)
     .single();
@@ -51,35 +51,50 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'raffle_ended' }, { status: 400 });
   }
 
-  // Check user eligibility: fetch tag days
+  const eligibilityType: string = raffle.eligibility_type ?? 'tag';
+
+  // Fetch profile once for eligibility checks
   const { data: profile } = await supabase
     .from('member_profiles')
-    .select('has_tag,tag_granted_at')
+    .select('has_tag,tag_granted_at,is_booster,current_badge_tier_id')
     .eq('guild_id', selectedGuildId)
     .eq('user_id', userId)
     .single();
 
-  const hasTag = profile?.has_tag ?? false;
   const tagGrantedAt = profile?.tag_granted_at ?? null;
-
+  const hasTag = profile?.has_tag === true || Boolean(tagGrantedAt);
   let tagDays = 0;
   if (hasTag && tagGrantedAt) {
-    tagDays = Math.floor(
-      (Date.now() - new Date(tagGrantedAt).getTime()) / (1000 * 60 * 60 * 24),
-    );
+    tagDays = Math.floor((Date.now() - new Date(tagGrantedAt).getTime()) / (1000 * 60 * 60 * 24));
   }
 
-  if (tagDays < raffle.min_tag_days) {
-    return NextResponse.json(
-      {
-        error: 'not_eligible',
-        required: raffle.min_tag_days,
-        current: tagDays,
-        remaining: raffle.min_tag_days - tagDays,
-      },
-      { status: 403 },
-    );
+  if (eligibilityType === 'booster') {
+    if (!profile?.is_booster) {
+      return NextResponse.json({ error: 'not_eligible', reason: 'booster_required' }, { status: 403 });
+    }
+  } else if (eligibilityType === 'tag') {
+    if (tagDays < raffle.min_tag_days) {
+      return NextResponse.json(
+        { error: 'not_eligible', required: raffle.min_tag_days, current: tagDays, remaining: raffle.min_tag_days - tagDays },
+        { status: 403 },
+      );
+    }
+    // Optional: specific badge tier requirement
+    if (raffle.required_badge_tier_id) {
+      const { data: tiers } = await supabase
+        .from('badge_tiers')
+        .select('days_required')
+        .eq('id', raffle.required_badge_tier_id)
+        .maybeSingle();
+      if (tiers && tagDays < tiers.days_required) {
+        return NextResponse.json(
+          { error: 'not_eligible', reason: 'badge_tier_required', required_days: tiers.days_required, current: tagDays },
+          { status: 403 },
+        );
+      }
+    }
   }
+  // eligibilityType === 'everyone': no additional check needed
 
   // Insert entry (unique constraint prevents double-entry)
   const { error: insertErr } = await supabase.from('raffle_entries').insert({
