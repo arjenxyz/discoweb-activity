@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from 'react';
 import {
   LuGift, LuClock, LuTag, LuLock,
   LuLoader, LuTicket, LuCheck, LuChevronDown, LuChevronUp, LuInfo,
-  LuUsers, LuCoins, LuShield, LuZap,
+  LuTrophy, LuUsers, LuCoins, LuShield, LuZap,
 } from 'react-icons/lu';
 import Image from 'next/image';
 import type { BadgeInfo } from '../types';
