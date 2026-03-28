@@ -5,6 +5,7 @@ import WelcomeScreen from './WelcomeScreen';
 import VerifyRoleScreen from './VerifyRoleScreen';
 import DmScreen from './DmScreen';
 import fetchWithCreds from '@/lib/fetchWithCreds';
+import { getDiscordSdk } from '@/lib/discordSdk';
 import { VideoBackground, MuteButton } from './VideoBackground';
 import { useT } from '@/contexts/LocaleContext';
 
@@ -125,6 +126,8 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
   const openSetupSite = async () => {
     const url = 'https://discoweb.tech';
     try {
+      const existing = getDiscordSdk();
+      if (existing) { await existing.commands.openExternalLink({ url }); return; }
       const { DiscordSDK } = await import('@discord/embedded-app-sdk');
       const sdk = new DiscordSDK(process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!);
       await sdk.ready();
@@ -176,13 +179,14 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
 
   const openBotInvite = async (url: string) => {
     try {
+      const existing = getDiscordSdk();
+      if (existing) { await existing.commands.openExternalLink({ url }); return; }
       const { DiscordSDK } = await import('@discord/embedded-app-sdk');
       const clientId = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!;
       const sdk = new DiscordSDK(clientId);
       await sdk.ready();
       await sdk.commands.openExternalLink({ url });
     } catch {
-      // fallback: window.open
       window.open(url, '_blank');
     }
   };
