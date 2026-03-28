@@ -108,7 +108,7 @@ export default function StoreSection({
         <div className="relative z-10 flex items-center justify-between mb-4 sm:mb-6">
           <div className="flex items-center gap-2.5 sm:gap-3">
             <div className="p-1.5 sm:p-2 bg-gradient-to-br from-[#5865F2] to-indigo-600 rounded-lg sm:rounded-xl shadow-lg shadow-[#5865F2]/20">
-              <LuStore className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+              <img src="/icon/shop.png" alt="" className="w-4 h-4 sm:w-5 sm:h-5 object-contain" />
             </div>
             <div>
               <h2 className="text-base sm:text-lg font-bold text-white tracking-tight">{t('store_title')}</h2>

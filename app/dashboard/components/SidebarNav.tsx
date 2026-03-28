@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import React from 'react';
 import Image from 'next/image';
 import { LuChevronRight, LuGift, LuHouse, LuMail, LuStore, LuCompass, LuTrendingUp, LuVault, LuChartBar, LuWallet, LuCoins, LuRocket, LuBadgePlus, LuNewspaper, LuShieldCheck } from 'react-icons/lu';
 import type { MemberProfile, Section } from '../types';
@@ -47,10 +46,10 @@ export default function SidebarNav({
       label: t('nav_group_discover'),
       items: [
         { key: 'overview' as Section, label: t('nav_home'), icon: LuHouse },
-        { key: 'store' as Section, label: t('nav_store'), icon: LuStore, imgSrc: '/icon/shop.png' },
-        { key: 'raffles' as Section, label: t('nav_raffles'), icon: LuGift, imgSrc: '/icon/raffle.png' },
+        { key: 'store' as Section, label: t('nav_store'), icon: LuStore },
+        { key: 'raffles' as Section, label: t('nav_raffles'), icon: LuGift },
         { key: 'tag-badge' as Section, label: t('nav_tag_badge'), icon: LuShieldCheck },
-        { key: 'discover' as Section, label: t('nav_community'), icon: LuCompass, imgSrc: '/icon/discover.png' },
+        { key: 'discover' as Section, label: t('nav_community'), icon: LuCompass },
         ...(isAdvancedEconomy ? [
           { key: 'market' as Section, label: t('nav_exchange'), icon: LuTrendingUp },
           { key: 'treasury' as Section, label: t('nav_treasury'), icon: LuVault },
@@ -135,7 +134,7 @@ export default function SidebarNav({
                 {group.label}
               </p>
             )}
-            {group.items.map(({ key, label, icon: Icon, imgSrc }: { key: Section; label: string; icon: React.ComponentType<{ className?: string }>; imgSrc?: string }) => {
+            {group.items.map(({ key, label, icon: Icon }) => {
               const active = effectiveSection === key;
               return (
                 <button
@@ -177,11 +176,7 @@ export default function SidebarNav({
                   <span className={`relative flex shrink-0 items-center justify-center rounded-lg transition-all ${
                     collapsed ? 'h-10 w-10' : 'h-7 w-7'
                   } ${active ? 'text-white' : 'text-white/45 group-hover:text-white/70'}`}>
-                    {imgSrc ? (
-                      <img src={imgSrc} alt="" className="h-4 w-4 object-contain" />
-                    ) : (
-                      <Icon className="h-4 w-4" />
-                    )}
+                    <Icon className="h-4 w-4" />
                   </span>
                   {!collapsed && (
                     <span className={`relative text-sm font-medium leading-none ${active ? 'text-white' : ''}`}>
