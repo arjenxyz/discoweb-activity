@@ -236,8 +236,8 @@ export default function OverviewSection({
             </div>
           )}
 
-          {/* TAG ROZETİ */}
-          {badgeInfo !== undefined && badgeInfo?.hasTag && (
+          {/* TAG ROZETİ — ana sayfadan kaldırıldı, ayrı sekme var */}
+          {false && badgeInfo !== undefined && badgeInfo?.hasTag && (
             <div className={card}>
               <div className="flex items-center gap-2 mb-4">
                 <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-indigo-500/10">
