@@ -90,14 +90,16 @@ export async function GET(request: NextRequest) {
         .from('member_badge_rewards')
         .insert({ user_id: userId, guild_id: selectedGuildId, badge_tier_id: tier.id, papel_given: tier.reward_papel });
       if (!insertErr && (tier.reward_papel ?? 0) > 0) {
-        // Credit wallet
-        await supabase.rpc('add_wallet_balance', {
-          p_user_id: userId,
-          p_guild_id: selectedGuildId,
-          p_amount: tier.reward_papel,
-        }).catch(() => {
-          // Fallback: direct upsert if RPC doesn't exist
-        });
+        // Credit wallet via RPC
+        try {
+          await supabase.rpc('add_wallet_balance', {
+            p_user_id: userId,
+            p_guild_id: selectedGuildId,
+            p_amount: tier.reward_papel,
+          });
+        } catch {
+          // RPC may not exist — ignore
+        }
       }
     }
   }
