@@ -68,8 +68,7 @@ function TierRow({
           style={{
             background: unlocked ? `${color}22` : 'rgba(255,255,255,0.04)',
             border: `2px solid ${unlocked ? color + '88' : 'rgba(255,255,255,0.1)'}`,
-            ringColor: color,
-            boxShadow: isCurrent ? `0 0 16px ${color}55` : undefined,
+            boxShadow: isCurrent ? `0 0 16px ${color}55, 0 0 0 2px ${color}66` : undefined,
           }}
         >
           {unlocked ? (
