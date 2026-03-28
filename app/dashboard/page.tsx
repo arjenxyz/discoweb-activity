@@ -15,6 +15,7 @@ import StoreSection from './components/StoreSection';
 import SettingsSection from './components/SettingsSection';
 import MailSection from './components/MailSection';
 import RafflesSection from './components/RafflesSection';
+import SessionExpiredModal from './components/SessionExpiredModal';
 import DiscoverSection from './components/DiscoverSection';
 import MarketSection from './components/MarketSection';
 import TreasuryCard from './components/TreasuryCard';
@@ -573,7 +574,7 @@ export default function DashboardPage() {
           setBadgeInfo(data);
         } else {
           // API hata döndürdüğünde loading ekranında takılmaması için boş set et
-          setBadgeInfo({ currentBadge: null, nextBadge: null, tagDays: 0, daysToNext: null, hasTag: false, earnMultiplier: 1, allTiers: [], activeRaffles: [], eligibleRaffles: [], joinedRaffles: [] });
+          setBadgeInfo({ currentBadge: null, nextBadge: null, tagDays: 0, daysToNext: null, hasTag: false, earnMultiplier: 1, allTiers: [], activeRaffles: [], eligibleRaffles: [], joinedRaffles: [], drawnRaffles: [] });
         }
       } catch {
         setBadgeInfo({ currentBadge: null, nextBadge: null, tagDays: 0, daysToNext: null, hasTag: false, earnMultiplier: 1, allTiers: [], activeRaffles: [], eligibleRaffles: [], joinedRaffles: [] });
@@ -1152,18 +1153,7 @@ export default function DashboardPage() {
                 )}
               </section>
             )}
-            {unauthorized && (
-              <section className="rounded-2xl border border-rose-500/30 bg-rose-500/10 p-6">
-                <p className="text-sm font-semibold text-rose-200">{t('session_ended')}</p>
-                <p className="mt-2 text-sm text-rose-100/80">LÃ¼tfen tekrar giriÅŸ yapÄ±n.</p>
-                <Link
-                  href={loginUrl}
-                  className="mt-4 inline-flex rounded-full border border-rose-300/40 px-4 py-2 text-sm text-rose-100 transition hover:border-rose-200"
-                >
-                  Discord ile tekrar giriÅŸ
-                </Link>
-              </section>
-            )}
+            {unauthorized && <SessionExpiredModal loginUrl={loginUrl} />}
             {!isSiteMaintenance && effectiveSection === 'overview' && (
               <>
                 {/* Server quick stats removed as requested */}
