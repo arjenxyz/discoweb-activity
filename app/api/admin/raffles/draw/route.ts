@@ -87,21 +87,6 @@ function mariWinnerMail(opts: { username: string; raffleTitle: string; amount: n
 </div>`;
 }
 
-function lotWinnerMail(opts: { username: string; raffleTitle: string; count: number; drawDate: string }): string {
-  return `<div style="font-family:sans-serif;color:#e2e8f0;max-width:600px;margin:0 auto;padding:24px;background:#0b0d12;border-radius:16px;border:1px solid #1e2232">
-  <div style="text-align:center;margin-bottom:24px">
-    <div style="font-size:40px">📈</div>
-    <h1 style="font-size:22px;font-weight:700;color:#fff;margin:8px 0">Tebrikler, ${opts.username}!</h1>
-    <p style="color:#94a3b8;font-size:14px;margin:0">"${opts.raffleTitle}" çekilişinde kazandınız.</p>
-  </div>
-  <div style="background:#1e2232;border-radius:12px;padding:20px;text-align:center;margin-bottom:20px">
-    <p style="color:#94a3b8;font-size:12px;text-transform:uppercase;letter-spacing:2px;margin:0 0 8px 0">Kazanılan Ödül</p>
-    <p style="font-size:28px;font-weight:700;color:#f59e0b;margin:0">${opts.count.toLocaleString('tr-TR')} Lot</p>
-  </div>
-  <p style="color:#64748b;font-size:13px;text-align:center;margin:0">Lotlar portföyünüze otomatik olarak eklenmiştir.</p>
-  <p style="color:#334155;font-size:11px;text-align:center;margin:16px 0 0 0">Çekiliş tarihi: ${opts.drawDate} — DiscoWeb Sistemi</p>
-</div>`;
-}
 
 function customWinnerMail(opts: { username: string; raffleTitle: string; prizes: string[]; drawDate: string }): string {
   return `<div style="font-family:sans-serif;color:#e2e8f0;max-width:600px;margin:0 auto;padding:24px;background:#0b0d12;border-radius:16px;border:1px solid #1e2232">
@@ -286,54 +271,6 @@ export async function POST(request: NextRequest) {
           user_id: winner.user_id,
           title: `💎 Çekiliş Kazandınız! — ${raffle.title}`,
           body: mariWinnerMail({ username, raffleTitle: raffle.title, amount: mariAmount, drawDate: drawDateLabel }),
-          category: 'lottery',
-          status: 'published',
-          author_name: 'DiscoWeb Sistem',
-          created_at: drawnAt,
-        });
-      } else if (raffle.prize_type === 'lot' && raffle.prize_lot_count) {
-        // Deduct from treasury_holdings and credit to investor_holdings
-        const lotCount = Number(raffle.prize_lot_count);
-        await supabase
-          .from('treasury_holdings')
-          .update({ lot_count: supabase.rpc as any })
-          .eq('guild_id', guildId)
-          .maybeSingle()
-          .catch(() => {});
-        // Directly update treasury_holdings lot_count
-        const { data: treasuryRow } = await supabase
-          .from('treasury_holdings')
-          .select('lot_count')
-          .eq('guild_id', guildId)
-          .maybeSingle();
-        if (treasuryRow && treasuryRow.lot_count >= lotCount) {
-          await supabase
-            .from('treasury_holdings')
-            .update({ lot_count: treasuryRow.lot_count - lotCount, last_updated: drawnAt })
-            .eq('guild_id', guildId);
-        }
-        // Credit lots to winner
-        const { data: holdingRow } = await supabase
-          .from('investor_holdings')
-          .select('id,lot_count')
-          .eq('guild_id', guildId)
-          .eq('user_id', winner.user_id)
-          .maybeSingle();
-        if (holdingRow) {
-          await supabase
-            .from('investor_holdings')
-            .update({ lot_count: holdingRow.lot_count + lotCount })
-            .eq('id', holdingRow.id);
-        } else {
-          await supabase.from('investor_holdings').insert({
-            guild_id: guildId, user_id: winner.user_id, lot_count: lotCount, avg_buy_price: 0,
-          });
-        }
-        await supabase.from('system_mails').insert({
-          guild_id: guildId,
-          user_id: winner.user_id,
-          title: `📈 Çekiliş Kazandınız! — ${raffle.title}`,
-          body: lotWinnerMail({ username, raffleTitle: raffle.title, count: lotCount, drawDate: drawDateLabel }),
           category: 'lottery',
           status: 'published',
           author_name: 'DiscoWeb Sistem',

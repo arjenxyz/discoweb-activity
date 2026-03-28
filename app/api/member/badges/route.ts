@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
       .single(),
     supabase
       .from('raffles')
-      .select('id,title,description,prizes,start_date,end_date,min_tag_days,winner_count,prize_type,prize_papel_amount,prize_role_id,prize_multiplier_value,prize_multiplier_days,prize_mari_amount,prize_lot_count,eligibility_type,required_badge_tier_id,drawn_at')
+      .select('id,title,description,prizes,start_date,end_date,min_tag_days,winner_count,prize_type,prize_papel_amount,prize_role_id,prize_multiplier_value,prize_multiplier_days,prize_mari_amount,eligibility_type,required_badge_tier_id,drawn_at')
       .eq('guild_id', selectedGuildId)
       .eq('is_active', true)
       .is('drawn_at', null)

@@ -59,13 +59,12 @@ export async function POST(request: NextRequest) {
     min_tag_days?: number;
     is_active?: boolean;
     winner_count?: number;
-    prize_type?: 'papel' | 'role' | 'custom' | 'timed_multiplier' | 'mari' | 'lot';
+    prize_type?: 'papel' | 'role' | 'custom' | 'timed_multiplier' | 'mari';
     prize_papel_amount?: number | null;
     prize_role_id?: string | null;
     prize_multiplier_value?: number | null;
     prize_multiplier_days?: number | null;
     prize_mari_amount?: number | null;
-    prize_lot_count?: number | null;
     eligibility_type?: 'tag' | 'everyone' | 'booster';
     required_badge_tier_id?: string | null;
   };
@@ -75,6 +74,25 @@ export async function POST(request: NextRequest) {
   }
   if (payload.start_date && payload.end_date && new Date(payload.end_date) <= new Date(payload.start_date)) {
     return NextResponse.json({ error: 'invalid_payload', message: 'Bitiş tarihi başlangıçtan sonra olmalı' }, { status: 400 });
+  }
+
+  // Mari prize: check treasury has enough balance
+  if (payload.prize_type === 'mari' && payload.prize_mari_amount && payload.prize_mari_amount > 0) {
+    const totalNeeded = payload.prize_mari_amount * (payload.winner_count ?? 1);
+    const { data: treasury } = await supabase
+      .from('server_mari_treasury')
+      .select('balance')
+      .eq('guild_id', guildId)
+      .maybeSingle();
+    const available = Number(treasury?.balance ?? 0);
+    if (available < totalNeeded) {
+      return NextResponse.json({
+        error: 'insufficient_mari_balance',
+        message: `Mari kasası yetersiz. Gereken: ${totalNeeded.toFixed(4)}, Mevcut: ${available.toFixed(4)}`,
+        available,
+        needed: totalNeeded,
+      }, { status: 400 });
+    }
   }
 
   const { error } = await supabase.from('raffles').insert({
@@ -93,7 +111,6 @@ export async function POST(request: NextRequest) {
     prize_multiplier_value: payload.prize_multiplier_value ?? null,
     prize_multiplier_days: payload.prize_multiplier_days ?? null,
     prize_mari_amount: payload.prize_mari_amount ?? null,
-    prize_lot_count: payload.prize_lot_count ?? null,
     eligibility_type: payload.eligibility_type ?? 'tag',
     required_badge_tier_id: payload.required_badge_tier_id ?? null,
   });
@@ -126,13 +143,12 @@ export async function PUT(request: NextRequest) {
     min_tag_days?: number;
     is_active?: boolean;
     winner_count?: number;
-    prize_type?: 'papel' | 'role' | 'custom' | 'timed_multiplier' | 'mari' | 'lot';
+    prize_type?: 'papel' | 'role' | 'custom' | 'timed_multiplier' | 'mari';
     prize_papel_amount?: number | null;
     prize_role_id?: string | null;
     prize_multiplier_value?: number | null;
     prize_multiplier_days?: number | null;
     prize_mari_amount?: number | null;
-    prize_lot_count?: number | null;
     eligibility_type?: 'tag' | 'everyone' | 'booster';
     required_badge_tier_id?: string | null;
   };
@@ -157,7 +173,6 @@ export async function PUT(request: NextRequest) {
   if (payload.prize_multiplier_value !== undefined) update.prize_multiplier_value = payload.prize_multiplier_value;
   if (payload.prize_multiplier_days !== undefined) update.prize_multiplier_days = payload.prize_multiplier_days;
   if (payload.prize_mari_amount !== undefined) update.prize_mari_amount = payload.prize_mari_amount;
-  if (payload.prize_lot_count !== undefined) update.prize_lot_count = payload.prize_lot_count;
   if (payload.eligibility_type !== undefined) update.eligibility_type = payload.eligibility_type;
   if (payload.required_badge_tier_id !== undefined) update.required_badge_tier_id = payload.required_badge_tier_id;
 

@@ -5,8 +5,7 @@ ALTER TABLE raffles
   ADD COLUMN IF NOT EXISTS required_badge_tier_id UUID REFERENCES badge_tiers(id) ON DELETE SET NULL,
   ADD COLUMN IF NOT EXISTS prize_multiplier_value NUMERIC(4,2) DEFAULT NULL,
   ADD COLUMN IF NOT EXISTS prize_multiplier_days  INTEGER DEFAULT NULL,
-  ADD COLUMN IF NOT EXISTS prize_mari_amount      DECIMAL(18,6) DEFAULT NULL,
-  ADD COLUMN IF NOT EXISTS prize_lot_count        INTEGER DEFAULT NULL;
+  ADD COLUMN IF NOT EXISTS prize_mari_amount      DECIMAL(18,6) DEFAULT NULL;
 
 -- Temporary earn multipliers granted by raffles or admins
 CREATE TABLE IF NOT EXISTS member_active_multipliers (
