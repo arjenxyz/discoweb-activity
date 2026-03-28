@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import {
-  LuGift, LuClock, LuTag, LuLock,
+  LuGift, LuClock, LuCalendar, LuTag, LuLock, LuX,
   LuLoader, LuTicket, LuCheck, LuChevronDown, LuChevronUp, LuInfo,
   LuTrophy, LuUsers, LuCoins, LuShield, LuZap,
 } from 'react-icons/lu';
