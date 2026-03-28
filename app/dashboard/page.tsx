@@ -573,10 +573,10 @@ export default function DashboardPage() {
           setBadgeInfo(data);
         } else {
           // API hata döndürdüğünde loading ekranında takılmaması için boş set et
-          setBadgeInfo({ currentBadge: null, nextBadge: null, tagDays: 0, daysToNext: null, hasTag: false, activeRaffles: [], eligibleRaffles: [], joinedRaffles: [] });
+          setBadgeInfo({ currentBadge: null, nextBadge: null, tagDays: 0, daysToNext: null, hasTag: false, earnMultiplier: 1, allTiers: [], activeRaffles: [], eligibleRaffles: [], joinedRaffles: [] });
         }
       } catch {
-        setBadgeInfo({ currentBadge: null, nextBadge: null, tagDays: 0, daysToNext: null, hasTag: false, activeRaffles: [], eligibleRaffles: [], joinedRaffles: [] });
+        setBadgeInfo({ currentBadge: null, nextBadge: null, tagDays: 0, daysToNext: null, hasTag: false, earnMultiplier: 1, allTiers: [], activeRaffles: [], eligibleRaffles: [], joinedRaffles: [] });
       }
     };
 
