@@ -93,19 +93,9 @@ export default function DashboardHeader({
   const router = useRouter();
 
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [currentGif, setCurrentGif] = useState(RANDOM_GIFS[0]);
   const [fetchedIcons, setFetchedIcons] = useState<Record<string, string | null>>({});
   const fetchedIconsSeenRef = useRef<Set<string>>(new Set());
-
-  useEffect(() => {
-    if (mobileMenuOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => { document.body.style.overflow = ''; };
-  }, [mobileMenuOpen]);
 
   useEffect(() => {
     if (isProfileOpen) {
@@ -165,13 +155,7 @@ export default function DashboardHeader({
           <div className="h-9 w-9 overflow-hidden rounded-xl border border-white/10 bg-white/5">
             <Image src="/gif/cat.gif" alt="logo" className="h-full w-full object-cover" width={36} height={36} />
           </div>
-          <button
-            type="button"
-            className="text-white font-black text-lg tracking-tight lg:cursor-default"
-            onClick={() => { if (typeof window !== 'undefined' && window.innerWidth < 1024) setMobileMenuOpen(o => !o); }}
-          >
-            DiscoWeb
-          </button>
+          <span className="text-white font-black text-lg tracking-tight">DiscoWeb</span>
         </div>
 
         {/* Orta — boşluk */}
@@ -355,56 +339,37 @@ export default function DashboardHeader({
         </div>
       </header>
 
-      {/* Mobil menü */}
-      {mobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 z-[9992]">
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-md" onClick={() => setMobileMenuOpen(false)} />
-          <div className="absolute top-[72px] left-3 right-3 overflow-hidden rounded-2xl border border-white/10 bg-[#0f1116] shadow-2xl">
-            {!unauthorized && profile && (
-              <div className="flex items-center gap-3 border-b border-white/[0.06] px-4 py-3">
-                <div className="h-9 w-9 overflow-hidden rounded-full border border-white/10">
-                  <Image src={profile.avatarUrl || '/gif/cat.gif'} alt="avatar" width={36} height={36} className="h-full w-full object-cover" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-white truncate">{profile.name}</p>
-                  <p className="text-[11px] text-white/35">@{profile.username}</p>
-                </div>
-                {!unauthorized && (
-                  <div className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs">
-                    <Image src="/papel.gif" alt="" width={14} height={14} className="h-3.5 w-3.5" />
-                    <span className="font-bold text-white tabular-nums">{walletLoading ? '—' : walletBalance.toFixed(2)}</span>
-                  </div>
+      {/* Mobil bottom nav */}
+      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-[#0b0d12]/95 backdrop-blur-xl border-t border-white/[0.06] pb-[env(safe-area-inset-bottom,0px)]">
+        <div className="flex items-stretch">
+          {navItems.filter(item => !item.requiresAuth || !unauthorized).map((item) => {
+            const isActive = navigation.activeSection === item.key;
+            return (
+              <button
+                key={item.key}
+                type="button"
+                onClick={() => handleNavClick(item.key)}
+                className={`relative flex flex-1 flex-col items-center justify-center gap-1 py-2.5 transition-colors ${
+                  isActive ? 'text-white' : 'text-white/35 hover:text-white/60'
+                }`}
+              >
+                {isActive && (
+                  <span className="absolute top-0 left-1/2 -translate-x-1/2 h-0.5 w-6 rounded-full bg-white" />
                 )}
-              </div>
-            )}
-            <nav className="px-3 py-3 space-y-0.5">
-              {navItems.filter(item => !item.requiresAuth || !unauthorized).map((item) => {
-                const isActive = navigation.activeSection === item.key;
-                return (
-                  <button
-                    key={item.key}
-                    type="button"
-                    onClick={() => { handleNavClick(item.key); setMobileMenuOpen(false); }}
-                    className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
-                      isActive ? 'bg-white/10 text-white' : 'text-white/50 hover:bg-white/[0.06] hover:text-white/80'
-                    }`}
-                  >
-                    <span className={`flex h-7 w-7 items-center justify-center rounded-lg ${isActive ? 'bg-white/12 text-white' : 'bg-white/5 text-white/40'}`}>
-                      {item.icon}
-                    </span>
-                    {item.label}
-                    {item.key === 'mail' && mailUnreadCount > 0 && (
-                      <span className="ml-auto rounded-full bg-rose-500 px-2 py-0.5 text-[10px] font-bold text-white">
-                        {mailUnreadCount > 99 ? '99+' : mailUnreadCount}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </nav>
-          </div>
+                <span className={`flex items-center justify-center transition-transform ${isActive ? 'scale-110' : ''}`}>
+                  {item.icon}
+                </span>
+                <span className="text-[9px] font-medium leading-none truncate max-w-[52px]">{item.label}</span>
+                {item.key === 'mail' && mailUnreadCount > 0 && (
+                  <span className="absolute top-1.5 right-[calc(50%-16px)] flex h-3.5 w-3.5 items-center justify-center rounded-full bg-rose-500 text-[8px] font-bold text-white leading-none">
+                    {mailUnreadCount > 9 ? '9+' : mailUnreadCount}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
-      )}
+      </nav>
     </>
   );
 }

@@ -1132,7 +1132,7 @@ export default function DashboardPage() {
         />
         )}
 
-        <main className={`${mainWrapperClass} flex flex-col flex-1 ${mainSpacingClass} overflow-y-auto custom-scrollbar bg-[#0e1018]`}>
+        <main className={`${mainWrapperClass} flex flex-col flex-1 ${mainSpacingClass} overflow-y-auto custom-scrollbar bg-[#0e1018] pb-16 lg:pb-0`}>
             {!maintenanceLoading && isSiteMaintenance && (
               <section className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-6">
                 <p className="text-sm font-semibold text-amber-200">Site bakÄ±mda</p>
