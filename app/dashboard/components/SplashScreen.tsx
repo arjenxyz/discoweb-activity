@@ -288,29 +288,7 @@ export default function SplashScreen({ onEnter }: Props) {
                 </div>
               </div>
 
-              {/* Tap / click hint */}
-              <div className="flex items-center gap-2 h-8">
-                {stillLoading ? (
-                  <svg className="h-3.5 w-3.5 animate-spin text-white/30" viewBox="0 0 16 16" fill="none">
-                    <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="2" strokeOpacity="0.3" />
-                    <path d="M8 2a6 6 0 016 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                  </svg>
-                ) : blocked ? (
-                  <span className="text-sm text-white/30">{t('splash_maintenance_title')}</span>
-                ) : (
-                  <span
-                    className="text-sm font-medium text-white/50"
-                    style={{
-                      textShadow: '0 1px 10px rgba(0,0,0,1)',
-                      animation: 'splashPulse 2.5s ease-in-out infinite',
-                    }}
-                  >
-                    {isTouch ? t('splash_tap_to_start') : t('splash_click_to_start')}
-                  </span>
-                )}
-              </div>
-
-              {/* Tip — buton altında, ikincil */}
+              {/* Tip — welcome altında, ikincil */}
               <div className="h-[56px] flex items-start">
                 <div
                   className="flex items-start gap-3"
@@ -329,6 +307,25 @@ export default function SplashScreen({ onEnter }: Props) {
             </div>
           </div>
         </main>
+
+        {/* Tap / click hint — footer üstü, ortalı */}
+        <div className="relative z-10 flex justify-center pb-4 flex-shrink-0">
+          {stillLoading ? (
+            <svg className="h-3.5 w-3.5 animate-spin text-white/25" viewBox="0 0 16 16" fill="none">
+              <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="2" strokeOpacity="0.3" />
+              <path d="M8 2a6 6 0 016 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          ) : blocked ? (
+            <span className="text-xs text-white/25">{t('splash_maintenance_title')}</span>
+          ) : (
+            <span
+              className="text-xs text-white/40 tracking-wide"
+              style={{ textShadow: '0 1px 10px rgba(0,0,0,1)', animation: 'splashPulse 2.5s ease-in-out infinite' }}
+            >
+              {isTouch ? t('splash_tap_to_start') : t('splash_click_to_start')}
+            </span>
+          )}
+        </div>
 
         {/* Bottom footer — copyright sol, linkler sağ */}
         <div className="relative z-10 flex items-center justify-between px-8 sm:px-14 pb-8 flex-shrink-0">
