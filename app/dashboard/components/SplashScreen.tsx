@@ -293,13 +293,13 @@ export default function SplashScreen({ onEnter }: Props) {
                 <div
                   className="flex items-start gap-3"
                   style={{
-                    opacity: tipVisible ? 0.5 : 0,
+                    opacity: tipVisible ? 1 : 0,
                     transform: tipVisible ? 'translateY(0)' : 'translateY(4px)',
                     transition: 'opacity 0.35s ease, transform 0.35s ease',
                   }}
                 >
-                  <span className="text-white/40 mt-0.5 flex-shrink-0">{TIPS[tipIndex].icon}</span>
-                  <p className="text-xs text-white/40 leading-relaxed" style={{ textShadow: '0 1px 10px rgba(0,0,0,1)' }}>
+                  <span className="text-white/60 mt-0.5 flex-shrink-0">{TIPS[tipIndex].icon}</span>
+                  <p className="text-sm text-white/60 leading-relaxed" style={{ textShadow: '0 1px 10px rgba(0,0,0,1)' }}>
                     {TIPS[tipIndex].text}
                   </p>
                 </div>
