@@ -254,7 +254,7 @@ export async function POST(request: NextRequest) {
       } else if (raffle.prize_type === 'mari' && raffle.prize_mari_amount) {
         // Deduct from server_mari_treasury and credit to member wallet
         const mariAmount = Number(raffle.prize_mari_amount);
-        await supabase.rpc('deduct_mari_treasury', { p_guild_id: guildId, p_amount: mariAmount }).maybeSingle().catch(() => {});
+        await supabase.rpc('deduct_mari_treasury', { p_guild_id: guildId, p_amount: mariAmount }).maybeSingle().then(() => {}, () => {});
         const { data: walletRow } = await supabase
           .from('member_wallets')
           .select('mari_balance')
