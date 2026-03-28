@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { LuChevronRight, LuGift, LuHouse, LuMail, LuStore, LuCompass, LuTrendingUp, LuVault, LuChartBar, LuWallet, LuCoins, LuRocket, LuBadgePlus, LuNewspaper } from 'react-icons/lu';
+import { LuChevronRight, LuGift, LuHouse, LuMail, LuStore, LuCompass, LuTrendingUp, LuVault, LuChartBar, LuWallet, LuCoins, LuRocket, LuBadgePlus, LuNewspaper, LuShieldCheck } from 'react-icons/lu';
 import type { MemberProfile, Section } from '../types';
 import { useT } from '@/contexts/LocaleContext';
 
@@ -25,14 +25,15 @@ export default function SidebarNav({
   const [collapsed, setCollapsed] = useState(false);
 
   const SECTION_BG: Partial<Record<Section, string>> = {
-    overview:        '/menu-background/menu.jpg',
-    store:           '/menu-background/menu2.jpg',
-    raffles:         '/menu-background/menu3.jpg',
-    discover:        '/menu-background/menu4.jpg',
-    market:          '/menu-background/menu5.jpg',
-    treasury:        '/menu-background/menu6.jpg',
-    borsa:           '/menu-background/menu7.jpg',
-    portfolio:       '/menu-background/menu8.jpg',
+    overview:        '/menu-background/menu4.jpg',
+    store:           '/menu-background/menu6.jpg',
+    raffles:         '/menu-background/menu7.jpg',
+    discover:        '/menu-background/menu8.jpg',
+    'tag-badge':     '/menu-background/menu8.jpg',
+    market:          '/menu-background/menu9.jpg',
+    treasury:        '/menu-background/menu10.jpg',
+    borsa:           '/menu-background/menu11.jpg',
+    portfolio:       '/menu-background/menu4.jpg',
     dividend:        '/menu-background/menu9.jpg',
     'ipo-apply':     '/menu-background/menu10.jpg',
     'market-news':   '/menu-background/menu11.jpg',
@@ -47,6 +48,7 @@ export default function SidebarNav({
         { key: 'overview' as Section, label: t('nav_home'), icon: LuHouse },
         { key: 'store' as Section, label: t('nav_store'), icon: LuStore },
         { key: 'raffles' as Section, label: t('nav_raffles'), icon: LuGift },
+        { key: 'tag-badge' as Section, label: t('nav_tag_badge'), icon: LuShieldCheck },
         { key: 'discover' as Section, label: t('nav_community'), icon: LuCompass },
         ...(isAdvancedEconomy ? [
           { key: 'market' as Section, label: t('nav_exchange'), icon: LuTrendingUp },

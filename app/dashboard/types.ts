@@ -1,5 +1,5 @@
 // Ortak Section tipi
-export type Section = 'overview' | 'store' | 'raffles' | 'notifications' | 'profile' | 'settings' | 'mail' | 'transactions' | 'tracking' | 'leaderboard' | 'discover' | 'market' | 'treasury' | 'borsa' | 'borsa-detail' | 'portfolio' | 'dividend' | 'ipo-apply' | 'ipo' | 'economy-apply' | 'market-news';
+export type Section = 'overview' | 'store' | 'raffles' | 'notifications' | 'profile' | 'settings' | 'mail' | 'transactions' | 'tracking' | 'leaderboard' | 'discover' | 'market' | 'treasury' | 'borsa' | 'borsa-detail' | 'portfolio' | 'dividend' | 'ipo-apply' | 'ipo' | 'economy-apply' | 'market-news' | 'tag-badge';
 export type Notification = {
   id: string;
   title: string;
@@ -160,6 +160,9 @@ export type BadgeTier = {
   color: string | null;
   description: string | null;
   sort_order: number;
+  reward_papel?: number | null;
+  reward_earn_multiplier?: number | null;
+  reward_message?: string | null;
 };
 
 export type Raffle = {
@@ -184,6 +187,8 @@ export type BadgeInfo = {
   tagDays: number;
   daysToNext: number | null;
   hasTag: boolean;
+  earnMultiplier: number;
+  allTiers: BadgeTier[];
   activeRaffles: Raffle[];
   eligibleRaffles: string[];
   joinedRaffles: string[];

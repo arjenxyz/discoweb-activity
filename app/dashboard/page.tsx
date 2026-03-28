@@ -24,6 +24,7 @@ import PortfolioSection from './components/PortfolioSection';
 import DividendSection from './components/DividendSection';
 import IpoSection from './components/IpoSection';
 import EconomyApplySection from './components/EconomyApplySection';
+import TagBadgeSection from './components/TagBadgeSection';
 import IpoApplySection from './components/IpoApplySection';
 import MarketNewsSection from './components/MarketNewsSection';
 import NotificationDetailModal from './components/NotificationDetailModal';
@@ -1279,6 +1280,13 @@ export default function DashboardPage() {
                     setBadgeInfo(data);
                   }
                 }}
+              />
+            )}
+
+            {effectiveSection === 'tag-badge' && !isSiteMaintenance && (
+              <TagBadgeSection
+                badgeInfo={badgeInfo}
+                loading={!badgeInfo && !unauthorized}
               />
             )}
 

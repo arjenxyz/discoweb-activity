@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
   const [{ data: tiers }, { data: profile }, { data: raffles }] = await Promise.all([
     supabase
       .from('badge_tiers')
-      .select('id,name,emoji,days_required,color,description,sort_order')
+      .select('id,name,emoji,days_required,color,description,sort_order,reward_papel,reward_earn_multiplier,reward_message')
       .eq('guild_id', selectedGuildId)
       .order('sort_order', { ascending: true }),
     supabase
@@ -60,10 +60,56 @@ export async function GET(request: NextRequest) {
     tagDays = Math.floor((now.getTime() - grantedDate.getTime()) / (1000 * 60 * 60 * 24));
   }
 
-  const sortedTiers = tiers ?? [];
+  const sortedTiers = (tiers ?? []) as Array<{
+    id: string; name: string; emoji: string | null; days_required: number;
+    color: string | null; description: string | null; sort_order: number;
+    reward_papel: number | null; reward_earn_multiplier: number | null; reward_message: string | null;
+  }>;
   const currentBadge = [...sortedTiers].reverse().find((t) => t.days_required <= tagDays) ?? null;
   const nextBadge = sortedTiers.find((t) => t.days_required > tagDays) ?? null;
   const daysToNext = nextBadge ? nextBadge.days_required - tagDays : null;
+
+  // Determine earn multiplier from current badge (default 1.0)
+  const earnMultiplier = currentBadge?.reward_earn_multiplier ?? 1.0;
+
+  // Trigger one-time papel rewards for newly unlocked tiers
+  const unlockedTiers = sortedTiers.filter((t) => t.days_required <= tagDays && (t.reward_papel ?? 0) > 0);
+  if (unlockedTiers.length > 0 && hasTag) {
+    // Fetch already-rewarded tiers for this user/guild
+    const { data: existingRewards } = await supabase
+      .from('member_badge_rewards')
+      .select('badge_tier_id')
+      .eq('user_id', userId)
+      .eq('guild_id', selectedGuildId);
+    const rewardedTierIds = new Set((existingRewards ?? []).map((r: { badge_tier_id: string }) => r.badge_tier_id));
+
+    for (const tier of unlockedTiers) {
+      if (rewardedTierIds.has(tier.id)) continue;
+      // Idempotent insert (UNIQUE constraint prevents duplicates)
+      const { error: insertErr } = await supabase
+        .from('member_badge_rewards')
+        .insert({ user_id: userId, guild_id: selectedGuildId, badge_tier_id: tier.id, papel_given: tier.reward_papel });
+      if (!insertErr && (tier.reward_papel ?? 0) > 0) {
+        // Credit wallet
+        await supabase.rpc('add_wallet_balance', {
+          p_user_id: userId,
+          p_guild_id: selectedGuildId,
+          p_amount: tier.reward_papel,
+        }).catch(() => {
+          // Fallback: direct upsert if RPC doesn't exist
+        });
+      }
+    }
+  }
+
+  // Update current_badge_tier_id on member_profiles
+  if (currentBadge) {
+    await supabase
+      .from('member_profiles')
+      .update({ current_badge_tier_id: currentBadge.id })
+      .eq('user_id', userId)
+      .eq('guild_id', selectedGuildId);
+  }
 
   const activeRaffles = raffles ?? [];
   const eligibleRaffles = activeRaffles
@@ -103,6 +149,8 @@ export async function GET(request: NextRequest) {
     tagDays,
     daysToNext,
     hasTag,
+    earnMultiplier,
+    allTiers: sortedTiers,
     activeRaffles: activeRafflesWithCount,
     eligibleRaffles,
     joinedRaffles,
