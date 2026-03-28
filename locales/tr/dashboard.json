@@ -71,6 +71,8 @@
   "splash_welcome_generic": "Hoş geldin 👋",
   "splash_welcome_subtitle": "Yeni bir ekonomi dünyasına giriş yaptın.",
   "splash_welcome_ready": "Başlamaya hazır mısın?",
+  "splash_tap_to_start": "Başlamak için ekrana dokun",
+  "splash_click_to_start": "Başlamak için ekrana tıkla",
   "splash_welcome_subtitle_maintenance": "Şu anda sistem üzerinde iyileştirmeler yapılıyor.",
   "splash_platform_name": "Discord Economy Platform",
   "splash_start_button": "Haydi Başlayalım!",

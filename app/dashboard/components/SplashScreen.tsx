@@ -107,6 +107,11 @@ export default function SplashScreen({ onEnter }: Props) {
   const [userLoading, setUserLoading] = useState(true);
   const [tipIndex, setTipIndex] = useState(0);
   const [tipVisible, setTipVisible] = useState(true);
+  const [isTouch, setIsTouch] = useState(false);
+
+  useEffect(() => {
+    setIsTouch(navigator.maxTouchPoints > 0);
+  }, []);
   const linkSdkRef = useRef<InstanceType<Awaited<typeof import('@discord/embedded-app-sdk')>['DiscordSDK']> | null>(null);
 
   const openLink = async (url: string) => {
@@ -197,10 +202,20 @@ export default function SplashScreen({ onEnter }: Props) {
   const stillLoading = !maintenanceChecked || (maintenance && !isDeveloperChecked);
   const blocked = maintenance && !isDeveloper;
 
+  const handleScreenClick = (e: React.MouseEvent) => {
+    if (stillLoading || blocked) return;
+    if ((e.target as HTMLElement).closest('button, a')) return;
+    onEnter();
+  };
+
   return (
-    <div className="splash-screen relative isolate flex min-h-screen w-full flex-col overflow-hidden bg-[#0b0d12]">
+    <div
+      className="splash-screen relative isolate flex min-h-screen w-full flex-col overflow-hidden bg-[#0b0d12] cursor-default"
+      onClick={handleScreenClick}
+    >
       <style>{`
         @keyframes titleShine{0%,60%{background-position:100% 0}100%{background-position:-100% 0}}
+        @keyframes splashPulse{0%,100%{opacity:0.5}50%{opacity:0.85}}
       `}</style>
       <VideoBackground videoRef={videoRef} />
       {/* Extra left overlay — içeriği öne çıkar */}
@@ -273,34 +288,25 @@ export default function SplashScreen({ onEnter }: Props) {
                 </div>
               </div>
 
-              {/* Enter button */}
-              <div className="flex items-center">
+              {/* Tap / click hint */}
+              <div className="flex items-center gap-2 h-8">
                 {stillLoading ? (
-                  <button type="button" disabled className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white/40 cursor-not-allowed">
-                    <svg className="h-3.5 w-3.5 animate-spin" viewBox="0 0 16 16" fill="none">
-                      <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="2" strokeOpacity="0.3" />
-                      <path d="M8 2a6 6 0 016 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                    </svg>
-                    {t('loading')}
-                  </button>
+                  <svg className="h-3.5 w-3.5 animate-spin text-white/30" viewBox="0 0 16 16" fill="none">
+                    <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="2" strokeOpacity="0.3" />
+                    <path d="M8 2a6 6 0 016 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  </svg>
+                ) : blocked ? (
+                  <span className="text-sm text-white/30">{t('splash_maintenance_title')}</span>
                 ) : (
-                  <button
-                    type="button"
-                    onClick={blocked ? undefined : onEnter}
-                    disabled={blocked}
-                    className={`group flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white transition-all duration-200 active:scale-95 ${
-                      blocked
-                        ? 'cursor-not-allowed text-white/30'
-                        : 'bg-white/10 hover:bg-white/15 backdrop-blur-sm border border-white/15 hover:border-white/25'
-                    }`}
+                  <span
+                    className="text-sm font-medium text-white/50"
+                    style={{
+                      textShadow: '0 1px 10px rgba(0,0,0,1)',
+                      animation: 'splashPulse 2.5s ease-in-out infinite',
+                    }}
                   >
-                    {blocked ? t('splash_maintenance_title') : t('splash_start_button')}
-                    {!blocked && (
-                      <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5">
-                        <path d="M3.75 7.25a.75.75 0 000 1.5h6.19l-2.72 2.72a.75.75 0 001.06 1.06l4-4a.75.75 0 000-1.06l-4-4a.75.75 0 00-1.06 1.06l2.72 2.72H3.75z" />
-                      </svg>
-                    )}
-                  </button>
+                    {isTouch ? t('splash_tap_to_start') : t('splash_click_to_start')}
+                  </span>
                 )}
               </div>
 
