@@ -112,7 +112,7 @@ function TierRow({
                 src={tier.background_image}
                 alt=""
                 fill
-                className={`object-cover ${unlocked ? 'opacity-[0.12]' : 'opacity-[0.04]'}`}
+                className={`object-cover ${unlocked ? 'opacity-[0.35]' : 'opacity-[0.12]'}`}
                 unoptimized
               />
               <div className="absolute inset-0 bg-gradient-to-r from-[#0e1018]/80 via-[#0e1018]/40 to-transparent" />
