@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
-import { LuHouse, LuMail, LuStore, LuSettings, LuChevronRight, LuTicket, LuSend, LuTag, LuTrendingUp, LuChartBar, LuCompass, LuVault, LuLayoutGrid } from 'react-icons/lu';
+import { LuHouse, LuMail, LuStore, LuSettings, LuChevronRight, LuTicket, LuSend, LuTag, LuTrendingUp, LuChartBar, LuCompass, LuVault, LuLayoutGrid, LuGift, LuShieldCheck, LuWallet, LuCoins, LuRocket, LuBadgePlus, LuNewspaper } from 'react-icons/lu';
 import Image from 'next/image';
 import DiscordAgreementButton from '@/components/DiscordAgreementButton';
 import type { Notification, Section } from '../types';
@@ -64,6 +64,7 @@ type DashboardHeaderProps = {
   mailUnreadCount?: number;
   onOpenLeaderboard?: () => void;
   openLink?: (url: string) => Promise<void>;
+  isAdvancedEconomy?: boolean;
 };
 
 const RANDOM_GIFS = [
@@ -88,6 +89,7 @@ export default function DashboardHeader({
   mailUnreadCount = 0,
   settings,
   openLink,
+  isAdvancedEconomy = false,
 }: DashboardHeaderProps) {
   const t = useT();
   const router = useRouter();
@@ -122,15 +124,44 @@ export default function DashboardHeader({
     });
   }, [server?.guilds]);
 
-  const navItems: Array<{ key: Section; label: string; requiresAuth?: boolean; icon: JSX.Element }> = [
-    { key: 'overview', label: t('dashboard_nav_overview'), icon: <LuHouse className="h-3.5 w-3.5" /> },
-    { key: 'store', label: t('dashboard_nav_store'), icon: <LuStore className="h-3.5 w-3.5" /> },
-    { key: 'raffles', label: t('nav_raffles'), requiresAuth: true, icon: <LuTicket className="h-3.5 w-3.5" /> },
-    { key: 'discover', label: t('nav_community'), icon: <LuCompass className="h-3.5 w-3.5" /> },
-    { key: 'market', label: t('nav_exchange'), icon: <LuTrendingUp className="h-3.5 w-3.5" /> },
-    { key: 'treasury', label: t('nav_treasury'), icon: <LuVault className="h-3.5 w-3.5" /> },
-    { key: 'mail', label: t('dashboard_nav_mail'), requiresAuth: true, icon: <LuMail className="h-3.5 w-3.5" /> },
+  const NAV_GROUPS: Array<{ label: string; requiresAuth?: boolean; items: Array<{ key: Section; label: string; icon: JSX.Element }> }> = [
+    {
+      label: t('nav_group_discover'),
+      items: [
+        { key: 'overview', label: t('nav_home'), icon: <LuHouse className="h-4 w-4" /> },
+        { key: 'store', label: t('nav_store'), icon: <LuStore className="h-4 w-4" /> },
+        { key: 'raffles', label: t('nav_raffles'), icon: <LuGift className="h-4 w-4" /> },
+        { key: 'tag-badge', label: t('nav_tag_badge'), icon: <LuShieldCheck className="h-4 w-4" /> },
+        { key: 'discover', label: t('nav_community'), icon: <LuCompass className="h-4 w-4" /> },
+        ...(isAdvancedEconomy ? [
+          { key: 'market' as Section, label: t('nav_exchange'), icon: <LuTrendingUp className="h-4 w-4" /> },
+          { key: 'treasury' as Section, label: t('nav_treasury'), icon: <LuVault className="h-4 w-4" /> },
+        ] : []),
+      ],
+    },
+    {
+      label: t('nav_group_borsa'),
+      items: isAdvancedEconomy ? [
+        { key: 'borsa', label: t('nav_borsa'), icon: <LuChartBar className="h-4 w-4" /> },
+        { key: 'portfolio', label: t('nav_portfolio'), icon: <LuWallet className="h-4 w-4" /> },
+        { key: 'dividend', label: t('nav_dividend'), icon: <LuCoins className="h-4 w-4" /> },
+        { key: 'ipo-apply', label: t('nav_ipo_apply'), icon: <LuRocket className="h-4 w-4" /> },
+        { key: 'market-news', label: t('nav_market_news'), icon: <LuNewspaper className="h-4 w-4" /> },
+      ] : [
+        { key: 'economy-apply', label: t('nav_economy_apply'), icon: <LuBadgePlus className="h-4 w-4" /> },
+      ],
+    },
+    {
+      label: t('nav_group_account'),
+      requiresAuth: true,
+      items: [
+        { key: 'mail', label: t('nav_messages'), icon: <LuMail className="h-4 w-4" /> },
+      ],
+    },
   ];
+
+  // Düz liste — bottom bar "Şu an" etiketi için
+  const navItems = NAV_GROUPS.flatMap(g => g.items);
 
   const handleNavClick = (key: Section) => {
     navigation.onNavigate(key);
@@ -172,7 +203,7 @@ export default function DashboardHeader({
         {/* Sağ — bakiye + profil */}
         <div className="flex items-center gap-2">
           {!unauthorized && (
-            <div className="flex items-center gap-1.5">
+            <div className="hidden lg:flex items-center gap-1.5">
               {/* Mari bakiye */}
               {mariBalance !== undefined && (
                 <button
@@ -413,30 +444,58 @@ export default function DashboardHeader({
 
         {/* Nav menüsü — yukarı açılır */}
         {mobileMenuOpen && (
-          <div className="absolute bottom-full left-0 right-0 mb-1 mx-2 z-50 rounded-2xl border border-white/10 bg-[#0f1116]/98 backdrop-blur-2xl shadow-2xl overflow-hidden">
-            <div className="p-2 space-y-0.5">
-              {navItems.filter(item => !item.requiresAuth || !unauthorized).map((item) => {
-                const isActive = navigation.activeSection === item.key;
-                return (
+          <div className="absolute bottom-full left-0 right-0 mb-1 mx-2 z-50 rounded-2xl border border-white/10 bg-[#0f1116]/98 backdrop-blur-2xl shadow-2xl overflow-hidden max-h-[70vh] overflow-y-auto">
+            {/* Bakiye satırı */}
+            {!unauthorized && (
+              <div className="flex items-center gap-2 px-3 pt-3 pb-2">
+                {mariBalance !== undefined && (
                   <button
-                    key={item.key}
                     type="button"
-                    onClick={() => { handleNavClick(item.key); setMobileMenuOpen(false); }}
-                    className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
-                      isActive ? 'bg-white/10 text-white' : 'text-white/60 hover:bg-white/5 hover:text-white'
-                    }`}
+                    onClick={() => { setMobileMenuOpen(false); settings.onOpenMariConvert?.(); }}
+                    className="flex flex-1 items-center gap-1.5 rounded-xl border border-violet-500/25 bg-violet-500/10 px-3 py-2 text-sm transition hover:bg-violet-500/20"
                   >
-                    <span className={isActive ? 'text-white' : 'text-white/40'}>{item.icon}</span>
-                    <span>{item.label}</span>
-                    {isActive && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-white" />}
-                    {item.key === 'mail' && mailUnreadCount > 0 && (
-                      <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white">
-                        {mailUnreadCount > 9 ? '9+' : mailUnreadCount}
-                      </span>
-                    )}
+                    <Image src="/Mari.gif" alt="Mari" width={16} height={16} className="h-4 w-4" unoptimized />
+                    <span className="font-bold text-violet-200 tabular-nums">{walletLoading ? '—' : mariBalance.toFixed(3)}</span>
+                    <span className="text-[10px] text-violet-300/60 ml-auto">Mari</span>
                   </button>
-                );
-              })}
+                )}
+                <div className="flex flex-1 items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm">
+                  <Image src="/papel.gif" alt="Papel" width={16} height={16} className="h-4 w-4" />
+                  <span className="font-bold text-white tabular-nums">{walletLoading ? '—' : walletBalance.toFixed(2)}</span>
+                  <span className="text-[10px] text-white/40 ml-auto">Papel</span>
+                </div>
+              </div>
+            )}
+            <div className="px-2 pb-2 space-y-3">
+              {NAV_GROUPS.filter(g => !g.requiresAuth || !unauthorized).map((group) => (
+                <div key={group.label}>
+                  <p className="px-3 pb-1 pt-1 text-[9px] font-semibold uppercase tracking-[0.3em] text-white/25">{group.label}</p>
+                  <div className="space-y-0.5">
+                    {group.items.map((item) => {
+                      const isActive = navigation.activeSection === item.key;
+                      return (
+                        <button
+                          key={item.key}
+                          type="button"
+                          onClick={() => { handleNavClick(item.key); setMobileMenuOpen(false); }}
+                          className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
+                            isActive ? 'bg-white/10 text-white' : 'text-white/60 hover:bg-white/5 hover:text-white'
+                          }`}
+                        >
+                          <span className={isActive ? 'text-white' : 'text-white/40'}>{item.icon}</span>
+                          <span>{item.label}</span>
+                          {isActive && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-white" />}
+                          {item.key === 'mail' && mailUnreadCount > 0 && (
+                            <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white">
+                              {mailUnreadCount > 9 ? '9+' : mailUnreadCount}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}

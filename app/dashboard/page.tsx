@@ -1101,6 +1101,7 @@ export default function DashboardPage() {
           mailUnreadCount={mailUnreadCount}
           onOpenLeaderboard={() => setLeaderboardOpen(true)}
           openLink={openLink}
+          isAdvancedEconomy={economyApproved}
           renderNotificationBody={renderNotificationBody}
           settings={{
             open: settingsOpen,
