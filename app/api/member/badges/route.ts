@@ -231,13 +231,14 @@ export async function GET(request: NextRequest) {
 
   // Fetch recently drawn raffles (last 14 days) with winner info
   const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const now = new Date().toISOString();
+  // Fetch: manually drawn OR end_date passed (expired) in the last 7 days
   const { data: drawnRafflesRaw } = await supabase
     .from('raffles')
-    .select('id,title,drawn_at,prize_type,prize_papel_amount,prize_multiplier_value,prize_multiplier_days,prize_mari_amount,winner_count')
+    .select('id,title,drawn_at,end_date,prize_type,prize_papel_amount,prize_multiplier_value,prize_multiplier_days,prize_mari_amount,winner_count')
     .eq('guild_id', selectedGuildId)
-    .not('drawn_at', 'is', null)
-    .gte('drawn_at', cutoff)
-    .order('drawn_at', { ascending: false })
+    .or(`drawn_at.not.is.null,and(end_date.lt.${now},end_date.gte.${cutoff})`)
+    .order('drawn_at', { ascending: false, nullsFirst: false })
     .limit(10);
 
   let drawnRaffles: any[] = [];

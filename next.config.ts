@@ -33,6 +33,14 @@ const nextConfig: NextConfig = {
         source: '/activity/api/:path*',
         destination: '/api/:path*',
       },
+      // Static public assets — Activity iframe'de /activity/ prefix ile istenir
+      { source: '/activity/store-background/:path*', destination: '/store-background/:path*' },
+      { source: '/activity/menu-background/:path*', destination: '/menu-background/:path*' },
+      { source: '/activity/flags/:path*', destination: '/flags/:path*' },
+      { source: '/activity/gif/:path*', destination: '/gif/:path*' },
+      { source: '/activity/background/:path*', destination: '/background/:path*' },
+      { source: '/activity/icon/:path*', destination: '/icon/:path*' },
+      { source: '/activity/penguin/:path*', destination: '/penguin/:path*' },
       // Supabase storage assets → same-origin (Discord CSP için)
       {
         source: '/cdn/:path*',
