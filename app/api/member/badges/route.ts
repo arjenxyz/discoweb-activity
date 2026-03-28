@@ -90,15 +90,30 @@ export async function GET(request: NextRequest) {
         .from('member_badge_rewards')
         .insert({ user_id: userId, guild_id: selectedGuildId, badge_tier_id: tier.id, papel_given: tier.reward_papel });
       if (!insertErr && (tier.reward_papel ?? 0) > 0) {
-        // Credit wallet via RPC
+        // Credit wallet: fetch current balance, upsert new balance, write ledger
         try {
-          await supabase.rpc('add_wallet_balance', {
-            p_user_id: userId,
-            p_guild_id: selectedGuildId,
-            p_amount: tier.reward_papel,
+          const { data: walletRow } = await supabase
+            .from('member_wallets')
+            .select('balance')
+            .eq('guild_id', selectedGuildId)
+            .eq('user_id', userId)
+            .maybeSingle();
+          const currentBalance = Number((walletRow as any)?.balance ?? 0);
+          const newBalance = Number((currentBalance + (tier.reward_papel ?? 0)).toFixed(2));
+          await (supabase.from('member_wallets') as any).upsert(
+            { guild_id: selectedGuildId, user_id: userId, balance: newBalance, updated_at: new Date().toISOString() },
+            { onConflict: 'guild_id,user_id' },
+          );
+          await (supabase.from('wallet_ledger') as any).insert({
+            guild_id: selectedGuildId,
+            user_id: userId,
+            amount: tier.reward_papel,
+            type: 'badge_reward',
+            balance_after: newBalance,
+            metadata: { source: 'badge_tier', badge_tier_id: tier.id, badge_name: tier.name },
           });
         } catch {
-          // RPC may not exist — ignore
+          // wallet credit is best-effort — reward row already inserted to prevent re-trigger
         }
       }
     }
