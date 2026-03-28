@@ -49,9 +49,9 @@ export async function GET(request: NextRequest) {
       .or('end_date.is.null,end_date.gt.' + new Date().toISOString()),
   ]);
 
-  const hasTag = profile?.has_tag ?? false;
-  // Fallback: if tag_granted_at is null but has_tag is true, use profile created_at
-  const tagGrantedAt = profile?.tag_granted_at ?? (hasTag ? profile?.created_at : null) ?? null;
+  // Same fallback as overview: treat tag as active if tag_granted_at is set, even if has_tag flag lags behind
+  const tagGrantedAt = profile?.tag_granted_at ?? null;
+  const hasTag = profile?.has_tag === true || Boolean(tagGrantedAt);
 
   let tagDays = 0;
   if (hasTag && tagGrantedAt) {
