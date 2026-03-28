@@ -250,45 +250,26 @@ export default function SplashScreen({ onEnter }: Props) {
             {/* İçerik — kutu yok, direkt video üzerinde */}
             <div className="flex flex-col gap-4">
               {/* Welcome */}
-              {(
-                <div
-                  className="flex items-center gap-2.5"
-                  style={{ transition: 'opacity 0.4s ease', opacity: visible ? 1 : 0 }}
-                >
-                  {user?.avatarUrl ? (
-                    <img src={user.avatarUrl} alt={user.username} className="h-7 w-7 rounded-full ring-1 ring-white/10 flex-shrink-0" />
-                  ) : (
-                    <div className="h-7 w-7 rounded-full bg-white/10 flex-shrink-0" />
-                  )}
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-base font-semibold text-white/90" style={{ textShadow: '0 1px 12px rgba(0,0,0,1)' }}>
-                      {userLoading
-                        ? <span className="inline-block h-3.5 w-28 rounded bg-white/10 animate-pulse" />
-                        : user
-                          ? t('splash_welcome_user', { username: user.username })
-                          : t('splash_welcome_generic')}
-                    </span>
-                    <span className="text-xs text-white/50" style={{ textShadow: '0 1px 8px rgba(0,0,0,1)' }}>
-                      {blocked ? t('splash_welcome_subtitle_maintenance') : t('splash_welcome_subtitle')}
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {/* Tip */}
-              <div className="h-[64px] flex items-start">
-                <div
-                  className="flex items-start gap-3"
-                  style={{
-                    opacity: tipVisible ? 1 : 0,
-                    transform: tipVisible ? 'translateY(0)' : 'translateY(4px)',
-                    transition: 'opacity 0.35s ease, transform 0.35s ease',
-                  }}
-                >
-                  <span className="text-[#5865F2] mt-0.5 flex-shrink-0">{TIPS[tipIndex].icon}</span>
-                  <p className="text-sm text-white/60 leading-relaxed" style={{ textShadow: '0 1px 10px rgba(0,0,0,1)' }}>
-                    {TIPS[tipIndex].text}
-                  </p>
+              <div
+                className="flex items-center gap-2.5"
+                style={{ transition: 'opacity 0.4s ease', opacity: visible ? 1 : 0 }}
+              >
+                {user?.avatarUrl ? (
+                  <img src={user.avatarUrl} alt={user.username} className="h-7 w-7 rounded-full ring-1 ring-white/10 flex-shrink-0" />
+                ) : (
+                  <div className="h-7 w-7 rounded-full bg-white/10 flex-shrink-0" />
+                )}
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-base font-semibold text-white/90" style={{ textShadow: '0 1px 12px rgba(0,0,0,1)' }}>
+                    {userLoading
+                      ? <span className="inline-block h-3.5 w-28 rounded bg-white/10 animate-pulse" />
+                      : user
+                        ? t('splash_welcome_user', { username: user.username })
+                        : t('splash_welcome_generic')}
+                  </span>
+                  <span className="text-xs text-white/50" style={{ textShadow: '0 1px 8px rgba(0,0,0,1)' }}>
+                    {blocked ? t('splash_welcome_subtitle_maintenance') : t('splash_welcome_subtitle')}
+                  </span>
                 </div>
               </div>
 
@@ -326,6 +307,23 @@ export default function SplashScreen({ onEnter }: Props) {
                     </span>
                   </button>
                 )}
+              </div>
+
+              {/* Tip — buton altında, ikincil */}
+              <div className="h-[56px] flex items-start">
+                <div
+                  className="flex items-start gap-3"
+                  style={{
+                    opacity: tipVisible ? 0.5 : 0,
+                    transform: tipVisible ? 'translateY(0)' : 'translateY(4px)',
+                    transition: 'opacity 0.35s ease, transform 0.35s ease',
+                  }}
+                >
+                  <span className="text-white/40 mt-0.5 flex-shrink-0">{TIPS[tipIndex].icon}</span>
+                  <p className="text-xs text-white/40 leading-relaxed" style={{ textShadow: '0 1px 10px rgba(0,0,0,1)' }}>
+                    {TIPS[tipIndex].text}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
