@@ -269,7 +269,7 @@ export default function SplashScreen({ onEnter }: Props) {
                           : t('splash_welcome_generic')}
                     </span>
                     <span className="text-xs text-white/50" style={{ textShadow: '0 1px 8px rgba(0,0,0,1)' }}>
-                      {t('splash_welcome_subtitle')}
+                      {blocked ? t('splash_welcome_subtitle_maintenance') : t('splash_welcome_subtitle')}
                     </span>
                   </div>
                 </div>
