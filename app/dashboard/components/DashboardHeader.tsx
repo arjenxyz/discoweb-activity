@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
-import { LuHouse, LuMail, LuStore, LuSettings, LuChevronRight, LuTicket, LuSend, LuTag, LuTrendingUp, LuChartBar, LuCompass, LuVault } from 'react-icons/lu';
+import { LuHouse, LuMail, LuStore, LuSettings, LuChevronRight, LuTicket, LuSend, LuTag, LuTrendingUp, LuChartBar, LuCompass, LuVault, LuLayoutGrid } from 'react-icons/lu';
 import Image from 'next/image';
 import DiscordAgreementButton from '@/components/DiscordAgreementButton';
 import type { Notification, Section } from '../types';
@@ -138,10 +138,17 @@ export default function DashboardHeader({
 
   return (
     <>
-      {/* Focus overlay */}
+      {/* Desktop overlay — sadece masaüstü profil dropdown için */}
+      <div
+        onClick={() => setIsProfileOpen(false)}
+        className={`hidden lg:block fixed inset-0 z-[9990] bg-black/50 backdrop-blur-sm transition-all duration-300 ${
+          isProfileOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'
+        }`}
+      />
+      {/* Mobil overlay — menü/profil dropdown için, modalların altında kalır */}
       <div
         onClick={() => { setIsProfileOpen(false); setMobileMenuOpen(false); }}
-        className={`fixed inset-0 z-[9990] bg-black/50 backdrop-blur-sm transition-all duration-300 ${
+        className={`lg:hidden fixed inset-0 z-[35] bg-black/60 backdrop-blur-sm transition-all duration-300 ${
           (isProfileOpen || mobileMenuOpen) ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'
         }`}
       />
@@ -151,8 +158,8 @@ export default function DashboardHeader({
         isActivityEmbed ? 'h-auto pt-[env(safe-area-inset-top,0px)] pb-2 min-h-[4rem]' : 'h-16'
       } ${isProfileOpen ? 'z-[9991]' : 'z-30'}`}>
 
-        {/* Sol — logo (sadece desktop) */}
-        <div className="hidden lg:flex items-center gap-3 min-w-fit">
+        {/* Sol — logo */}
+        <div className="flex items-center gap-3 min-w-fit">
           <div className="h-9 w-9 overflow-hidden rounded-xl border border-white/10 bg-white/5">
             <Image src="/gif/cat.gif" alt="logo" className="h-full w-full object-cover" width={36} height={36} />
           </div>
@@ -330,58 +337,83 @@ export default function DashboardHeader({
           )}
 
           {unauthorized && (
+            <div className="hidden lg:block">
+              <DiscordAgreementButton
+                href={loginUrl}
+                className="rounded-full bg-[#5865F2] hover:bg-[#4752C4] px-5 py-2 text-sm font-bold text-white transition-all"
+                targetBlank={false}
+              >
+                {t('dashboard_login_button')}
+              </DiscordAgreementButton>
+            </div>
+          )}
+        </div>
+      </header>
+
+      {/* Mobil bottom bar */}
+      <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-[#0b0d12]/98 backdrop-blur-2xl border-t border-white/[0.08] pb-[env(safe-area-inset-bottom,0px)]">
+        <div className="flex items-center gap-2 px-3 py-2">
+          {/* Sol — Menüler butonu */}
+          <button
+            type="button"
+            onClick={() => { setMobileMenuOpen(o => !o); setIsProfileOpen(false); }}
+            className={`flex flex-1 items-center gap-2.5 rounded-2xl px-3 py-2 transition-all ${
+              mobileMenuOpen ? 'bg-white/10 border border-white/15' : 'bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.08]'
+            }`}
+          >
+            <div className={`flex h-7 w-7 items-center justify-center rounded-xl transition-colors ${mobileMenuOpen ? 'bg-white/15' : 'bg-white/8'}`}>
+              <LuLayoutGrid className="h-3.5 w-3.5 text-white/70" />
+            </div>
+            <div className="flex flex-col items-start leading-none">
+              <span className="text-[10px] text-white/35 font-medium">Şu an</span>
+              <span className="text-sm font-bold text-white">
+                {navItems.find(i => i.key === navigation.activeSection)?.label ?? 'Menüler'}
+              </span>
+            </div>
+            {mailUnreadCount > 0 && (
+              <span className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white">
+                {mailUnreadCount > 9 ? '9+' : mailUnreadCount}
+              </span>
+            )}
+          </button>
+
+          {/* Sağ — profil butonu */}
+          {!unauthorized ? (
+            <button
+              type="button"
+              onClick={() => { setIsProfileOpen(o => !o); setMobileMenuOpen(false); }}
+              className={`flex items-center gap-2 rounded-2xl border px-3 py-2 transition-all ${
+                isProfileOpen ? 'border-white/20 bg-white/10' : 'border-white/[0.06] bg-white/[0.04] hover:bg-white/[0.08]'
+              }`}
+            >
+              <div className="h-7 w-7 overflow-hidden rounded-xl border border-white/15 flex-shrink-0">
+                <Image
+                  src={profile?.avatarUrl || '/gif/cat.gif'}
+                  alt="avatar"
+                  width={28}
+                  height={28}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              <div className="flex flex-col items-start leading-none">
+                <span className="text-[10px] text-white/35 font-medium">Profil</span>
+                <span className="text-sm font-bold text-white max-w-[80px] truncate">{profile?.username || '—'}</span>
+              </div>
+            </button>
+          ) : (
             <DiscordAgreementButton
               href={loginUrl}
-              className="rounded-full bg-[#5865F2] hover:bg-[#4752C4] px-5 py-2 text-sm font-bold text-white transition-all"
+              className="rounded-2xl bg-[#5865F2] hover:bg-[#4752C4] px-4 py-2 text-sm font-bold text-white transition-all"
               targetBlank={false}
             >
               {t('dashboard_login_button')}
             </DiscordAgreementButton>
           )}
         </div>
-      </header>
-
-      {/* Mobil bottom bar */}
-      <div className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-[#0b0d12]/95 backdrop-blur-xl border-t border-white/[0.06] pb-[env(safe-area-inset-bottom,0px)]">
-        <div className="flex items-center justify-between px-4 py-2.5">
-          {/* Sol — DiscoWeb logo (menü açar) */}
-          <button
-            type="button"
-            onClick={() => { setMobileMenuOpen(o => !o); setIsProfileOpen(false); }}
-            className="flex items-center gap-2.5"
-          >
-            <div className="h-8 w-8 overflow-hidden rounded-xl border border-white/10 bg-white/5">
-              <Image src="/gif/cat.gif" alt="logo" width={32} height={32} className="h-full w-full object-cover" />
-            </div>
-            <span className="text-white font-black text-base tracking-tight">DiscoWeb</span>
-          </button>
-
-          {/* Sağ — profil butonu */}
-          {!unauthorized && (
-            <button
-              type="button"
-              onClick={() => { setIsProfileOpen(o => !o); setMobileMenuOpen(false); }}
-              className={`flex items-center gap-2 rounded-full border p-1 pr-3 transition-all ${
-                isProfileOpen ? 'border-white/20 bg-white/10' : 'border-transparent hover:border-white/10 hover:bg-white/5'
-              }`}
-            >
-              <div className="h-8 w-8 overflow-hidden rounded-full border border-white/10">
-                <Image
-                  src={profile?.avatarUrl || '/gif/cat.gif'}
-                  alt="avatar"
-                  width={32}
-                  height={32}
-                  className="h-full w-full object-cover"
-                />
-              </div>
-              <p className="text-sm font-semibold text-white leading-tight">{profile?.username || t('dashboard_user_fallback')}</p>
-            </button>
-          )}
-        </div>
 
         {/* Nav menüsü — yukarı açılır */}
         {mobileMenuOpen && (
-          <div className="absolute bottom-full left-0 right-0 mb-1 mx-2 rounded-2xl border border-white/10 bg-[#0f1116]/98 backdrop-blur-2xl shadow-2xl overflow-hidden">
+          <div className="absolute bottom-full left-0 right-0 mb-1 mx-2 z-50 rounded-2xl border border-white/10 bg-[#0f1116]/98 backdrop-blur-2xl shadow-2xl overflow-hidden">
             <div className="p-2 space-y-0.5">
               {navItems.filter(item => !item.requiresAuth || !unauthorized).map((item) => {
                 const isActive = navigation.activeSection === item.key;
@@ -413,7 +445,7 @@ export default function DashboardHeader({
         {isProfileOpen && !unauthorized && (
           <div
             onClick={e => e.stopPropagation()}
-            className="absolute bottom-full right-2 left-2 mb-1 rounded-2xl border border-white/10 bg-[#0f1116] shadow-2xl overflow-hidden"
+            className="absolute bottom-full right-2 left-2 mb-1 z-50 rounded-2xl border border-white/10 bg-[#0f1116] shadow-2xl overflow-hidden"
           >
             {/* GIF header */}
             <div className="relative h-24 overflow-hidden bg-[#5865F2]/15">
