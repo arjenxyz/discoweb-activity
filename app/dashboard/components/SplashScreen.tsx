@@ -250,7 +250,7 @@ export default function SplashScreen({ onEnter }: Props) {
             {/* İçerik — kutu yok, direkt video üzerinde */}
             <div className="flex flex-col gap-4">
               {/* Welcome */}
-              {!blocked && (
+              {(
                 <div
                   className="flex items-center gap-2.5"
                   style={{ transition: 'opacity 0.4s ease', opacity: visible ? 1 : 0 }}
