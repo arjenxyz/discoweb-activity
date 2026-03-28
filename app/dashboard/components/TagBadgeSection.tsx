@@ -1,6 +1,6 @@
 'use client';
 
-import { LuShieldCheck, LuLock, LuStar, LuCoins, LuZap, LuCheckCircle2 } from 'react-icons/lu';
+import { LuShieldCheck, LuLock, LuStar, LuCoins, LuZap, LuCircleCheck } from 'react-icons/lu';
 import type { BadgeInfo, BadgeTier } from '../types';
 
 type Props = {
@@ -111,7 +111,7 @@ function TierRow({
                   </span>
                 )}
                 {unlocked && !isCurrent && (
-                  <LuCheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                  <LuCircleCheck className="h-3.5 w-3.5 text-emerald-400" />
                 )}
               </div>
               <p className={`mt-0.5 text-xs ${unlocked ? 'text-white/40' : 'text-white/20'}`}>
