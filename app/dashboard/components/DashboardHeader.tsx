@@ -133,9 +133,9 @@ export default function DashboardHeader({
 
   const navItems: Array<{ key: Section; label: string; requiresAuth?: boolean; icon: JSX.Element }> = [
     { key: 'overview', label: t('dashboard_nav_overview'), icon: <LuHouse className="h-3.5 w-3.5" /> },
-    { key: 'store', label: t('dashboard_nav_store'), icon: <LuStore className="h-3.5 w-3.5" /> },
-    { key: 'raffles', label: t('nav_raffles'), requiresAuth: true, icon: <LuTicket className="h-3.5 w-3.5" /> },
-    { key: 'discover', label: t('nav_community'), icon: <LuCompass className="h-3.5 w-3.5" /> },
+    { key: 'store', label: t('dashboard_nav_store'), icon: <img src="/icon/shop.png" alt="" className="h-3.5 w-3.5 object-contain" /> },
+    { key: 'raffles', label: t('nav_raffles'), requiresAuth: true, icon: <img src="/icon/raffle.png" alt="" className="h-3.5 w-3.5 object-contain" /> },
+    { key: 'discover', label: t('nav_community'), icon: <img src="/icon/discover.png" alt="" className="h-3.5 w-3.5 object-contain" /> },
     { key: 'market', label: t('nav_exchange'), icon: <LuTrendingUp className="h-3.5 w-3.5" /> },
     { key: 'treasury', label: t('nav_treasury'), icon: <LuVault className="h-3.5 w-3.5" /> },
     { key: 'mail', label: t('dashboard_nav_mail'), requiresAuth: true, icon: <LuMail className="h-3.5 w-3.5" /> },

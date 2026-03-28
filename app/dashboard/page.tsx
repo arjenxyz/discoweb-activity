@@ -1277,6 +1277,7 @@ export default function DashboardPage() {
               <TagBadgeSection
                 badgeInfo={badgeInfo}
                 loading={!badgeInfo && !unauthorized}
+                overviewStats={overviewStats}
               />
             )}
 
