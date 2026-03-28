@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import {
   LuLayoutDashboard, LuScrollText, LuTriangleAlert, LuClipboardList,
   LuServer, LuUsers, LuMegaphone, LuChevronLeft, LuRefreshCw,
-  LuShield, LuSearch, LuTrash2, LuCheck, LuX, LuCopy, LuLink,
+  LuShield, LuSearch, LuTrash2, LuCheck, LuX, LuCopy, LuLink, LuBug, LuMessageSquare,
 } from 'react-icons/lu';
 import { apiUrl } from '@/lib/api';
 import { useT } from '@/contexts/LocaleContext';
@@ -155,7 +155,20 @@ const prettyJson = (value: unknown) => {
   try { return JSON.stringify(value, null, 2); } catch { return String(value); }
 };
 
-type TabId = 'overview' | 'logs' | 'apps' | 'servers' | 'profiles' | 'ads' | 'suspicious';
+type TabId = 'overview' | 'logs' | 'apps' | 'servers' | 'profiles' | 'ads' | 'suspicious' | 'reports';
+
+type BugReport = {
+  id: string;
+  user_id: string;
+  guild_id?: string | null;
+  type: 'bug' | 'suggestion';
+  section?: string | null;
+  description: string;
+  status: string;
+  dev_note?: string | null;
+  created_at: string;
+  updated_at?: string | null;
+};
 
 const NAV_ITEMS: { id: TabId; label: string; Icon: React.ElementType; accent: string }[] = [
   { id: 'overview',   label: 'Genel Bakış',   Icon: LuLayoutDashboard, accent: 'text-[#7289da]' },
@@ -165,6 +178,7 @@ const NAV_ITEMS: { id: TabId; label: string; Icon: React.ElementType; accent: st
   { id: 'servers',    label: 'Sunucular',      Icon: LuServer,          accent: 'text-violet-400' },
   { id: 'profiles',   label: 'Profiller',      Icon: LuUsers,           accent: 'text-sky-400' },
   { id: 'ads',        label: 'Reklamlar',      Icon: LuMegaphone,       accent: 'text-pink-400' },
+  { id: 'reports',    label: 'Raporlar',       Icon: LuBug,             accent: 'text-orange-400' },
 ];
 
 export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClose, variant = 'panel' }: Props) {
@@ -193,6 +207,11 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
   const [selectedProfile, setSelectedProfile] = useState<ProfileRow | null>(null);
   const [maintenanceLoading, setMaintenanceLoading] = useState(false);
   const [clearLoading, setClearLoading] = useState(false);
+  const [reports, setReports] = useState<BugReport[]>([]);
+  const [reportFilter, setReportFilter] = useState<string>('open');
+  const [reportTypeFilter, setReportTypeFilter] = useState<string>('all');
+  const [reportNoteInputs, setReportNoteInputs] = useState<Record<string, string>>({});
+  const [reportUpdating, setReportUpdating] = useState<string | null>(null);
   const [ads, setAds] = useState<Ad[]>([]);
   const [adLoading, setAdLoading] = useState(false);
   const [adFetching, setAdFetching] = useState(false);
@@ -237,6 +256,9 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
         setSelectedProfile(null);
       } else if (section === 'suspicious') {
         await fetchSuspicious(suspiciousFilter);
+        return;
+      } else if (section === 'reports') {
+        await fetchReports(reportFilter, reportTypeFilter);
         return;
       }
     } catch (e) {
@@ -387,6 +409,30 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
       setSuspiciousFlags(data.flags ?? []);
     } catch (e) { setError(e instanceof Error ? e.message : String(e)); }
     finally { setLoadingTab(false); }
+  };
+
+  const fetchReports = async (statusF = reportFilter, typeF = reportTypeFilter) => {
+    setLoadingTab(true);
+    try {
+      const res = await fetch(apiUrl(`/api/admin/reports?status=${statusF}&type=${typeF}&limit=100`), { credentials: 'include' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? String(res.status));
+      setReports(data.reports ?? []);
+    } catch (e) { setError(e instanceof Error ? e.message : String(e)); }
+    finally { setLoadingTab(false); }
+  };
+
+  const updateReport = async (id: string, status: string, note?: string) => {
+    setReportUpdating(id);
+    try {
+      const res = await fetch(apiUrl('/api/admin/reports'), {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+        body: JSON.stringify({ id, status, note }),
+      });
+      if (!res.ok) throw new Error((await res.json()).error);
+      setReports((prev) => prev.map((r) => r.id === id ? { ...r, status, ...(note ? { dev_note: note } : {}) } : r));
+    } catch (e) { setError(e instanceof Error ? e.message : String(e)); }
+    finally { setReportUpdating(null); }
   };
 
   const runScan = async () => {
@@ -842,6 +888,132 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
     </div>
   );
 
+  const REPORT_STATUS_OPTIONS = [
+    { value: 'reviewing',     label: '🔍 İnceleniyor',          cls: 'border-amber-400/25 bg-amber-500/10 text-amber-300' },
+    { value: 'need_info',     label: '💬 Bilgi Gerekiyor',       cls: 'border-blue-400/25 bg-blue-500/10 text-blue-300' },
+    { value: 'critical',      label: '⚠️ Kritik',               cls: 'border-red-400/25 bg-red-500/10 text-red-300' },
+    { value: 'fixed_pending', label: '🔧 Deploy Bekleniyor',     cls: 'border-cyan-400/25 bg-cyan-500/10 text-cyan-300' },
+    { value: 'planned_next',  label: '🎯 Sonraki Sürüme',        cls: 'border-teal-400/25 bg-teal-500/10 text-teal-300' },
+    { value: 'long_term',     label: '⏳ Uzun Vadeli',           cls: 'border-purple-400/25 bg-purple-500/10 text-purple-300' },
+    { value: 'resolved',      label: '✅ Çözüldü',               cls: 'border-emerald-400/25 bg-emerald-500/10 text-emerald-300' },
+    { value: 'not_found',     label: '❌ Tespit Edilemedi',      cls: 'border-red-400/25 bg-red-500/10 text-red-300' },
+    { value: 'duplicate',     label: '🔁 Bilinen Sorun',         cls: 'border-white/10 bg-white/5 text-white/50' },
+    { value: 'invalid',       label: '🚫 Geçersiz',              cls: 'border-white/10 bg-white/5 text-white/30' },
+    { value: 'closed',        label: '🔒 Kapalı',                cls: 'border-white/10 bg-white/5 text-white/30' },
+  ];
+
+  const REPORT_STATUS_BADGE: Record<string, string> = {
+    open:          'border-orange-400/30 bg-orange-500/10 text-orange-300',
+    reviewing:     'border-amber-400/30 bg-amber-500/10 text-amber-300',
+    need_info:     'border-blue-400/30 bg-blue-500/10 text-blue-300',
+    critical:      'border-red-400/30 bg-red-500/10 text-red-300',
+    fixed_pending: 'border-cyan-400/30 bg-cyan-500/10 text-cyan-300',
+    planned_next:  'border-teal-400/30 bg-teal-500/10 text-teal-300',
+    long_term:     'border-purple-400/30 bg-purple-500/10 text-purple-300',
+    resolved:      'border-emerald-400/30 bg-emerald-500/10 text-emerald-300',
+    not_found:     'border-red-400/30 bg-red-500/10 text-red-300',
+    duplicate:     'border-white/10 bg-white/5 text-white/50',
+    invalid:       'border-white/10 bg-white/5 text-white/30',
+    closed:        'border-white/10 bg-white/5 text-white/25',
+  };
+
+  const reportsSection = (
+    <div className="flex flex-col gap-4">
+      {/* Filters */}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap gap-1">
+          {['open','reviewing','need_info','resolved','closed','all'].map((s) => (
+            <button key={s} onClick={() => { setReportFilter(s); fetchReports(s, reportTypeFilter); }}
+              className={`rounded-full border px-3 py-1 text-[11px] font-medium transition ${reportFilter === s ? 'border-orange-400/40 bg-orange-500/15 text-orange-300' : 'border-white/10 text-white/40 hover:text-white/70'}`}>
+              {s}
+            </button>
+          ))}
+        </div>
+        <div className="flex gap-1 ml-auto">
+          {[{v:'all',l:'Tümü'},{v:'bug',l:'🐛 Hata'},{v:'suggestion',l:'💡 Öneri'}].map(({v,l}) => (
+            <button key={v} onClick={() => { setReportTypeFilter(v); fetchReports(reportFilter, v); }}
+              className={`rounded-full border px-3 py-1 text-[11px] font-medium transition ${reportTypeFilter === v ? 'border-[#5865F2]/40 bg-[#5865F2]/15 text-[#7289da]' : 'border-white/10 text-white/40 hover:text-white/70'}`}>
+              {l}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* List */}
+      <div className="flex flex-col gap-3 max-h-[680px] overflow-y-auto pr-1">
+        {reports.map((r) => (
+          <div key={r.id} className="rounded-2xl border border-white/[0.08] bg-[#0b0d12] overflow-hidden">
+            {/* Header */}
+            <div className="flex items-start justify-between gap-3 p-4 pb-3">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-base">{r.type === 'bug' ? '🐛' : '💡'}</span>
+                <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase ${REPORT_STATUS_BADGE[r.status] ?? 'border-white/10 text-white/30'}`}>
+                  {r.status}
+                </span>
+                {r.section && (
+                  <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-[10px] text-white/50">{r.section}</span>
+                )}
+              </div>
+              <span className="text-[10px] text-white/25 shrink-0">{formatDate(r.created_at)}</span>
+            </div>
+
+            {/* Description */}
+            <div className="px-4 pb-3">
+              <p className="text-sm text-white/80 whitespace-pre-wrap leading-relaxed">{r.description}</p>
+              <div className="mt-2 flex flex-wrap gap-3 text-[10px] text-white/30">
+                <span>Kullanıcı: <span className="text-white/50">{r.user_id}</span></span>
+                {r.guild_id && <span>Sunucu: <span className="text-white/50">{r.guild_id}</span></span>}
+              </div>
+            </div>
+
+            {/* Dev note */}
+            {r.dev_note && (
+              <div className="mx-4 mb-3 rounded-xl border border-[#5865F2]/20 bg-[#5865F2]/5 px-3 py-2">
+                <p className="text-[10px] text-[#7289da] font-semibold mb-0.5">Developer Notu</p>
+                <p className="text-[11px] text-white/60">{r.dev_note}</p>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="border-t border-white/[0.06] px-4 py-3 flex flex-col gap-2">
+              <div className="flex flex-wrap gap-1.5">
+                {REPORT_STATUS_OPTIONS.map((opt) => (
+                  <button key={opt.value}
+                    disabled={r.status === opt.value || reportUpdating === r.id}
+                    onClick={() => updateReport(r.id, opt.value)}
+                    className={`rounded-lg border px-2.5 py-1 text-[10px] font-medium transition disabled:opacity-40 ${opt.cls}`}>
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Developer notu ekle..."
+                  value={reportNoteInputs[r.id] ?? ''}
+                  onChange={(e) => setReportNoteInputs((p) => ({ ...p, [r.id]: e.target.value }))}
+                  className="flex-1 rounded-xl border border-white/10 bg-black/30 px-3 py-1.5 text-xs text-white placeholder-white/20 outline-none focus:border-[#5865F2]/40"
+                />
+                <button
+                  disabled={!reportNoteInputs[r.id] || reportUpdating === r.id}
+                  onClick={() => updateReport(r.id, r.status, reportNoteInputs[r.id])}
+                  className="shrink-0 rounded-xl border border-[#5865F2]/25 bg-[#5865F2]/10 hover:bg-[#5865F2]/20 px-3 py-1.5 text-[10px] text-[#7289da] transition disabled:opacity-40">
+                  <LuMessageSquare className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+        {reports.length === 0 && (
+          <div className="flex flex-col items-center gap-2 py-12 text-white/25">
+            <LuBug className="w-8 h-8" />
+            <p className="text-xs">Bu filtrede kayıtlı rapor yok.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
   const adsSection = (
     <div className="flex flex-col gap-4">
       <div className="rounded-2xl border border-white/10 bg-[#0b0d12] p-5">
@@ -911,6 +1083,7 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
     profiles:   profilesSection,
     ads:        adsSection,
     suspicious: suspiciousSection,
+    reports:    reportsSection,
   };
 
   const activeNav = NAV_ITEMS.find(n => n.id === activeTab)!;

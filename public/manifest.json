@@ -1,7 +1,7 @@
 {
   "name": "DiscoWeb - Discord Yönetim Paneli",
   "short_name": "DiscoWeb",
-  "description": "Özel Discord sunucuları için geliştirilmiş, yapay zeka destekli gelişmiş yönetim platformu.",
+  "description": "Özel Discord sunucuları için geliştirilmiş platform.",
   "start_url": "/dashboard",
   "display": "standalone",
   "background_color": "#0a0a0c",
