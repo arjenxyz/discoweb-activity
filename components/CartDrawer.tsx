@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  LuX, LuTrash2, LuPlus, LuMinus,
+  LuX, LuTrash2, LuPlus, LuMinus, LuChevronLeft,
   LuTicket, LuCircleCheck, LuChevronDown, LuChevronUp, LuLock, LuEye, LuEyeOff
 } from 'react-icons/lu';
 import Image from 'next/image';
@@ -263,6 +263,13 @@ export default function CartDrawer() {
         {/* --- HEADER --- */}
         <div className="relative z-10 flex items-center justify-between px-5 py-4 border-b border-white/10">
           <div className="flex items-center gap-3">
+            <button
+              onClick={closeCart}
+              className="sm:hidden flex items-center justify-center h-8 w-8 rounded-xl bg-white/8 text-white/70 hover:text-white hover:bg-white/15 transition-all"
+              aria-label="Geri"
+            >
+              <LuChevronLeft className="w-5 h-5" />
+            </button>
             <span className="text-white font-bold text-lg">{t('cart_drawer_title')}</span>
             <span className="bg-white/10 text-white/60 text-[10px] px-2 py-0.5 rounded-full font-medium">
               {t('cart_drawer_count', { count: items.reduce((s, i) => s + i.qty, 0), items: items.length })}

@@ -189,16 +189,21 @@ export default function DashboardHeader({
         isActivityEmbed ? 'h-auto pt-[env(safe-area-inset-top,0px)] pb-2 min-h-[4rem]' : 'h-16'
       } ${isProfileOpen ? 'z-[9991]' : 'z-30'}`}>
 
-        {/* Sol — logo */}
-        <div className="flex items-center gap-3 min-w-fit">
+        {/* Sol — logo (sadece desktop) */}
+        <div className="hidden lg:flex items-center gap-3 min-w-fit">
           <div className="h-9 w-9 overflow-hidden rounded-xl border border-white/10 bg-white/5">
             <Image src="/gif/cat.gif" alt="logo" className="h-full w-full object-cover" width={36} height={36} />
           </div>
-          <span className="hidden lg:block text-white font-black text-lg tracking-tight">DiscoWeb</span>
+          <span className="text-white font-black text-lg tracking-tight">DiscoWeb</span>
         </div>
 
-        {/* Mobil orta — DiscoWeb yazısı */}
-        <span className="lg:hidden absolute left-1/2 -translate-x-1/2 text-white font-black text-lg tracking-tight pointer-events-none">DiscoWeb</span>
+        {/* Mobil orta — logo + DiscoWeb yazısı birlikte */}
+        <div className="lg:hidden absolute left-1/2 -translate-x-1/2 flex items-center gap-2 pointer-events-none">
+          <div className="h-8 w-8 overflow-hidden rounded-xl border border-white/10 bg-white/5 flex-shrink-0">
+            <Image src="/gif/cat.gif" alt="logo" className="h-full w-full object-cover" width={32} height={32} />
+          </div>
+          <span className="text-white font-black text-lg tracking-tight">DiscoWeb</span>
+        </div>
 
         {/* Orta — boşluk */}
         <div className="flex-1" />

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import {
   LuX, LuTicket, LuClock, LuUsers, LuLoader,
-  LuCoins, LuShield, LuZap, LuGift,
+  LuCoins, LuShield, LuZap, LuGift, LuChevronLeft,
 } from 'react-icons/lu';
 import type { BadgeInfo } from '../types';
 
@@ -122,6 +122,13 @@ export default function RafflesDrawer({
         {/* HEADER */}
         <div className="relative z-10 flex items-center justify-between px-5 py-4 border-b border-white/10">
           <div className="flex items-center gap-3">
+            <button
+              onClick={onClose}
+              className="sm:hidden flex items-center justify-center h-8 w-8 rounded-xl bg-white/8 text-white/70 hover:text-white hover:bg-white/15 transition-all"
+              aria-label="Geri"
+            >
+              <LuChevronLeft className="w-5 h-5" />
+            </button>
             <img src="/icon/raffle.png" alt="" className="w-5 h-5 object-contain" />
             <span className="text-white font-bold text-lg">Çekilişlerim</span>
             <span className="bg-emerald-500/15 text-emerald-300 border border-emerald-500/25 text-[10px] px-2 py-0.5 rounded-full font-semibold">
