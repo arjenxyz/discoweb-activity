@@ -38,7 +38,6 @@ export default function CartDrawer() {
   const [code, setCode] = useState('');
   const [applying, setApplying] = useState(false);
   const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
-  const [showCouponInput, setShowCouponInput] = useState(false);
   const [showCouponList, setShowCouponList] = useState(true);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [checkoutSuccess, setCheckoutSuccess] = useState(false);
@@ -74,16 +73,6 @@ export default function CartDrawer() {
   // Kupon uygulandıktan sonra kullanım bilgisini göster
   // NOT: Kupon limiti dolana kadar (userUsageCount >= perUserLimit) listede kalır
   // Limit tam dolduğunda backend /api/member/coupons listeden kaldırır
-
-  // Eğer sepette ürün ekleme/çıkarma yapıldıysa kupon girişini kapat (kullanıcı gizlediyse açılmasın)
-  useEffect(() => {
-    if (showCouponInput) {
-      const timer = setTimeout(() => {
-        setShowCouponInput(false);
-      }, 0);
-      return () => clearTimeout(timer);
-    }
-  }, [items.length, showCouponInput]);
 
   // Sepet açıldığında kuponları yenile — CartProvider mount olduğunda guild_id
   // henüz localStorage'da olmayabilir, bu yüzden ilk fetch boş döner.
@@ -362,46 +351,27 @@ export default function CartDrawer() {
               <div>
                 {!appliedCoupon ? (
                   <div className="border-b border-white/5 pb-2">
-                    <div className="flex items-center gap-3">
+                    {/* Kod girişi — her zaman görünür */}
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <LuTicket className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30" />
+                        <input
+                          value={code}
+                          onChange={(e) => setCode(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && code && handleApply(code)}
+                          placeholder={t('coupon_input_placeholder')}
+                          className="w-full bg-white/5 border border-white/10 rounded-xl pl-8 pr-3 py-2.5 text-xs text-white focus:border-[#5865F2] outline-none placeholder:text-white/25"
+                        />
+                      </div>
                       <button
-                        onClick={() => setShowCouponInput(!showCouponInput)}
-                        className="flex items-center gap-2 text-xs font-bold text-[#5865F2] hover:text-white transition-colors select-none"
+                        onClick={() => handleApply(code)}
+                        disabled={applying || !code}
+                        className="px-4 bg-[#5865F2] hover:bg-[#4752C4] text-white rounded-xl text-xs font-bold transition-all disabled:opacity-40"
                       >
-                        <LuTicket /> {t('cart_drawer_discount_code')} {showCouponInput ? <LuChevronUp /> : <LuChevronDown />}
-                      </button>
-
-                      <div className="flex-1" />
-
-                      <button
-                        onClick={() => setShowCouponList(prev => !prev)}
-                        className="text-white/50 hover:text-white p-2 rounded-md transition-colors"
-                        aria-label={showCouponList ? t('coupon_toggle_list_close') : t('coupon_toggle_list_open')}
-                        title={showCouponList ? t('coupon_toggle_list_close') : t('coupon_toggle_list_open')}
-                      >
-                        {showCouponList ? <LuEye className="w-4 h-4" /> : <LuEyeOff className="w-4 h-4" />}
+                        {applying ? '...' : t('cart_drawer_apply_discount')}
                       </button>
                     </div>
-
-                    {showCouponInput && showCouponList && (
-                      <div className="mt-3 space-y-2 animate-fadeIn">
-                        <div className="flex gap-2">
-                          <input
-                            value={code}
-                            onChange={(e) => setCode(e.target.value)}
-                            placeholder={t('coupon_input_placeholder')}
-                            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:border-[#5865F2] outline-none"
-                          />
-                          <button
-                            onClick={() => handleApply(code)}
-                            disabled={applying || !code}
-                            className="px-3 bg-white/10 hover:bg-[#5865F2] text-white rounded-lg text-xs font-bold transition-all disabled:opacity-50"
-                          >
-                            {t('cart_drawer_apply_discount')}
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                     {message && <p className={`text-[10px] mt-1 ${message.type === 'error' ? 'text-rose-400' : 'text-emerald-400'}`}>{message.text}</p>}
+                    {message && <p className={`text-[10px] mt-1.5 ${message.type === 'error' ? 'text-rose-400' : 'text-emerald-400'}`}>{message.text}</p>}
                   </div>
                 ) : (
                   <div className="flex items-center justify-between bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 rounded-lg">
