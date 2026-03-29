@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { apiUrl } from '@/lib/api';
+import { setCurrentSection } from '@/lib/errorContext';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -94,7 +95,11 @@ export default function DashboardPage() {
   const [storePage, setStorePage] = useState(1);
   const [storeHasMore, setStoreHasMore] = useState(true);
   const [storeLoadingMore, setStoreLoadingMore] = useState(false);
-  const [activeSection, setActiveSection] = useState<Section>('overview');
+  const [activeSection, setActiveSectionState] = useState<Section>('overview');
+  const setActiveSection = useCallback((s: Section) => {
+    setActiveSectionState(s);
+    setCurrentSection(s);
+  }, []);
   const [borsaDetailGuildId, setBorsaDetailGuildId] = useState<string | null>(null);
   const [dividendGuildId, setDividendGuildId] = useState<string | null>(null);
 
@@ -560,9 +565,10 @@ export default function DashboardPage() {
 
     const loadAccrued = async () => {
       try {
-        await fetchWithCreds('/api/member/load-accrued', { method: 'POST' });
+        const res = await fetchWithCreds('/api/member/load-accrued', { method: 'POST' });
+        if (!res.ok) console.error(`[load-accrued] HTTP ${res.status}`);
       } catch (err) {
-        console.warn('Accrued earnings sync failed:', err);
+        console.error('[load-accrued] fetch failed:', err);
       }
     };
 

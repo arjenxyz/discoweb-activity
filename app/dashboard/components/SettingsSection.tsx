@@ -42,15 +42,16 @@ export default function SettingsSection({
   const [ipoEstimatedDate, setIpoEstimatedDate] = useState('');
 
   useEffect(() => {
-    fetch(apiUrl('/api/member/treasury'))
-      .then((r) => r.json())
-      .then((d) => {
+    fetchWithCreds('/api/member/treasury')
+      .then(async (r) => {
+        if (!r.ok) { console.error(`[treasury/settings] HTTP ${r.status}`); return; }
+        const d = await r.json();
         setEconomyTier(d.economy_tier ?? 'basic');
       })
-      .catch(() => {});
+      .catch((err) => console.error('[treasury/settings] fetch failed:', err));
 
     // Bekleyen başvuru kontrolü
-    fetch(apiUrl('/api/member/economy-tier-status'))
+    fetchWithCreds('/api/member/economy-tier-status')
       .then((r) => r.json())
       .then((d) => { if (d.pending) setHasPending(true); })
       .catch(() => {});

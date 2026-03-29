@@ -34,22 +34,28 @@ export async function POST(request: Request) {
     debugLogs?: string[];
     context?: string;
     componentStack?: string;
+    breadcrumbs?: string[];
+    section?: string;
+    deviceInfo?: string;
   };
 
   try { body = await request.json(); } catch {
     return NextResponse.json({ error: 'invalid_body' }, { status: 400 });
   }
 
-  const hasCode   = !!body.errorCode;
-  const code      = body.errorCode ?? 'DW-9003';
-  const message   = String(body.message ?? 'Bilinmiyor').slice(0, 800);
-  const stack     = String(body.stack ?? '').slice(0, 2000);
-  const url       = String(body.url ?? '').slice(0, 300);
-  const ua        = String(body.userAgent ?? request.headers.get('user-agent') ?? 'Bilinmiyor').slice(0, 250);
-  const logs      = (body.debugLogs ?? []).slice(-15).join('\n').slice(0, 1500);
-  const context   = String(body.context ?? '').slice(0, 300);
-  const compStack = String(body.componentStack ?? '').slice(0, 1000);
-  const time      = new Date().toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' });
+  const hasCode    = !!body.errorCode;
+  const code       = body.errorCode ?? 'DW-9003';
+  const message    = String(body.message ?? 'Bilinmiyor').slice(0, 800);
+  const stack      = String(body.stack ?? '').slice(0, 2000);
+  const url        = String(body.url ?? '').slice(0, 300);
+  const ua         = String(body.userAgent ?? request.headers.get('user-agent') ?? 'Bilinmiyor').slice(0, 250);
+  const logs       = (body.debugLogs ?? []).slice(-15).join('\n').slice(0, 1500);
+  const context    = String(body.context ?? '').slice(0, 300);
+  const compStack  = String(body.componentStack ?? '').slice(0, 1000);
+  const crumbs     = (body.breadcrumbs ?? []).slice(-10).join('\n').slice(0, 800);
+  const section    = String(body.section ?? '').slice(0, 100);
+  const deviceInfo = String(body.deviceInfo ?? '').slice(0, 150);
+  const time       = new Date().toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' });
 
   const embed = {
     title: hasCode
@@ -61,9 +67,12 @@ export async function POST(request: Request) {
       { name: '🏷️ Kod', value: `\`${code}\``, inline: true },
       { name: '🕐 Zaman', value: time, inline: true },
       { name: '🌐 IP', value: ip, inline: true },
+      ...(section ? [{ name: '📌 Section', value: section, inline: true }] : []),
+      ...(deviceInfo ? [{ name: '📱 Cihaz', value: deviceInfo, inline: true }] : []),
       ...(url ? [{ name: '🔗 URL', value: url, inline: false }] : []),
       ...(context ? [{ name: '📍 Bağlam', value: context, inline: false }] : []),
       { name: '💻 User Agent', value: `\`${ua}\``, inline: false },
+      ...(crumbs ? [{ name: '🧭 Son Eylemler', value: `\`\`\`${crumbs}\`\`\``, inline: false }] : []),
       ...(stack ? [{ name: '📚 Stack Trace', value: `\`\`\`${stack}\`\`\``, inline: false }] : []),
       ...(compStack ? [{ name: '⚛️ Component Stack', value: `\`\`\`${compStack}\`\`\``, inline: false }] : []),
       ...(logs ? [{ name: '📋 Debug Logları', value: `\`\`\`${logs}\`\`\``, inline: false }] : []),

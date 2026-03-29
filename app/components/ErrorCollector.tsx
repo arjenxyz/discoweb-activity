@@ -3,17 +3,25 @@
 import { useEffect, useRef } from 'react';
 import { pushClientError } from '@/lib/clientErrorStore';
 import { reportError } from '@/components/GlobalErrorReporter';
+import { pushBreadcrumb } from '@/lib/breadcrumbs';
+import { registerClientErrorReporter } from '@/lib/reportClientError';
 
-const DEBOUNCE_MS = 5000; // aynı hatayı 5 saniyede bir kez gönder
-const sent = new Set<string>(); // session boyunca duplicate'leri önle
+const DEBOUNCE_MS = 5000;
+const sent = new Set<string>();
+
+function getClientErrorUrl(): string {
+  const isActivity = typeof window !== 'undefined' &&
+    window.location.hostname.includes('discordsays.com');
+  return isActivity ? '/activity/api/client-error' : '/api/client-error';
+}
 
 function sendError(payload: object) {
+  const url = getClientErrorUrl();
   try {
-    navigator.sendBeacon('/api/client-error', JSON.stringify(payload));
+    navigator.sendBeacon(url, JSON.stringify(payload));
   } catch {
-    // sendBeacon desteklenmiyorsa fetch dene
     try {
-      void fetch('/api/client-error', {
+      void fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -27,10 +35,33 @@ function buildKey(message: string, source?: string): string {
   return `${message.slice(0, 80)}|${(source ?? '').slice(0, 40)}`;
 }
 
+const ERROR_NOISE = [
+  'Warning:',
+  'Download the React DevTools',
+  'ReactDOM.render is no longer supported',
+  'WebSocket connection',
+  'RealtimeClient',
+  'Realtime connection',
+];
+
+const WARN_PATTERNS = [
+  'Accrued',
+  'failed',
+  'HTTP 4',
+  'HTTP 5',
+  '[treasury]',
+  '[load-accrued]',
+];
+
 export default function ErrorCollector() {
   const lastSent = useRef<Map<string, number>>(new Map());
 
   useEffect(() => {
+    // reportClientError bağlantısı — lib dosyaları bu fonksiyonu kullanır
+    registerClientErrorReporter((message, context, stack) => {
+      reportError({ message, context, stack });
+    });
+
     const shouldSend = (key: string): boolean => {
       if (sent.has(key)) return false;
       const last = lastSent.current.get(key) ?? 0;
@@ -46,8 +77,52 @@ export default function ErrorCollector() {
       timestamp: new Date().toISOString(),
     });
 
+    // Sayfa yükleme performansı
+    const checkPageLoad = () => {
+      try {
+        const entries = performance.getEntriesByType('navigation') as PerformanceNavigationTiming[];
+        if (entries.length > 0) {
+          const nav = entries[0];
+          const loadTime = Math.round(nav.loadEventEnd - nav.startTime);
+          if (loadTime > 5000) {
+            pushBreadcrumb('slow_page_load', `${loadTime}ms`);
+            sendError({
+              type: 'slow_load',
+              message: `Sayfa yükleme süresi: ${loadTime}ms`,
+              loadTime,
+              ...meta(),
+            });
+          }
+        }
+      } catch {}
+    };
+
+    if (document.readyState === 'complete') {
+      checkPageLoad();
+    } else {
+      const onLoad = () => checkPageLoad();
+      window.addEventListener('load', onLoad, { once: true });
+    }
+
+    // Otomatik click breadcrumbs
+    const onDocClick = (e: MouseEvent) => {
+      try {
+        const target = e.target as HTMLElement;
+        const el = target.closest('button, a, [data-breadcrumb]');
+        if (!el) return;
+        const label =
+          (el as HTMLElement).dataset?.breadcrumb ||
+          el.getAttribute('aria-label') ||
+          el.textContent?.trim().slice(0, 60) ||
+          el.tagName.toLowerCase();
+        pushBreadcrumb('click', label ?? undefined);
+      } catch {}
+    };
+    document.addEventListener('click', onDocClick, { passive: true });
+
     // JS hataları
     const onError = (event: ErrorEvent) => {
+      pushBreadcrumb('js_error', event.message?.slice(0, 60));
       const key = buildKey(event.message, event.filename);
       const payload = {
         type: 'js_error',
@@ -72,6 +147,7 @@ export default function ErrorCollector() {
       const message = event.reason instanceof Error
         ? event.reason.message
         : String(event.reason);
+      pushBreadcrumb('promise_rejection', message.slice(0, 60));
       const key = buildKey(message, 'promise');
       const payload = {
         type: 'unhandled_rejection',
@@ -93,20 +169,25 @@ export default function ErrorCollector() {
     const originalConsoleError = console.error;
     console.error = (...args: unknown[]) => {
       originalConsoleError(...args);
-      const message = args.map(a => (typeof a === 'object' ? JSON.stringify(a) : String(a))).join(' ');
-      // React'in kendi uyarılarını ve beklenen hataları filtrele
-      if (
-        message.includes('Warning:') ||
-        message.includes('Download the React DevTools') ||
-        message.includes('ReactDOM.render is no longer supported')
-      ) return;
+      const message = args.map(a =>
+        typeof a === 'object' ? (() => { try { return JSON.stringify(a); } catch { return String(a); } })() : String(a)
+      ).join(' ');
+      if (ERROR_NOISE.some(n => message.includes(n))) return;
+      reportError({ message: message.slice(0, 300), context: 'console.error' });
       const key = buildKey(message, 'console');
       if (!shouldSend(key)) return;
-      sendError({
-        type: 'console_error',
-        message: message.slice(0, 800),
-        ...meta(),
-      });
+      sendError({ type: 'console_error', message: message.slice(0, 800), ...meta() });
+    };
+
+    // console.warn intercept — sadece önemli pattern'lar, modal gösterme
+    const originalConsoleWarn = console.warn;
+    console.warn = (...args: unknown[]) => {
+      originalConsoleWarn(...args);
+      const message = args.map(a => String(a)).join(' ');
+      if (!WARN_PATTERNS.some(p => message.includes(p))) return;
+      const key = buildKey(message, 'warn');
+      if (!shouldSend(key)) return;
+      sendError({ type: 'console_warn', message: message.slice(0, 800), ...meta() });
     };
 
     window.addEventListener('error', onError);
@@ -115,7 +196,9 @@ export default function ErrorCollector() {
     return () => {
       window.removeEventListener('error', onError);
       window.removeEventListener('unhandledrejection', onUnhandledRejection);
+      document.removeEventListener('click', onDocClick);
       console.error = originalConsoleError;
+      console.warn = originalConsoleWarn;
     };
   }, []);
 

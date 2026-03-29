@@ -1,5 +1,11 @@
 // fetchWithCreds.ts
 import { apiUrl } from './api';
+import { pushBreadcrumb } from './breadcrumbs';
+import { reportClientError } from './reportClientError';
+
+// Yavaş API eşiği (ms)
+const SLOW_THRESHOLD = 3000;
+const VERY_SLOW_THRESHOLD = 8000;
 
 const getCookie = (name: string): string | null => {
   if (typeof document === 'undefined') return null;
@@ -65,7 +71,28 @@ export default async function fetchWithCreds(input: RequestInfo, init: RequestIn
     },
   };
 
+  const requestStart = Date.now();
   const response = await fetch(finalInput, merged);
+  const elapsed = Date.now() - requestStart;
+
+  // Yavaş API takibi
+  if (typeof window !== 'undefined' && elapsed >= SLOW_THRESHOLD) {
+    const path = typeof finalInput === 'string'
+      ? finalInput.replace(/\?.*/, '').slice(-60)
+      : '?';
+    pushBreadcrumb('slow_api', `${path} ${elapsed}ms`);
+    if (elapsed >= VERY_SLOW_THRESHOLD) {
+      reportClientError(`Çok yavaş API yanıtı: ${path} — ${elapsed}ms`, 'fetchWithCreds slow');
+    }
+  }
+
+  // 5xx hataları hata modalını tetikler
+  if (typeof window !== 'undefined' && response.status >= 500) {
+    const path = typeof finalInput === 'string'
+      ? finalInput.replace(/\?.*/, '').slice(-60)
+      : '?';
+    reportClientError(`API ${response.status}: ${path}`, 'fetchWithCreds');
+  }
 
   if (response.status === 401 && bearerToken) {
     try {

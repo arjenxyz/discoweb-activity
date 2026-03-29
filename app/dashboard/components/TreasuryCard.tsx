@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { LuFlame, LuVault, LuTrendingUp, LuGift } from 'react-icons/lu';
-import { apiUrl } from '@/lib/api';
+import fetchWithCreds from '@/lib/fetchWithCreds';
 import { useT } from '@/contexts/LocaleContext';
 
 type Treasury = {
@@ -20,15 +20,16 @@ export default function TreasuryCard() {
   const [isAdvanced, setIsAdvanced] = useState(false);
 
   useEffect(() => {
-    fetch(apiUrl('/api/member/treasury'))
-      .then((r) => r.json())
-      .then((d) => {
+    fetchWithCreds('/api/member/treasury')
+      .then(async (r) => {
+        if (!r.ok) { console.error(`[treasury] HTTP ${r.status}`); return; }
+        const d = await r.json();
         if (d.economy_tier === 'advanced' && d.treasury) {
           setIsAdvanced(true);
           setTreasury(d.treasury);
         }
       })
-      .catch(() => {})
+      .catch((err) => console.error('[treasury] fetch failed:', err))
       .finally(() => setLoading(false));
   }, []);
 
