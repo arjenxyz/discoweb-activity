@@ -125,6 +125,10 @@ export default function CartDrawer() {
     }
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  useEffect(() => {
+    if (videoRef.current) videoRef.current.muted = muted;
+  }, [muted]);
+
   if (!open) return null;
 
   // --- KUPON UYGULAMA ---
@@ -280,10 +284,6 @@ export default function CartDrawer() {
     if (isBelowLimit) return t('checkout_button_limit_insufficient');
     return t('checkout_button_default');
   };
-
-  useEffect(() => {
-    if (videoRef.current) videoRef.current.muted = muted;
-  }, [muted]);
 
   return (
     <div className="fixed inset-0 z-[10000] flex justify-end font-sans">
