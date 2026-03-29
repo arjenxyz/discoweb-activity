@@ -119,10 +119,6 @@ export default function CartDrawer() {
     }
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => {
-    if (videoRef.current) videoRef.current.muted = muted;
-  }, [muted]);
-
   if (!open) return null;
 
   // --- KUPON UYGULAMA ---
