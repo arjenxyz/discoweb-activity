@@ -1,14 +1,18 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   LuX, LuTrash2, LuPlus, LuMinus, LuChevronLeft,
-  LuTicket, LuCircleCheck, LuChevronDown, LuChevronUp, LuLock, LuEye, LuEyeOff
+  LuTicket, LuCircleCheck, LuChevronDown, LuChevronUp, LuLock, LuEye, LuEyeOff,
+  LuShoppingBag, LuTag, LuStar, LuZap, LuGift,
 } from 'react-icons/lu';
 import Image from 'next/image';
 import { useCart } from '../lib/cart';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { useT } from '@/contexts/LocaleContext';
+
+const MIN_WIDTH = 320;
+const MAX_WIDTH = 600;
 
 
 type Coupon = {
@@ -34,6 +38,39 @@ export default function CartDrawer() {
     open, closeCart,
     refreshCoupons,
   } = useCart();
+
+  const [drawerWidth, setDrawerWidth] = useState(420);
+  const isResizing = useRef(false);
+  const startX = useRef(0);
+  const startWidth = useRef(0);
+
+  const onMouseDown = useCallback((e: React.MouseEvent) => {
+    isResizing.current = true;
+    startX.current = e.clientX;
+    startWidth.current = drawerWidth;
+    document.body.style.userSelect = 'none';
+    document.body.style.cursor = 'ew-resize';
+  }, [drawerWidth]);
+
+  useEffect(() => {
+    const onMouseMove = (e: MouseEvent) => {
+      if (!isResizing.current) return;
+      const delta = startX.current - e.clientX;
+      const newWidth = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, startWidth.current + delta));
+      setDrawerWidth(newWidth);
+    };
+    const onMouseUp = () => {
+      isResizing.current = false;
+      document.body.style.userSelect = '';
+      document.body.style.cursor = '';
+    };
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+  }, []);
 
   const [code, setCode] = useState('');
   const [applying, setApplying] = useState(false);
@@ -238,25 +275,95 @@ export default function CartDrawer() {
     return t('checkout_button_default');
   };
 
+  const badges = [
+    { icon: <LuTag className="w-4 h-4" />, text: 'İndirim Kodları', sub: 'Özel fırsatlar seni bekliyor', color: 'from-violet-500/20 to-purple-500/10 border-violet-500/30 text-violet-300' },
+    { icon: <LuGift className="w-4 h-4" />, text: 'Hoşgeldin Bonusu', sub: 'İlk alışverişe özel %50', color: 'from-rose-500/20 to-pink-500/10 border-rose-500/30 text-rose-300' },
+    { icon: <LuZap className="w-4 h-4" />, text: 'Papel Kazan', sub: 'Her mesajda otomatik kazanç', color: 'from-amber-500/20 to-yellow-500/10 border-amber-500/30 text-amber-300' },
+    { icon: <LuStar className="w-4 h-4" />, text: 'Özel Roller', sub: 'Sunucunda öne çık', color: 'from-emerald-500/20 to-teal-500/10 border-emerald-500/30 text-emerald-300' },
+    { icon: <LuShoppingBag className="w-4 h-4" />, text: 'Sınırlı Stok', sub: 'Kaçırmadan al', color: 'from-sky-500/20 to-blue-500/10 border-sky-500/30 text-sky-300' },
+  ];
+
   return (
     <div className="fixed inset-0 z-[10000] flex justify-end font-sans">
+      {/* Backdrop — animasyonlu banner + overlay */}
       <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-[6px] transition-all duration-300"
+        className="absolute inset-0 bg-black/70 backdrop-blur-[6px]"
         onClick={closeCart}
       >
-        {/* Sol taraftaki büyük GIF Efekti */}
-        <div className="absolute inset-y-0 left-0 w-[420px] pointer-events-none overflow-hidden">
-           <Image
-             src="/gif/image.gif"
-             alt="Effect"
-             fill
-             className="object-contain object-left opacity-100"
-             unoptimized
-           />
+        {/* Animated shopping banner */}
+        <div
+          className="absolute inset-y-0 left-0 overflow-hidden pointer-events-none flex flex-col items-center justify-center gap-6 px-8"
+          style={{ right: drawerWidth }}
+        >
+          {/* Animated gradient bg */}
+          <div className="absolute inset-0 bg-gradient-to-br from-[#5865F2]/10 via-transparent to-violet-900/10 animate-pulse" style={{ animationDuration: '4s' }} />
+          <div className="absolute inset-0" style={{
+            background: 'radial-gradient(ellipse at 30% 50%, rgba(88,101,242,0.12) 0%, transparent 60%), radial-gradient(ellipse at 70% 30%, rgba(139,92,246,0.08) 0%, transparent 50%)',
+          }} />
+
+          {/* Floating particles */}
+          {[...Array(12)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute rounded-full bg-white/10"
+              style={{
+                width: `${4 + (i % 4) * 3}px`,
+                height: `${4 + (i % 4) * 3}px`,
+                left: `${10 + (i * 17) % 80}%`,
+                top: `${5 + (i * 23) % 85}%`,
+                animation: `float-${i % 3} ${3 + (i % 4)}s ease-in-out infinite`,
+                animationDelay: `${(i * 0.4) % 3}s`,
+              }}
+            />
+          ))}
+
+          {/* Icon + title */}
+          <div className="relative z-10 text-center mb-2">
+            <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-[#5865F2]/20 border border-[#5865F2]/30 mx-auto mb-4 shadow-[0_0_40px_rgba(88,101,242,0.3)]">
+              <LuShoppingBag className="w-8 h-8 text-[#5865F2]" />
+            </div>
+            <h2 className="text-2xl font-black text-white tracking-tight drop-shadow-lg">Mağazaya Hoş Geldin</h2>
+            <p className="text-sm text-white/40 mt-1 font-medium">Papel harca, ayrıcalıklarını kazan</p>
+          </div>
+
+          {/* Animated badge cards */}
+          <div className="relative z-10 flex flex-col gap-2.5 w-full max-w-[260px]">
+            {badges.map((badge, i) => (
+              <div
+                key={i}
+                className={`flex items-center gap-3 px-4 py-2.5 rounded-xl border bg-gradient-to-r ${badge.color} backdrop-blur-sm`}
+                style={{
+                  animation: 'slideInLeft 0.5s ease-out both',
+                  animationDelay: `${i * 0.1}s`,
+                  transform: 'translateY(0)',
+                }}
+              >
+                <span className="flex-shrink-0 opacity-80">{badge.icon}</span>
+                <div className="min-w-0">
+                  <p className="text-xs font-bold leading-tight">{badge.text}</p>
+                  <p className="text-[10px] opacity-60 leading-tight">{badge.sub}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Bottom shimmer line */}
+          <div className="relative z-10 w-full max-w-[260px] h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+          <p className="relative z-10 text-[10px] text-white/20 font-medium tracking-widest uppercase">DiscoWeb Store</p>
         </div>
       </div>
 
-      <div className="relative w-full max-w-[420px] h-full bg-[#0b0d12]/90 backdrop-blur-2xl border-l border-white/10 shadow-2xl flex flex-col transform transition-transform duration-300 ease-out">
+      <div
+        className="relative h-full bg-[#0b0d12]/90 backdrop-blur-2xl border-l border-white/10 shadow-2xl flex flex-col"
+        style={{ width: drawerWidth }}
+      >
+        {/* Resize handle */}
+        <div
+          onMouseDown={onMouseDown}
+          className="absolute left-0 top-0 bottom-0 w-1 cursor-ew-resize z-50 group"
+        >
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-12 rounded-full bg-white/10 group-hover:bg-[#5865F2]/60 transition-colors" />
+        </div>
 
         {/* Glow */}
         <div className="absolute top-0 right-0 w-40 h-40 bg-[#5865F2]/20 rounded-full blur-[60px] pointer-events-none" />
@@ -517,6 +624,10 @@ export default function CartDrawer() {
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fadeIn { animation: fadeIn 0.3s ease-out forwards; }
+        @keyframes slideInLeft { from { opacity: 0; transform: translateX(-16px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes float-0 { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
+        @keyframes float-1 { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-16px); } }
+        @keyframes float-2 { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-6px); } }
       `}</style>
     </div>
   );
