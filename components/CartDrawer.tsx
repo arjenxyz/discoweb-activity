@@ -43,12 +43,6 @@ export default function CartDrawer() {
   const startX = useRef(0);
   const startWidth = useRef(0);
 
-  // Video state — hook'lar early return'den önce olmalı
-  const VIDEOS = ['/cdn/Storage/test.mp4', '/cdn/Storage/Test1.mp4'];
-  const [videoSrc] = useState(() => VIDEOS[Math.floor(Math.random() * VIDEOS.length)]);
-  const [muted, setMuted] = useState(true);
-  const [spoilerRevealed, setSpoilerRevealed] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
 
   const onMouseDown = useCallback((e: React.MouseEvent) => {
     isResizing.current = true;
@@ -287,83 +281,8 @@ export default function CartDrawer() {
 
   return (
     <div className="fixed inset-0 z-[10000] flex justify-end font-sans">
-      {/* Backdrop — video + overlay */}
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-[6px]" onClick={closeCart}>
-        {/* Video alanı */}
-        <div
-          className="absolute inset-y-0 left-0 overflow-hidden"
-          style={{ right: drawerWidth }}
-          onClick={e => e.stopPropagation()}
-        >
-          {/* Video */}
-          <video
-            ref={videoRef}
-            src={videoSrc}
-            autoPlay
-            loop
-            muted
-            playsInline
-            disablePictureInPicture
-            className={`absolute inset-0 w-full h-full object-cover transition-all duration-500 ${spoilerRevealed ? 'blur-0' : 'blur-2xl scale-110'}`}
-          />
-
-          {/* Karartma gradient */}
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-black/20 to-black/60 pointer-events-none" />
-
-          {/* Spoiler overlay */}
-          {!spoilerRevealed && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/40 backdrop-blur-sm">
-              <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-md">
-                <svg className="w-7 h-7 text-white/70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
-                </svg>
-              </div>
-              <p className="text-white/60 text-sm font-semibold">Spoiler</p>
-              <button
-                onClick={() => setSpoilerRevealed(true)}
-                className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold transition-all backdrop-blur-md"
-              >
-                Göster
-              </button>
-            </div>
-          )}
-
-          {/* Butonlar */}
-          {spoilerRevealed && (
-            <div className="absolute bottom-4 left-4 flex items-center gap-2 z-10">
-              {/* Mute butonu */}
-              <button
-                onClick={() => setMuted(m => !m)}
-                className="flex items-center justify-center w-9 h-9 rounded-full bg-black/40 hover:bg-black/60 border border-white/15 text-white/70 hover:text-white transition-all backdrop-blur-md"
-                aria-label={muted ? 'Sesi aç' : 'Sesi kapat'}
-              >
-                {muted ? (
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M13 3.586L7.707 8.879A1 1 0 017 9H4a1 1 0 00-1 1v4a1 1 0 001 1h3a1 1 0 01.707.293L13 20.414V3.586z"/>
-                    <line x1="18" y1="9" x2="23" y2="14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                    <line x1="23" y1="9" x2="18" y2="14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                  </svg>
-                ) : (
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M13 3.586L7.707 8.879A1 1 0 017 9H4a1 1 0 00-1 1v4a1 1 0 001 1h3a1 1 0 01.707.293L13 20.414V3.586z"/>
-                    <path d="M17.5 7.5a7 7 0 010 9M20 5a10 10 0 010 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
-                  </svg>
-                )}
-              </button>
-              {/* Spoiler gizle */}
-              <button
-                onClick={() => { setSpoilerRevealed(false); setMuted(true); }}
-                className="flex items-center justify-center w-9 h-9 rounded-full bg-black/40 hover:bg-black/60 border border-white/15 text-white/70 hover:text-white transition-all backdrop-blur-md"
-                aria-label="Gizle"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                </svg>
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
+      {/* Backdrop — blur */}
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-[8px]" onClick={closeCart} />
 
       <div
         className="relative h-full bg-[#0b0d12]/90 backdrop-blur-2xl border-l border-white/10 shadow-2xl flex flex-col"
