@@ -433,56 +433,49 @@ export default function CartDrawer() {
                   </div>
                 )}
 
-                {showCouponList && (
-                  <>
-                    {/* Hoşgeldin Kuponu */}
-                    {welcomeCoupon && !appliedCoupon && (() => {
+                {/* Kupon chip'leri — yatay kaydırılabilir */}
+                {showCouponList && !appliedCoupon && (welcomeCoupon || specialCoupons.length > 0) && (
+                  <div className="mt-3 flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+                    {/* Hoşgeldin kuponu */}
+                    {welcomeCoupon && (() => {
                       const wUsage = (welcomeCoupon as Coupon).userUsageCount ?? 0;
                       const wLimit = (welcomeCoupon as Coupon).perUserLimit ?? 1;
                       return (
-                        <div className="mt-3 p-3 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 rounded-lg">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="text-xs font-bold text-indigo-300">{t('cart_welcome_coupon_title')}</p>
-                              <p className="text-[10px] text-white/60">
-                                {welcomeCoupon.percent}{t('cart_discount_suffix')}
-                                {wLimit > 1 && <span className="ml-1.5 text-white/40">• {t('cart_coupon_used_count', { used: wUsage, limit: wLimit })}</span>}
-                              </p>
-                            </div>
-                            <button onClick={() => handleApply((welcomeCoupon as Coupon).code)} disabled={applying} className="px-3 py-1 bg-indigo-500 hover:bg-indigo-400 text-white text-xs font-bold rounded-lg transition-colors">
-                              {t('cart_coupon_use_button')}
-                            </button>
-                          </div>
-                        </div>
+                        <button
+                          key="welcome"
+                          onClick={() => handleApply((welcomeCoupon as Coupon).code)}
+                          disabled={applying}
+                          className="flex-shrink-0 flex flex-col items-start gap-0.5 px-3 py-2 rounded-xl border border-indigo-500/30 bg-indigo-500/10 hover:bg-indigo-500/20 transition-all disabled:opacity-50 text-left"
+                        >
+                          <span className="text-[11px] font-bold text-indigo-300">🎁 {t('cart_welcome_coupon_title')}</span>
+                          <span className="text-[10px] text-indigo-300/60">
+                            %{welcomeCoupon.percent} indirim
+                            {wLimit > 1 && <span className="ml-1 opacity-60">• {wUsage}/{wLimit}</span>}
+                          </span>
+                        </button>
                       );
                     })()}
 
-                    {/* Özel Kuponlar (kaydırılabilir) */}
-                    {!appliedCoupon && specialCoupons.length > 0 && (
-                      <div className="mt-3 max-h-44 overflow-y-auto space-y-2 pr-2">
-                        {specialCoupons.map((coupon) => {
-                          const userUsageCount = (coupon as Coupon).userUsageCount ?? 0;
-                          const perUserLimit = (coupon as Coupon).perUserLimit ?? 1;
-                          return (
-                            <div key={coupon.id} className="p-3 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 rounded-lg">
-                              <div className="flex items-center justify-between">
-                                <div>
-                                  <p className="text-xs font-bold text-emerald-300">{coupon.code}</p>
-                                  <p className="text-[10px] text-white/60">
-                                    {coupon.percent}{t('cart_discount_suffix')}
-                                    {perUserLimit > 1 && <span className="ml-1.5 text-white/40">• {t('cart_coupon_used_count', { used: userUsageCount, limit: perUserLimit })}</span>}
-                                  </p>
-                                </div>
-                                <button onClick={() => handleApply(coupon.code)} disabled={applying} className="px-3 py-1 bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-bold rounded-lg transition-colors">
-                                  {t('cart_coupon_use_button')}
-                                </button>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </>
+                    {/* Özel kuponlar */}
+                    {specialCoupons.map((coupon) => {
+                      const userUsageCount = (coupon as Coupon).userUsageCount ?? 0;
+                      const perUserLimit = (coupon as Coupon).perUserLimit ?? 1;
+                      return (
+                        <button
+                          key={coupon.id}
+                          onClick={() => handleApply(coupon.code)}
+                          disabled={applying}
+                          className="flex-shrink-0 flex flex-col items-start gap-0.5 px-3 py-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 transition-all disabled:opacity-50 text-left"
+                        >
+                          <span className="text-[11px] font-bold text-emerald-300">{coupon.code}</span>
+                          <span className="text-[10px] text-emerald-300/60">
+                            %{coupon.percent} indirim
+                            {perUserLimit > 1 && <span className="ml-1 opacity-60">• {userUsageCount}/{perUserLimit}</span>}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 )}
               </div>
 
