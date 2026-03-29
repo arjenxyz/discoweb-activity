@@ -4,7 +4,6 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   LuX, LuTrash2, LuPlus, LuMinus, LuChevronLeft,
   LuTicket, LuCircleCheck, LuChevronDown, LuChevronUp, LuLock, LuEye, LuEyeOff,
-  LuShoppingBag, LuTag, LuStar, LuZap, LuGift,
 } from 'react-icons/lu';
 import Image from 'next/image';
 import { useCart } from '../lib/cart';
@@ -275,81 +274,93 @@ export default function CartDrawer() {
     return t('checkout_button_default');
   };
 
-  const badges = [
-    { icon: <LuTag className="w-4 h-4" />, text: 'İndirim Kodları', sub: 'Özel fırsatlar seni bekliyor', color: 'from-violet-500/20 to-purple-500/10 border-violet-500/30 text-violet-300' },
-    { icon: <LuGift className="w-4 h-4" />, text: 'Hoşgeldin Bonusu', sub: 'İlk alışverişe özel %50', color: 'from-rose-500/20 to-pink-500/10 border-rose-500/30 text-rose-300' },
-    { icon: <LuZap className="w-4 h-4" />, text: 'Papel Kazan', sub: 'Her mesajda otomatik kazanç', color: 'from-amber-500/20 to-yellow-500/10 border-amber-500/30 text-amber-300' },
-    { icon: <LuStar className="w-4 h-4" />, text: 'Özel Roller', sub: 'Sunucunda öne çık', color: 'from-emerald-500/20 to-teal-500/10 border-emerald-500/30 text-emerald-300' },
-    { icon: <LuShoppingBag className="w-4 h-4" />, text: 'Sınırlı Stok', sub: 'Kaçırmadan al', color: 'from-sky-500/20 to-blue-500/10 border-sky-500/30 text-sky-300' },
-  ];
+  const VIDEOS = ['/cdn/Storage/test.mp4', '/cdn/Storage/Test1.mp4'];
+  const [videoSrc] = useState(() => VIDEOS[Math.floor(Math.random() * VIDEOS.length)]);
+  const [muted, setMuted] = useState(true);
+  const [spoilerRevealed, setSpoilerRevealed] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    if (videoRef.current) videoRef.current.muted = muted;
+  }, [muted]);
 
   return (
     <div className="fixed inset-0 z-[10000] flex justify-end font-sans">
-      {/* Backdrop — animasyonlu banner + overlay */}
-      <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-[6px]"
-        onClick={closeCart}
-      >
-        {/* Animated shopping banner */}
+      {/* Backdrop — video + overlay */}
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-[6px]" onClick={closeCart}>
+        {/* Video alanı */}
         <div
-          className="absolute inset-y-0 left-0 overflow-hidden pointer-events-none flex flex-col items-center justify-center gap-6 px-8"
+          className="absolute inset-y-0 left-0 overflow-hidden"
           style={{ right: drawerWidth }}
+          onClick={e => e.stopPropagation()}
         >
-          {/* Animated gradient bg */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#5865F2]/10 via-transparent to-violet-900/10 animate-pulse" style={{ animationDuration: '4s' }} />
-          <div className="absolute inset-0" style={{
-            background: 'radial-gradient(ellipse at 30% 50%, rgba(88,101,242,0.12) 0%, transparent 60%), radial-gradient(ellipse at 70% 30%, rgba(139,92,246,0.08) 0%, transparent 50%)',
-          }} />
+          {/* Video */}
+          <video
+            ref={videoRef}
+            src={videoSrc}
+            autoPlay
+            loop
+            muted
+            playsInline
+            disablePictureInPicture
+            className={`absolute inset-0 w-full h-full object-cover transition-all duration-500 ${spoilerRevealed ? 'blur-0' : 'blur-2xl scale-110'}`}
+          />
 
-          {/* Floating particles */}
-          {[...Array(12)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute rounded-full bg-white/10"
-              style={{
-                width: `${4 + (i % 4) * 3}px`,
-                height: `${4 + (i % 4) * 3}px`,
-                left: `${10 + (i * 17) % 80}%`,
-                top: `${5 + (i * 23) % 85}%`,
-                animation: `float-${i % 3} ${3 + (i % 4)}s ease-in-out infinite`,
-                animationDelay: `${(i * 0.4) % 3}s`,
-              }}
-            />
-          ))}
+          {/* Karartma gradient */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-black/20 to-black/60 pointer-events-none" />
 
-          {/* Icon + title */}
-          <div className="relative z-10 text-center mb-2">
-            <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-[#5865F2]/20 border border-[#5865F2]/30 mx-auto mb-4 shadow-[0_0_40px_rgba(88,101,242,0.3)]">
-              <LuShoppingBag className="w-8 h-8 text-[#5865F2]" />
-            </div>
-            <h2 className="text-2xl font-black text-white tracking-tight drop-shadow-lg">Mağazaya Hoş Geldin</h2>
-            <p className="text-sm text-white/40 mt-1 font-medium">Papel harca, ayrıcalıklarını kazan</p>
-          </div>
-
-          {/* Animated badge cards */}
-          <div className="relative z-10 flex flex-col gap-2.5 w-full max-w-[260px]">
-            {badges.map((badge, i) => (
-              <div
-                key={i}
-                className={`flex items-center gap-3 px-4 py-2.5 rounded-xl border bg-gradient-to-r ${badge.color} backdrop-blur-sm`}
-                style={{
-                  animation: 'slideInLeft 0.5s ease-out both',
-                  animationDelay: `${i * 0.1}s`,
-                  transform: 'translateY(0)',
-                }}
-              >
-                <span className="flex-shrink-0 opacity-80">{badge.icon}</span>
-                <div className="min-w-0">
-                  <p className="text-xs font-bold leading-tight">{badge.text}</p>
-                  <p className="text-[10px] opacity-60 leading-tight">{badge.sub}</p>
-                </div>
+          {/* Spoiler overlay */}
+          {!spoilerRevealed && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/40 backdrop-blur-sm">
+              <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-md">
+                <svg className="w-7 h-7 text-white/70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                </svg>
               </div>
-            ))}
-          </div>
+              <p className="text-white/60 text-sm font-semibold">Spoiler</p>
+              <button
+                onClick={() => setSpoilerRevealed(true)}
+                className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold transition-all backdrop-blur-md"
+              >
+                Göster
+              </button>
+            </div>
+          )}
 
-          {/* Bottom shimmer line */}
-          <div className="relative z-10 w-full max-w-[260px] h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-          <p className="relative z-10 text-[10px] text-white/20 font-medium tracking-widest uppercase">DiscoWeb Store</p>
+          {/* Butonlar */}
+          {spoilerRevealed && (
+            <div className="absolute bottom-4 left-4 flex items-center gap-2 z-10">
+              {/* Mute butonu */}
+              <button
+                onClick={() => setMuted(m => !m)}
+                className="flex items-center justify-center w-9 h-9 rounded-full bg-black/40 hover:bg-black/60 border border-white/15 text-white/70 hover:text-white transition-all backdrop-blur-md"
+                aria-label={muted ? 'Sesi aç' : 'Sesi kapat'}
+              >
+                {muted ? (
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M13 3.586L7.707 8.879A1 1 0 017 9H4a1 1 0 00-1 1v4a1 1 0 001 1h3a1 1 0 01.707.293L13 20.414V3.586z"/>
+                    <line x1="18" y1="9" x2="23" y2="14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                    <line x1="23" y1="9" x2="18" y2="14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                  </svg>
+                ) : (
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M13 3.586L7.707 8.879A1 1 0 017 9H4a1 1 0 00-1 1v4a1 1 0 001 1h3a1 1 0 01.707.293L13 20.414V3.586z"/>
+                    <path d="M17.5 7.5a7 7 0 010 9M20 5a10 10 0 010 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+                  </svg>
+                )}
+              </button>
+              {/* Spoiler gizle */}
+              <button
+                onClick={() => { setSpoilerRevealed(false); setMuted(true); }}
+                className="flex items-center justify-center w-9 h-9 rounded-full bg-black/40 hover:bg-black/60 border border-white/15 text-white/70 hover:text-white transition-all backdrop-blur-md"
+                aria-label="Gizle"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                </svg>
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
