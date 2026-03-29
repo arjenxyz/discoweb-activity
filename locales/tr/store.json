@@ -60,6 +60,7 @@
   "cart_coupon_use_button": "Kullan",
   "cart_coupon_used_count": "{used}/{limit} kullanıldı",
   "cart_coupon_usage_label": "Kullanım",
+  "cart_discount_suffix": "% indirim",
   "cart_welcome_coupon_title": "Hoşgeldin İndirimi",
   "cart_papel_unit": "Papel",
   "cart_drawer_title": "Sepet",
