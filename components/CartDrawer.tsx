@@ -245,12 +245,12 @@ export default function CartDrawer() {
         onClick={closeCart}
       >
         {/* Sol taraftaki büyük GIF Efekti */}
-        <div className="absolute inset-0 flex items-center justify-start pl-72 pointer-events-none">
+        <div className="absolute inset-y-0 left-0 w-[420px] pointer-events-none overflow-hidden">
            <Image
              src="/gif/image.gif"
              alt="Effect"
              fill
-             className="object-contain opacity-100"
+             className="object-contain object-left opacity-100"
              unoptimized
            />
         </div>
