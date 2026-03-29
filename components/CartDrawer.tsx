@@ -356,27 +356,42 @@ export default function CartDrawer() {
               <div>
                 {!appliedCoupon ? (
                   <div className="border-b border-white/5 pb-2">
-                    {/* Kod girişi — her zaman görünür */}
-                    <div className="flex gap-2">
-                      <div className="relative flex-1">
-                        <LuTicket className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30" />
-                        <input
-                          value={code}
-                          onChange={(e) => setCode(e.target.value)}
-                          onKeyDown={(e) => e.key === 'Enter' && code && handleApply(code)}
-                          placeholder={t('coupon_input_placeholder')}
-                          className="w-full bg-white/5 border border-white/10 rounded-xl pl-8 pr-3 py-2.5 text-xs text-white focus:border-[#5865F2] outline-none placeholder:text-white/25"
-                        />
-                      </div>
+                    {/* Başlık + göz ikonu */}
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="flex items-center gap-1.5 text-xs font-bold text-[#5865F2]">
+                        <LuTicket className="w-3.5 h-3.5" /> {t('cart_drawer_discount_code')}
+                      </span>
                       <button
-                        onClick={() => handleApply(code)}
-                        disabled={applying || !code}
-                        className="px-4 bg-[#5865F2] hover:bg-[#4752C4] text-white rounded-xl text-xs font-bold transition-all disabled:opacity-40"
+                        onClick={() => setShowCouponList(prev => !prev)}
+                        className="text-white/40 hover:text-white transition-colors"
+                        aria-label={showCouponList ? t('coupon_toggle_list_close') : t('coupon_toggle_list_open')}
                       >
-                        {applying ? '...' : t('cart_drawer_apply_discount')}
+                        {showCouponList ? <LuEye className="w-3.5 h-3.5" /> : <LuEyeOff className="w-3.5 h-3.5" />}
                       </button>
                     </div>
-                    {message && <p className={`text-[10px] mt-1.5 ${message.type === 'error' ? 'text-rose-400' : 'text-emerald-400'}`}>{message.text}</p>}
+
+                    {/* Kod girişi + buton */}
+                    {showCouponList && (
+                      <>
+                        <div className="flex gap-2">
+                          <input
+                            value={code}
+                            onChange={(e) => setCode(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && code && handleApply(code)}
+                            placeholder={t('coupon_input_placeholder')}
+                            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs text-white focus:border-[#5865F2] outline-none placeholder:text-white/25"
+                          />
+                          <button
+                            onClick={() => handleApply(code)}
+                            disabled={applying || !code}
+                            className="px-4 bg-[#5865F2] hover:bg-[#4752C4] text-white rounded-xl text-xs font-bold transition-all disabled:opacity-40"
+                          >
+                            {applying ? '...' : t('cart_drawer_apply_discount')}
+                          </button>
+                        </div>
+                        {message && <p className={`text-[10px] mt-1.5 ${message.type === 'error' ? 'text-rose-400' : 'text-emerald-400'}`}>{message.text}</p>}
+                      </>
+                    )}
                   </div>
                 ) : (
                   <div className="flex items-center justify-between bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 rounded-lg">
@@ -405,20 +420,6 @@ export default function CartDrawer() {
                       </div>
                     </div>
                     <button onClick={handleRemoveCoupon} className="text-[10px] text-white/50 hover:text-white underline">{t('cart_drawer_remove')}</button>
-                  </div>
-                )}
-
-                {/* Kupon chip başlığı + gizle/göster */}
-                {!appliedCoupon && (welcomeCoupon || specialCoupons.length > 0) && (
-                  <div className="flex items-center justify-between mt-3 mb-1">
-                    <span className="text-[10px] text-white/30 font-semibold uppercase tracking-wider">Kuponlarım</span>
-                    <button
-                      onClick={() => setShowCouponList(prev => !prev)}
-                      className="text-white/40 hover:text-white transition-colors"
-                      aria-label={showCouponList ? t('coupon_toggle_list_close') : t('coupon_toggle_list_open')}
-                    >
-                      {showCouponList ? <LuEye className="w-3.5 h-3.5" /> : <LuEyeOff className="w-3.5 h-3.5" />}
-                    </button>
                   </div>
                 )}
 
