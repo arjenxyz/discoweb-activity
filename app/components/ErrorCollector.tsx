@@ -133,11 +133,11 @@ export default function ErrorCollector() {
         timestamp: new Date().toISOString(),
       };
       pushClientError(payload);
-      reportError({
+      setTimeout(() => reportError({
         message: event.message,
         stack: event.error?.stack,
         context: `${event.filename ?? ''}:${event.lineno ?? ''}:${event.colno ?? ''}`,
-      });
+      }), 0);
       if (!shouldSend(key)) return;
       sendError({ ...payload, col: event.colno, ...meta() });
     };
@@ -156,11 +156,11 @@ export default function ErrorCollector() {
         timestamp: new Date().toISOString(),
       };
       pushClientError(payload);
-      reportError({
+      setTimeout(() => reportError({
         message,
         stack: event.reason instanceof Error ? event.reason.stack : undefined,
         context: 'Unhandled Promise Rejection',
-      });
+      }), 0);
       if (!shouldSend(key)) return;
       sendError({ ...payload, ...meta() });
     };
@@ -173,7 +173,8 @@ export default function ErrorCollector() {
         typeof a === 'object' ? (() => { try { return JSON.stringify(a); } catch { return String(a); } })() : String(a)
       ).join(' ');
       if (ERROR_NOISE.some(n => message.includes(n))) return;
-      reportError({ message: message.slice(0, 300), context: 'console.error' });
+      // setTimeout(0): render phase'de setState çağrısını önler (React #310)
+      setTimeout(() => reportError({ message: message.slice(0, 300), context: 'console.error' }), 0);
       const key = buildKey(message, 'console');
       if (!shouldSend(key)) return;
       sendError({ type: 'console_error', message: message.slice(0, 800), ...meta() });
