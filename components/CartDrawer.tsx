@@ -129,7 +129,6 @@ export default function CartDrawer() {
         if (res.ok) {
             setMessage({ text: t('coupon_applied_success'), type: 'success' });
             setCode('');
-            setShowCouponInput(false);
         } else {
             setMessage({ text: res.message || t('coupon_invalid_error'), type: 'error' });
         }
