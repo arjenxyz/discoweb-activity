@@ -78,13 +78,20 @@ export default function CartDrawer() {
   // Eğer sepette ürün ekleme/çıkarma yapıldıysa kupon girişini kapat (kullanıcı gizlediyse açılmasın)
   useEffect(() => {
     if (showCouponInput) {
-      // Use setTimeout to avoid synchronous state updates that can trigger cascading renders
       const timer = setTimeout(() => {
         setShowCouponInput(false);
       }, 0);
       return () => clearTimeout(timer);
     }
   }, [items.length, showCouponInput]);
+
+  // Sepet açıldığında kuponları yenile — CartProvider mount olduğunda guild_id
+  // henüz localStorage'da olmayabilir, bu yüzden ilk fetch boş döner.
+  useEffect(() => {
+    if (open) {
+      void refreshCoupons();
+    }
+  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!open) return null;
 
