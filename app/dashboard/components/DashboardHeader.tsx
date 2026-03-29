@@ -185,7 +185,7 @@ export default function DashboardHeader({
       />
 
       {/* Header — desktop full / mobile sadece bakiye */}
-      <header className={`md:fixed inset-x-0 top-0 flex items-center bg-[#0e1018]/95 backdrop-blur-xl border-b border-white/[0.06] px-4 sm:px-6 transition-all duration-200 ${
+      <header className={`md:fixed inset-x-0 top-0 flex items-center bg-[#0e1018]/95 backdrop-blur-xl border-b border-white/[0.06] px-4 sm:px-6 transition-all duration-200 relative ${
         isActivityEmbed ? 'h-auto pt-[env(safe-area-inset-top,0px)] pb-2 min-h-[4rem]' : 'h-16'
       } ${isProfileOpen ? 'z-[9991]' : 'z-30'}`}>
 
@@ -194,8 +194,11 @@ export default function DashboardHeader({
           <div className="h-9 w-9 overflow-hidden rounded-xl border border-white/10 bg-white/5">
             <Image src="/gif/cat.gif" alt="logo" className="h-full w-full object-cover" width={36} height={36} />
           </div>
-          <span className="text-white font-black text-lg tracking-tight">DiscoWeb</span>
+          <span className="hidden lg:block text-white font-black text-lg tracking-tight">DiscoWeb</span>
         </div>
+
+        {/* Mobil orta — DiscoWeb yazısı */}
+        <span className="lg:hidden absolute left-1/2 -translate-x-1/2 text-white font-black text-lg tracking-tight pointer-events-none">DiscoWeb</span>
 
         {/* Orta — boşluk */}
         <div className="flex-1" />
