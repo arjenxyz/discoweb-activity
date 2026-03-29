@@ -146,7 +146,7 @@ export default function StoreSection({
                   {items.map((item) => (
                     <div
                       key={item.id}
-                      className="group relative flex flex-col justify-between overflow-hidden rounded-[24px] border border-white/10 bg-[#0b0d12] p-5 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_20px_50px_rgba(88,101,242,0.25)] hover:border-[#5865F2]/50"
+                      className="group relative flex flex-col justify-between overflow-hidden rounded-[24px] border border-white/10 bg-[#0b0d12] p-5 transition-all duration-300 hover:shadow-[0_8px_30px_rgba(88,101,242,0.2)] hover:border-[#5865F2]/40"
                     >
                       {/* Expand button (small, top-right) */}
                       <button
