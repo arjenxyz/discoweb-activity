@@ -112,6 +112,10 @@
   "overview_badge_booster": "Booster",
   "overview_since_verified": "Doğrulamadan Bu Yana",
 
+  "pending_earnings_title": "Biriken Kazanç",
+  "pending_earnings_claim": "Kazancı Al",
+  "pending_earnings_auto_note": "Alınmayan kazançlar her gece 00:00'da otomatik olarak hesabınıza aktarılır.",
+
   "discover_title": "Topluluk",
   "discover_subtitle": "Öne çıkan sunucuları keşfet",
   "discover_featured_badge": "Öne Çıkan",

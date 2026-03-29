@@ -88,6 +88,8 @@ export default function DashboardPage() {
   const [walletLoading, setWalletLoading] = useState(true);
   const [overviewStats, setOverviewStats] = useState<OverviewStats | OverviewStatsExpanded | null>(null);
   const [overviewLoading, setOverviewLoading] = useState(true);
+  const [pendingEarnings, setPendingEarnings] = useState<{ pending: number; messageTotal: number; voiceTotal: number; count: number } | null>(null);
+  const [claimLoading, setClaimLoading] = useState(false);
   const [badgeInfo, setBadgeInfo] = useState<BadgeInfo | null>(null);
   const [storeItems, setStoreItems] = useState<StoreItem[]>([]);
   const [storeItemsLoading, setStoreItemsLoading] = useState(true);
@@ -563,12 +565,15 @@ export default function DashboardPage() {
       setOverviewLoading(false);
     };
 
-    const loadAccrued = async () => {
+    const loadPendingEarnings = async () => {
       try {
-        const res = await fetchWithCreds('/api/member/load-accrued', { method: 'POST' });
-        if (!res.ok) console.error(`[load-accrued] HTTP ${res.status}`);
+        const res = await fetchWithCreds('/api/member/load-accrued');
+        if (res.ok) {
+          const data = await res.json();
+          setPendingEarnings(data);
+        }
       } catch (err) {
-        console.error('[load-accrued] fetch failed:', err);
+        console.error('[pending-earnings] fetch failed:', err);
       }
     };
 
@@ -588,12 +593,28 @@ export default function DashboardPage() {
     };
 
     const run = async () => {
-      await loadAccrued();
-      await Promise.all([loadOverview(), loadBadges()]);
+      await Promise.all([loadPendingEarnings(), loadOverview(), loadBadges()]);
     };
 
     run();
   }, [activityReadinessLoading, isBlockedByReadiness]);
+
+  const claimEarnings = useCallback(async () => {
+    setClaimLoading(true);
+    try {
+      const res = await fetchWithCreds('/api/member/load-accrued', { method: 'POST' });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.totalTransferred > 0) {
+          setWalletBalance(prev => Number((prev + data.totalTransferred).toFixed(2)));
+        }
+        setPendingEarnings({ pending: 0, messageTotal: 0, voiceTotal: 0, count: 0 });
+      }
+    } catch (err) {
+      console.error('[claim-earnings] failed:', err);
+    }
+    setClaimLoading(false);
+  }, []);
 
   const refreshStoreItems = useCallback(async (page = 1, append = false) => {
     if (page === 1) {
@@ -1174,6 +1195,9 @@ export default function DashboardPage() {
                   renderPapelAmount={renderPapelAmount}
                   formatRoleColor={formatRoleColor}
                   badgeInfo={badgeInfo}
+                  pendingEarnings={pendingEarnings}
+                  claimLoading={claimLoading}
+                  onClaim={claimEarnings}
                 />
                 
               </>

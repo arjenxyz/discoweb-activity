@@ -9,6 +9,7 @@ import {
   LuZap,
   LuTrendingUp,
   LuClock,
+  LuCoins,
 } from 'react-icons/lu';
 import type { MemberProfile, OverviewStats, OrderStats, OverviewStatsExpanded, BadgeInfo } from '../types';
 import TreasuryCard from './TreasuryCard';
@@ -24,6 +25,9 @@ type OverviewSectionProps = {
   renderPapelAmount: (value: number) => React.ReactNode;
   formatRoleColor: (color: number) => string;
   badgeInfo?: BadgeInfo | null;
+  pendingEarnings?: { pending: number; messageTotal: number; voiceTotal: number; count: number } | null;
+  claimLoading?: boolean;
+  onClaim?: () => void;
 };
 
 export default function OverviewSection({
@@ -35,6 +39,9 @@ export default function OverviewSection({
   profile,
   formatRoleColor,
   badgeInfo,
+  pendingEarnings,
+  claimLoading,
+  onClaim,
 }: OverviewSectionProps) {
   const t = useT();
   const hasTag = (overviewStats as OverviewStatsExpanded)?.hasTag ?? false;
@@ -199,6 +206,52 @@ export default function OverviewSection({
               </div>
             ))}
           </div>
+
+          {/* BİRİKEN KAZANÇ */}
+          {pendingEarnings && pendingEarnings.pending > 0 && (
+            <div className={`${card} relative overflow-hidden`}>
+              <div className="absolute top-0 left-0 h-32 w-32 rounded-full bg-amber-500/10 blur-[50px] pointer-events-none" />
+              <div className="relative z-10">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/15">
+                    <LuCoins className="h-4 w-4 text-amber-400" />
+                  </div>
+                  <span className="text-sm font-semibold text-white">{t('pending_earnings_title')}</span>
+                </div>
+                <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+                  <div>
+                    <p className="text-3xl font-black text-amber-300 tabular-nums">
+                      {pendingEarnings.pending.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+                      <span className="text-sm font-semibold text-amber-300/60 ml-1">papel</span>
+                    </p>
+                    <div className="flex gap-4 mt-1.5">
+                      <span className="text-[11px] text-white/40">
+                        <LuMessageSquare className="inline h-3 w-3 mr-0.5 -mt-0.5" />
+                        {pendingEarnings.messageTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+                      </span>
+                      <span className="text-[11px] text-white/40">
+                        <LuMic className="inline h-3 w-3 mr-0.5 -mt-0.5" />
+                        {pendingEarnings.voiceTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={onClaim}
+                    disabled={claimLoading}
+                    className="flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-50 disabled:cursor-not-allowed px-5 py-2.5 text-sm font-bold text-black transition-colors"
+                  >
+                    {claimLoading ? (
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-black/20 border-t-black/60" />
+                    ) : (
+                      <LuCoins className="h-4 w-4" />
+                    )}
+                    {t('pending_earnings_claim')}
+                  </button>
+                </div>
+                <p className="mt-2 text-[10px] text-white/25">{t('pending_earnings_auto_note')}</p>
+              </div>
+            </div>
+          )}
 
           {/* DOĞRULANMADAN BERİ */}
           {totalsSince && (

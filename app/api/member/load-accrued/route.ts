@@ -11,6 +11,61 @@ const getSupabase = (): SupabaseClient | null => {
   return createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
 };
 
+/** GET — return pending (unsettled) earnings summary without claiming */
+export async function GET(request: Request) {
+  const maintenance = await checkMaintenance(['site']);
+  if (maintenance.blocked) {
+    return NextResponse.json({ error: 'maintenance', key: maintenance.key, reason: maintenance.reason }, { status: 503 });
+  }
+
+  const supabase = getSupabase();
+  if (!supabase) return NextResponse.json({ error: 'missing_service_role' }, { status: 500 });
+
+  const userId = await getSessionUserId();
+  if (!userId) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+
+  const selectedGuildId = await getSelectedGuildId(request);
+
+  const { data: server } = await supabase
+    .from('servers')
+    .select('id')
+    .eq('discord_id', selectedGuildId)
+    .eq('is_setup', true)
+    .maybeSingle();
+
+  if (!server) return NextResponse.json({ pending: 0, messageTotal: 0, voiceTotal: 0, count: 0 });
+
+  // Bot writes daily_earnings with Discord guild ID, so query with both server.id and selectedGuildId
+  const { data: rows } = await supabase
+    .from('daily_earnings')
+    .select('amount,source')
+    .or(`guild_id.eq.${server.id},guild_id.eq.${selectedGuildId}`)
+    .eq('user_id', userId)
+    .is('settled_at', null)
+    .is('deleted_at', null);
+
+  if (!rows || rows.length === 0) {
+    return NextResponse.json({ pending: 0, messageTotal: 0, voiceTotal: 0, count: 0 });
+  }
+
+  let messageTotal = 0;
+  let voiceTotal = 0;
+  for (const r of rows) {
+    const amt = Number(r.amount ?? 0);
+    if (r.source === 'voice') voiceTotal += amt;
+    else messageTotal += amt;
+  }
+
+  const pending = Number((messageTotal + voiceTotal).toFixed(2));
+  return NextResponse.json({
+    pending,
+    messageTotal: Number(messageTotal.toFixed(2)),
+    voiceTotal: Number(voiceTotal.toFixed(2)),
+    count: rows.length,
+  });
+}
+
+/** POST — claim (settle) all pending earnings into wallet */
 export async function POST(request: Request) {
   const maintenance = await checkMaintenance(['site']);
   if (maintenance.blocked) {
@@ -35,11 +90,11 @@ export async function POST(request: Request) {
 
   if (!server) return NextResponse.json({ error: 'server_not_found' }, { status: 404 });
 
-  // Fetch unsettled daily_earnings for this user + guild
+  // Fetch unsettled daily_earnings for this user + guild (bot may use Discord ID or internal ID)
   const { data: rows } = await supabase
     .from('daily_earnings')
     .select('id,amount,source,metadata,created_at')
-    .eq('guild_id', server.id)
+    .or(`guild_id.eq.${server.id},guild_id.eq.${selectedGuildId}`)
     .eq('user_id', userId)
     .is('settled_at', null)
     .is('deleted_at', null)
@@ -90,6 +145,47 @@ export async function POST(request: Request) {
   // Mark daily_earnings as settled to avoid re-loading
   const ids = rows.map((r: any) => r.id);
   await supabase.from('daily_earnings').update({ settled_at: new Date().toISOString() }).in('id', ids as any[]);
+
+  // Send claim mail
+  try {
+    const msgTotal = Number(rows.filter((r: any) => r.source === 'message').reduce((s: number, r: any) => s + Number(r.amount ?? 0), 0).toFixed(2));
+    const voiceTotal = Number(rows.filter((r: any) => r.source === 'voice').reduce((s: number, r: any) => s + Number(r.amount ?? 0), 0).toFixed(2));
+    // Use the guild ID that bot writes with (selectedGuildId = Discord guild ID)
+    const mailGuildId = selectedGuildId;
+    await supabase.from('system_mails').insert({
+      guild_id: mailGuildId,
+      user_id: userId,
+      title: 'Kazançlarınız Hesabınıza Tanımlandı',
+      body: `<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #374151; line-height: 1.6; font-size: 14px; max-width: 600px;">
+  <div style="margin-bottom: 24px; border-bottom: 1px solid #e5e7eb; padding-bottom: 16px;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <span style="font-size: 20px;">💰</span>
+      <h1 style="margin: 0; font-size: 18px; font-weight: 600; color: #111827;">Kazançlarınız Hesabınıza Tanımlandı</h1>
+    </div>
+  </div>
+  <div style="margin-bottom: 24px;">
+    <p style="margin: 0 0 16px 0; color: #111827; font-weight: 500;">Merhaba,</p>
+    <p style="margin: 0 0 16px 0;">Biriken kazançlarınız talebiniz üzerine hesabınıza başarıyla aktarılmıştır.</p>
+    <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 20px; margin: 20px 0;">
+      <h3 style="margin: 0 0 12px 0; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #92400e;">💰 Kazanç Özeti</h3>
+      <div style="color: #78350f; font-size: 14px;">
+        <p style="margin: 0 0 8px 0;"><strong>Toplam:</strong> ${total} papel</p>
+        <p style="margin: 0 0 4px 0;">💬 Mesaj kazancı: ${msgTotal} papel</p>
+        <p style="margin: 0 0 4px 0;">🎙️ Ses kazancı: ${voiceTotal} papel</p>
+        <p style="margin: 8px 0 0 0; font-size: 12px; color: #a16207;">${rows.length} kazanç kaydı işlendi</p>
+      </div>
+    </div>
+    <p style="margin: 0; color: #4b5563;">Kazancınız cüzdanınıza yansımıştır. Mağazadan dilediğiniz ürünleri satın alabilirsiniz.</p>
+  </div>
+  <div style="margin-top: 32px; padding-top: 16px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #9ca3af;">Bu bildirim otomatik sistem protokolleri tarafından oluşturulmuştur.</div>
+</div>`,
+      category: 'system',
+      status: 'published',
+      author_name: 'Sistem',
+    });
+  } catch (mailErr) {
+    console.error('[load-accrued] mail send failed', mailErr);
+  }
 
   return NextResponse.json({ status: 'ok', totalTransferred: total, count: rows.length });
 }
