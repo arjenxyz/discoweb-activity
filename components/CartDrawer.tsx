@@ -481,6 +481,15 @@ export default function CartDrawer() {
 
               {/* FİYAT & BUTON */}
               <div className="flex items-end justify-between gap-4">
+                 {/* Mobil geri butonu */}
+                 <button
+                   onClick={closeCart}
+                   className="sm:hidden flex items-center justify-center h-12 w-12 rounded-xl bg-white/8 border border-white/10 text-white/70 hover:text-white hover:bg-white/15 transition-all flex-shrink-0"
+                   aria-label="Geri"
+                 >
+                   <LuChevronLeft className="w-5 h-5" />
+                 </button>
+
                  <div>
                     <p className="text-xs text-white/50 mb-0.5">{t('cart_drawer_total')}</p>
                     <div className="flex items-baseline gap-2">

@@ -210,16 +210,28 @@ export default function RafflesDrawer({
         </div>
 
         {/* FOOTER */}
-        {joinedRaffles.length > 0 && (
-          <div className="relative z-10 border-t border-white/10 px-5 py-4">
-            <div className="flex items-center justify-between text-xs text-white/40">
-              <span>{joinedRaffles.length} çekilişte aktifsin</span>
-              <span className="text-emerald-400/70 font-semibold">
-                {joinedRaffles.length} ödül fırsatı 🎁
-              </span>
-            </div>
+        <div className="relative z-10 border-t border-white/10 px-5 py-4">
+          <div className="flex items-center justify-between text-xs text-white/40">
+            {joinedRaffles.length > 0 ? (
+              <>
+                <span>{joinedRaffles.length} çekilişte aktifsin</span>
+                <span className="text-emerald-400/70 font-semibold">
+                  {joinedRaffles.length} ödül fırsatı 🎁
+                </span>
+              </>
+            ) : (
+              <div className="flex-1" />
+            )}
           </div>
-        )}
+          {/* Mobil geri butonu */}
+          <button
+            onClick={onClose}
+            className="sm:hidden mt-3 w-full flex items-center justify-center gap-2 h-11 rounded-xl bg-white/8 border border-white/10 text-white/70 hover:text-white hover:bg-white/15 transition-all text-sm font-semibold"
+          >
+            <LuChevronLeft className="w-4 h-4" />
+            Geri
+          </button>
+        </div>
       </div>
 
       <style jsx>{`
