@@ -1,13 +1,7 @@
-import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { requireSessionUser } from '@/lib/auth';
-
-const getSelectedGuildId = async (): Promise<string | null> => {
-  const cookieStore = await cookies();
-  const selectedGuildId = cookieStore.get('selected_guild_id')?.value;
-  return selectedGuildId || process.env.DISCORD_GUILD_ID || null;
-};
+import { getSelectedGuildId } from '@/lib/guild';
 
 const getSupabase = () => {
   const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -32,7 +26,7 @@ export async function POST(request: Request) {
     }
 
     const supabase = getSupabase();
-    const selectedGuildId = await getSelectedGuildId();
+    const selectedGuildId = await getSelectedGuildId(request);
 
     // DEBUG: Log incoming discount validation attempt (temporary)
     console.log('[discount-debug] Validating discount code', { code, itemId, selectedGuildId });
