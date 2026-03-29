@@ -43,6 +43,13 @@ export default function CartDrawer() {
   const startX = useRef(0);
   const startWidth = useRef(0);
 
+  // Video state — hook'lar early return'den önce olmalı
+  const VIDEOS = ['/cdn/Storage/test.mp4', '/cdn/Storage/Test1.mp4'];
+  const [videoSrc] = useState(() => VIDEOS[Math.floor(Math.random() * VIDEOS.length)]);
+  const [muted, setMuted] = useState(true);
+  const [spoilerRevealed, setSpoilerRevealed] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
   const onMouseDown = useCallback((e: React.MouseEvent) => {
     isResizing.current = true;
     startX.current = e.clientX;
@@ -273,12 +280,6 @@ export default function CartDrawer() {
     if (isBelowLimit) return t('checkout_button_limit_insufficient');
     return t('checkout_button_default');
   };
-
-  const VIDEOS = ['/cdn/Storage/test.mp4', '/cdn/Storage/Test1.mp4'];
-  const [videoSrc] = useState(() => VIDEOS[Math.floor(Math.random() * VIDEOS.length)]);
-  const [muted, setMuted] = useState(true);
-  const [spoilerRevealed, setSpoilerRevealed] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     if (videoRef.current) videoRef.current.muted = muted;
