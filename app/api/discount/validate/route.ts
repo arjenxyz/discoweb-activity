@@ -37,13 +37,24 @@ export async function POST(request: Request) {
     // DEBUG: Log incoming discount validation attempt (temporary)
     console.log('[discount-debug] Validating discount code', { code, itemId, selectedGuildId });
 
-    // Get server ID
-    const { data: server } = await supabase
-      .from('servers')
-      .select('id')
-      .eq('discord_id', selectedGuildId)
-      .single();
-
+    // Get server ID — with fallback like /api/member/coupons
+    let server: { id: string } | null = null;
+    if (selectedGuildId) {
+      const { data: byDiscord } = await supabase
+        .from('servers')
+        .select('id')
+        .eq('discord_id', selectedGuildId)
+        .maybeSingle();
+      server = byDiscord as { id: string } | null;
+    }
+    if (!server) {
+      const { data: first } = await supabase
+        .from('servers')
+        .select('id')
+        .limit(1)
+        .maybeSingle();
+      server = first as { id: string } | null;
+    }
     if (!server) {
       return NextResponse.json({ error: 'Server not found' }, { status: 404 });
     }
