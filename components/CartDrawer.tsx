@@ -112,8 +112,14 @@ export default function CartDrawer() {
              setMessage({ text: t('coupon_min_spend_error', { remaining: data.remaining }), type: 'error' });
            } else if (data?.error === 'ALREADY_USED') {
              setMessage({ text: t('coupon_already_used_error'), type: 'error' });
+           } else if (data?.error === 'wrong_server') {
+             setMessage({ text: t('discount_error_wrong_server'), type: 'error' });
+           } else if (data?.error === 'expired') {
+             setMessage({ text: t('discount_error_expired'), type: 'error' });
+           } else if (data?.error === 'usage_limit_exceeded') {
+             setMessage({ text: t('discount_error_usage_limit'), type: 'error' });
            } else {
-             setMessage({ text: data?.error || t('coupon_invalid_error'), type: 'error' });
+             setMessage({ text: t('coupon_invalid_error'), type: 'error' });
            }
            // Eğer yerelde uygulandıysa geri al
            removeCoupon();
@@ -402,9 +408,23 @@ export default function CartDrawer() {
                   </div>
                 )}
 
+                {/* Kupon chip başlığı + gizle/göster */}
+                {!appliedCoupon && (welcomeCoupon || specialCoupons.length > 0) && (
+                  <div className="flex items-center justify-between mt-3 mb-1">
+                    <span className="text-[10px] text-white/30 font-semibold uppercase tracking-wider">Kuponlarım</span>
+                    <button
+                      onClick={() => setShowCouponList(prev => !prev)}
+                      className="text-white/40 hover:text-white transition-colors"
+                      aria-label={showCouponList ? t('coupon_toggle_list_close') : t('coupon_toggle_list_open')}
+                    >
+                      {showCouponList ? <LuEye className="w-3.5 h-3.5" /> : <LuEyeOff className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                )}
+
                 {/* Kupon chip'leri — yatay kaydırılabilir */}
                 {showCouponList && !appliedCoupon && (welcomeCoupon || specialCoupons.length > 0) && (
-                  <div className="mt-3 flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+                  <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
                     {/* Hoşgeldin kuponu */}
                     {welcomeCoupon && (() => {
                       const wUsage = (welcomeCoupon as Coupon).userUsageCount ?? 0;
