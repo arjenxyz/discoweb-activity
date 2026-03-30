@@ -1017,19 +1017,20 @@ export default function DashboardPage() {
       ? 'w-full max-w-4xl px-0 sm:px-6'
       : 'mx-0 w-full max-w-full px-0'
     : 'w-full max-w-4xl px-4 sm:px-6';
+  // pb-20 on mobile ensures content clears the fixed bottom nav bar (~64px + safe area)
   const mainSpacingClass = effectiveSection === 'mail'
-    ? 'py-0 gap-0'
+    ? 'py-0 gap-0 pb-20 lg:pb-0'
     : effectiveSection === 'market'
-      ? 'md:pt-16 pb-0 gap-0'
+      ? 'md:pt-16 pb-20 lg:pb-0 gap-0'
       : effectiveSection === 'store'
         ? isActivityEmbed
           ? 'md:pt-20 pb-28 gap-0 md:pb-0'
           : 'md:pt-20 pb-28 sm:pb-10 gap-0 sm:gap-6 md:pb-0'
         : effectiveSection === 'raffles'
-          ? 'md:pt-20 pb-6 gap-0'
+          ? 'md:pt-20 pb-20 lg:pb-6 gap-0'
           : effectiveSection === 'economy-apply'
-            ? 'md:pt-20 pb-6 gap-0'
-            : 'md:pt-24 pb-6 gap-6';
+            ? 'md:pt-20 pb-20 lg:pb-6 gap-0'
+            : 'md:pt-24 pb-20 lg:pb-6 gap-6';
 
   // Splash — readiness sorgulanmadan önce gösterilir
   if (!splashDone) {
@@ -1160,7 +1161,7 @@ export default function DashboardPage() {
         />
         )}
 
-        <main className={`${mainWrapperClass} flex flex-col flex-1 ${mainSpacingClass} overflow-y-auto custom-scrollbar bg-[#0e1018] pb-16 lg:pb-0`}>
+        <main className={`${mainWrapperClass} flex flex-col flex-1 ${mainSpacingClass} overflow-y-auto custom-scrollbar bg-[#0e1018]`}>
             {!maintenanceLoading && isSiteMaintenance && (
               <section className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-6">
                 <p className="text-sm font-semibold text-amber-200">Site bakÄ±mda</p>
