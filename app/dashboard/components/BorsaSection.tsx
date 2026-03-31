@@ -5,6 +5,7 @@ import { LuTrendingUp, LuTrendingDown, LuSearch, LuArrowRight, LuTriangleAlert }
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { apiUrl } from '@/lib/api';
 import type { Section } from '../types';
+import { useT } from '@/contexts/LocaleContext';
 
 type Listing = {
   guild_id: string;
@@ -29,6 +30,7 @@ type BorsaSectionProps = {
 };
 
 export default function BorsaSection({ onNavigate }: BorsaSectionProps) {
+  const t = useT();
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -67,15 +69,15 @@ export default function BorsaSection({ onNavigate }: BorsaSectionProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-white">Exchange</h2>
-          <p className="text-sm text-white/40 mt-0.5">Buy and sell server lots with Mari</p>
+          <h2 className="text-xl font-bold text-white">{t('borsa_section_title')}</h2>
+          <p className="text-sm text-white/40 mt-0.5">{t('borsa_section_subtitle')}</p>
         </div>
         <button
           type="button"
           onClick={() => onNavigate('ipo-apply')}
           className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white/70 transition hover:bg-white/10 hover:text-white"
         >
-          List My Server
+          {t('borsa_list_my_server')}
         </button>
       </div>
 
@@ -84,7 +86,7 @@ export default function BorsaSection({ onNavigate }: BorsaSectionProps) {
         <LuSearch className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30" />
         <input
           type="text"
-          placeholder="Search servers..."
+          placeholder={t('borsa_search_placeholder')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full rounded-xl border border-white/10 bg-white/5 py-2.5 pl-10 pr-4 text-sm text-white placeholder-white/30 outline-none focus:border-white/20 focus:bg-white/8"
@@ -105,12 +107,12 @@ export default function BorsaSection({ onNavigate }: BorsaSectionProps) {
         </div>
       ) : filtered.length === 0 ? (
         <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] py-16 text-center text-white/30">
-          No listed servers found.
+          {t('borsa_no_servers_found')}
         </div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {filtered.map((l) => (
-            <ListingCard key={l.guild_id} listing={l} onNavigate={onNavigate} />
+            <ListingCard key={l.guild_id} listing={l} onNavigate={onNavigate} t={t} />
           ))}
         </div>
       )}
@@ -118,7 +120,7 @@ export default function BorsaSection({ onNavigate }: BorsaSectionProps) {
   );
 }
 
-function ListingCard({ listing: l, onNavigate }: { listing: Listing; onNavigate: (s: Section, e?: unknown) => void }) {
+function ListingCard({ listing: l, onNavigate, t }: { listing: Listing; onNavigate: (s: Section, e?: unknown) => void; t: (key: string, vars?: Record<string, string | number>) => string }) {
   const positive = (l.price_change_pct ?? 0) >= 0;
   const fillPct = l.public_lots > 0 ? Math.min(100, Math.round((l.circulating_lots / l.public_lots) * 100)) : 0;
 
@@ -151,7 +153,7 @@ function ListingCard({ listing: l, onNavigate }: { listing: Listing; onNavigate:
         <div>
           <p className="text-lg font-bold text-white leading-none">
             {l.market_price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            <span className="ml-1 text-xs font-normal text-white/40">MRI/lot</span>
+            <span className="ml-1 text-xs font-normal text-white/40">{t('borsa_mri_per_lot')}</span>
           </p>
           {l.price_change_pct !== undefined && (
             <div className={`mt-0.5 flex items-center gap-1 text-xs font-medium ${positive ? 'text-emerald-400' : 'text-red-400'}`}>
@@ -161,7 +163,7 @@ function ListingCard({ listing: l, onNavigate }: { listing: Listing; onNavigate:
           )}
         </div>
         <div className="text-right">
-          <p className="text-xs text-white/35">{fillPct}% sold</p>
+          <p className="text-xs text-white/35">{fillPct}% {t('borsa_sold')}</p>
           <div className="mt-1 h-1 w-20 overflow-hidden rounded-full bg-white/10">
             <div
               className="h-full rounded-full bg-indigo-500 transition-all"

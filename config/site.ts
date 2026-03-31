@@ -17,3 +17,18 @@ export const siteConfig = {
     github: "https://github.com/arjenxyz"
   }
 };
+
+// Translation keys for internationalization
+export const siteConfigKeys = {
+  name: "site_name",
+  hero: {
+    badge: "site_hero_badge",
+    title: "site_hero_title",
+    description: "site_hero_description",
+    cta: "site_hero_cta",
+  },
+  bot: {
+    name: "site_bot_name",
+    description: "site_bot_description",
+  }
+};

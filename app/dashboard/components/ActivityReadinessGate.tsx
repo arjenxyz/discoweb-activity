@@ -109,7 +109,7 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
         }),
       });
       setReportedStatus(readiness.status);
-    } catch { /* sessizce geç */ }
+    } catch { /* silently pass */ }
   };
   if (readiness.status === 'missing_guild') {
     return <DmScreen />;
@@ -142,16 +142,16 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
   const isAdmin = readiness.isAdmin && readiness.canInviteBot;
 
   const supportMessage = useMemo(() => {
-    const serverName = readiness.guildName ?? readiness.guildId ?? 'bu sunucu';
-    const botLink = readiness.inviteUrl ? `\nBot davet linki: ${readiness.inviteUrl}` : '';
+    const serverName = readiness.guildName ?? readiness.guildId ?? t('gate_default_server_name');
+    const botLink = readiness.inviteUrl ? `\n${t('gate_bot_invite_link_prefix')}${readiness.inviteUrl}` : '';
     if (isBotMissing && isAdmin) {
-      return `Merhaba, "${serverName}" sunucusu için Activity açılırken bot sunucuda bulunamıyor. Botu eklemem gerekiyor.${botLink}`;
+      return t('gate_support_message_admin_bot_missing', { serverName, botLink });
     }
     if (isBotMissing) {
-      return `Merhaba, "${serverName}" sunucusu için Activity açılırken bot sunucuda bulunamıyor hatası alıyorum. Botu sunucuya ekleyebilir misiniz?${botLink}`;
+      return t('gate_support_message_user_bot_missing', { serverName, botLink });
     }
-    return `Merhaba, "${serverName}" sunucusu için Activity açılırken "${readiness.status}" hatası alıyorum. Kontrol edebilir misiniz?`;
-  }, [isAdmin, isBotMissing, readiness.guildId, readiness.guildName, readiness.inviteUrl, readiness.status]);
+    return t('gate_support_message_generic', { serverName, status: readiness.status });
+  }, [isAdmin, isBotMissing, readiness.guildId, readiness.guildName, readiness.inviteUrl, readiness.status, t]);
 
   const copyToClipboard = async (text: string) => {
     try {

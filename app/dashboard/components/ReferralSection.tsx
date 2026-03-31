@@ -274,7 +274,7 @@ export default function ReferralSection() {
 
   const shareWithReferral = async () => {
     if (!discordSdkRef.current || !sdkReadyRef.current) {
-      setShareStatus({ type: 'error', message: 'Discord SDK bağlantısı hazır değil.' });
+      setShareStatus({ type: 'error', message: t('referral_error_discord_sdk') });
       return;
     }
     setShareLoading(true);
@@ -287,8 +287,8 @@ export default function ReferralSection() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             custom_id: referralCode ? `ref:${referralCode}` : undefined,
-            title: 'DiscoWeb — Sunucu Paneli',
-            description: 'Sunucu ekonomisi, mağaza ve borsa yönetimi!',
+            title: t('referral_share_title'),
+            description: t('referral_share_description'),
           }),
         });
         if (res.ok) {
@@ -298,17 +298,17 @@ export default function ReferralSection() {
       } catch { /* fall through */ }
 
       const args = linkId
-        ? { message: 'DiscoWeb ile sunucu yönetimini keşfet! 🚀', link_id: linkId }
-        : { message: 'DiscoWeb ile sunucu yönetimini keşfet! 🚀', custom_id: referralCode ? `ref:${referralCode}` : undefined };
+        ? { message: t('referral_share_message'), link_id: linkId }
+        : { message: t('referral_share_message'), custom_id: referralCode ? `ref:${referralCode}` : undefined };
 
       const result = await discordSdkRef.current.commands.shareLink(args);
       if (result?.success) {
-        setShareStatus({ type: 'success', message: 'Bağlantı paylaşıldı! 🎉' });
+        setShareStatus({ type: 'success', message: t('referral_share_success') });
       } else {
-        setShareStatus({ type: 'error', message: 'Paylaşım iptal edildi.' });
+        setShareStatus({ type: 'error', message: t('referral_share_cancelled') });
       }
     } catch (e: unknown) {
-      setShareStatus({ type: 'error', message: (e instanceof Error ? e.message : null) ?? 'Paylaşım başarısız.' });
+      setShareStatus({ type: 'error', message: (e instanceof Error ? e.message : null) ?? t('referral_share_failed') });
     } finally {
       setShareLoading(false);
       window.setTimeout(() => setShareStatus(null), 4000);
@@ -352,16 +352,16 @@ export default function ReferralSection() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         const msgs: Record<string, string> = {
-          already_referred: 'Bu hesap zaten davet edilmiş.',
-          new_account: 'Hesabın çok yeni (en az 3 gün olmalı).',
-          self_referral: 'Kendi davetini kabul edemezsin.',
-          referrer_not_found: 'Davet eden bulunamadı.',
-          code_not_found: 'Kod geçersiz.',
+          already_referred: t('referral_pending_already_referred'),
+          new_account: t('referral_pending_new_account'),
+          self_referral: t('referral_pending_self_referral'),
+          referrer_not_found: t('referral_pending_referrer_not_found'),
+          code_not_found: t('referral_pending_code_not_found'),
         };
-        setPendingStatus({ type: 'error', message: msgs[data.error] ?? `Hata: ${data.error ?? 'bilinmiyor'}` });
+        setPendingStatus({ type: 'error', message: msgs[data.error] ?? t('referral_pending_unknown_error', { error: data.error ?? 'bilinmiyor' }) });
       } else {
         const reward = data.reward ?? referralReward;
-        setPendingStatus({ type: 'success', message: `Davet kabul edildi! Her ikinize +${reward} Papel verildi. 🎉` });
+        setPendingStatus({ type: 'success', message: t('referral_pending_success', { reward }) });
         setReferredBy(
           pendingReferrer.type === 'by_code'
             ? pendingReferrer.code
@@ -374,7 +374,7 @@ export default function ReferralSection() {
         setPendingReferrerState(null);
       }
     } catch {
-      setPendingStatus({ type: 'error', message: 'Sunucu hatası, tekrar dene.' });
+      setPendingStatus({ type: 'error', message: t('referral_pending_server_error') });
     } finally {
       setPendingSubmitting(false);
     }
@@ -383,7 +383,7 @@ export default function ReferralSection() {
   const submitManualCode = async () => {
     const code = manualCode.trim().toUpperCase();
     if (!code || code.length !== 6) {
-      setManualStatus({ type: 'error', message: 'Kod 6 karakter olmalıdır.' });
+      setManualStatus({ type: 'error', message: t('referral_manual_code_length') });
       return;
     }
     setManualSubmitting(true);
@@ -397,23 +397,23 @@ export default function ReferralSection() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         const msgs: Record<string, string> = {
-          already_referred: 'Bu hesap zaten bir kodla davet edilmiş.',
-          code_not_found: 'Bu kod bulunamadı.',
-          cannot_use_own_code: 'Kendi kodunu kullanamazsın.',
-          invalid_code: 'Geçersiz kod.',
-          new_account: 'Hesabın çok yeni (en az 3 gün olmalı).',
-          update_failed: 'Kayıt başarısız, tekrar dene.',
+          already_referred: t('referral_manual_already_referred'),
+          code_not_found: t('referral_manual_code_not_found'),
+          cannot_use_own_code: t('referral_manual_own_code'),
+          invalid_code: t('referral_manual_invalid_code'),
+          new_account: t('referral_manual_new_account'),
+          update_failed: t('referral_manual_update_failed'),
         };
-        setManualStatus({ type: 'error', message: msgs[data.error] ?? `Hata: ${data.error ?? 'bilinmiyor'}` });
+        setManualStatus({ type: 'error', message: msgs[data.error] ?? t('referral_manual_unknown_error', { error: data.error ?? 'bilinmiyor' }) });
       } else {
-        setManualStatus({ type: 'success', message: `Kod uygulandı! Her ikinize +${data.reward ?? referralReward} Papel verildi. 🎉` });
+        setManualStatus({ type: 'success', message: t('referral_manual_success', { reward: data.reward ?? referralReward }) });
         setReferredBy(code);
         setManualCode('');
         setShowCelebration(true);
         setTimeout(() => setShowCelebration(false), 3500);
       }
     } catch {
-      setManualStatus({ type: 'error', message: 'Sunucu hatası, tekrar dene.' });
+      setManualStatus({ type: 'error', message: t('referral_manual_server_error') });
     } finally {
       setManualSubmitting(false);
     }
@@ -433,17 +433,17 @@ export default function ReferralSection() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         const msgs: Record<string, string> = {
-          invalid_code: 'Geçersiz kod.',
-          own_code: 'Kendi kodunu kullanamazsın.',
-          already_used: 'Bu sunucuda zaten bir davet kodu kullandın.',
-          not_advanced: 'Bu sunucu Yüksek Ekonomi kademesinde değil.',
+          invalid_code: t('referral_advanced_invalid_code'),
+          own_code: t('referral_advanced_own_code'),
+          already_used: t('referral_advanced_already_used'),
+          not_advanced: t('referral_advanced_not_advanced'),
         };
-        throw new Error(msgs[data.error] ?? 'Kod kullanılamadı.');
+        throw new Error(msgs[data.error] ?? t('referral_advanced_generic_error'));
       }
-      setAdvancedStatus({ type: 'success', message: 'Kod kaydedildi! İlk harcamanızda aktif olacak.' });
+      setAdvancedStatus({ type: 'success', message: t('referral_advanced_success') });
       setAdvancedInput('');
     } catch (e: unknown) {
-      setAdvancedStatus({ type: 'error', message: e instanceof Error ? e.message : 'Bir hata oluştu.' });
+      setAdvancedStatus({ type: 'error', message: e instanceof Error ? e.message : t('referral_advanced_error') });
     } finally {
       setAdvancedSubmitting(false);
     }
@@ -471,14 +471,14 @@ export default function ReferralSection() {
           <div className="flex items-start gap-3">
             <span className="text-2xl">🎁</span>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-indigo-200">Seni biri davet etti!</p>
+              <p className="text-sm font-bold text-indigo-200">{t('referral_pending_title')}</p>
               <p className="mt-0.5 text-xs text-indigo-300/70">
                 {pendingReferrer.type === 'by_code'
-                  ? `Davet kodu: ${pendingReferrer.code}`
-                  : `Davet eden ID: ...${pendingReferrer.referrer_discord_id.slice(-4)}`}
+                  ? t('referral_pending_code_label', { code: pendingReferrer.code })
+                  : t('referral_pending_user_label', { id: pendingReferrer.referrer_discord_id.slice(-4) })}
               </p>
               <p className="mt-1 text-xs text-white/50">
-                Kabul edersen her ikinize <span className="font-bold text-indigo-200">+{referralReward.toLocaleString()} Papel</span> verilir.
+                {t('referral_pending_accept_hint', { reward: referralReward.toLocaleString() })}
               </p>
               {pendingStatus && (
                 <p className={`mt-2 text-sm font-semibold ${pendingStatus.type === 'success' ? 'text-emerald-300' : 'text-rose-300'}`}>
@@ -497,7 +497,7 @@ export default function ReferralSection() {
               >
                 {pendingSubmitting ? (
                   <span className="inline-flex h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent mx-auto" />
-                ) : '🎉 Daveti Kabul Et'}
+                ) : t('referral_pending_accept_button')}
               </button>
               <button
                 type="button"
@@ -507,7 +507,7 @@ export default function ReferralSection() {
                 }}
                 className="rounded-xl bg-white/8 px-4 py-2.5 text-sm text-white/50 transition hover:bg-white/12"
               >
-                Reddet
+                {t('referral_pending_reject_button')}
               </button>
             </div>
           ) : null}
@@ -524,12 +524,12 @@ export default function ReferralSection() {
             {referralReward > 0 && (
               <div className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-300">
                 <span>🎁</span>
-                <span>Her davet → her iki kişiye +{referralReward.toLocaleString('tr-TR')} Papel</span>
+                <span>{t('referral_card_reward_text', { reward: referralReward.toLocaleString('tr-TR') })}</span>
               </div>
             )}
             {referralReward === 0 && (
               <div className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-white/30">
-                Şu an ödül verilmiyor
+                {t('referral_card_no_reward')}
               </div>
             )}
           </div>
@@ -561,7 +561,7 @@ export default function ReferralSection() {
             <span className="text-[10px] font-semibold uppercase tracking-wider">{t('referral_stats_active_referrals')}</span>
           </div>
           <p className="text-lg font-black text-white">{displayTotalInvites}</p>
-          <p className="text-[10px] text-white/30">Davet</p>
+          <p className="text-[10px] text-white/30">{t('referral_stats_invites_unit')}</p>
         </div>
 
         {stats?.advanced ? (
@@ -577,10 +577,10 @@ export default function ReferralSection() {
           <div className="rounded-2xl border border-indigo-500/15 bg-indigo-500/5 p-4 flex flex-col gap-1">
             <div className="flex items-center gap-1.5 text-indigo-400/60">
               <LuTrophy className="h-3.5 w-3.5" />
-              <span className="text-[10px] font-semibold uppercase tracking-wider">Sonraki Hedef</span>
+              <span className="text-[10px] font-semibold uppercase tracking-wider">{t('referral_stats_next_target')}</span>
             </div>
             <p className="text-lg font-black text-white">{stats?.next_milestone ?? nextMilestone}</p>
-            <p className="text-[10px] text-indigo-300/40">Davet</p>
+            <p className="text-[10px] text-indigo-300/40">{t('referral_stats_target_unit')}</p>
           </div>
         )}
       </div>
@@ -629,7 +629,7 @@ export default function ReferralSection() {
 
           {/* Milestone Şeridi */}
           <div className="rounded-3xl border border-white/15 bg-white/5 p-5">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-white/40">Ödül Seviyeleri</p>
+            <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-white/40">{t('referral_milestone_title')}</p>
             <div className="flex gap-2 overflow-x-auto pb-1">
               {MILESTONES.map((m) => {
                 const claimed = claimedMilestones.includes(m);
@@ -650,7 +650,7 @@ export default function ReferralSection() {
                     ) : (
                       <span className="text-xs font-bold">{m}</span>
                     )}
-                    <span className="text-[10px] font-semibold">{m} davet</span>
+                    <span className="text-[10px] font-semibold">{t('referral_milestone_invite_count', { count: m })}</span>
                     <span className={`text-[10px] font-black ${claimed ? 'text-amber-300' : isCurrent ? 'text-indigo-300' : 'text-white/20'}`}>
                       +{(MILESTONE_REWARDS[m] ?? 0).toLocaleString()}
                     </span>
@@ -755,7 +755,7 @@ export default function ReferralSection() {
                         <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.015.04.029.05a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.04.001-.088-.041-.104a13.1 13.1 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.105c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/>
                       </svg>
                     )}
-                    Discord&apos;da Paylaş
+                    {t('referral_discord_share_button')}
                   </button>
                   {shareStatus && (
                     <p className={`text-xs text-center ${shareStatus.type === 'success' ? 'text-emerald-400' : 'text-red-400'}`}>
@@ -773,7 +773,7 @@ export default function ReferralSection() {
                 </>
               ) : (
                 <div className="rounded-2xl border border-white/8 bg-white/4 px-4 py-3 text-xs text-white/35">
-                  Paylaş butonu yalnızca Discord Activity içinde çalışır.
+                  {t('referral_discord_only')}
                 </div>
               )}
             </div>
@@ -782,8 +782,8 @@ export default function ReferralSection() {
           {/* Manuel Kod Girişi — zaten davet edilmemişse göster */}
           {!referredBy && (
             <div className="rounded-3xl border border-white/15 bg-white/5 p-6">
-              <p className="text-sm font-semibold text-white mb-1">Davet Kodun var mı?</p>
-              <p className="text-xs text-white/40 mb-3">Arkadaşının 6 haneli kodunu girerek her ikiniz +{referralReward.toLocaleString()} Papel kazanırsınız.</p>
+              <p className="text-sm font-semibold text-white mb-1">{t('referral_manual_title')}</p>
+              <p className="text-xs text-white/40 mb-3">{t('referral_manual_description', { reward: referralReward.toLocaleString() })}</p>
               <div className="flex gap-2">
                 <input
                   type="text"
@@ -802,7 +802,7 @@ export default function ReferralSection() {
                 >
                   {manualSubmitting ? (
                     <span className="inline-flex h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  ) : 'Uygula'}
+                  ) : t('referral_manual_apply_button')}
                 </button>
               </div>
               {manualStatus && (
@@ -816,11 +816,10 @@ export default function ReferralSection() {
           {/* Yüksek Ekonomi Pasif Gelir Referral */}
           {advancedCode !== null && (
             <div className="rounded-3xl border border-blue-500/20 bg-blue-500/[0.04] p-6">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-blue-400 mb-1">Yüksek Ekonomi · Pasif Gelir</p>
-              <h2 className="text-lg font-black text-white">Davet Kodu</h2>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-blue-400 mb-1">{t('referral_advanced_title')}</p>
+              <h2 className="text-lg font-black text-white">{t('referral_advanced_subtitle')}</h2>
               <p className="mt-1 text-sm text-white/40">
-                Arkadaşların bu kodu kullanırsa, ilk 3 ay boyunca yaptıkları harcamaların{' '}
-                <span className="text-blue-300 font-semibold">%10&apos;u</span> sunucu hazinesinden sana akar.
+                {t('referral_advanced_description')}
               </p>
               <div className="mt-4 flex items-center gap-3">
                 <div className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
@@ -835,18 +834,18 @@ export default function ReferralSection() {
                   }}
                   className="rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-blue-500"
                 >
-                  {advancedCodeCopied ? '✓ Kopyalandı' : 'Kopyala'}
+                  {advancedCodeCopied ? t('referral_advanced_copied') : t('referral_advanced_copy_button')}
                 </button>
               </div>
-              <p className="mt-2 text-xs text-white/25">{advancedCodeUsage} kişi bu kodu kullandı</p>
+              <p className="mt-2 text-xs text-white/25">{t('referral_advanced_usage_text', { count: advancedCodeUsage })}</p>
               <div className="mt-4 border-t border-white/[0.06] pt-4">
-                <p className="text-sm font-semibold text-white mb-2">Davet Kodu Kullan</p>
+                <p className="text-sm font-semibold text-white mb-2">{t('referral_advanced_use_title')}</p>
                 <div className="flex gap-2">
                   <input
                     type="text"
                     value={advancedInput}
                     onChange={(e) => setAdvancedInput(e.target.value.toUpperCase())}
-                    placeholder="Kod girin"
+                    placeholder={t('referral_advanced_placeholder')}
                     maxLength={8}
                     className="flex-1 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/20 outline-none focus:border-blue-500/50 uppercase"
                   />
@@ -856,7 +855,7 @@ export default function ReferralSection() {
                     onClick={handleAdvancedCodeSubmit}
                     className="rounded-xl bg-white/10 px-4 py-2 text-sm font-bold text-white transition hover:bg-white/15 disabled:opacity-40"
                   >
-                    {advancedSubmitting ? '...' : 'Kullan'}
+                    {advancedSubmitting ? '...' : t('referral_advanced_use_button')}
                   </button>
                 </div>
                 {advancedStatus && (
@@ -881,15 +880,15 @@ export default function ReferralSection() {
               ))}
             </div>
           ) : leaderboard.length === 0 ? (
-            <p className="text-sm text-white/30">Henüz kimse davet yapmamış.</p>
+            <p className="text-sm text-white/30">{t('referral_leaderboard_empty')}</p>
           ) : (
             <>
               {/* Header */}
               <div className="mb-2 grid grid-cols-[2rem_1fr_4rem_5rem] gap-2 px-3 text-[10px] font-semibold uppercase tracking-wider text-white/30">
-                <span>#</span>
-                <span>Kullanıcı</span>
-                <span className="text-right">Davet</span>
-                <span className="text-right">Kazanılan</span>
+                <span>{t('referral_leaderboard_header_rank')}</span>
+                <span>{t('referral_leaderboard_header_user')}</span>
+                <span className="text-right">{t('referral_leaderboard_header_invites')}</span>
+                <span className="text-right">{t('referral_leaderboard_header_earned')}</span>
               </div>
               <div className="space-y-1.5">
                 {leaderboard.map((entry) => (
@@ -905,7 +904,7 @@ export default function ReferralSection() {
                       {entry.rank <= 3 ? ['🥇','🥈','🥉'][entry.rank - 1] : `#${entry.rank}`}
                     </span>
                     <span className={`text-sm truncate ${entry.is_me ? 'font-bold text-indigo-200' : 'text-white/80'}`}>
-                      {entry.user_label}{entry.is_me && ' (Sen)'}
+                      {entry.user_label}{entry.is_me && t('referral_leaderboard_you_suffix')}
                     </span>
                     <span className="text-right text-sm font-semibold text-white">{entry.total_invites}</span>
                     <span className="text-right text-xs text-white/50">{entry.total_earned.toLocaleString()} P</span>
@@ -916,7 +915,7 @@ export default function ReferralSection() {
               {/* Kendi sırası top 10 dışındaysa */}
               {myRank !== null && !leaderboard.some((e) => e.is_me) && (
                 <div className="mt-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white/60">
-                  {t('referral_leaderboard_rank', { rank: myRank })} · {myInvites} davet
+                  {t('referral_leaderboard_rank', { rank: myRank })} · {myInvites} {t('referral_stats_invites_unit')}
                 </div>
               )}
             </>

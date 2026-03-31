@@ -16,6 +16,26 @@ const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? '';
 const supabase = createClient(supabaseUrl, supabaseKey, { auth: { persistSession: false } });
 
+// Simple translation function for cron job
+const t = (key: string, params?: Record<string, string | number>): string => {
+  const translations: Record<string, string> = {
+    'cron_referral_freeze_active': 'Global freeze aktif — referral pasif gelir atlandı.',
+    'cron_referral_note': 'Referral pasif gelir ({weekId}): {referredUserId} harcamasından %{rate}',
+    'cron_referral_success_log': '✅ Referral pasif gelir: {totalPaid} Papel ödendi, {totalPending} Papel beklemede ({weekId})',
+    'cron_referral_started': '🕐 referralPassiveIncome cron başladı: {timestamp}',
+    'cron_referral_completed': '✅ referralPassiveIncome cron tamamlandı.',
+    'cron_referral_pending_payment': 'Bekleyen referral ödemesi'
+  };
+  
+  let result = translations[key] || key;
+  if (params) {
+    Object.entries(params).forEach(([param, value]) => {
+      result = result.replace(new RegExp(`{${param}}`, 'g'), String(value));
+    });
+  }
+  return result;
+};
+
 async function isGlobalFrozen(): Promise<boolean> {
   const { data } = await supabase
     .from('app_config')
@@ -35,7 +55,7 @@ function getWeekId(): string {
 
 async function runReferralPassiveIncome() {
   if (await isGlobalFrozen()) {
-    console.log('Global freeze aktif — referral pasif gelir atlandı.');
+    console.log(t('cron_referral_freeze_active'));
     return;
   }
 
@@ -121,7 +141,7 @@ async function runReferralPassiveIncome() {
         user_id: referrerId,
         amount: bonus,
         type: 'referral_bonus',
-        note: `Referral pasif gelir (${weekId}): ${usage.referred_user_id} harcamasından %${Math.round((usage.passive_income_rate ?? 0.10) * 100)}`,
+        note: t('cron_referral_note', { weekId, referredUserId: usage.referred_user_id, rate: Math.round((usage.passive_income_rate ?? 0.10) * 100) }),
       });
 
       // Hazineden düş
@@ -151,7 +171,7 @@ async function runReferralPassiveIncome() {
   // Bekleyen ödemeleri hazine dolunca karşıla (FIFO)
   await processPendingReferralPayments();
 
-  console.log(`✅ Referral pasif gelir: ${totalPaid.toLocaleString()} Papel ödendi, ${totalPending.toLocaleString()} Papel beklemede (${weekId})`);
+  console.log(t('cron_referral_success_log', { totalPaid: totalPaid.toLocaleString(), totalPending: totalPending.toLocaleString(), weekId }));
 }
 
 async function processPendingReferralPayments() {
@@ -200,7 +220,7 @@ async function processPendingReferralPayments() {
       user_id: refCode.user_id,
       amount: toPay,
       type: 'referral_bonus',
-      note: `Bekleyen referral ödemesi`,
+      note: t('cron_referral_pending_payment'),
     });
 
     await supabase.from('server_treasury').update({
@@ -215,7 +235,7 @@ async function processPendingReferralPayments() {
 }
 
 (async () => {
-  console.log('🕐 referralPassiveIncome cron başladı:', new Date().toISOString());
+  console.log(t('cron_referral_started', { timestamp: new Date().toISOString() }));
   await runReferralPassiveIncome();
-  console.log('✅ referralPassiveIncome cron tamamlandı.');
+  console.log(t('cron_referral_completed'));
 })();

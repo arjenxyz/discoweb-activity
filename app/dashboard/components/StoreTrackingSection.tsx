@@ -104,10 +104,10 @@ export default function StoreTrackingSection({ ordersLoading, orders }: StoreTra
     const hours = Math.floor((totalSeconds % 86400) / 3600);
     const seconds = totalSeconds % 60;
     const parts = [] as string[];
-    if (months > 0) parts.push(`${months} ay`);
-    if (days > 0) parts.push(`${days} gün`);
-    parts.push(`${hours} saat`);
-    parts.push(`${seconds} sn`);
+    if (months > 0) parts.push(t('tracking_duration_months', { count: months }));
+    if (days > 0) parts.push(t('tracking_duration_days', { count: days }));
+    parts.push(t('tracking_duration_hours', { count: hours }));
+    parts.push(t('tracking_duration_seconds', { count: seconds }));
     return parts.join(' ');
   };
 

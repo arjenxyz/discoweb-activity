@@ -17,6 +17,28 @@ const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? '';
 const supabase = createClient(supabaseUrl, supabaseKey, { auth: { persistSession: false } });
 
+// Simple translation function for cron job
+const t = (key: string, params?: Record<string, string | number>): string => {
+  const translations: Record<string, string> = {
+    'cron_papel_freeze_active': 'Global freeze aktif — updatePapelValue atlandı.',
+    'cron_papel_update_error': 'Papel value update hatası ({guildId}):',
+    'cron_papel_success_log': '✅ Papel değer çarpanı güncellendi: {serverCount} sunucu',
+    'cron_halving_success_log': '✅ Halving: global supply={globalSupply}, earn_multiplier={earnMultiplier}',
+    'cron_vesting_success_log': '✅ Founder vesting güncellendi: {listingCount} listing',
+    'cron_orders_expired_log': '✅ Süresi dolan emirler iptal edildi: {orderCount} emir',
+    'cron_papel_started': '🕐 updatePapelValue cron başladı: {timestamp}',
+    'cron_papel_completed': '✅ updatePapelValue cron tamamlandı.'
+  };
+  
+  let result = translations[key] || key;
+  if (params) {
+    Object.entries(params).forEach(([param, value]) => {
+      result = result.replace(new RegExp(`{${param}}`, 'g'), String(value));
+    });
+  }
+  return result;
+};
+
 async function isGlobalFrozen(): Promise<boolean> {
   const { data } = await supabase
     .from('app_config')
@@ -28,7 +50,7 @@ async function isGlobalFrozen(): Promise<boolean> {
 
 async function updatePapelValues() {
   if (await isGlobalFrozen()) {
-    console.log('Global freeze aktif — updatePapelValue atlandı.');
+    console.log(t('cron_papel_freeze_active'));
     return;
   }
 
@@ -85,11 +107,11 @@ async function updatePapelValues() {
         .eq('discord_id', guildId);
 
     } catch (err) {
-      console.error(`Papel value update hatası (${guildId}):`, err);
+      console.error(t('cron_papel_update_error', { guildId }), err);
     }
   }
 
-  console.log(`✅ Papel değer çarpanı güncellendi: ${servers.length} sunucu`);
+  console.log(t('cron_papel_success_log', { serverCount: servers.length }));
 }
 
 async function updateHalving() {
@@ -114,7 +136,7 @@ async function updateHalving() {
     .update({ earn_multiplier_override: earnMultiplier })
     .eq('is_setup', true);
 
-  console.log(`✅ Halving: global supply=${globalSupply.toLocaleString()}, earn_multiplier=${earnMultiplier}`);
+  console.log(t('cron_halving_success_log', { globalSupply: globalSupply.toLocaleString(), earnMultiplier }));
 }
 
 async function updateFounderVesting() {
@@ -150,7 +172,7 @@ async function updateFounderVesting() {
       .eq('guild_id', listing.guild_id);
   }
 
-  console.log(`✅ Founder vesting güncellendi: ${listings.length} listing`);
+  console.log(t('cron_vesting_success_log', { listingCount: listings.length }));
 }
 
 async function expireOldOrders() {
@@ -182,17 +204,17 @@ async function expireOldOrders() {
     }
   }
 
-  console.log(`✅ Süresi dolan emirler iptal edildi: ${expired.length} emir`);
+  console.log(t('cron_orders_expired_log', { orderCount: expired.length }));
 }
 
 // Ana çalıştırıcı
 (async () => {
-  console.log('🕐 updatePapelValue cron başladı:', new Date().toISOString());
+  console.log(t('cron_papel_started', { timestamp: new Date().toISOString() }));
   await Promise.all([
     updatePapelValues(),
     updateHalving(),
     updateFounderVesting(),
     expireOldOrders(),
   ]);
-  console.log('✅ updatePapelValue cron tamamlandı.');
+  console.log(t('cron_papel_completed'));
 })();

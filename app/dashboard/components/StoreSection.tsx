@@ -342,7 +342,7 @@ export default function StoreSection({
                             {isOwned ? (
                               <div className="flex-1 flex items-center justify-center gap-1.5 h-8 rounded-lg text-[11px] font-bold text-teal-300 bg-teal-500/10 border border-teal-500/20">
                                 <LuBadgeCheck className="w-3.5 h-3.5" />
-                                <span>Mevcut</span>
+                                <span>{t('store_product_owned_mobile')}</span>
                               </div>
                             ) : (
                               <>

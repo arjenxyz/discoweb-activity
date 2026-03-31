@@ -173,7 +173,7 @@ export default function DiscordAgreementButton({ href, children, className, targ
               <button
                 onClick={declineAgreement}
                 className="sm:w-auto w-full rounded-md px-4 py-3 bg-white/5 border border-white/10 text-sm text-white/80 hover:bg-white/10"
-                aria-label="Kabul etmiyorum"
+                aria-label={t('agreement_decline_aria')}
               >
                 {t('agreement_decline')}
               </button>
@@ -181,7 +181,7 @@ export default function DiscordAgreementButton({ href, children, className, targ
                 onClick={acceptAgreement}
                 disabled={isProcessingAgreement}
                 className="sm:w-auto w-full rounded-md px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-500 text-white text-sm font-medium hover:from-blue-700 hover:to-blue-600 disabled:opacity-50 flex items-center justify-center gap-2"
-                aria-label="Kabul ediyorum ve devam et"
+                aria-label={t('agreement_accept_aria')}
               >
                 {isProcessingAgreement ? t('market_order_processing') : t('agreement_accept')}
               </button>

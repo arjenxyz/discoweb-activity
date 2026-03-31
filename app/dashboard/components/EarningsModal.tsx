@@ -119,7 +119,7 @@ export default function EarningsModal({ open, onClose }: Props) {
                   type="button"
                   onClick={fetchData}
                   className="ml-auto text-xs text-white/40 hover:text-white transition"
-                  title="Yenile"
+                  title={t('earnings_refresh_title')}
                 >
                   ↻
                 </button>
@@ -155,8 +155,8 @@ export default function EarningsModal({ open, onClose }: Props) {
                   />
                   <Badge
                     active={Boolean(data.isBooster)}
-                    activeLabel={`Booster${data.boosterSince ? ' · ' + fmtDate(data.boosterSince) : ''}`}
-                    inactiveLabel="Boost: Yok"
+                    activeLabel={`${t('earnings_booster_active')}${data.boosterSince ? ' · ' + fmtDate(data.boosterSince) : ''}`}
+                    inactiveLabel={t('earnings_booster_inactive')}
                     color="pink"
                   />
                 </div>
@@ -166,20 +166,20 @@ export default function EarningsModal({ open, onClose }: Props) {
               <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
                 <p className="text-xs font-semibold uppercase tracking-widest text-indigo-300 mb-3">{t('earnings_stats_title')}</p>
                 <div className="grid grid-cols-2 gap-2">
-                  <StatCard label="Son 24 saat · Mesaj" value={data.messagesLast24h ?? 0} />
-                  <StatCard label="Son 24 saat · Ses (dk)" value={data.voiceMinutesLast24h ?? 0} />
-                  <StatCard label="Toplam Mesaj" value={data.userMessages ?? 0} />
-                  <StatCard label="Toplam Ses (dk)" value={data.userVoiceMinutes ?? 0} />
+                  <StatCard label={t('earnings_stat_messages_24h')} value={data.messagesLast24h ?? 0} />
+                  <StatCard label={t('earnings_stat_voice_24h')} value={data.voiceMinutesLast24h ?? 0} />
+                  <StatCard label={t('earnings_stat_total_messages')} value={data.userMessages ?? 0} />
+                  <StatCard label={t('earnings_stat_total_voice')} value={data.userVoiceMinutes ?? 0} />
                 </div>
 
                 {data.totalsSinceVerified && (
                   <div className="mt-3 rounded-xl border border-white/10 bg-[#0b0d12]/60 p-3">
                     <p className="text-xs text-white/40 mb-1">
-                      Doğrulanmadan beri{data.verifiedSince ? ` (${fmtDate(data.verifiedSince)})` : ''}
+                      {t('earnings_since_verified')}{data.verifiedSince ? ` (${fmtDate(data.verifiedSince)})` : ''}
                     </p>
                     <p className="text-sm text-white/70">
-                      <span className="font-semibold text-white">{fmt(data.totalsSinceVerified.messages)}</span> mesaj ·{' '}
-                      <span className="font-semibold text-white">{fmt(data.totalsSinceVerified.voice_minutes)}</span> dk ses
+                      <span className="font-semibold text-white">{fmt(data.totalsSinceVerified.messages)}</span> {t('earnings_messages_suffix')} ·{' '}
+                      <span className="font-semibold text-white">{fmt(data.totalsSinceVerified.voice_minutes)}</span> {t('earnings_voice_suffix')}
                     </p>
                   </div>
                 )}
@@ -222,18 +222,20 @@ function RateRow({
   boost: number | null;
   effective: number;
 }) {
+  const t = useT();
+  
   return (
     <div className="flex items-center justify-between gap-2">
       <p className="text-sm text-white/70">{label}</p>
       <div className="flex items-center gap-1.5 text-xs">
         <span className="text-white/50">{base}</span>
         {tag !== null && tag > 0 && (
-          <span className="rounded-full bg-indigo-500/20 px-1.5 py-0.5 text-indigo-300">+{tag} tag</span>
+          <span className="rounded-full bg-indigo-500/20 px-1.5 py-0.5 text-indigo-300">+{tag} {t('earnings_rate_tag')}</span>
         )}
         {boost !== null && boost > 0 && (
-          <span className="rounded-full bg-pink-500/20 px-1.5 py-0.5 text-pink-300">+{boost} boost</span>
+          <span className="rounded-full bg-pink-500/20 px-1.5 py-0.5 text-pink-300">+{boost} {t('earnings_rate_boost')}</span>
         )}
-        <span className="font-bold text-emerald-400">{effective} papel</span>
+        <span className="font-bold text-emerald-400">{effective} {t('earnings_rate_currency')}</span>
       </div>
     </div>
   );

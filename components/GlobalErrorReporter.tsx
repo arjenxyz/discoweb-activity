@@ -5,6 +5,7 @@ import { apiUrl } from '@/lib/api';
 import { getBreadcrumbs } from '@/lib/breadcrumbs';
 import { getDeviceInfo, getCurrentSection } from '@/lib/errorContext';
 import { recordAndCheckFlood } from '@/lib/errorFlood';
+import { useT } from '@/contexts/LocaleContext';
 
 type CapturedError = {
   message: string;
@@ -38,6 +39,7 @@ export function reportError(err: {
 }
 
 export default function GlobalErrorReporter() {
+  const t = useT();
   // Hata kuyruğu
   const [queue, setQueue] = useState<CapturedError[]>([]);
   const [sending, setSending] = useState(false);
@@ -144,9 +146,9 @@ export default function GlobalErrorReporter() {
             <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 shrink-0">
               <path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0114.082 15H1.918a1.75 1.75 0 01-1.543-2.575L6.457 1.047zM9 11a1 1 0 11-2 0 1 1 0 012 0zm-.25-5.25a.75.75 0 00-1.5 0v2.5a.75.75 0 001.5 0v-2.5z" />
             </svg>
-            Birden fazla hata tespit edildi
-            <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs font-bold">{floodCount} adet</span>
-            — Lütfen sayfayı yenileyin veya yöneticiyle iletişime geçin.
+            {t('error_flood_detected')}
+            <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs font-bold">{t('error_flood_count', { count: floodCount })}</span>
+            — {t('error_flood_message')}
           </div>
           <button
             onClick={() => setFloodDismissed(true)}
@@ -189,7 +191,7 @@ export default function GlobalErrorReporter() {
 
               <div className="flex-1 min-w-0">
                 <p className={`text-xs font-semibold leading-tight ${sent ? 'text-emerald-300' : 'text-white/90'}`}>
-                  {sent ? 'Hata raporlandı' : sending ? 'Raporlanıyor...' : 'Arka planda hata oluştu'}
+                  {sent ? t('error_reported') : sending ? t('error_reporting') : t('error_occurred')}
                 </p>
                 <p className="text-[11px] text-white/40 mt-0.5 truncate">{current.message}</p>
               </div>
@@ -200,8 +202,8 @@ export default function GlobalErrorReporter() {
                   type="button"
                   onClick={() => setExpanded(v => !v)}
                   className="rounded-lg p-1 text-white/30 hover:text-white/60 hover:bg-white/10 transition"
-                  aria-label={expanded ? 'Daralt' : 'Detay göster'}
-                  title={expanded ? 'Daralt' : 'Detay göster'}
+                  aria-label={expanded ? t('error_details_hide') : t('error_details_show')}
+                  title={expanded ? t('error_details_hide') : t('error_details_show')}
                 >
                   <svg viewBox="0 0 16 16" fill="currentColor" className={`h-3.5 w-3.5 transition-transform ${expanded ? 'rotate-180' : ''}`}>
                     <path d="M4.427 9.573a.75.75 0 001.146 0L8 7.148l2.427 2.425a.75.75 0 101.146-.966L8.573 5.930a.75.75 0 00-1.146 0L4.427 8.607a.75.75 0 000 .966z" />
@@ -253,7 +255,7 @@ export default function GlobalErrorReporter() {
                   </span>
                   {queue.length > 1 && (
                     <span className="text-[9px] px-1.5 py-0.5 rounded bg-orange-500/15 text-orange-300 font-semibold">
-                      +{queue.length - 1} bekleyen hata
+                      {t('error_pending_count', { count: queue.length - 1 })}
                     </span>
                   )}
                 </div>
@@ -265,7 +267,7 @@ export default function GlobalErrorReporter() {
                     onClick={handleSend}
                     className="w-full rounded-xl bg-red-500/15 border border-red-500/20 py-2 text-xs font-semibold text-red-300 hover:bg-red-500/25 transition"
                   >
-                    Tekrar Gönder
+                    {t('error_resend')}
                   </button>
                 )}
               </div>

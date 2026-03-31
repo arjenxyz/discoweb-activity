@@ -14,9 +14,9 @@ type Props = {
 type Phase = 'idle' | 'loading' | 'success' | 'error';
 
 const ERROR_MESSAGES: Record<string, string> = {
-  role_assign_failed: 'Rol ataması başarısız oldu. Bot sunucuda aktif olmayabilir veya rolün bot hiyerarşisinin üstünde olabilir. Sunucu ayarlarından bot rolünün, doğrulanmış üye rolünün üstünde olduğunu kontrol et.',
-  bot_missing_manage_roles: 'Botun "Rolleri Yönet" yetkisi yok. Sunucu ayarlarından bota bu yetkiyi ver.',
-  bot_role_hierarchy: 'Bot kendi rolünden yüksek bir rol atayamaz. Sunucu Ayarları → Roller bölümünden bot rolünü doğrulanmış üye rolünün üstüne taşı.',
+  role_assign_failed: 'verify_role_error_role_assign_failed',
+  bot_missing_manage_roles: 'verify_role_error_bot_missing_manage_roles',
+  bot_role_hierarchy: 'verify_role_error_bot_role_hierarchy',
 };
 
 export default function VerifyRoleScreen({ readiness, onRetry }: Props) {
@@ -54,7 +54,7 @@ export default function VerifyRoleScreen({ readiness, onRetry }: Props) {
         const json = await res.json().catch(() => null);
         const code = json?.error ?? null;
         setErrorCode(code);
-        setError(code ? (ERROR_MESSAGES[code] ?? `Bilinmeyen hata: ${code}`) : t('verify_role_error_assign'));
+        setError(code ? t(ERROR_MESSAGES[code] ?? `Bilinmeyen hata: ${code}`) : t('verify_role_error_assign'));
         setPhase('error');
         return;
       }
@@ -91,16 +91,16 @@ export default function VerifyRoleScreen({ readiness, onRetry }: Props) {
                 className="text-4xl font-black leading-tight tracking-tight text-white"
                 style={{ textShadow: '0 0 60px rgba(255,255,255,0.15), 0 2px 20px rgba(0,0,0,1)' }}
               >
-                Bu kapıyı açmak için bir anahtara ihtiyacın var.
+                {t('verify_role_main_title')}
               </h1>
               <p className="text-sm text-white/70 leading-relaxed max-w-sm" style={{ textShadow: '0 1px 8px rgba(0,0,0,1)' }}>
-                Doğrulanmış üye rolü alman yeterli. Tek tıkla seni içeri alalım.
+                {t('verify_role_main_description')}
               </p>
             </div>
             {phase === 'error' && error && (
               <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 backdrop-blur-md flex flex-col gap-2">
                 {errorCode && (
-                  <p className="text-xs font-mono text-red-400">hata: <span className="font-bold">{errorCode}</span></p>
+                  <p className="text-xs font-mono text-red-400">{t('verify_role_error_label')} <span className="font-bold">{errorCode}</span></p>
                 )}
                 <p className="text-sm text-red-300 leading-relaxed">{error}</p>
                 <button
@@ -158,6 +158,7 @@ export default function VerifyRoleScreen({ readiness, onRetry }: Props) {
 }
 
 function SuccessState() {
+  const t = useT();
   return (
     <div className="flex flex-col items-center gap-4 text-center drop-shadow-lg">
       <div
@@ -168,8 +169,8 @@ function SuccessState() {
           <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
         </svg>
       </div>
-      <h2 className="text-xl font-black">Kapı açıldı!</h2>
-      <p className="text-sm text-white/70">DiscoWeb dünyasına giriş yapıyorsun...</p>
+      <h2 className="text-xl font-black">{t('verify_role_success_title')}</h2>
+      <p className="text-sm text-white/70">{t('verify_role_success_description')}</p>
       <style>{`
         @keyframes popIn {
           from { transform: scale(0); opacity: 0; }

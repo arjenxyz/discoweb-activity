@@ -23,44 +23,44 @@ const previewText = (s?: string, max = 100) => {
   return t.length > max ? `${t.slice(0, max - 1)}…` : t;
 };
 
-const CATEGORY_CONFIG: Record<string, { label: string; icon: React.ReactNode; css: string }> = {
+const CATEGORY_CONFIG: Record<string, { labelKey: string; icon: React.ReactNode; css: string }> = {
   announcement: {
-    label: 'Duyurular',
+    labelKey: 'mail_category_announcement',
     icon: <LuMegaphone />,
     css: 'border-[#5865F2]/30 bg-[#5865F2]/10 text-[#5865F2]',
   },
   system: {
-    label: 'Sistem',
+    labelKey: 'mail_category_system',
     icon: <LuMail />,
     css: 'border-red-500/30 bg-red-500/10 text-red-400',
   },
   maintenance: {
-    label: 'Bakım',
+    labelKey: 'mail_category_maintenance',
     icon: <LuWrench />,
     css: 'border-amber-500/30 bg-amber-500/10 text-amber-400',
   },
   sponsor: {
-    label: 'Sponsorluk',
+    labelKey: 'mail_category_sponsor',
     icon: <LuStar />,
     css: 'border-fuchsia-500/30 bg-fuchsia-500/10 text-fuchsia-400',
   },
   update: {
-    label: 'Güncellemeler',
+    labelKey: 'mail_category_update',
     icon: <LuSparkles />,
     css: 'border-indigo-500/30 bg-indigo-500/10 text-indigo-400',
   },
   lottery: {
-    label: 'Promosyonlar',
+    labelKey: 'mail_category_lottery',
     icon: <LuGift />,
     css: 'border-rose-500/30 bg-rose-500/10 text-rose-400',
   },
   reward: {
-    label: 'Ödüller',
+    labelKey: 'mail_category_reward',
     icon: <LuReceipt />,
     css: 'border-indigo-500/30 bg-indigo-500/10 text-indigo-400',
   },
   order: {
-    label: 'Siparişler',
+    labelKey: 'mail_category_order',
     icon: <LuTag />,
     css: 'border-white/20 bg-white/5 text-white/60',
   },
@@ -222,8 +222,8 @@ export default function MailSection({
     { key: 'all', label: t('mail_category_all'), icon: <LuInbox /> },
     ...FIXED_CATEGORIES.map(cat => ({
       key: cat,
-      label: t(`mail_category_${cat}` as string) || CATEGORY_CONFIG[cat]?.label || cat,
-      icon: CATEGORY_CONFIG[cat]?.icon ?? <LuMail />,
+      label: t(CATEGORY_CONFIG[cat].labelKey),
+      icon: CATEGORY_CONFIG[cat].icon ?? <LuMail />,
     })),
   ];
 
@@ -274,10 +274,10 @@ export default function MailSection({
           <div className="flex items-center gap-1.5 rounded-lg border border-white/[0.06] bg-black/20 px-2 py-1 md:px-3 md:py-1.5 text-[10px] md:text-xs font-medium text-white/50">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             <span>{countsTotal.all ?? 0}</span>
-            <span className="hidden sm:inline">Mesaj</span>
+            <span className="hidden sm:inline">{t('mail_messages_label')}</span>
             <span className="text-white/20">&middot;</span>
             <span className="text-[#5865F2]">{countsUnread.all ?? 0}</span>
-            <span className="hidden sm:inline">Okunmamış</span>
+            <span className="hidden sm:inline">{t('mail_unread_label')}</span>
           </div>
         </div>
       </div>
@@ -413,7 +413,7 @@ export default function MailSection({
                       try {
                         const res = await fetchWithCreds(apiUrl('/api/mail'), { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids }) });
                         if (!res.ok) { showToast(t('mail_delete_error_toast'), 'error'); return; }
-                        showToast(`${ids.length} mesaj silindi`, 'success');
+                        showToast(t('mail_messages_deleted', { count: ids.length }), 'success');
                         setSelectedIds(new Set());
                         window.dispatchEvent(new CustomEvent('mail:refresh'));
                       } catch {
@@ -564,7 +564,7 @@ export default function MailSection({
                     <div className="flex-shrink-0">
                       <span className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${config.css}`}>
                         <span className="text-sm">{config.icon}</span>
-                        <span>{t(`mail_category_${mail.category}` as Parameters<typeof t>[0]) || config.label}</span>
+                        <span>{t(config.labelKey)}</span>
                       </span>
                     </div>
 
@@ -619,7 +619,7 @@ export default function MailSection({
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
                         <span className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide ${config.css}`}>
-                          {t(`mail_category_${mail.category}` as Parameters<typeof t>[0]) || config.label}
+                          {t(config.labelKey)}
                         </span>
                         <span className="text-[10px] text-white/25 ml-auto flex-shrink-0">
                           {formatDate(mail.created_at)}

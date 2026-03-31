@@ -72,31 +72,33 @@ function formatCountdown(ms: number): string {
 
 // ── Prize badge label ─────────────────────────────────────────────────────────
 function PrizeBadge({ raffle }: { raffle: BadgeInfo['activeRaffles'][0] }) {
+  const t = useT();
+  
   if (raffle.prize_type === 'papel' && raffle.prize_papel_amount) {
     return (
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-yellow-500/20 border border-yellow-500/30 backdrop-blur-md text-[10px] text-yellow-300 font-bold">
-        <LuCoins className="w-3 h-3" /> {Number(raffle.prize_papel_amount).toLocaleString('tr-TR')} Papel
+        <LuCoins className="w-3 h-3" /> {t('raffles_prize_papel_badge', { amount: Number(raffle.prize_papel_amount).toLocaleString('tr-TR') })}
       </span>
     );
   }
   if (raffle.prize_type === 'role') {
     return (
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-violet-500/20 border border-violet-500/30 backdrop-blur-md text-[10px] text-violet-300 font-bold">
-        <LuShield className="w-3 h-3" /> Rol
+        <LuShield className="w-3 h-3" /> {t('raffles_prize_role_badge')}
       </span>
     );
   }
   if (raffle.prize_type === 'timed_multiplier' && raffle.prize_multiplier_value) {
     return (
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 backdrop-blur-md text-[10px] text-emerald-300 font-bold">
-        <LuZap className="w-3 h-3" /> ×{raffle.prize_multiplier_value} / {raffle.prize_multiplier_days}g
+        <LuZap className="w-3 h-3" /> {t('raffles_prize_multiplier_badge', { multiplier: raffle.prize_multiplier_value, days: raffle.prize_multiplier_days ?? 0 })}
       </span>
     );
   }
   if (raffle.prize_type === 'mari' && raffle.prize_mari_amount) {
     return (
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-500/20 border border-indigo-500/30 backdrop-blur-md text-[10px] text-indigo-300 font-bold">
-        💎 {Number(raffle.prize_mari_amount).toFixed(2)} Mari
+        💎 {t('raffles_prize_mari_badge', { amount: Number(raffle.prize_mari_amount).toFixed(2) })}
       </span>
     );
   }
@@ -113,32 +115,33 @@ function PrizeBadge({ raffle }: { raffle: BadgeInfo['activeRaffles'][0] }) {
   }
   return (
     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/60 border border-white/10 backdrop-blur-md text-[10px] text-white/50">
-      <LuGift className="w-3 h-3" /> Sürpriz
+      <LuGift className="w-3 h-3" /> {t('raffles_prize_surprise_badge')}
     </span>
   );
 }
 
 // ── Eligibility chip ──────────────────────────────────────────────────────────
 function EligibilityChip({ raffle, tagDays }: { raffle: BadgeInfo['activeRaffles'][0]; tagDays: number }) {
+  const t = useT();
   const elig = (raffle as any).eligibility_type ?? 'tag';
   if (elig === 'everyone') {
     return (
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide border bg-white/5 text-white/50 border-white/10">
-        <LuUsers className="w-3 h-3" /> Herkes
+        <LuUsers className="w-3 h-3" /> {t('raffles_eligibility_everyone')}
       </span>
     );
   }
   if (elig === 'booster') {
     return (
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide border bg-pink-500/10 text-pink-400 border-pink-500/20">
-        ⚡ Booster
+        ⚡ {t('raffles_eligibility_booster')}
       </span>
     );
   }
   return (
     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide border bg-indigo-500/10 text-indigo-400 border-indigo-500/20">
       <LuTag className="w-3 h-3" />
-      {raffle.min_tag_days}g tag
+      {t('raffles_eligibility_tag_days', { days: raffle.min_tag_days })}
     </span>
   );
 }
@@ -253,7 +256,7 @@ export default function RafflesSection({ badgeInfo, loading, onJoinRaffle }: Raf
             className="relative flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 hover:text-white transition-all text-xs font-semibold"
           >
             <LuTicket className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Çekilişlerim</span>
+            <span className="hidden sm:inline">{t('raffles_my_raffles_button')}</span>
             {joined.length > 0 && (
               <span className="flex items-center justify-center w-4 h-4 rounded-full bg-emerald-500 text-white text-[9px] font-bold leading-none">
                 {joined.length}
@@ -318,7 +321,7 @@ export default function RafflesSection({ badgeInfo, loading, onJoinRaffle }: Raf
                       </div>
                       {isUpcoming && (
                         <span className="shrink-0 flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold border bg-amber-500/20 text-amber-300 border-amber-500/30 animate-pulse">
-                          <LuClock className="w-2.5 h-2.5" /> Yakında
+                          <LuClock className="w-2.5 h-2.5" /> {t('raffles_upcoming_badge')}
                         </span>
                       )}
                       {!isUpcoming && hasJoined && (
@@ -345,7 +348,7 @@ export default function RafflesSection({ badgeInfo, loading, onJoinRaffle }: Raf
                       <EligibilityChip raffle={raffle} tagDays={tagDays} />
                       {(raffle.winner_count ?? 1) > 1 && (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide border bg-amber-500/10 text-amber-400 border-amber-500/20">
-                          <LuTrophy className="w-3 h-3" /> {raffle.winner_count} kazanan
+                          <LuTrophy className="w-3 h-3" /> {t('raffles_winner_count', { count: raffle.winner_count })}
                         </span>
                       )}
                       {(raffle.entry_count ?? 0) > 0 && (
@@ -370,14 +373,14 @@ export default function RafflesSection({ badgeInfo, loading, onJoinRaffle }: Raf
                   }`}>
                     {isUpcoming ? (
                       <div className="rounded-xl border border-amber-500/20 bg-amber-500/8 px-3 py-2.5 text-center">
-                        <p className="text-[10px] text-amber-300/60 font-medium mb-0.5">Çekiliş başlayana kadar</p>
+                        <p className="text-[10px] text-amber-300/60 font-medium mb-0.5">{t('raffles_upcoming_countdown_label')}</p>
                         <p className="text-sm font-bold text-amber-300 tabular-nums tracking-widest">
                           {formatCountdown(msToStart ?? 0)}
                         </p>
                       </div>
                     ) : hasJoined ? (
                       <div className="flex flex-col gap-1">
-                        {hasLeaveError && <p className="text-[10px] text-red-400/80">İptal edilemedi, tekrar dene.</p>}
+                        {hasLeaveError && <p className="text-[10px] text-red-400/80">{t('raffles_leave_error_desktop')}</p>}
                         <div className="flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-2.5">
                           <LuCheck className="w-4 h-4 text-emerald-400 shrink-0" />
                           <span className="text-xs text-emerald-300 font-medium">{t('raffles_joined_success')}</span>
@@ -400,9 +403,9 @@ export default function RafflesSection({ badgeInfo, loading, onJoinRaffle }: Raf
                         <LuLock className="w-4 h-4 text-white/30 shrink-0" />
                         <span className="text-xs text-white/40">
                           {(raffle as any).eligibility_type === 'booster'
-                            ? 'Booster gerekli'
+                            ? t('raffles_booster_required')
                             : raffle.min_tag_days - tagDays > 0
-                            ? `${raffle.min_tag_days - tagDays} gün daha tag taşı`
+                            ? t('raffles_tag_days_remaining', { days: raffle.min_tag_days - tagDays })
                             : t('raffles_tag_days_required', { count: raffle.min_tag_days })}
                         </span>
                       </div>
@@ -441,7 +444,7 @@ export default function RafflesSection({ badgeInfo, loading, onJoinRaffle }: Raf
                           {raffle.title}
                         </h4>
                         {isUpcoming ? (
-                          <span className="shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 animate-pulse">Yakında</span>
+                          <span className="shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 animate-pulse">{t('raffles_upcoming_badge')}</span>
                         ) : hasJoined && (
                           <span className="shrink-0 flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                             <LuCheck className="w-2.5 h-2.5" />
@@ -473,12 +476,12 @@ export default function RafflesSection({ badgeInfo, loading, onJoinRaffle }: Raf
                     <div className="mt-2.5">
                       {isUpcoming ? (
                         <div className="rounded-lg border border-amber-500/20 bg-amber-500/8 px-2.5 py-2 text-center">
-                          <p className="text-[9px] text-amber-300/60">Başlayana kadar</p>
+                          <p className="text-[9px] text-amber-300/60">{t('raffles_upcoming_mobile_label')}</p>
                           <p className="text-xs font-bold text-amber-300 tabular-nums">{formatCountdown(msToStart ?? 0)}</p>
                         </div>
                       ) : hasJoined ? (
                         <div className="flex flex-col gap-1">
-                          {hasLeaveError && <p className="text-[9px] text-red-400/80">İptal edilemedi.</p>}
+                          {hasLeaveError && <p className="text-[9px] text-red-400/80">{t('raffles_leave_error_mobile')}</p>}
                           <div className="flex items-center gap-1.5 h-8 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-2.5">
                             <LuCheck className="w-3 h-3 text-emerald-400" />
                             <span className="text-[11px] text-emerald-300 font-medium">{t('raffles_participated_badge')}</span>
@@ -497,9 +500,9 @@ export default function RafflesSection({ badgeInfo, loading, onJoinRaffle }: Raf
                         <div className="flex items-center gap-1.5 h-8 rounded-lg border border-white/8 bg-white/4 px-2.5">
                           <LuLock className="w-3 h-3 text-white/25" />
                           <span className="text-[10px] text-white/35">
-                            {(raffle as any).eligibility_type === 'booster' ? 'Booster gerekli'
-                              : raffle.min_tag_days - tagDays > 0 ? `${raffle.min_tag_days - tagDays}g daha`
-                              : `${raffle.min_tag_days}g tag gerekli`}
+                            {(raffle as any).eligibility_type === 'booster' ? t('raffles_booster_required')
+                              : raffle.min_tag_days - tagDays > 0 ? t('raffles_tag_days_mobile', { days: raffle.min_tag_days - tagDays })
+                              : t('raffles_tag_days_required_mobile', { days: raffle.min_tag_days })}
                           </span>
                         </div>
                       )}
@@ -531,11 +534,11 @@ export default function RafflesSection({ badgeInfo, loading, onJoinRaffle }: Raf
 
             <div className={`overflow-hidden transition-all duration-300 ease-in-out ${infoOpen ? 'max-h-[400px] opacity-100 mt-2' : 'max-h-0 opacity-0'}`}>
               <div className="p-4 rounded-2xl bg-black/20 border border-white/5 text-xs text-white/60 space-y-2">
-                <p>• &quot;Yakında&quot; rozeti olan çekilişler sayaç sıfırlanınca otomatik olarak katılıma açılır.</p>
-                <p>• Katılımınızı çekiliş sona ermeden önce iptal edebilirsiniz.</p>
-                <p>• Her çekilişe yalnızca bir kez katılabilirsiniz; çift kayıt engellenmiştir.</p>
-                <p>• Çekiliş sonuçları admin tarafından açıklanır; kazananlar Discord ve panel bildirimiyle haberdar edilir.</p>
-                <p>• Tag süreniz yeterliyse bile çekiliş süresi dolmuşsa katılım yapılamaz.</p>
+                <p>{t('raffles_info_rule1')}</p>
+                <p>{t('raffles_info_rule2')}</p>
+                <p>{t('raffles_info_rule3')}</p>
+                <p>{t('raffles_info_rule4')}</p>
+                <p>{t('raffles_info_rule5')}</p>
               </div>
             </div>
           </div>

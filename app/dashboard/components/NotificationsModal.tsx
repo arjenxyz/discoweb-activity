@@ -102,7 +102,7 @@ export default function NotificationsModal({
                     rel="noreferrer"
                     className="mt-2 inline-flex rounded-full border border-white/10 px-2 py-1 text-[11px] text-white/50 transition hover:border-white/30 hover:text-white"
                   >
-                    Detay bağlantısı
+                    {t('notifications_detail_link')}
                   </a>
                 )}
                 <span className="mt-2 inline-flex rounded-full border border-white/10 px-2 py-1 text-[11px] text-white/50">

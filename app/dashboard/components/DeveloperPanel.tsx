@@ -170,15 +170,15 @@ type BugReport = {
   updated_at?: string | null;
 };
 
-const NAV_ITEMS: { id: TabId; label: string; Icon: React.ElementType; accent: string }[] = [
-  { id: 'overview',   label: 'Genel Bakış',   Icon: LuLayoutDashboard, accent: 'text-[#7289da]' },
-  { id: 'logs',       label: 'Loglar',         Icon: LuScrollText,      accent: 'text-emerald-400' },
-  { id: 'suspicious', label: 'Şüpheli',        Icon: LuTriangleAlert,   accent: 'text-red-400' },
-  { id: 'apps',       label: 'Başvurular',     Icon: LuClipboardList,   accent: 'text-amber-400' },
-  { id: 'servers',    label: 'Sunucular',      Icon: LuServer,          accent: 'text-violet-400' },
-  { id: 'profiles',   label: 'Profiller',      Icon: LuUsers,           accent: 'text-sky-400' },
-  { id: 'ads',        label: 'Reklamlar',      Icon: LuMegaphone,       accent: 'text-pink-400' },
-  { id: 'reports',    label: 'Raporlar',       Icon: LuBug,             accent: 'text-orange-400' },
+const NAV_ITEMS: { id: TabId; labelKey: string; Icon: React.ElementType; accent: string }[] = [
+  { id: 'overview',   labelKey: 'dev_nav_overview',   Icon: LuLayoutDashboard, accent: 'text-[#7289da]' },
+  { id: 'logs',       labelKey: 'dev_nav_logs',       Icon: LuScrollText,      accent: 'text-emerald-400' },
+  { id: 'suspicious', labelKey: 'dev_nav_suspicious', Icon: LuTriangleAlert,   accent: 'text-red-400' },
+  { id: 'apps',       labelKey: 'dev_nav_apps',       Icon: LuClipboardList,   accent: 'text-amber-400' },
+  { id: 'servers',    labelKey: 'dev_nav_servers',    Icon: LuServer,          accent: 'text-violet-400' },
+  { id: 'profiles',   labelKey: 'dev_nav_profiles',   Icon: LuUsers,           accent: 'text-sky-400' },
+  { id: 'ads',        labelKey: 'dev_nav_ads',        Icon: LuMegaphone,       accent: 'text-pink-400' },
+  { id: 'reports',    labelKey: 'dev_nav_reports',    Icon: LuBug,             accent: 'text-orange-400' },
 ];
 
 export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClose, variant = 'panel' }: Props) {
@@ -276,14 +276,14 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
     setAdError(null);
     try {
       const res = await fetch(`https://discord.com/api/v10/invites/${code}?with_counts=true`);
-      if (!res.ok) throw new Error('Geçersiz davet linki');
+      if (!res.ok) throw new Error(t('dev_invalid_invite'));
       const data = await res.json() as {
         guild?: { name?: string; description?: string | null; icon?: string | null; id?: string };
         approximate_member_count?: number;
         approximate_presence_count?: number;
       };
       const guild = data.guild;
-      if (!guild) throw new Error('Sunucu bilgisi alınamadı');
+      if (!guild) throw new Error(t('dev_server_info_error'));
       setPreview({
         invite_url: url,
         server_name: guild.name ?? '',
@@ -295,7 +295,7 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
         online_count: data.approximate_presence_count ?? null,
       });
     } catch (e) {
-      setAdError(e instanceof Error ? e.message : 'Davet bilgisi alınamadı');
+      setAdError(e instanceof Error ? e.message : t('dev_invite_info_error'));
       setPreview(null);
     } finally {
       setAdFetching(false);
@@ -610,18 +610,18 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
         </div>
         <div className="grid gap-2.5">
           {([
-            { key: 'economy_vote_threshold',          label: 'Oy Eşiği',               stateKey: 'voteThreshold' },
-            { key: 'economy_direct_member_threshold', label: 'Direkt Üye Eşiği',       stateKey: 'directMemberThreshold' },
-            { key: 'economy_auto_approve_days',       label: 'Otomatik Onay Günü',     stateKey: 'autoApproveDays' },
-          ] as const).map(({ key, label, stateKey }) => (
+            { key: 'economy_vote_threshold',          labelKey: 'dev_votes_label',               stateKey: 'voteThreshold' },
+            { key: 'economy_direct_member_threshold', labelKey: 'dev_member_label',       stateKey: 'directMemberThreshold' },
+            { key: 'economy_auto_approve_days',       labelKey: 'dev_apps_auto_days',     stateKey: 'autoApproveDays' },
+          ] as const).map(({ key, labelKey, stateKey }) => (
             <div key={key} className="flex items-center gap-3">
-              <span className="flex-1 text-xs text-white/50">{label}</span>
+              <span className="flex-1 text-xs text-white/50">{t(labelKey)}</span>
               <input type="number" min={1} value={thresholdInputs[stateKey]}
                 onChange={(e) => setThresholdInputs((p) => ({ ...p, [stateKey]: e.target.value }))}
                 className="w-24 rounded-lg border border-white/10 bg-black/30 px-2.5 py-1.5 text-xs text-white focus:border-[#5865F2]/50 focus:outline-none" />
               <button onClick={() => saveThreshold(key, thresholdInputs[stateKey])} disabled={thresholdSaving === key}
                 className="rounded-lg border border-[#5865F2]/30 bg-[#5865F2]/15 hover:bg-[#5865F2]/25 px-3 py-1.5 text-[11px] font-medium text-[#7289da] transition disabled:opacity-50">
-                {thresholdSaving === key ? '...' : 'Kaydet'}
+                {thresholdSaving === key ? '...' : t('dev_save_button')}
               </button>
             </div>
           ))}
@@ -642,10 +642,10 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
                 <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${app.status === 'pending' ? 'border-amber-500/30 bg-amber-500/10 text-amber-300' : 'border-white/10 text-white/40'}`}>{app.status}</span>
               </div>
               <div className="flex flex-wrap gap-3 text-[11px] text-white/50 mb-3">
-                <span>Üye: <strong className="text-white">{app.criteria?.memberCount ?? 0}</strong></span>
-                <span>Oy: <strong className="text-white">{app.criteria?.voteCount ?? 0}</strong>/{app.criteria?.voteThreshold ?? 120}</span>
-                <span>Kurulum: <strong className={app.criteria?.isSetup ? 'text-emerald-400' : 'text-red-400'}>{app.criteria?.isSetup ? 'var' : 'yok'}</strong></span>
-                <span>Uygun: <strong className={app.criteria?.eligible ? 'text-emerald-400' : 'text-red-400'}>{app.criteria?.eligible ? 'evet' : 'hayır'}</strong></span>
+                <span>{t('dev_member_label')}: <strong className="text-white">{app.criteria?.memberCount ?? 0}</strong></span>
+                <span>{t('dev_votes_label')}: <strong className="text-white">{app.criteria?.voteCount ?? 0}</strong>/{app.criteria?.voteThreshold ?? 120}</span>
+                <span>{t('dev_setup_label')}: <strong className={app.criteria?.isSetup ? 'text-emerald-400' : 'text-red-400'}>{app.criteria?.isSetup ? t('dev_has') : t('dev_not_has')}</strong></span>
+                <span>{t('dev_eligible_label')}: <strong className={app.criteria?.eligible ? 'text-emerald-400' : 'text-red-400'}>{app.criteria?.eligible ? t('dev_yes') : t('dev_no')}</strong></span>
               </div>
               <div className="flex gap-2">
                 <button onClick={() => handleDecision('economy_applications', app.id, 'approve')}
@@ -676,7 +676,7 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
                 </div>
                 <span className="text-[10px] text-white/30">{formatDate(app.created_at)}</span>
               </div>
-              <p className="text-[11px] text-white/50 mb-3">Başvuran: <strong className="text-white">{app.applicant_user_id}</strong></p>
+              <p className="text-[11px] text-white/50 mb-3">{t('dev_applicant_label')}: <strong className="text-white">{app.applicant_user_id}</strong></p>
               <div className="flex gap-2">
                 <button onClick={() => handleDecision('economy_tier_applications', app.id, 'approve')}
                   className="flex items-center gap-1.5 rounded-lg border border-emerald-400/25 bg-emerald-500/10 hover:bg-emerald-500/20 px-3 py-1.5 text-[11px] font-medium text-emerald-300 transition">
@@ -710,8 +710,8 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
               </div>
               <p className="mt-0.5 text-[10px] text-white/30">{server.discord_id}</p>
               <div className="mt-1 flex gap-3 text-[10px] text-white/40">
-                <span>{server.member_count ?? 0} üye</span>
-                <span className={server.is_setup ? 'text-emerald-400' : 'text-white/25'}>{server.is_setup ? 'kurulu' : 'kurulmamış'}</span>
+                <span>{server.member_count ?? 0} {t('dev_members_suffix')}</span>
+                <span className={server.is_setup ? 'text-emerald-400' : 'text-white/25'}>{server.is_setup ? t('dev_established') : t('dev_not_established')}</span>
               </div>
             </button>
           ))}
@@ -727,13 +727,13 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
             </div>
             <div className="rounded-xl bg-black/30 border border-white/[0.06] p-3 grid gap-2 text-[11px]">
               {([
-                ['Üye', `${selectedServer.member_count ?? 0}`],
-                ['Kurulum', selectedServer.is_setup ? 'var' : 'yok'],
-                ['Ekonomi', selectedServer.economy_tier],
-                ['Admin Rol', selectedServer.admin_role_id ?? '—'],
-                ['Verify Rol', selectedServer.verify_role_id ?? '—'],
-                ['Market', selectedServer.market_hours_enabled ? `${selectedServer.market_open_time ?? ''}-${selectedServer.market_close_time ?? ''}` : 'kapalı'],
-                ['Timezone', selectedServer.market_timezone ?? '—'],
+                [t('dev_server_detail_members'), `${selectedServer.member_count ?? 0}`],
+                [t('dev_server_detail_setup'), selectedServer.is_setup ? t('dev_has') : t('dev_not_has')],
+                [t('dev_server_detail_economy'), selectedServer.economy_tier],
+                [t('dev_server_detail_admin_role'), selectedServer.admin_role_id ?? '—'],
+                [t('dev_server_detail_verify_role'), selectedServer.verify_role_id ?? '—'],
+                [t('dev_server_detail_market'), selectedServer.market_hours_enabled ? `${selectedServer.market_open_time ?? ''}-${selectedServer.market_close_time ?? ''}` : t('dev_market_closed')],
+                [t('dev_server_detail_timezone'), selectedServer.market_timezone ?? '—'],
               ] as [string, string][]).map(([k, v]) => (
                 <div key={k} className="flex items-center justify-between gap-2">
                   <span className="text-white/40">{k}</span>
@@ -744,16 +744,16 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
             <button onClick={() => { setInviteResult(null); generateInvite(selectedServer.discord_id); }} disabled={inviteLoading}
               className="flex items-center justify-center gap-2 w-full rounded-xl border border-[#5865F2]/30 bg-[#5865F2]/15 hover:bg-[#5865F2]/25 px-4 py-2.5 text-xs font-semibold text-[#7289da] transition disabled:opacity-50">
               <LuLink className="w-3.5 h-3.5" />
-              {inviteLoading ? 'Oluşturuluyor...' : 'Davet Oluştur (1 kullanım · 10 dk)'}
+              {inviteLoading ? t('dev_invite_loading') : t('dev_invite_button')}
             </button>
             {inviteResult && (
               <div className="rounded-xl border border-emerald-400/20 bg-emerald-500/10 p-3">
-                <p className="text-[11px] font-bold text-emerald-300 mb-1.5">Davet hazır!</p>
+                <p className="text-[11px] font-bold text-emerald-300 mb-1.5">{t('dev_invite_ready')}</p>
                 <a href={inviteResult.url} target="_blank" rel="noopener noreferrer" className="text-xs text-emerald-400 underline break-all">{inviteResult.url}</a>
-                {inviteResult.expires && <p className="text-[10px] text-white/30 mt-1">Geçerlilik: {formatDate(inviteResult.expires)}</p>}
+                {inviteResult.expires && <p className="text-[10px] text-white/30 mt-1">{t('dev_invite_validity')} {formatDate(inviteResult.expires)}</p>}
                 <button onClick={() => navigator.clipboard.writeText(inviteResult.url)}
                   className="mt-2 flex items-center gap-1.5 rounded-lg bg-white/10 hover:bg-white/15 px-2.5 py-1 text-[10px] text-white/60 transition">
-                  <LuCopy className="w-3 h-3" /> Kopyala
+                  <LuCopy className="w-3 h-3" /> {t('dev_copy_button')}
                 </button>
               </div>
             )}
@@ -856,17 +856,17 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
                 <p className="text-xs font-bold text-white">{flag.title}</p>
                 {flag.description && <p className="mt-0.5 text-[11px] text-white/50">{flag.description}</p>}
                 <div className="mt-1.5 flex flex-wrap gap-3 text-[10px] text-white/30">
-                  {flag.guild_id && <span>Sunucu: {flag.guild_id}</span>}
-                  {flag.user_id && <span>Kullanıcı: {flag.user_id}</span>}
+                  {flag.guild_id && <span>{t('dev_suspicious_server_label')} {flag.guild_id}</span>}
+                  {flag.user_id && <span>{t('dev_suspicious_user_label')} {flag.user_id}</span>}
                   <span>{formatDate(flag.created_at)}</span>
                 </div>
               </div>
               {flag.status === 'open' && (
                 <div className="flex flex-col gap-1.5 shrink-0">
                   {[
-                    { status: 'reviewed',  label: 'İncelendi',    cls: 'border-sky-400/25 bg-sky-500/10 text-sky-300 hover:bg-sky-500/20' },
-                    { status: 'actioned',  label: 'İşlem Alındı', cls: 'border-emerald-400/25 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20' },
-                    { status: 'dismissed', label: 'Yoksay',       cls: 'border-white/10 bg-white/5 text-white/40 hover:bg-white/10' },
+                    { status: 'reviewed',  label: t('dev_suspicious_reviewed'),    cls: 'border-sky-400/25 bg-sky-500/10 text-sky-300 hover:bg-sky-500/20' },
+                    { status: 'actioned',  label: t('dev_suspicious_actioned'), cls: 'border-emerald-400/25 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20' },
+                    { status: 'dismissed', label: t('dev_suspicious_dismissed'),       cls: 'border-white/10 bg-white/5 text-white/40 hover:bg-white/10' },
                   ].map((btn) => (
                     <button key={btn.status} onClick={() => updateFlagStatus(flag.id, btn.status)}
                       className={`rounded-lg border px-2.5 py-1 text-[10px] font-medium transition ${btn.cls}`}>
@@ -881,7 +881,7 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
         {suspiciousFlags.length === 0 && (
           <div className="flex flex-col items-center gap-2 py-12 text-white/25">
             <LuShield className="w-8 h-8" />
-            <p className="text-xs">Kayıtlı şüpheli hareket yok. Tarama başlatmak için &quot;Şimdi Tara&quot; butonunu kullan.</p>
+            <p className="text-xs">{t('dev_suspicious_empty')}</p>
           </div>
         )}
       </div>
@@ -889,17 +889,17 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
   );
 
   const REPORT_STATUS_OPTIONS = [
-    { value: 'reviewing',     label: '🔍 İnceleniyor',          cls: 'border-amber-400/25 bg-amber-500/10 text-amber-300' },
-    { value: 'need_info',     label: '💬 Bilgi Gerekiyor',       cls: 'border-blue-400/25 bg-blue-500/10 text-blue-300' },
-    { value: 'critical',      label: '⚠️ Kritik',               cls: 'border-red-400/25 bg-red-500/10 text-red-300' },
-    { value: 'fixed_pending', label: '🔧 Deploy Bekleniyor',     cls: 'border-cyan-400/25 bg-cyan-500/10 text-cyan-300' },
-    { value: 'planned_next',  label: '🎯 Sonraki Sürüme',        cls: 'border-teal-400/25 bg-teal-500/10 text-teal-300' },
-    { value: 'long_term',     label: '⏳ Uzun Vadeli',           cls: 'border-purple-400/25 bg-purple-500/10 text-purple-300' },
-    { value: 'resolved',      label: '✅ Çözüldü',               cls: 'border-emerald-400/25 bg-emerald-500/10 text-emerald-300' },
-    { value: 'not_found',     label: '❌ Tespit Edilemedi',      cls: 'border-red-400/25 bg-red-500/10 text-red-300' },
-    { value: 'duplicate',     label: '🔁 Bilinen Sorun',         cls: 'border-white/10 bg-white/5 text-white/50' },
-    { value: 'invalid',       label: '🚫 Geçersiz',              cls: 'border-white/10 bg-white/5 text-white/30' },
-    { value: 'closed',        label: '🔒 Kapalı',                cls: 'border-white/10 bg-white/5 text-white/30' },
+    { value: 'reviewing',     label: t('dev_report_status_reviewing'),     cls: 'border-amber-400/25 bg-amber-500/10 text-amber-300' },
+    { value: 'need_info',     label: t('dev_report_status_need_info'),     cls: 'border-blue-400/25 bg-blue-500/10 text-blue-300' },
+    { value: 'critical',      label: t('dev_report_status_critical'),      cls: 'border-red-400/25 bg-red-500/10 text-red-300' },
+    { value: 'fixed_pending', label: t('dev_report_status_fixed_pending'), cls: 'border-cyan-400/25 bg-cyan-500/10 text-cyan-300' },
+    { value: 'planned_next',  label: t('dev_report_status_planned_next'),  cls: 'border-teal-400/25 bg-teal-500/10 text-teal-300' },
+    { value: 'long_term',     label: t('dev_report_status_long_term'),     cls: 'border-purple-400/25 bg-purple-500/10 text-purple-300' },
+    { value: 'resolved',      label: t('dev_report_status_resolved'),      cls: 'border-emerald-400/25 bg-emerald-500/10 text-emerald-300' },
+    { value: 'not_found',     label: t('dev_report_status_not_found'),     cls: 'border-red-400/25 bg-red-500/10 text-red-300' },
+    { value: 'duplicate',     label: t('dev_report_status_duplicate'),     cls: 'border-white/10 bg-white/5 text-white/50' },
+    { value: 'invalid',       label: t('dev_report_status_invalid'),       cls: 'border-white/10 bg-white/5 text-white/30' },
+    { value: 'closed',        label: t('dev_report_status_closed'),        cls: 'border-white/10 bg-white/5 text-white/30' },
   ];
 
   const REPORT_STATUS_BADGE: Record<string, string> = {
@@ -961,15 +961,15 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
             <div className="px-4 pb-3">
               <p className="text-sm text-white/80 whitespace-pre-wrap leading-relaxed">{r.description}</p>
               <div className="mt-2 flex flex-wrap gap-3 text-[10px] text-white/30">
-                <span>Kullanıcı: <span className="text-white/50">{r.user_id}</span></span>
-                {r.guild_id && <span>Sunucu: <span className="text-white/50">{r.guild_id}</span></span>}
+                <span>{t('dev_report_user_label')} <span className="text-white/50">{r.user_id}</span></span>
+                {r.guild_id && <span>{t('dev_report_server_label')} <span className="text-white/50">{r.guild_id}</span></span>}
               </div>
             </div>
 
             {/* Dev note */}
             {r.dev_note && (
               <div className="mx-4 mb-3 rounded-xl border border-[#5865F2]/20 bg-[#5865F2]/5 px-3 py-2">
-                <p className="text-[10px] text-[#7289da] font-semibold mb-0.5">Developer Notu</p>
+                <p className="text-[10px] text-[#7289da] font-semibold mb-0.5">{t('dev_report_dev_note_title')}</p>
                 <p className="text-[11px] text-white/60">{r.dev_note}</p>
               </div>
             )}
@@ -989,7 +989,7 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
               <div className="flex gap-2">
                 <input
                   type="text"
-                  placeholder="Developer notu ekle..."
+                  placeholder={t('dev_report_note_placeholder')}
                   value={reportNoteInputs[r.id] ?? ''}
                   onChange={(e) => setReportNoteInputs((p) => ({ ...p, [r.id]: e.target.value }))}
                   className="flex-1 rounded-xl border border-white/10 bg-black/30 px-3 py-1.5 text-xs text-white placeholder-white/20 outline-none focus:border-[#5865F2]/40"
@@ -1007,7 +1007,7 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
         {reports.length === 0 && (
           <div className="flex flex-col items-center gap-2 py-12 text-white/25">
             <LuBug className="w-8 h-8" />
-            <p className="text-xs">Bu filtrede kayıtlı rapor yok.</p>
+            <p className="text-xs">{t('dev_ads_empty')}</p>
           </div>
         )}
       </div>
@@ -1019,13 +1019,13 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
       <div className="rounded-2xl border border-white/10 bg-[#0b0d12] p-5">
         <p className="text-sm font-semibold text-white mb-3">{t('developer_ads_title')}</p>
         <div className="flex gap-2">
-          <input type="text" placeholder="discord.gg/... davet linki" value={inviteUrl}
+          <input type="text" placeholder={t('dev_ads_invite_placeholder')} value={inviteUrl}
             onChange={e => { setInviteUrl(e.target.value); setAdSuccess(false); setAdError(null); setPreview(null); }}
             onBlur={e => { if (e.target.value) fetchInviteInfo(e.target.value); }}
             className="flex-1 min-w-0 rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 text-xs text-white placeholder-white/25 outline-none focus:border-[#5865F2]/40" />
           <button onClick={() => fetchInviteInfo(inviteUrl)} disabled={adFetching || !inviteUrl}
             className="shrink-0 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 px-3 py-2.5 text-xs text-white/60 transition hover:text-white disabled:opacity-40">
-            {adFetching ? '...' : 'Getir'}
+            {adFetching ? '...' : t('dev_ads_fetch_button')}
           </button>
         </div>
         {preview && (
@@ -1038,34 +1038,34 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
               <p className="text-xs font-bold text-white truncate">{preview.server_name}</p>
               {preview.server_description && <p className="text-[10px] text-white/40 truncate">{preview.server_description}</p>}
               <div className="mt-0.5 flex gap-3 text-[10px] text-white/30">
-                {preview.online_count != null && <span>{preview.online_count.toLocaleString()} çevrimiçi</span>}
-                {preview.member_count != null && <span>{preview.member_count.toLocaleString()} üye</span>}
+                {preview.online_count != null && <span>{preview.online_count.toLocaleString()} {t('dev_ads_online_suffix')}</span>}
+                {preview.member_count != null && <span>{preview.member_count.toLocaleString()} {t('dev_ads_member_suffix')}</span>}
               </div>
             </div>
           </div>
         )}
         {adError && <p className="mt-2 text-xs text-red-400">{adError}</p>}
-        {adSuccess && <p className="mt-2 text-xs text-emerald-400">Reklam yayınlandı!</p>}
+        {adSuccess && <p className="mt-2 text-xs text-emerald-400">{t('dev_ads_published')}</p>}
         {preview && (
           <button onClick={submitAd} disabled={adLoading}
             className="mt-3 w-full rounded-xl border border-[#5865F2]/25 bg-[#5865F2]/15 hover:bg-[#5865F2]/25 px-4 py-2.5 text-xs font-bold text-[#7289da] transition disabled:opacity-50">
-            {adLoading ? 'Yayınlanıyor...' : 'Reklam Ver'}
+            {adLoading ? t('dev_ads_loading') : t('dev_ads_submit')}
           </button>
         )}
       </div>
       {ads.length > 0 && (
         <div className="rounded-2xl border border-white/10 bg-[#0b0d12] p-5">
-          <p className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-3">Mevcut Reklamlar</p>
+          <p className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-3">{t('dev_ads_current_title')}</p>
           <div className="flex flex-col gap-2">
             {ads.map(a => (
               <div key={a.id} className="flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2.5">
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-bold text-white truncate">{a.server_name}</p>
-                  <p className={`text-[10px] ${a.active ? 'text-emerald-400' : 'text-white/30'}`}>{a.active ? 'Görüntüleniyor' : 'Gizlendi'}</p>
+                  <p className={`text-[10px] ${a.active ? 'text-emerald-400' : 'text-white/30'}`}>{a.active ? t('dev_ads_status_active') : t('dev_ads_status_hidden')}</p>
                 </div>
                 <button onClick={() => deleteAd(a.id)}
                   className="shrink-0 flex items-center gap-1 rounded-lg border border-red-500/20 bg-red-500/10 hover:bg-red-500/20 px-2.5 py-1.5 text-[10px] text-red-400 transition">
-                  <LuTrash2 className="w-3 h-3" /> Sil
+                  <LuTrash2 className="w-3 h-3" /> {t('dev_ads_delete')}
                 </button>
               </div>
             ))}
@@ -1102,18 +1102,18 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
                 <path fillRule="evenodd" d="M8.837 1.626c-.246-.835-1.428-.835-1.674 0l-1.32 4.064H1.8c-.88 0-1.245 1.128-.534 1.64l3.353 2.437-1.28 3.94c-.255.785.643 1.436 1.31.967L8 12.09l3.352 2.584c.666.469 1.564-.182 1.309-.967l-1.28-3.94 3.353-2.437c.711-.512.346-1.64-.534-1.64H11.157L8.837 1.626z" clipRule="evenodd"/>
               </svg>
             </div>
-            <span className="text-sm font-bold text-white">Dev Panel</span>
+            <span className="text-sm font-bold text-white">{t('dev_panel_title')}</span>
           </div>
           <button onClick={onClose}
             className="flex h-7 w-7 items-center justify-center rounded-lg text-white/30 hover:bg-white/[0.06] hover:text-white/70 transition"
-            title="Geri dön">
+            title={t('dev_back_button')}>
             <LuChevronLeft className="h-4 w-4" />
           </button>
         </div>
 
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
-          {NAV_ITEMS.map(({ id, label, Icon, accent }) => {
+          {NAV_ITEMS.map(({ id, labelKey, Icon, accent }) => {
             const active = activeTab === id;
             return (
               <button key={id} onClick={() => setActiveTab(id)}
@@ -1121,7 +1121,7 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
                 <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition-all ${active ? accent : 'text-white/30 group-hover:text-white/60'}`}>
                   <Icon className="h-4 w-4" />
                 </span>
-                <span className="text-sm font-medium leading-none">{label}</span>
+                <span className="text-sm font-medium leading-none">{t(labelKey)}</span>
                 {active && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-white/50" />}
               </button>
             );
@@ -1135,23 +1135,23 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
         <div className="flex h-14 shrink-0 items-center justify-between border-b border-white/[0.06] bg-[#0e1018] px-5">
           <div className="flex items-center gap-2.5">
             <span className={`${activeNav.accent}`}><activeNav.Icon className="h-4 w-4" /></span>
-            <span className="text-sm font-bold text-white">{activeNav.label}</span>
+            <span className="text-sm font-bold text-white">{t(activeNav.labelKey)}</span>
             {loadingTab && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/15 border-t-white/60" />}
           </div>
           <button onClick={() => fetchSection(activeTab)} disabled={loadingTab}
             className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] px-3 py-1.5 text-xs text-white/50 transition hover:text-white/80 disabled:opacity-40">
             <LuRefreshCw className={`h-3 w-3 ${loadingTab ? 'animate-spin' : ''}`} />
-            Yenile
+            {t('dev_refresh_button')}
           </button>
         </div>
 
         {/* Mobile tab bar */}
         <div className="flex gap-1 overflow-x-auto border-b border-white/[0.06] bg-[#0b0d12] px-3 py-2 md:hidden">
-          {NAV_ITEMS.map(({ id, label, Icon, accent }) => (
+          {NAV_ITEMS.map(({ id, labelKey, Icon, accent }) => (
             <button key={id} onClick={() => setActiveTab(id)}
               className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition ${activeTab === id ? `bg-white/10 text-white border border-white/15` : 'text-white/40 border border-transparent hover:text-white/70'}`}>
               <span className={activeTab === id ? accent : 'text-white/25'}><Icon className="h-3.5 w-3.5" /></span>
-              {label}
+              {t(labelKey)}
             </button>
           ))}
         </div>

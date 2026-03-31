@@ -5,6 +5,7 @@ import { LuTrendingUp, LuTrendingDown, LuTriangleAlert, LuLoader, LuArrowRight }
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { apiUrl } from '@/lib/api';
 import type { Section } from '../types';
+import { useT } from '@/contexts/LocaleContext';
 
 type Holding = {
   guild_id: string;
@@ -21,6 +22,7 @@ type Props = {
 };
 
 export default function PortfolioSection({ onNavigate }: Props) {
+  const t = useT();
   const [holdings, setHoldings] = useState<Holding[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -51,23 +53,23 @@ export default function PortfolioSection({ onNavigate }: Props) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-bold text-white">Portfolio</h2>
-        <p className="text-sm text-white/40 mt-0.5">Your server lot positions</p>
+        <h2 className="text-xl font-bold text-white">{t('portfolio_title')}</h2>
+        <p className="text-sm text-white/40 mt-0.5">{t('portfolio_subtitle')}</p>
       </div>
 
       {/* Summary cards */}
       {!loading && holdings.length > 0 && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] px-4 py-3">
-            <p className="text-[10px] uppercase tracking-wider text-white/30">Total Value</p>
+            <p className="text-[10px] uppercase tracking-wider text-white/30">{t('portfolio_total_value')}</p>
             <p className="mt-1 text-lg font-bold text-white">{totalValue.toFixed(2)} <span className="text-xs font-normal text-white/35">MRI</span></p>
           </div>
           <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] px-4 py-3">
-            <p className="text-[10px] uppercase tracking-wider text-white/30">Total Cost</p>
+            <p className="text-[10px] uppercase tracking-wider text-white/30">{t('portfolio_total_cost')}</p>
             <p className="mt-1 text-lg font-bold text-white">{totalCost.toFixed(2)} <span className="text-xs font-normal text-white/35">MRI</span></p>
           </div>
           <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] px-4 py-3">
-            <p className="text-[10px] uppercase tracking-wider text-white/30">Unrealized P&L</p>
+            <p className="text-[10px] uppercase tracking-wider text-white/30">{t('portfolio_unrealized_pl')}</p>
             <p className={`mt-1 text-lg font-bold ${totalPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
               {totalPnl >= 0 ? '+' : ''}{totalPnl.toFixed(2)} <span className="text-xs font-normal opacity-60">MRI</span>
             </p>
@@ -85,13 +87,13 @@ export default function PortfolioSection({ onNavigate }: Props) {
         </div>
       ) : holdings.length === 0 ? (
         <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] py-16 text-center">
-          <p className="text-white/30">No positions yet.</p>
+          <p className="text-white/30">{t('portfolio_empty_title')}</p>
           <button
             type="button"
             onClick={() => onNavigate('borsa')}
             className="mt-4 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/60 hover:bg-white/10 hover:text-white"
           >
-            Browse Exchange
+            {t('portfolio_empty_button')}
           </button>
         </div>
       ) : (
@@ -115,7 +117,7 @@ export default function PortfolioSection({ onNavigate }: Props) {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-semibold text-white">{h.server_name ?? h.guild_id}</p>
-                    <p className="text-xs text-white/35">{h.lot_count.toLocaleString()} lots · avg {h.avg_buy_price.toFixed(2)} MRI</p>
+                    <p className="text-xs text-white/35">{t('portfolio_lots_info', { lots: h.lot_count.toLocaleString(), price: h.avg_buy_price.toFixed(2) })}</p>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="text-right">
@@ -129,8 +131,8 @@ export default function PortfolioSection({ onNavigate }: Props) {
                   </div>
                 </div>
                 <div className="mt-3 flex items-center justify-between text-xs text-white/30">
-                  <span>Daily sell used: {h.daily_sell_used}/{dailyLimit} lots</span>
-                  <span>Market: {marketPrice.toFixed(2)} MRI</span>
+                  <span>{t('portfolio_daily_sell_used', { used: h.daily_sell_used, limit: dailyLimit })}</span>
+                  <span>{t('portfolio_market_price', { price: marketPrice.toFixed(2) })}</span>
                 </div>
                 <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-white/10">
                   <div

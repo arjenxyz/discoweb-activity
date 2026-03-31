@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { LuShieldCheck, LuLock, LuCoins, LuZap, LuStar, LuCalendar, LuTrendingUp, LuCircleCheck, LuTag, LuHeart } from 'react-icons/lu';
 import type { BadgeInfo, BadgeTier, OverviewStats, OverviewStatsExpanded } from '../types';
+import { useT } from '@/contexts/LocaleContext';
 
 type Props = {
   badgeInfo: BadgeInfo | null;
@@ -40,6 +41,7 @@ function TierRow({ tier, unlocked, isCurrent, tagDays, isLast }: {
   tagDays: number;
   isLast: boolean;
 }) {
+  const t = useT();
   const color = tier.color ?? '#818cf8';
   const daysLeft = tier.days_required - tagDays;
   const hasRewards = (tier.reward_papel ?? 0) > 0 || (tier.reward_earn_multiplier ?? 1) > 1 || tier.reward_message;
@@ -88,14 +90,14 @@ function TierRow({ tier, unlocked, isCurrent, tagDays, isLast }: {
                   </span>
                   {isCurrent && (
                     <span className="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide" style={{ background: color + '20', color }}>
-                      Aktif
+                      {t('badge_active_label')}
                     </span>
                   )}
                   {unlocked && !isCurrent && <LuCircleCheck className="h-3.5 w-3.5 text-emerald-400/80" />}
                 </div>
                 <p className={`mt-0.5 text-xs ${unlocked ? 'text-white/35' : 'text-white/20'}`}>
-                  {tier.days_required} gün gerekli
-                  {!unlocked && daysLeft > 0 && <span className="ml-1 text-white/25">· {daysLeft} gün kaldı</span>}
+                  {t('badge_days_required', { days: tier.days_required })}
+                  {!unlocked && daysLeft > 0 && <span className="ml-1 text-white/25">· {t('badge_days_left', { days: daysLeft })}</span>}
                 </p>
               </div>
               <div
@@ -110,12 +112,12 @@ function TierRow({ tier, unlocked, isCurrent, tagDays, isLast }: {
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {(tier.reward_papel ?? 0) > 0 && (
                   <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${unlocked ? 'border border-yellow-400/30 bg-yellow-400/10 text-yellow-300' : 'border border-white/8 bg-white/5 text-white/25'}`}>
-                    <LuCoins className="h-3 w-3" />+{tier.reward_papel} papel
+                    <LuCoins className="h-3 w-3" />{t('badge_reward_papel', { amount: tier.reward_papel ?? 0 })}
                   </span>
                 )}
                 {(tier.reward_earn_multiplier ?? 1) > 1 && (
                   <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${unlocked ? 'border border-emerald-400/30 bg-emerald-400/10 text-emerald-300' : 'border border-white/8 bg-white/5 text-white/25'}`}>
-                    <LuZap className="h-3 w-3" />×{tier.reward_earn_multiplier} çarpan
+                    <LuZap className="h-3 w-3" />{t('badge_reward_multiplier', { multiplier: tier.reward_earn_multiplier ?? 1 })}
                   </span>
                 )}
                 {tier.reward_message && (
@@ -134,6 +136,7 @@ function TierRow({ tier, unlocked, isCurrent, tagDays, isLast }: {
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function TagBadgeSection({ badgeInfo, loading, overviewStats }: Props) {
+  const t = useT();
   const expanded = overviewStats as OverviewStatsExpanded | null | undefined;
   const isBooster = expanded?.isBooster ?? false;
   const boosterSince = expanded?.boosterSince ?? null;
@@ -178,12 +181,12 @@ export default function TagBadgeSection({ badgeInfo, loading, overviewStats }: P
       {/* BAŞLIK */}
       <div className="flex items-end justify-between">
         <div>
-          <h1 className="text-2xl font-black text-white tracking-tight">Tag & Booster</h1>
-          <p className="mt-1 text-sm text-white/40">Takip, ödüller ve ayrıcalıkların tüm detayları</p>
+          <h1 className="text-2xl font-black text-white tracking-tight">{t('badge_title')}</h1>
+          <p className="mt-1 text-sm text-white/40">{t('badge_subtitle')}</p>
         </div>
         <div className="hidden sm:flex items-center gap-1.5 rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-1.5">
           <span className={`h-1.5 w-1.5 rounded-full ${hasTag || isBooster ? 'bg-emerald-400 animate-pulse' : 'bg-white/20'}`} />
-          <span className="text-[11px] font-medium text-white/40">{hasTag || isBooster ? 'Aktif Ayrıcalık' : 'Pasif'}</span>
+          <span className="text-[11px] font-medium text-white/40">{hasTag || isBooster ? t('badge_active_privilege') : t('badge_inactive')}</span>
         </div>
       </div>
 
@@ -205,14 +208,14 @@ export default function TagBadgeSection({ badgeInfo, loading, overviewStats }: P
                 <div className={`flex h-8 w-8 items-center justify-center rounded-xl ${hasTag ? 'bg-indigo-500/15 text-indigo-300' : 'bg-white/5 text-white/20'}`}>
                   <LuTag className="h-4 w-4" />
                 </div>
-                <span className="text-sm font-bold text-white/80">Sunucu Etiketi</span>
+                <span className="text-sm font-bold text-white/80">{t('badge_server_tag')}</span>
               </div>
               {hasTag ? (
                 <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/25 bg-emerald-500/8 px-2 py-0.5 text-[10px] font-semibold text-emerald-300">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />Aktif
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />{t('badge_active_label')}
                 </span>
               ) : (
-                <span className="rounded-full border border-white/8 bg-white/5 px-2 py-0.5 text-[10px] font-medium text-white/30">Pasif</span>
+                <span className="rounded-full border border-white/8 bg-white/5 px-2 py-0.5 text-[10px] font-medium text-white/30">{t('badge_inactive')}</span>
               )}
             </div>
 
@@ -227,12 +230,12 @@ export default function TagBadgeSection({ badgeInfo, loading, overviewStats }: P
                   </div>
                   <div>
                     <p className="text-xl font-black leading-tight" style={{ color: currentColor }}>
-                      {currentBadge?.name ?? 'Rozet Yok'}
+                      {currentBadge?.name ?? t('badge_no_badge')}
                     </p>
-                    <p className="text-xs text-white/40 mt-0.5">{tagDays} gündür etiket taşıyorsunuz</p>
+                    <p className="text-xs text-white/40 mt-0.5">{t('badge_tag_duration', { days: tagDays })}</p>
                     {earnMultiplier > 1 && (
                       <span className="mt-1.5 inline-flex items-center gap-1 rounded-full border border-emerald-500/25 bg-emerald-500/8 px-2 py-0.5 text-[10px] font-semibold text-emerald-300">
-                        <LuZap className="h-2.5 w-2.5" />×{earnMultiplier} çarpan
+                        <LuZap className="h-2.5 w-2.5" />{t('badge_reward_multiplier', { multiplier: earnMultiplier })}
                       </span>
                     )}
                   </div>
@@ -240,22 +243,22 @@ export default function TagBadgeSection({ badgeInfo, loading, overviewStats }: P
 
                 <div className="grid grid-cols-3 gap-2 mb-4">
                   <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
-                    <p className="text-[10px] text-white/30 mb-1"><LuCalendar className="h-2.5 w-2.5 inline mr-1" />Süre</p>
+                    <p className="text-[10px] text-white/30 mb-1"><LuCalendar className="h-2.5 w-2.5 inline mr-1" />{t('badge_duration_label')}</p>
                     <p className="text-base font-black text-white tabular-nums">{tagDays}<span className="text-xs font-normal text-white/30 ml-0.5">g</span></p>
                   </div>
                   <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
-                    <p className="text-[10px] text-white/30 mb-1"><LuShieldCheck className="h-2.5 w-2.5 inline mr-1" />Rozet</p>
+                    <p className="text-[10px] text-white/30 mb-1"><LuShieldCheck className="h-2.5 w-2.5 inline mr-1" />{t('badge_badge_label')}</p>
                     <p className="text-base font-black text-white tabular-nums">{unlockedCount}<span className="text-[10px] font-normal text-white/30">/{allTiers.length}</span></p>
                   </div>
                   <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
-                    <p className="text-[10px] text-white/30 mb-1"><LuTrendingUp className="h-2.5 w-2.5 inline mr-1" />Çarpan</p>
+                    <p className="text-[10px] text-white/30 mb-1"><LuTrendingUp className="h-2.5 w-2.5 inline mr-1" />{t('badge_multiplier_label')}</p>
                     <p className="text-base font-black text-white tabular-nums">×{earnMultiplier}</p>
                   </div>
                 </div>
 
                 {tagGrantedAt && (
                   <p className="text-[10px] text-white/25 mb-3">
-                    Etiket tarihi: {new Date(tagGrantedAt).toLocaleDateString('tr-TR')}
+                    {t('badge_tag_date', { date: new Date(tagGrantedAt).toLocaleDateString('tr-TR') })}
                   </p>
                 )}
 
@@ -263,12 +266,12 @@ export default function TagBadgeSection({ badgeInfo, loading, overviewStats }: P
                   <div className="flex flex-wrap gap-1.5 mb-3">
                     {tagBonusMessage > 0 && (
                       <span className="inline-flex items-center gap-1 rounded-full border border-indigo-400/20 bg-indigo-400/8 px-2 py-0.5 text-[10px] text-indigo-300">
-                        +{tagBonusMessage} mesaj bonus
+                        {t('badge_message_bonus', { amount: tagBonusMessage })}
                       </span>
                     )}
                     {tagBonusVoice > 0 && (
                       <span className="inline-flex items-center gap-1 rounded-full border border-violet-400/20 bg-violet-400/8 px-2 py-0.5 text-[10px] text-violet-300">
-                        +{tagBonusVoice} ses bonus
+                        {t('badge_voice_bonus', { amount: tagBonusVoice })}
                       </span>
                     )}
                   </div>
@@ -277,8 +280,8 @@ export default function TagBadgeSection({ badgeInfo, loading, overviewStats }: P
                 {nextBadge && (
                   <div>
                     <div className="mb-1.5 flex items-center justify-between text-[10px]">
-                      <span className="text-white/35">Sonraki: <span className="font-semibold" style={{ color: nextColor }}>{nextBadge.name}</span></span>
-                      <span className="text-white/40 font-bold">{daysToNext} gün</span>
+                      <span className="text-white/35">{t('badge_next_badge', { name: nextBadge.name })}</span>
+                      <span className="text-white/40 font-bold">{t('badge_next_days', { days: daysToNext ?? 0 })}</span>
                     </div>
                     <div className="relative h-2 overflow-hidden rounded-full bg-white/[0.06]">
                       <div
@@ -293,7 +296,7 @@ export default function TagBadgeSection({ badgeInfo, loading, overviewStats }: P
                 )}
                 {!nextBadge && currentBadge && (
                   <div className="flex items-center gap-2 rounded-xl border border-yellow-400/15 bg-yellow-400/5 px-3 py-2 text-[10px] text-yellow-300/70">
-                    <LuStar className="h-3 w-3 text-yellow-400/60 shrink-0" />En yüksek seviyeye ulaştınız!
+                    <LuStar className="h-3 w-3 text-yellow-400/60 shrink-0" />{t('badge_max_level')}
                   </div>
                 )}
               </>
@@ -303,8 +306,8 @@ export default function TagBadgeSection({ badgeInfo, loading, overviewStats }: P
                   <LuShieldCheck className="h-6 w-6 text-white/15" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-white/40">Etiket Taşımıyorsunuz</p>
-                  <p className="mt-1 text-xs leading-relaxed text-white/25">Discord profilinize sunucu etiketini ekleyerek rozet sistemi ve özel ödüllerden yararlanabilirsiniz.</p>
+                  <p className="text-sm font-semibold text-white/40">{t('badge_no_tag_title')}</p>
+                  <p className="mt-1 text-xs leading-relaxed text-white/25">{t('badge_no_tag_description')}</p>
                 </div>
               </div>
             )}
@@ -326,14 +329,14 @@ export default function TagBadgeSection({ badgeInfo, loading, overviewStats }: P
                 <div className={`flex h-8 w-8 items-center justify-center rounded-xl ${isBooster ? 'bg-pink-500/15 text-pink-300' : 'bg-white/5 text-white/20'}`}>
                   <LuHeart className="h-4 w-4" />
                 </div>
-                <span className="text-sm font-bold text-white/80">Server Booster</span>
+                <span className="text-sm font-bold text-white/80">{t('badge_booster_title')}</span>
               </div>
               {isBooster ? (
                 <span className="inline-flex items-center gap-1 rounded-full border border-pink-500/25 bg-pink-500/8 px-2 py-0.5 text-[10px] font-semibold text-pink-300">
-                  <span className="h-1.5 w-1.5 rounded-full bg-pink-400 animate-pulse" />Aktif
+                  <span className="h-1.5 w-1.5 rounded-full bg-pink-400 animate-pulse" />{t('badge_active_label')}
                 </span>
               ) : (
-                <span className="rounded-full border border-white/8 bg-white/5 px-2 py-0.5 text-[10px] font-medium text-white/30">Pasif</span>
+                <span className="rounded-full border border-white/8 bg-white/5 px-2 py-0.5 text-[10px] font-medium text-white/30">{t('badge_inactive')}</span>
               )}
             </div>
 
@@ -345,10 +348,10 @@ export default function TagBadgeSection({ badgeInfo, loading, overviewStats }: P
                     💎
                   </div>
                   <div>
-                    <p className="text-xl font-black leading-tight text-pink-300">Server Booster</p>
-                    <p className="text-xs text-white/40 mt-0.5">Sunucuyu destekliyorsunuz</p>
+                    <p className="text-xl font-black leading-tight text-pink-300">{t('badge_booster_title')}</p>
+                    <p className="text-xs text-white/40 mt-0.5">{t('badge_booster_supporting')}</p>
                     <span className="mt-1.5 inline-flex items-center gap-1 rounded-full border border-pink-500/25 bg-pink-500/8 px-2 py-0.5 text-[10px] font-semibold text-pink-300">
-                      <LuZap className="h-2.5 w-2.5" />Nitro Boost Aktif
+                      <LuZap className="h-2.5 w-2.5" />{t('badge_nitro_boost_active')}
                     </span>
                   </div>
                 </div>
@@ -356,13 +359,13 @@ export default function TagBadgeSection({ badgeInfo, loading, overviewStats }: P
                 <div className="grid grid-cols-2 gap-2 mb-4">
                   {boosterSince && (
                     <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
-                      <p className="text-[10px] text-white/30 mb-1"><LuCalendar className="h-2.5 w-2.5 inline mr-1" />Boost Tarihi</p>
+                      <p className="text-[10px] text-white/30 mb-1"><LuCalendar className="h-2.5 w-2.5 inline mr-1" />{t('badge_boost_date')}</p>
                       <p className="text-xs font-bold text-white">{new Date(boosterSince).toLocaleDateString('tr-TR')}</p>
                     </div>
                   )}
                   <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
-                    <p className="text-[10px] text-white/30 mb-1"><LuTrendingUp className="h-2.5 w-2.5 inline mr-1" />Ayrıcalık</p>
-                    <p className="text-xs font-bold text-pink-300">Özel Ödüller</p>
+                    <p className="text-[10px] text-white/30 mb-1"><LuTrendingUp className="h-2.5 w-2.5 inline mr-1" />{t('badge_privilege_label')}</p>
+                    <p className="text-xs font-bold text-pink-300">{t('badge_special_rewards')}</p>
                   </div>
                 </div>
 
@@ -370,12 +373,12 @@ export default function TagBadgeSection({ badgeInfo, loading, overviewStats }: P
                   <div className="flex flex-wrap gap-1.5">
                     {boosterBonusMessage > 0 && (
                       <span className="inline-flex items-center gap-1 rounded-full border border-pink-400/20 bg-pink-400/8 px-2.5 py-1 text-[10px] text-pink-300">
-                        <LuCoins className="h-2.5 w-2.5" />+{boosterBonusMessage} mesaj bonus
+                        <LuCoins className="h-2.5 w-2.5" />{t('badge_message_bonus', { amount: boosterBonusMessage })}
                       </span>
                     )}
                     {boosterBonusVoice > 0 && (
                       <span className="inline-flex items-center gap-1 rounded-full border border-pink-400/20 bg-pink-400/8 px-2.5 py-1 text-[10px] text-pink-300">
-                        <LuZap className="h-2.5 w-2.5" />+{boosterBonusVoice} ses bonus
+                        <LuZap className="h-2.5 w-2.5" />{t('badge_voice_bonus', { amount: boosterBonusVoice })}
                       </span>
                     )}
                   </div>
@@ -387,8 +390,8 @@ export default function TagBadgeSection({ badgeInfo, loading, overviewStats }: P
                   💎
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-white/40">Boost Yapmıyorsunuz</p>
-                  <p className="mt-1 text-xs leading-relaxed text-white/25">Discord Nitro ile sunucuyu boost'layarak özel ödüller, mesaj ve ses bonusları kazanabilirsiniz.</p>
+                  <p className="text-sm font-semibold text-white/40">{t('badge_no_boost_title')}</p>
+                  <p className="mt-1 text-xs leading-relaxed text-white/25">{t('badge_no_boost_description')}</p>
                 </div>
               </div>
             )}
@@ -405,12 +408,12 @@ export default function TagBadgeSection({ badgeInfo, loading, overviewStats }: P
                 <LuShieldCheck className="h-4 w-4 text-indigo-400/80" />
               </div>
               <div>
-                <p className="text-sm font-bold text-white/80">Tag Yolu</p>
-                <p className="text-[10px] text-white/30">Etiket rozeti kademeleri</p>
+                <p className="text-sm font-bold text-white/80">{t('badge_tag_path')}</p>
+                <p className="text-[10px] text-white/30">{t('badge_tag_tiers')}</p>
               </div>
             </div>
             <span className="rounded-full border border-white/8 bg-white/5 px-2.5 py-1 text-[10px] font-semibold text-white/40">
-              {unlockedCount}/{allTiers.length} kazanıldı
+              {t('badge_unlocked_count', { count: unlockedCount, total: allTiers.length })}
             </span>
           </div>
 
@@ -419,13 +422,13 @@ export default function TagBadgeSection({ badgeInfo, loading, overviewStats }: P
               {totalPapel > 0 && (
                 <div className="flex items-center gap-1.5 rounded-xl border border-yellow-500/15 bg-yellow-500/[0.06] px-3 py-1.5 text-xs text-white/40">
                   <LuCoins className="h-3.5 w-3.5 text-yellow-400/60" />
-                  Tüm yolda <strong className="text-yellow-300/80 ml-1">{totalPapel} papel</strong>
+                  {t('badge_total_papel', { amount: totalPapel })}
                 </div>
               )}
               {maxMultiplier > 1 && (
                 <div className="flex items-center gap-1.5 rounded-xl border border-emerald-500/15 bg-emerald-500/[0.06] px-3 py-1.5 text-xs text-white/40">
                   <LuZap className="h-3.5 w-3.5 text-emerald-400/60" />
-                  Max <strong className="text-emerald-300/80 ml-1">×{maxMultiplier} çarpan</strong>
+                  {t('badge_max_multiplier', { multiplier: maxMultiplier })}
                 </div>
               )}
             </div>
@@ -449,7 +452,7 @@ export default function TagBadgeSection({ badgeInfo, loading, overviewStats }: P
       {!badgeInfo && (
         <div className="flex flex-col items-center gap-3 rounded-2xl border border-white/6 bg-white/[0.02] p-12 text-center">
           <LuShieldCheck className="h-8 w-8 text-white/12" />
-          <p className="text-sm text-white/25">Rozet bilgisi yüklenemedi.</p>
+          <p className="text-sm text-white/25">{t('badge_load_error')}</p>
         </div>
       )}
     </section>

@@ -13,6 +13,7 @@ import {
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { apiUrl } from '@/lib/api';
 import type { Section } from '../types';
+import { useT } from '@/contexts/LocaleContext';
 
 type MarketDetail = {
   listing: {
@@ -72,6 +73,7 @@ type Props = {
 };
 
 export default function BorsaDetailSection({ guildId, onBack, onNavigate }: Props) {
+  const t = useT();
   const [detail, setDetail] = useState<MarketDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -102,7 +104,7 @@ export default function BorsaDetailSection({ guildId, onBack, onNavigate }: Prop
 
   const handleTrade = async () => {
     const lots = parseInt(lotInput, 10);
-    if (!lots || lots <= 0) { setTradeError('Enter a valid lot count.'); return; }
+    if (!lots || lots <= 0) { setTradeError(t('borsa_error_enter_valid_lot')); return; }
     setTradeLoading(true);
     setTradeError(null);
     setTradeSuccess(null);
@@ -115,13 +117,13 @@ export default function BorsaDetailSection({ guildId, onBack, onNavigate }: Prop
       const json = await res.json();
       if (!res.ok) {
         const msg: Record<string, string> = {
-          insufficient_lots: 'Not enough lots to sell.',
-          insufficient_mari: `Not enough Mari. Required: ${json.required?.toFixed(2)} MRI`,
-          daily_sell_limit_exceeded: `Daily sell limit exceeded. Sold: ${json.already_sold}, Limit: ${json.daily_limit}`,
-          insufficient_market_lots: `Only ${json.available} lots available.`,
-          maintenance: `Maintenance: ${json.reason ?? json.key}`,
+          insufficient_lots: t('borsa_error_not_enough_lots'),
+          insufficient_mari: t('borsa_error_not_enough_mari', { required: json.required?.toFixed(2) }),
+          daily_sell_limit_exceeded: t('borsa_error_daily_sell_limit', { alreadySold: json.already_sold, dailyLimit: json.daily_limit }),
+          insufficient_market_lots: t('borsa_error_insufficient_market_lots', { available: json.available }),
+          maintenance: t('borsa_error_maintenance', { reason: json.reason ?? json.key }),
         };
-        setTradeError(msg[json.error] ?? json.error ?? 'Trade failed.');
+        setTradeError(msg[json.error] ?? json.error ?? t('borsa_error_trade_failed'));
       } else {
         setTradeSuccess(json);
         setLotInput('');
@@ -143,10 +145,10 @@ export default function BorsaDetailSection({ guildId, onBack, onNavigate }: Prop
   if (error || !detail) return (
     <div className="space-y-4">
       <button type="button" onClick={onBack} className="flex items-center gap-2 text-sm text-white/40 hover:text-white">
-        <LuArrowLeft className="h-4 w-4" /> Back
+        <LuArrowLeft className="h-4 w-4" /> {t('borsa_back_button')}
       </button>
       <div className="flex items-center gap-3 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
-        <LuTriangleAlert className="h-4 w-4 shrink-0" />{error ?? 'Listing not found.'}
+        <LuTriangleAlert className="h-4 w-4 shrink-0" />{error ?? t('borsa_listing_not_found')}
       </div>
     </div>
   );
@@ -162,7 +164,7 @@ export default function BorsaDetailSection({ guildId, onBack, onNavigate }: Prop
     <div className="space-y-6">
       {/* Back */}
       <button type="button" onClick={onBack} className="flex items-center gap-2 text-sm text-white/40 hover:text-white">
-        <LuArrowLeft className="h-4 w-4" /> All Listings
+        <LuArrowLeft className="h-4 w-4" /> {t('borsa_back_button')}
       </button>
 
       {/* Header */}
@@ -185,24 +187,24 @@ export default function BorsaDetailSection({ guildId, onBack, onNavigate }: Prop
           </p>
           <div className={`flex items-center justify-end gap-1 text-sm font-medium ${positive ? 'text-emerald-400' : 'text-red-400'}`}>
             {positive ? <LuTrendingUp className="h-4 w-4" /> : <LuTrendingDown className="h-4 w-4" />}
-            {positive ? '+' : ''}{listing.price_change_pct.toFixed(2)}% today
+            {positive ? '+' : ''}{listing.price_change_pct.toFixed(2)}% {t('borda_today_label')}
           </div>
         </div>
       </div>
 
       {/* Stats row */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatCard label="Day High" value={listing.current_day_high?.toFixed(2) ?? '—'} unit="MRI" />
-        <StatCard label="Day Low" value={listing.current_day_low?.toFixed(2) ?? '—'} unit="MRI" />
-        <StatCard label="Available" value={lots.available.toLocaleString()} unit="lots" />
-        <StatCard label="Week Dividends" value={dividend_pool.total_mari.toLocaleString('en-US', { maximumFractionDigits: 2 })} unit="MRI" />
+        <StatCard label={t('borsa_day_high')} value={listing.current_day_high?.toFixed(2) ?? '—'} unit="MRI" />
+        <StatCard label={t('borsa_day_low')} value={listing.current_day_low?.toFixed(2) ?? '—'} unit="MRI" />
+        <StatCard label={t('borsa_available')} value={lots.available.toLocaleString()} unit="lots" />
+        <StatCard label={t('borsa_week_dividends')} value={dividend_pool.total_mari.toLocaleString('en-US', { maximumFractionDigits: 2 })} unit="MRI" />
       </div>
 
       {/* Main: Trade + Right panels */}
       <div className="grid gap-4 lg:grid-cols-3">
         {/* Trade Panel */}
         <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5 space-y-4">
-          <h3 className="text-sm font-semibold text-white">Trade</h3>
+          <h3 className="text-sm font-semibold text-white">{t('borsa_trade_title')}</h3>
 
           {/* Buy/Sell toggle */}
           <div className="flex rounded-xl bg-white/5 p-1 gap-1">
@@ -217,14 +219,14 @@ export default function BorsaDetailSection({ guildId, onBack, onNavigate }: Prop
                     : 'text-white/30 hover:text-white/60'
                 }`}
               >
-                {a === 'buy' ? 'Buy' : 'Sell'}
+                {a === 'buy' ? t('borsa_buy') : t('borsa_sell')}
               </button>
             ))}
           </div>
 
           {/* Lot input */}
           <div>
-            <label className="mb-1.5 block text-xs text-white/40">Lots</label>
+            <label className="mb-1.5 block text-xs text-white/40">{t('borsa_lots_label')}</label>
             <input
               type="number"
               min={1}
@@ -239,15 +241,15 @@ export default function BorsaDetailSection({ guildId, onBack, onNavigate }: Prop
           {lotCount > 0 && (
             <div className="rounded-xl bg-white/5 px-3 py-2.5 text-xs space-y-1">
               <div className="flex justify-between text-white/40">
-                <span>Price / lot</span>
+                <span>{t('borsa_price_per_lot')}</span>
                 <span>{listing.market_price.toFixed(2)} MRI</span>
               </div>
               <div className="flex justify-between text-white/40">
-                <span>Fee ({action === 'buy' ? '1%' : '0.5%'})</span>
+                <span>{t('borsa_fee_' + (action === 'buy' ? 'buy' : 'sell'))}</span>
                 <span>{fee.toFixed(2)} MRI</span>
               </div>
               <div className="flex justify-between border-t border-white/10 pt-1 font-semibold text-white">
-                <span>{action === 'buy' ? 'Total cost' : 'You receive'}</span>
+                <span>{action === 'buy' ? t('borsa_total_cost') : t('borsa_you_receive')}</span>
                 <span>{total.toFixed(2)} MRI</span>
               </div>
             </div>
@@ -258,7 +260,11 @@ export default function BorsaDetailSection({ guildId, onBack, onNavigate }: Prop
           )}
           {tradeSuccess && (
             <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-400">
-              ✓ {tradeSuccess.action === 'buy' ? 'Bought' : 'Sold'} {tradeSuccess.lot_count} lots @ {tradeSuccess.price_per_lot.toFixed(2)} MRI
+              ✓ {t('borsa_success_trade_details', {
+                action: tradeSuccess.action === 'buy' ? t('borsa_success_bought') : t('borsa_success_sold'),
+                lotCount: tradeSuccess.lot_count,
+                price: tradeSuccess.price_per_lot.toFixed(2)
+              })}
             </div>
           )}
 
@@ -272,7 +278,7 @@ export default function BorsaDetailSection({ guildId, onBack, onNavigate }: Prop
                 : 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
             }`}
           >
-            {tradeLoading ? <LuLoader className="mx-auto h-4 w-4 animate-spin" /> : action === 'buy' ? 'Buy Lots' : 'Sell Lots'}
+            {tradeLoading ? <LuLoader className="mx-auto h-4 w-4 animate-spin" /> : (action === 'buy' ? t('borsa_buy_lots') : t('borsa_sell_lots'))}
           </button>
         </div>
 
@@ -280,10 +286,10 @@ export default function BorsaDetailSection({ guildId, onBack, onNavigate }: Prop
         <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5">
           <div className="flex items-center gap-2 mb-3">
             <LuUsers className="h-4 w-4 text-white/30" />
-            <h3 className="text-sm font-semibold text-white">Top Holders</h3>
+            <h3 className="text-sm font-semibold text-white">{t('borsa_top_holders')}</h3>
           </div>
           {top_holders.length === 0 ? (
-            <p className="text-xs text-white/30">No holders yet.</p>
+            <p className="text-xs text-white/30">{t('borsa_no_holders')}</p>
           ) : (
             <div className="space-y-2">
               {top_holders.map((h, i) => (
@@ -306,10 +312,10 @@ export default function BorsaDetailSection({ guildId, onBack, onNavigate }: Prop
         <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5">
           <div className="flex items-center gap-2 mb-3">
             <LuActivity className="h-4 w-4 text-white/30" />
-            <h3 className="text-sm font-semibold text-white">Recent Trades</h3>
+            <h3 className="text-sm font-semibold text-white">{t('borsa_recent_trades')}</h3>
           </div>
           {recent_trades.length === 0 ? (
-            <p className="text-xs text-white/30">No trades yet.</p>
+            <p className="text-xs text-white/30">{t('borsa_no_trades')}</p>
           ) : (
             <div className="space-y-2">
               {recent_trades.slice(0, 10).map((t) => (
@@ -330,17 +336,17 @@ export default function BorsaDetailSection({ guildId, onBack, onNavigate }: Prop
 
       {/* Lot Distribution */}
       <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5">
-        <h3 className="mb-3 text-sm font-semibold text-white">Lot Distribution</h3>
+        <h3 className="mb-3 text-sm font-semibold text-white">{t('borsa_lot_distribution')}</h3>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <DistRow label="Total" value={lots.total} />
-          <DistRow label="Founder" value={lots.founder} />
-          <DistRow label="Circulating" value={lots.circulating} />
-          <DistRow label="Available" value={lots.available} />
+          <DistRow label={t('borsa_total')} value={lots.total} />
+          <DistRow label={t('borsa_founder')} value={lots.founder} />
+          <DistRow label={t('borsa_circulating')} value={lots.circulating} />
+          <DistRow label={t('borsa_available')} value={lots.available} />
         </div>
         {lots.public > 0 && (
           <div className="mt-4">
             <div className="flex justify-between text-xs text-white/35 mb-1">
-              <span>Fill rate</span>
+              <span>{t('borsa_fill_rate')}</span>
               <span>{Math.min(100, Math.round((lots.circulating / lots.public) * 100))}%</span>
             </div>
             <div className="h-2 overflow-hidden rounded-full bg-white/10">
@@ -356,12 +362,12 @@ export default function BorsaDetailSection({ guildId, onBack, onNavigate }: Prop
       {/* Treasury Info */}
       {treasury && (
         <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5">
-          <h3 className="mb-3 text-sm font-semibold text-white">Server Treasury</h3>
+          <h3 className="mb-3 text-sm font-semibold text-white">{t('borsa_server_treasury')}</h3>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <DistRow label="Balance" value={treasury.balance.toFixed(2)} unit="MRI" />
-            <DistRow label="Support Reserve" value={treasury.support_reserve.toFixed(2)} unit="MRI" />
-            <DistRow label="Treasury Lots" value={treasury.lot_count} unit="lots" />
-            <DistRow label="Total Collected" value={treasury.total_collected.toFixed(2)} unit="MRI" />
+            <DistRow label={t('borsa_balance')} value={treasury.balance.toFixed(2)} unit="MRI" />
+            <DistRow label={t('borsa_support_reserve')} value={treasury.support_reserve.toFixed(2)} unit="MRI" />
+            <DistRow label={t('borsa_treasury_lots')} value={treasury.lot_count} unit="lots" />
+            <DistRow label={t('borsa_total_collected')} value={treasury.total_collected.toFixed(2)} unit="MRI" />
           </div>
         </div>
       )}

@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { LuLoader, LuTriangleAlert, LuCheck, LuInfo } from 'react-icons/lu';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { apiUrl } from '@/lib/api';
+import { useT } from '@/contexts/LocaleContext';
 
 type IpoStatus = {
   listed?: boolean;
@@ -32,6 +33,7 @@ const FOUNDER_RATIO_MAX = 0.80;
 const TOTAL_LOTS = 1_000_000;
 
 export default function IpoApplySection() {
+  const t = useT();
   const [status, setStatus] = useState<IpoStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -67,9 +69,9 @@ export default function IpoApplySection() {
   const marketCap = priceNum * publicLots;
 
   const handleSubmit = async () => {
-    if (!priceNum || priceNum <= 0) { setSubmitError('Enter a valid price.'); return; }
+    if (!priceNum || priceNum <= 0) { setSubmitError(t('ipo_error_valid_price')); return; }
     if (founderRatioNum < FOUNDER_RATIO_MIN || founderRatioNum > FOUNDER_RATIO_MAX) {
-      setSubmitError(`Founder ratio must be between ${FOUNDER_RATIO_MIN * 100}% and ${FOUNDER_RATIO_MAX * 100}%.`);
+      setSubmitError(t('ipo_error_ratio_range'));
       return;
     }
     setSubmitting(true);
@@ -90,16 +92,16 @@ export default function IpoApplySection() {
       const json = await res.json();
       if (!res.ok) {
         const msgs: Record<string, string> = {
-          forbidden: 'Only server admins can submit an IPO application.',
-          invalid_price: 'Invalid price.',
-          invalid_founder_ratio: `Founder ratio must be 51–80%.`,
-          already_applied: 'An application already exists.',
-          already_listed: 'Server is already listed.',
-          global_freeze: 'System is under maintenance.',
+          forbidden: t('ipo_error_forbidden'),
+          invalid_price: t('ipo_error_invalid_price'),
+          invalid_founder_ratio: t('ipo_error_invalid_ratio'),
+          already_applied: t('ipo_error_already_applied'),
+          already_listed: t('ipo_error_already_listed'),
+          global_freeze: t('ipo_error_freeze'),
         };
-        setSubmitError(msgs[json.error] ?? json.error ?? 'Submission failed.');
+        setSubmitError(msgs[json.error] ?? json.error ?? t('ipo_error_submission'));
       } else {
-        setSubmitSuccess('IPO application submitted! Our team will review it shortly.');
+        setSubmitSuccess(t('ipo_success_submitted'));
         void load();
       }
     } catch (e) {
@@ -115,8 +117,8 @@ export default function IpoApplySection() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-bold text-white">Exchange Listing (IPO)</h2>
-        <p className="text-sm text-white/40 mt-0.5">List your server on the DiscoWeb exchange</p>
+        <h2 className="text-xl font-bold text-white">{t('ipo_title')}</h2>
+        <p className="text-sm text-white/40 mt-0.5">{t('ipo_subtitle')}</p>
       </div>
 
       {loading ? (
@@ -133,16 +135,16 @@ export default function IpoApplySection() {
           <div className="flex items-center gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-400">
             <LuCheck className="h-4 w-4 shrink-0" />
             <div>
-              <p className="font-semibold">Already Listed</p>
-              <p className="text-xs opacity-70">Your server is live on the exchange.</p>
+              <p className="font-semibold">{t('ipo_already_listed')}</p>
+              <p className="text-xs opacity-70">{t('ipo_already_listed_desc')}</p>
             </div>
           </div>
           {status.listing && (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <StatBox label="Status" value={status.listing.status} />
-              <StatBox label="Market Price" value={`${status.listing.market_price.toFixed(2)} MRI`} />
-              <StatBox label="IPO Price" value={`${status.listing.ipo_price.toFixed(2)} MRI`} />
-              <StatBox label="Public Lots" value={status.listing.public_lots.toLocaleString()} />
+              <StatBox label={t('ipo_status_label')} value={status.listing.status} />
+              <StatBox label={t('ipo_market_price_label')} value={`${status.listing.market_price.toFixed(2)} MRI`} />
+              <StatBox label={t('ipo_ipo_price_label')} value={`${status.listing.ipo_price.toFixed(2)} MRI`} />
+              <StatBox label={t('ipo_public_lots_label')} value={status.listing.public_lots.toLocaleString()} />
             </div>
           )}
         </div>
@@ -154,12 +156,12 @@ export default function IpoApplySection() {
         <div className="grid gap-6 lg:grid-cols-2">
           {/* Form */}
           <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5 space-y-5">
-            <h3 className="text-sm font-semibold text-white">IPO Application</h3>
+            <h3 className="text-sm font-semibold text-white">{t('ipo_application_title')}</h3>
 
             {/* Price */}
             <div>
               <label className="mb-1.5 block text-xs font-medium text-white/50">
-                Proposed IPO Price (MRI/lot)
+                {t('ipo_price_label')}
               </label>
               <input
                 type="number"
@@ -167,7 +169,7 @@ export default function IpoApplySection() {
                 step={0.01}
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
-                placeholder="e.g. 10.00"
+                placeholder={t('ipo_price_placeholder')}
                 className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white placeholder-white/20 outline-none focus:border-white/20"
               />
             </div>
@@ -175,8 +177,8 @@ export default function IpoApplySection() {
             {/* Founder ratio */}
             <div>
               <label className="mb-1.5 flex items-center gap-1 text-xs font-medium text-white/50">
-                Founder Ratio
-                <span className="text-white/25">(51–80%)</span>
+                {t('ipo_founder_ratio_label')}
+                <span className="text-white/25">{t('ipo_founder_ratio_hint')}</span>
               </label>
               <input
                 type="range"
@@ -188,16 +190,16 @@ export default function IpoApplySection() {
                 className="w-full accent-indigo-500"
               />
               <div className="mt-1 flex justify-between text-xs text-white/35">
-                <span>51% founder</span>
-                <span className="text-white font-semibold">{Math.round(founderRatioNum * 100)}% founder</span>
-                <span>80% founder</span>
+                <span>51% {t('ipo_founder_lots').toLowerCase()}</span>
+                <span className="text-white font-semibold">{Math.round(founderRatioNum * 100)}% {t('ipo_founder_lots').toLowerCase()}</span>
+                <span>80% {t('ipo_founder_lots').toLowerCase()}</span>
               </div>
             </div>
 
             {/* Estimated date */}
             <div>
               <label className="mb-1.5 block text-xs font-medium text-white/50">
-                Estimated Launch Date <span className="text-white/25">(optional — auto-approves 2 days before)</span>
+                {t('ipo_estimated_date_label')} <span className="text-white/25">{t('ipo_estimated_date_hint')}</span>
               </label>
               <input
                 type="date"
@@ -225,7 +227,7 @@ export default function IpoApplySection() {
               disabled={submitting || !price}
               className="w-full rounded-xl bg-indigo-500/20 py-2.5 text-sm font-semibold text-indigo-400 transition hover:bg-indigo-500/30 disabled:opacity-40"
             >
-              {submitting ? <LuLoader className="mx-auto h-4 w-4 animate-spin" /> : 'Submit IPO Application'}
+              {submitting ? <LuLoader className="mx-auto h-4 w-4 animate-spin" /> : t('ipo_submit_button')}
             </button>
           </div>
 
@@ -233,23 +235,23 @@ export default function IpoApplySection() {
           <div className="space-y-4">
             {/* Lot distribution preview */}
             <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5">
-              <h3 className="mb-3 text-sm font-semibold text-white">Lot Distribution Preview</h3>
+              <h3 className="mb-3 text-sm font-semibold text-white">{t('ipo_distribution_preview')}</h3>
               <div className="space-y-3">
                 <div className="flex justify-between text-sm">
-                  <span className="text-white/50">Total lots</span>
+                  <span className="text-white/50">{t('ipo_total_lots')}</span>
                   <span className="font-semibold text-white">1,000,000</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-white/50">Founder lots ({Math.round(founderRatioNum * 100)}%)</span>
+                  <span className="text-white/50">{t('ipo_founder_lots')} ({Math.round(founderRatioNum * 100)}%)</span>
                   <span className="font-semibold text-white">{founderLots.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-white/50">Public lots ({Math.round((1 - founderRatioNum) * 100)}%)</span>
+                  <span className="text-white/50">{t('ipo_public_lots')} ({Math.round((1 - founderRatioNum) * 100)}%)</span>
                   <span className="font-semibold text-white">{publicLots.toLocaleString()}</span>
                 </div>
                 {priceNum > 0 && (
                   <div className="flex justify-between text-sm border-t border-white/10 pt-2">
-                    <span className="text-white/50">Public market cap</span>
+                    <span className="text-white/50">{t('ipo_public_market_cap')}</span>
                     <span className="font-semibold text-indigo-400">
                       {marketCap.toLocaleString('en-US', { maximumFractionDigits: 0 })} MRI
                     </span>
@@ -263,23 +265,23 @@ export default function IpoApplySection() {
                 <div className="h-full bg-emerald-500/60" style={{ width: `${(1 - founderRatioNum) * 100}%` }} />
               </div>
               <div className="mt-1.5 flex gap-4 text-xs text-white/35">
-                <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full bg-indigo-500/60" />Founder (locked 45d)</span>
-                <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full bg-emerald-500/60" />Public</span>
+                <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full bg-indigo-500/60" />{t('ipo_founder_locked')}</span>
+                <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-full bg-emerald-500/60" />{t('ipo_public_label')}</span>
               </div>
             </div>
 
             {/* Info box */}
             <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4 space-y-2">
               <div className="flex items-center gap-2 text-xs font-semibold text-white/60">
-                <LuInfo className="h-4 w-4" /> How it works
+                <LuInfo className="h-4 w-4" /> {t('ipo_how_it_works')}
               </div>
               <ul className="space-y-1.5 text-xs text-white/40 list-disc list-inside">
-                <li>Application reviewed within 7 days (or auto-approved before estimated date)</li>
-                <li>Founder lots vest in 3 tranches: day 15, 30, 45</li>
-                <li>Trading fees: 1% buy / 0.5% sell (split: 60% treasury, 25% dividends, 15% platform)</li>
-                <li>Weekly dividends paid every Monday to all lot holders</li>
-                <li>Treasury auto-buys if price drops 15% below day-1 price for 3+ days</li>
-                <li>Server delisted if price stays below 50% IPO price for 5+ days</li>
+                <li>{t('ipo_info_1')}</li>
+                <li>{t('ipo_info_2')}</li>
+                <li>{t('ipo_info_3')}</li>
+                <li>{t('ipo_info_4')}</li>
+                <li>{t('ipo_info_5')}</li>
+                <li>{t('ipo_info_6')}</li>
               </ul>
             </div>
           </div>
@@ -305,6 +307,7 @@ function ApplicationStatusCard({
   app: NonNullable<IpoStatus['application']>;
   onReapply: () => void;
 }) {
+  const t = useT();
   const isPending = app.status === 'pending';
   const isRejected = app.status === 'rejected';
   return (
@@ -314,17 +317,17 @@ function ApplicationStatusCard({
       }`}>
         {isPending ? <LuLoader className="h-4 w-4 mt-0.5 shrink-0 animate-spin" /> : <LuTriangleAlert className="h-4 w-4 mt-0.5 shrink-0" />}
         <div>
-          <p className="font-semibold">{isPending ? 'Application Under Review' : 'Application Rejected'}</p>
+          <p className="font-semibold">{isPending ? t('ipo_app_under_review') : t('ipo_app_rejected')}</p>
           <p className="text-xs opacity-70 mt-0.5">
-            {isPending ? `Submitted on ${new Date(app.created_at).toLocaleDateString()}` : app.rejection_reason ?? 'No reason provided.'}
+            {isPending ? `${t('ipo_submitted_on')} ${new Date(app.created_at).toLocaleDateString()}` : app.rejection_reason ?? t('ipo_no_reason')}
           </p>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        <StatBox label="Proposed Price" value={`${app.proposed_price.toFixed(2)} MRI`} />
-        <StatBox label="Founder Ratio" value={`${Math.round(app.proposed_founder_ratio * 100)}%`} />
-        {app.estimated_date && <StatBox label="Target Date" value={app.estimated_date} />}
+        <StatBox label={t('ipo_proposed_price_label')} value={`${app.proposed_price.toFixed(2)} MRI`} />
+        <StatBox label={t('ipo_founder_ratio_display')} value={`${Math.round(app.proposed_founder_ratio * 100)}%`} />
+        {app.estimated_date && <StatBox label={t('ipo_target_date_label')} value={app.estimated_date} />}
       </div>
 
       {isRejected && (
@@ -333,7 +336,7 @@ function ApplicationStatusCard({
           onClick={onReapply}
           className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/60 transition hover:bg-white/10 hover:text-white"
         >
-          Submit New Application
+          {t('ipo_submit_new')}
         </button>
       )}
     </div>

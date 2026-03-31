@@ -2,6 +2,26 @@ import crypto from 'crypto';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
+// Simple translation function for auth library
+const t = (key: string, params?: Record<string, string | number>): string => {
+  const translations: Record<string, string> = {
+    'auth_no_session_cookie': '[auth] No discord_session cookie found. Available cookies:',
+    'auth_session_verification_failed': '[auth] discord_session cookie exists but verification failed (expired or invalid signature)',
+    'auth_missing_auth_header': '[auth] Missing or invalid Authorization header:',
+    'auth_bearer_verification_failed': '[auth] Bearer session token verification failed:',
+    'auth_error_unauthorized': 'unauthorized',
+    'auth_error_invalid_origin': 'invalid_origin'
+  };
+  
+  let result = translations[key] || key;
+  if (params) {
+    Object.entries(params).forEach(([param, value]) => {
+      result = result.replace(new RegExp(`{${param}}`, 'g'), String(value));
+    });
+  }
+  return result;
+};
+
 const SESSION_COOKIE = 'discord_session';
 const CSRF_COOKIE = 'csrf_token';
 const SESSION_MAX_AGE_SEC = 60 * 60 * 24 * 3; // 3 gün
@@ -119,7 +139,7 @@ export const getSessionUserId = async () => {
   if (!token) {
     if ((process.env.NODE_ENV as string) === 'development') {
       const all = cookieStore.getAll().map(c => ({ name: c.name, value: c.value }));
-      console.log('[auth] No discord_session cookie found. Available cookies:', all);
+      console.log(t('auth_no_session_cookie'), all);
     }
     return null;
   }
@@ -127,7 +147,7 @@ export const getSessionUserId = async () => {
   const payload = verifySessionToken(token);
   if (!payload) {
     if ((process.env.NODE_ENV as string) === 'development') {
-      console.log('[auth] discord_session cookie exists but verification failed (expired or invalid signature)');
+      console.log(t('auth_session_verification_failed'));
     }
   }
   return payload?.sub ?? null;
@@ -164,7 +184,7 @@ export const assertSameOrigin = (request: Request) => {
   }
 
   if (allowed.size > 0 && !allowed.has(origin)) {
-    return NextResponse.json({ error: 'invalid_origin' }, { status: 403 });
+    return NextResponse.json({ error: t('auth_error_invalid_origin') }, { status: 403 });
   }
 
   return null;
@@ -219,7 +239,7 @@ export const getSessionUserIdFromRequest = (request: Request): string | null => 
     }
 
     if (!token && process.env.NODE_ENV === 'development') {
-      console.log('[auth] Missing or invalid Authorization header:', authHeader);
+      console.log(t('auth_missing_auth_header'), authHeader);
     }
   }
 
@@ -227,7 +247,7 @@ export const getSessionUserIdFromRequest = (request: Request): string | null => 
 
   const payload = verifySessionToken(token);
   if (!payload && process.env.NODE_ENV === 'development') {
-    console.log('[auth] Bearer session token verification failed:', token);
+    console.log(t('auth_bearer_verification_failed'), token);
   }
   return payload?.sub ?? null;
 };
@@ -249,7 +269,7 @@ export const requireSessionUser = async (request?: Request) => {
 
   const userId = await getSessionUserId();
   if (!userId) {
-    return { ok: false as const, response: NextResponse.json({ error: 'unauthorized' }, { status: 401 }) };
+    return { ok: false as const, response: NextResponse.json({ error: t('auth_error_unauthorized') }, { status: 401 }) };
   }
 
   return { ok: true as const, userId };

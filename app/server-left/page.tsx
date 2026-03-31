@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { apiUrl } from '@/lib/api';
 import { VideoBackground, MuteButton } from '../dashboard/components/VideoBackground';
+import { useT } from '@/contexts/LocaleContext';
 
 interface UserInfo {
   id: string;
@@ -23,6 +24,7 @@ function getActivityUrl(path: string) {
 }
 
 export default function ServerLeftPage() {
+  const t = useT();
   const [user, setUser] = useState<UserInfo | null>(null);
   const [muted, setMuted] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -63,13 +65,13 @@ export default function ServerLeftPage() {
               className="text-4xl font-black leading-tight tracking-tight text-white"
               style={{ textShadow: '0 0 60px rgba(255,255,255,0.15), 0 2px 20px rgba(0,0,0,1)' }}
             >
-              Görünüşe göre ayrılmışsın.
+              {t('server_left_title')}
             </h1>
             <p className="text-sm text-white/70 leading-relaxed max-w-sm" style={{ textShadow: '0 1px 8px rgba(0,0,0,1)' }}>
-              Bu sunucunun mağazasına, cüzdanına ve tüm özelliklerine erişmek için sunucuda aktif üye olman gerekiyor.
+              {t('server_left_description')}
             </p>
             <p className="text-xs text-white/45 leading-relaxed" style={{ textShadow: '0 1px 6px rgba(0,0,0,1)' }}>
-              Sunucuya geri katılırsan kaldığın yerden devam edebilirsin.
+              {t('server_left_hint')}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2 pt-2">
@@ -82,7 +84,7 @@ export default function ServerLeftPage() {
               onClick={() => { window.location.href = getActivityUrl('/activity'); }}
               className="rounded-full border border-white/30 bg-white/10 px-8 py-3.5 text-sm font-bold text-white backdrop-blur-md transition hover:bg-white/20 hover:border-white/50"
             >
-              Tekrar Dene
+              {t('server_left_retry_button')}
             </button>
           </div>
         </div>

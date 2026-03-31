@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { LuNewspaper, LuRefreshCw, LuTriangleAlert, LuChevronDown } from 'react-icons/lu';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { apiUrl } from '@/lib/api';
+import { useT } from '@/contexts/LocaleContext';
 
 type MarketEvent = {
   id: string;
@@ -48,17 +49,18 @@ const EVENT_BG: Record<string, string> = {
   price_crash: 'border-red-500/20 bg-red-500/5',
 };
 
-function timeAgo(dateStr: string): string {
+function timeAgo(dateStr: string, t: (key: string, vars?: Record<string, string | number> | undefined) => string): string {
   const diff = (Date.now() - new Date(dateStr).getTime()) / 1000;
-  if (diff < 60) return `${Math.floor(diff)}s önce`;
-  if (diff < 3600) return `${Math.floor(diff / 60)}dk önce`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}sa önce`;
-  return `${Math.floor(diff / 86400)}g önce`;
+  if (diff < 60) return t('market_news_time_ago_seconds', { seconds: Math.floor(diff) });
+  if (diff < 3600) return t('market_news_time_ago_minutes', { minutes: Math.floor(diff / 60) });
+  if (diff < 86400) return t('market_news_time_ago_hours', { hours: Math.floor(diff / 3600) });
+  return t('market_news_time_ago_days', { days: Math.floor(diff / 86400) });
 }
 
 const LIMIT = 20;
 
 export default function MarketNewsSection() {
+  const t = useT();
   const [events, setEvents] = useState<MarketEvent[]>([]);
   const [total, setTotal] = useState(0);
   const [offset, setOffset] = useState(0);
@@ -72,18 +74,18 @@ export default function MarketNewsSection() {
 
     try {
       const res = await fetchWithCreds(apiUrl(`/api/member/market-news?limit=${LIMIT}&offset=${off}`));
-      if (!res.ok) throw new Error('Yüklenemedi');
+      if (!res.ok) throw new Error(t('market_news_error_loading'));
       const data = await res.json();
       setEvents(prev => append ? [...prev, ...(data.events ?? [])] : (data.events ?? []));
       setTotal(data.total ?? 0);
       setOffset(off);
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Hata');
+      setError(e instanceof Error ? e.message : t('market_news_error_generic'));
     } finally {
       setLoading(false);
       setLoadingMore(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     fetchEvents(0);
@@ -95,7 +97,7 @@ export default function MarketNewsSection() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <LuNewspaper className="text-blue-400" size={20} />
-          <h2 className="text-lg font-semibold text-white">Borsa Haberleri</h2>
+          <h2 className="text-lg font-semibold text-white">{t('market_news_title')}</h2>
           {total > 0 && (
             <span className="text-xs text-white/40 bg-white/5 px-2 py-0.5 rounded-full">{total}</span>
           )}
@@ -130,8 +132,8 @@ export default function MarketNewsSection() {
       {!loading && events.length === 0 && !error && (
         <div className="text-center py-16 text-white/30">
           <LuNewspaper size={32} className="mx-auto mb-3 opacity-30" />
-          <p className="text-sm">Henüz haber yok.</p>
-          <p className="text-xs mt-1">İlk büyük işlem gerçekleştiğinde burada görünecek.</p>
+          <p className="text-sm">{t('market_news_empty_title')}</p>
+          <p className="text-xs mt-1">{t('market_news_empty_subtitle')}</p>
         </div>
       )}
 
@@ -153,7 +155,7 @@ export default function MarketNewsSection() {
                   <p className="text-xs text-white/40 mt-1 leading-relaxed">{ev.body}</p>
                 )}
                 <div className="flex items-center gap-2 mt-1.5">
-                  <span className="text-xs text-white/25">{timeAgo(ev.created_at)}</span>
+                  <span className="text-xs text-white/25">{timeAgo(ev.created_at, t)}</span>
                   {ev.guild_id && (
                     <>
                       <span className="text-white/15">·</span>
@@ -177,7 +179,7 @@ export default function MarketNewsSection() {
               ) : (
                 <LuChevronDown size={13} />
               )}
-              Daha fazla yükle ({total - events.length} kaldı)
+              {t('market_news_load_more', { count: total - events.length })}
             </button>
           )}
         </div>

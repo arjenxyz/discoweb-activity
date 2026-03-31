@@ -15,6 +15,25 @@ const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? '';
 const supabase = createClient(supabaseUrl, supabaseKey, { auth: { persistSession: false } });
 
+// Simple translation function for cron job
+const t = (key: string, params?: Record<string, string | number>): string => {
+  const translations: Record<string, string> = {
+    'cron_dividend_freeze_active': 'Global freeze aktif — temettü atlandı.',
+    'cron_dividend_note': 'Haftalık temettü: {lotCount} lot × {perLotAmount} Papel ({weekId})',
+    'cron_dividend_success_log': '✅ Temettü dağıtıldı: {totalListings} sunucu, toplam {totalPaid} Papel ({weekId})',
+    'cron_dividend_started': '🕐 dividendPayout cron başladı: {timestamp}',
+    'cron_dividend_completed': '✅ dividendPayout cron tamamlandı.'
+  };
+  
+  let result = translations[key] || key;
+  if (params) {
+    Object.entries(params).forEach(([param, value]) => {
+      result = result.replace(new RegExp(`{${param}}`, 'g'), String(value));
+    });
+  }
+  return result;
+};
+
 async function isGlobalFrozen(): Promise<boolean> {
   const { data } = await supabase
     .from('app_config')
@@ -35,7 +54,7 @@ function getWeekId(): string {
 
 async function runDividendPayout() {
   if (await isGlobalFrozen()) {
-    console.log('Global freeze aktif — temettü atlandı.');
+    console.log(t('cron_dividend_freeze_active'));
     return;
   }
 
@@ -120,7 +139,7 @@ async function runDividendPayout() {
         user_id: holding.user_id,
         amount: share,
         type: 'dividend',
-        note: `Haftalık temettü: ${holding.lot_count} lot × ${perLotAmount.toFixed(4)} Papel (${weekId})`,
+        note: t('cron_dividend_note', { lotCount: holding.lot_count, perLotAmount: perLotAmount.toFixed(4), weekId }),
       });
     }
 
@@ -145,11 +164,11 @@ async function runDividendPayout() {
     totalListings++;
   }
 
-  console.log(`✅ Temettü dağıtıldı: ${totalListings} sunucu, toplam ${totalPaid.toLocaleString()} Papel (${weekId})`);
+  console.log(t('cron_dividend_success_log', { totalListings, totalPaid: totalPaid.toLocaleString(), weekId }));
 }
 
 (async () => {
-  console.log('🕐 dividendPayout cron başladı:', new Date().toISOString());
+  console.log(t('cron_dividend_started', { timestamp: new Date().toISOString() }));
   await runDividendPayout();
-  console.log('✅ dividendPayout cron tamamlandı.');
+  console.log(t('cron_dividend_completed'));
 })();

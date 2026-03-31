@@ -1,10 +1,13 @@
 'use client';
 
+import { useT } from '@/contexts/LocaleContext';
+
 type Props = {
   onClose: () => void;
 };
 
 export default function DeveloperAboutModal({ onClose }: Props) {
+  const t = useT();
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -24,7 +27,7 @@ export default function DeveloperAboutModal({ onClose }: Props) {
           type="button"
           onClick={onClose}
           className="absolute top-4 right-4 flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/50 hover:text-white hover:bg-white/10 transition z-10"
-          aria-label="Kapat"
+          aria-label={t('developer_close_aria')}
         >
           <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5">
             <path d="M3.72 3.72a.75.75 0 011.06 0L8 6.94l3.22-3.22a.75.75 0 111.06 1.06L9.06 8l3.22 3.22a.75.75 0 11-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 01-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 010-1.06z" />
@@ -48,9 +51,9 @@ export default function DeveloperAboutModal({ onClose }: Props) {
             </div>
             <div className="flex flex-col gap-1">
               <span className="text-base font-bold text-white">thearjen</span>
-              <span className="text-xs text-white/40 uppercase tracking-widest font-semibold">Developer & Designer</span>
+              <span className="text-xs text-white/40 uppercase tracking-widest font-semibold">{t('developer_title')}</span>
               <span className="text-xs text-white/50 leading-relaxed mt-0.5">
-                DiscoWeb'in tek geliştiricisi. Full-stack web ve Discord uygulamaları üzerine çalışıyor.
+                {t('developer_description')}
               </span>
             </div>
           </div>
@@ -62,21 +65,21 @@ export default function DeveloperAboutModal({ onClose }: Props) {
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-2">
               <div className="h-px flex-1 bg-white/5" />
-              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/30">Teşekkürler</span>
+              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/30">{t('developer_thanks_title')}</span>
               <div className="h-px flex-1 bg-white/5" />
             </div>
 
             <div className="flex flex-col gap-2">
-              <ThanksRow name="Discord" desc="Gömülü uygulama platformu için" />
-              <ThanksRow name="Next.js & Vercel" desc="Altyapı ve barındırma için" />
-              <ThanksRow name="Tüm kullanıcılar" desc="Geri bildirim ve destek için" />
+              <ThanksRow name="Discord" desc={t('developer_thanks_discord')} />
+              <ThanksRow name="Next.js & Vercel" desc={t('developer_thanks_infra')} />
+              <ThanksRow name="Tüm kullanıcılar" desc={t('developer_thanks_users')} />
             </div>
           </div>
 
           {/* Footer */}
           <div className="flex items-center justify-between pt-1">
-            <span className="text-[10px] text-white/20">© {new Date().getFullYear()} DiscoWeb · All rights reserved</span>
-            <span className="text-[10px] text-white/20">v1.0</span>
+            <span className="text-[10px] text-white/20">{t('developer_copyright', { year: new Date().getFullYear() })}</span>
+            <span className="text-[10px] text-white/20">{t('developer_version')}</span>
           </div>
         </div>
       </div>

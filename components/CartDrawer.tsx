@@ -473,7 +473,7 @@ export default function CartDrawer() {
                         >
                           <span className="text-[11px] font-bold text-indigo-300">🎁 {t('cart_welcome_coupon_title')}</span>
                           <span className="text-[10px] text-indigo-300/60">
-                            %{welcomeCoupon.percent} indirim
+                            {t('cart_coupon_discount_percent', { percent: welcomeCoupon.percent })}
                             {wLimit > 1 && <span className="ml-1 opacity-60">• {wUsage}/{wLimit}</span>}
                           </span>
                         </button>
@@ -493,7 +493,7 @@ export default function CartDrawer() {
                         >
                           <span className="text-[11px] font-bold text-emerald-300">{coupon.code}</span>
                           <span className="text-[10px] text-emerald-300/60">
-                            %{coupon.percent} indirim
+                            {t('cart_coupon_discount_percent', { percent: coupon.percent })}
                             {perUserLimit > 1 && <span className="ml-1 opacity-60">• {userUsageCount}/{perUserLimit}</span>}
                           </span>
                         </button>

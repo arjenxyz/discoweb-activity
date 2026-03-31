@@ -287,19 +287,19 @@ export default function MarketSection({ userId, economyApproved }: { userId?: st
       const data = await res.json();
       if (!res.ok) {
         const msgs: Record<string,string> = {
-          insufficient_balance: `Yetersiz Mari bakiyesi. Mevcut: ${data.available?.toFixed(4)} MRI`,
-          insufficient_lots: 'Yeterli lot yok.',
-          own_server: 'Kendi sunucunuza yatırım yapamazsınız.',
-          max_portfolio_reached: 'Maksimum 3 farklı sunucu yatırımı.',
-          vesting_locked: `Founder kilidi. Satılabilir: ${data.vested_lots??0} lot.`,
-          not_listed: 'Bu sunucu listede değil.',
+          insufficient_balance: t('market_error_insufficient_balance', { available: data.available?.toFixed(4) ?? '0' }),
+          insufficient_lots: t('market_error_insufficient_lots'),
+          own_server: t('market_error_own_server'),
+          max_portfolio_reached: t('market_error_max_portfolio'),
+          vesting_locked: t('market_error_vesting_locked', { vested_lots: data.vested_lots ?? 0 }),
+          not_listed: t('market_error_not_listed'),
         };
-        throw new Error(msgs[data.error] ?? 'Emir gönderilemedi.');
+        throw new Error(msgs[data.error] ?? t('market_error_order_failed'));
       }
       setOrderSuccess(true); setOrderLots('');
       const refreshed = await fetchWithCreds(`/api/member/market-orders?guild_id=${selected.guild_id}`).then(r=>r.json()).catch(()=>({}));
       setMyOrders(refreshed.orders??[]); setMyHolding(refreshed.holding??null);
-    } catch(e) { setOrderError(e instanceof Error ? e.message : 'Bir hata oluştu.'); }
+    } catch(e) { setOrderError(e instanceof Error ? e.message : t('market_error_generic')); }
     finally { setOrderLoading(false); }
   };
 
@@ -325,13 +325,13 @@ export default function MarketSection({ userId, economyApproved }: { userId?: st
       const data = await res.json();
       if (!res.ok) {
         const msgs: Record<string,string> = {
-          insufficient_papel: 'Yeterli papel bakiyesi yok.',
-          server_daily_limit: `Bugün bu sunucudan daha fazla dönüşüm yapamazsın. (Limit: ${mariInfo?.server_limit} MRI)`,
-          global_daily_limit: `Günlük global limitine ulaştın. (Limit: ${mariInfo?.global_limit} MRI)`,
-          min_activity_required: 'Bugün yeterli aktivite sağlanmadı. (50+ mesaj veya 30+ dk ses)',
-          economy_not_approved: 'Bu sunucu henüz yüksek ekonomiye geçmedi.',
+          insufficient_papel: t('market_convert_error_insufficient_papel'),
+          server_daily_limit: t('market_convert_error_server_limit', { limit: mariInfo?.server_limit ?? 0 }),
+          global_daily_limit: t('market_convert_error_global_limit', { limit: mariInfo?.global_limit ?? 0 }),
+          min_activity_required: t('market_convert_error_min_activity'),
+          economy_not_approved: t('market_convert_error_economy_not_approved'),
         };
-        throw new Error(msgs[data.error] ?? 'Dönüşüm başarısız.');
+        throw new Error(msgs[data.error] ?? t('market_convert_error_failed'));
       }
       setMariSuccess(true);
       setMariInfo(prev => prev ? {
@@ -344,7 +344,7 @@ export default function MarketSection({ userId, economyApproved }: { userId?: st
         global_remaining_today: prev.global_remaining_today - data.mari_gained,
       } : null);
       setMariInput('');
-    } catch(e) { setMariError(e instanceof Error ? e.message : 'Bir hata oluştu.'); }
+    } catch(e) { setMariError(e instanceof Error ? e.message : t('market_convert_error_generic')); }
     finally { setMariLoading(false); }
   };
 
@@ -624,26 +624,26 @@ export default function MarketSection({ userId, economyApproved }: { userId?: st
         const d = await res.json() as { ok?: boolean; error?: string; vote_count?: number; threshold_reached?: boolean; is_valid?: boolean };
         if (!res.ok) {
           const msgs: Record<string, string> = {
-            already_voted: 'Zaten oy verdin.',
-            not_in_voting: 'Oylama aktif değil.',
-            not_enough_members: '500+ üye gerekli.',
-            already_applied: 'Başvuru zaten mevcut.',
-            forbidden: 'Bu işlem için yönetici yetkisi gerekli.',
+            already_voted: t('market_vote_error_already_voted'),
+            not_in_voting: t('market_vote_error_not_active'),
+            not_enough_members: t('market_vote_error_not_enough_members'),
+            already_applied: t('market_vote_error_already_applied'),
+            forbidden: t('market_vote_error_forbidden'),
           };
-          setEcoActionMsg(msgs[d.error ?? ''] ?? d.error ?? 'Hata oluştu.');
+          setEcoActionMsg(msgs[d.error ?? ''] ?? d.error ?? t('market_vote_error_generic'));
         } else {
           if (action === 'cast_vote') {
-            if (!d.is_valid) setEcoActionMsg('Oyun kaydedildi fakat hesabın 30 günden genç olduğu için geçersiz sayıldı.');
-            else if (d.threshold_reached) setEcoActionMsg('🎉 Eşik doldu! Başvuru developer incelemesine alındı.');
-            else setEcoActionMsg(`Oyun kaydedildi. Toplam: ${d.vote_count} / ${eco?.vote_threshold ?? 100}`);
+            if (!d.is_valid) setEcoActionMsg(t('market_vote_success_invalid'));
+            else if (d.threshold_reached) setEcoActionMsg(t('market_vote_success_threshold'));
+            else setEcoActionMsg(t('market_vote_success_recorded', { vote_count: d.vote_count, threshold: eco?.vote_threshold ?? 100 }));
           } else {
-            setEcoActionMsg('✅ Başvuru gönderildi. Developer inceleyecek (max 7 gün).');
+            setEcoActionMsg(t('market_apply_success'));
           }
           // Durumu yenile
           const r2 = await fetchWithCreds('/api/member/economy-status');
           if (r2.ok) setEcoStatus(await r2.json() as EcoStatus);
         }
-      } catch { setEcoActionMsg('Bağlantı hatası.'); }
+      } catch { setEcoActionMsg(t('market_action_connection_error')); }
       setEcoActionLoading(false);
     };
 
@@ -723,16 +723,16 @@ export default function MarketSection({ userId, economyApproved }: { userId?: st
             <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] px-5 py-3 text-xs text-white/30 space-y-1 text-left w-full">
               {canDirect ? (
                 <>
-                  <p>• Sunucunuzun <span className="text-white/50 font-semibold">500+ üyesi</span> var, direkt kayıt yapabilirsiniz</p>
-                  <p>• Başvuru developer tarafından onaylanır <span className="text-white/50">(max 7 gün)</span></p>
-                  {!isAdmin && <p className="text-white/20 mt-1">Kayıt için sunucu yöneticisine başvurun.</p>}
+                  <p dangerouslySetInnerHTML={{ __html: t('market_info_direct_register') }} />
+                  <p dangerouslySetInnerHTML={{ __html: t('market_info_direct_approval') }} />
+                  {!isAdmin && <p className="text-white/20 mt-1">{t('market_info_direct_contact')}</p>}
                 </>
               ) : (
                 <>
-                  <p>• Sunucu içinden <span className="text-white/50 font-semibold">100 oy</span> toplanarak ön başvuru yapılabilir</p>
-                  <p>• Şu an üye sayısı: <span className="text-white/50 font-semibold">{memberCount}</span> (direkt başvuru için 500+ gerekli)</p>
-                  <p>• Başvuru developer tarafından onaylanır <span className="text-white/50">(max 7 gün)</span></p>
-                  {!isAdmin && <p className="text-white/20 mt-1">Oylama başlatmak için sunucu yöneticisine başvurun.</p>}
+                  <p dangerouslySetInnerHTML={{ __html: t('market_info_vote_requirement') }} />
+                  <p dangerouslySetInnerHTML={{ __html: t('market_info_current_members', { member_count: memberCount }) }} />
+                  <p dangerouslySetInnerHTML={{ __html: t('market_info_approval_time') }} />
+                  {!isAdmin && <p className="text-white/20 mt-1">{t('market_info_vote_contact')}</p>}
                 </>
               )}
             </div>
@@ -861,12 +861,12 @@ export default function MarketSection({ userId, economyApproved }: { userId?: st
                         className="w-full rounded-2xl border border-white/10 bg-black/30 pl-4 pr-16 py-3 text-sm font-bold text-white placeholder-white/15 focus:outline-none focus:ring-1 focus:ring-violet-500/50 focus:border-violet-500/40 transition tabular-nums"/>
                       <button onClick={() => setMariInput(String(Math.floor(mariInfo.papel_balance)))}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-violet-400 hover:text-violet-300 px-2 py-1 rounded-lg hover:bg-violet-500/10 transition">
-                        MAX
+                        {t('market_convert_max_button')}
                       </button>
                     </div>
                     {mariInput && parseFloat(mariInput) > 0 && (
                       <p className="text-[11px] text-violet-400/70 mt-2 tabular-nums">
-                        Alacaksın: ≈ {(parseFloat(mariInput) / mariInfo.mari_rate).toFixed(6)} <Image src="/Mari.gif" alt="Mari" width={12} height={12} className="h-3 w-3 inline" unoptimized />
+                        {t('market_convert_preview', { amount: (parseFloat(mariInput) / mariInfo.mari_rate).toFixed(6) })} <Image src="/Mari.gif" alt="Mari" width={12} height={12} className="h-3 w-3 inline" unoptimized />
                       </p>
                     )}
                   </div>
@@ -1102,13 +1102,13 @@ export default function MarketSection({ userId, economyApproved }: { userId?: st
                         <Avatar name={h.name} iconUrl={h.icon_url}/>
                         <div className="flex-1 min-w-0 space-y-1">
                           <p className="font-black text-sm text-white truncate">{h.name}</p>
-                          <p className="text-[11px] text-white/30">{h.lot_count.toLocaleString()} lot · ort. {h.avg_buy_price.toFixed(1)} P</p>
+                          <p className="text-[11px] text-white/30">{h.lot_count.toLocaleString()} lot · {t('market_portfolio_avg_price', { price: h.avg_buy_price.toFixed(1) })}</p>
                         </div>
                         <div className="text-right flex-shrink-0 space-y-1">
                           <p className="text-sm font-black text-white tabular-nums">{(h.lot_count*h.market_price).toLocaleString()} P</p>
                           <div className={`flex items-center justify-end gap-1 text-xs font-black ${up2?'text-emerald-400':'text-red-400'}`}>
                             <span>{up2?'▲':'▼'} {Math.abs(plPct2).toFixed(2)}%</span>
-                            <span className="text-white/20 font-normal">({plVal2>=0?'+':''}{Math.round(plVal2).toLocaleString()} P)</span>
+                            <span className="text-white/20 font-normal">{t('market_portfolio_pl', { pl: `${plVal2>=0?'+':''}${Math.round(plVal2).toLocaleString()}` })}</span>
                           </div>
                         </div>
                       </div>

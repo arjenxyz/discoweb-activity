@@ -4,7 +4,25 @@ import React, { createContext, useContext, useEffect, useMemo, useState } from '
 import { getSupabaseClient } from './supabaseClient';
 import fetchWithCreds from './fetchWithCreds';
 import { apiUrl } from './api';
+import { useT } from '@/contexts/LocaleContext';
 import type { StoreItem, CartItem } from '../app/dashboard/types';
+
+// Simple translation function for cart library
+const t = (key: string, params?: Record<string, string | number>): string => {
+  const translations: Record<string, string> = {
+    'cart_coupon_empty_code': 'Kod boş olamaz',
+    'cart_coupon_not_found': 'Kod bulunamadı',
+    'cart_provider_error': 'useCart must be used within CartProvider'
+  };
+  
+  let result = translations[key] || key;
+  if (params) {
+    Object.entries(params).forEach(([param, value]) => {
+      result = result.replace(new RegExp(`{${param}}`, 'g'), String(value));
+    });
+  }
+  return result;
+};
 
 type Coupon = { id: string; code: string; percent: number; minSpend?: number; is_welcome?: boolean; is_special?: boolean; perUserLimit?: number; userUsageCount?: number };
 
@@ -128,7 +146,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const applyCoupon = (code: string, meta?: Partial<Coupon>) => {
     const trimmed = code.trim();
-    if (!trimmed) return { ok: false, message: 'Kod boş olamaz' };
+    if (!trimmed) return { ok: false, message: t('cart_coupon_empty_code') };
     const found = userCoupons.find((c) => c.code.toLowerCase() === trimmed.toLowerCase());
     if (found) {
       setAppliedCoupon({ ...found, ...(meta ?? {}) });
@@ -139,7 +157,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       setAppliedCoupon({ id: String(meta.id), code: String(meta.code), percent: Number(meta.percent ?? 0), is_welcome: meta.is_welcome, is_special: meta.is_special, perUserLimit: meta.perUserLimit, userUsageCount: meta.userUsageCount });
       return { ok: true };
     }
-    return { ok: false, message: 'Kod bulunamadı' };
+    return { ok: false, message: t('cart_coupon_not_found') };
   };
 
   const removeCoupon = () => setAppliedCoupon(null);
@@ -171,7 +189,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
 export function useCart() {
   const ctx = useContext(CartContext);
-  if (!ctx) throw new Error('useCart must be used within CartProvider');
+  if (!ctx) throw new Error(t('cart_provider_error'));
   return ctx;
 }
 

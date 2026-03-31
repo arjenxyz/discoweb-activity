@@ -6,6 +6,7 @@ import {
   LuCoins, LuShield, LuZap, LuGift, LuChevronLeft,
 } from 'react-icons/lu';
 import type { BadgeInfo } from '../types';
+import { useT } from '@/contexts/LocaleContext';
 
 type Raffle = BadgeInfo['activeRaffles'][0];
 
@@ -33,31 +34,33 @@ function formatCountdown(ms: number): string {
 }
 
 function PrizeLabel({ raffle }: { raffle: Raffle }) {
+  const t = useT();
+  
   if (raffle.prize_type === 'papel' && raffle.prize_papel_amount) {
     return (
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-yellow-500/15 border border-yellow-500/25 text-[10px] text-yellow-300 font-bold">
-        <LuCoins className="w-3 h-3" /> {Number(raffle.prize_papel_amount).toLocaleString('tr-TR')} Papel
+        <LuCoins className="w-3 h-3" /> {t('raffles_prize_papel', { amount: Number(raffle.prize_papel_amount).toLocaleString('tr-TR') })}
       </span>
     );
   }
   if (raffle.prize_type === 'role') {
     return (
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-violet-500/15 border border-violet-500/25 text-[10px] text-violet-300 font-bold">
-        <LuShield className="w-3 h-3" /> Rol
+        <LuShield className="w-3 h-3" /> {t('raffles_prize_role')}
       </span>
     );
   }
   if (raffle.prize_type === 'timed_multiplier' && raffle.prize_multiplier_value) {
     return (
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/25 text-[10px] text-emerald-300 font-bold">
-        <LuZap className="w-3 h-3" /> ×{raffle.prize_multiplier_value} / {raffle.prize_multiplier_days}g
+        <LuZap className="w-3 h-3" /> {t('raffles_prize_multiplier', { multiplier: raffle.prize_multiplier_value, days: raffle.prize_multiplier_days ?? 0 })}
       </span>
     );
   }
   if (raffle.prize_type === 'mari' && raffle.prize_mari_amount) {
     return (
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-500/15 border border-indigo-500/25 text-[10px] text-indigo-300 font-bold">
-        💎 {Number(raffle.prize_mari_amount).toFixed(2)} Mari
+        💎 {t('raffles_prize_mari', { amount: Number(raffle.prize_mari_amount).toFixed(2) })}
       </span>
     );
   }
@@ -70,7 +73,7 @@ function PrizeLabel({ raffle }: { raffle: Raffle }) {
   }
   return (
     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/40 border border-white/10 text-[10px] text-white/50">
-      <LuGift className="w-3 h-3" /> Sürpriz
+      <LuGift className="w-3 h-3" /> {t('raffles_prize_surprise')}
     </span>
   );
 }
@@ -83,6 +86,7 @@ export default function RafflesDrawer({
   onLeave,
   leavingId,
 }: RafflesDrawerProps) {
+  const t = useT();
   const [now, setNow] = useState(() => Date.now());
   const [leaveErrors, setLeaveErrors] = useState<Set<string>>(new Set());
 
@@ -125,17 +129,17 @@ export default function RafflesDrawer({
             <button
               onClick={onClose}
               className="sm:hidden flex items-center justify-center h-8 w-8 rounded-xl bg-white/8 text-white/70 hover:text-white hover:bg-white/15 transition-all"
-              aria-label="Geri"
+              aria-label={t('raffles_back_label')}
             >
               <LuChevronLeft className="w-5 h-5" />
             </button>
             <img src="/icon/raffle.png" alt="" className="w-5 h-5 object-contain" />
-            <span className="text-white font-bold text-lg">Çekilişlerim</span>
+            <span className="text-white font-bold text-lg">{t('raffles_drawer_title')}</span>
             <span className="bg-emerald-500/15 text-emerald-300 border border-emerald-500/25 text-[10px] px-2 py-0.5 rounded-full font-semibold">
-              {joinedRaffles.length} aktif
+              {t('raffles_drawer_active_count', { count: joinedRaffles.length })}
             </span>
           </div>
-          <button onClick={onClose} className="text-white/50 hover:text-white transition-colors" aria-label="Kapat">
+          <button onClick={onClose} className="text-white/50 hover:text-white transition-colors" aria-label={t('raffles_close_label')}>
             <LuX className="w-5 h-5" />
           </button>
         </div>
@@ -146,8 +150,8 @@ export default function RafflesDrawer({
             <div className="h-full flex flex-col items-center justify-center text-center gap-4 py-16">
               <div className="text-5xl opacity-30">🎫</div>
               <div>
-                <p className="text-white/40 text-sm font-medium">Henüz katılmadın</p>
-                <p className="text-white/25 text-xs mt-1">Bir çekilişe katıldığında burada görünür</p>
+                <p className="text-white/40 text-sm font-medium">{t('raffles_drawer_empty_title')}</p>
+                <p className="text-white/25 text-xs mt-1">{t('raffles_drawer_empty_subtitle')}</p>
               </div>
             </div>
           ) : (
@@ -183,12 +187,12 @@ export default function RafflesDrawer({
                     {raffle.entry_count !== undefined && (
                       <div className="flex items-center gap-1 text-[11px] text-white/45">
                         <LuUsers className="w-3 h-3" />
-                        <span>{raffle.entry_count} katılımcı</span>
+                        <span>{t('raffles_participants_count', { count: raffle.entry_count })}</span>
                       </div>
                     )}
                     <div className="flex items-center gap-1 text-[11px] text-emerald-400/80 ml-auto">
                       <LuTicket className="w-3 h-3" />
-                      <span className="font-semibold">{winChance} şans</span>
+                      <span className="font-semibold">{t('raffles_win_chance_label', { chance: winChance })}</span>
                     </div>
                   </div>
 
@@ -199,10 +203,10 @@ export default function RafflesDrawer({
                     className="w-full flex items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-white/5 py-2 text-xs font-medium text-white/50 hover:border-rose-500/30 hover:bg-rose-500/10 hover:text-rose-400 transition-all disabled:opacity-40"
                   >
                     {isLeaving
-                      ? <><LuLoader className="w-3 h-3 animate-spin" /> Çıkılıyor...</>
-                      : 'Çekilişten Çık'}
+                      ? <><LuLoader className="w-3 h-3 animate-spin" /> {t('raffles_leaving')}</>
+                      : t('raffles_leave_button')}
                   </button>
-                  {hasError && <p className="mt-1 text-[10px] text-rose-400 text-center">Çıkış başarısız, tekrar dene</p>}
+                  {hasError && <p className="mt-1 text-[10px] text-rose-400 text-center">{t('raffles_leave_error')}</p>}
                 </div>
               );
             })
@@ -214,9 +218,9 @@ export default function RafflesDrawer({
           <div className="flex items-center justify-between text-xs text-white/40">
             {joinedRaffles.length > 0 ? (
               <>
-                <span>{joinedRaffles.length} çekilişte aktifsin</span>
+                <span>{t('raffles_footer_active', { count: joinedRaffles.length })}</span>
                 <span className="text-emerald-400/70 font-semibold">
-                  {joinedRaffles.length} ödül fırsatı 🎁
+                  {t('raffles_footer_opportunities', { count: joinedRaffles.length })}
                 </span>
               </>
             ) : (
@@ -229,7 +233,7 @@ export default function RafflesDrawer({
             className="sm:hidden mt-3 w-full flex items-center justify-center gap-2 h-11 rounded-xl bg-white/8 border border-white/10 text-white/70 hover:text-white hover:bg-white/15 transition-all text-sm font-semibold"
           >
             <LuChevronLeft className="w-4 h-4" />
-            Geri
+            {t('raffles_back_button')}
           </button>
         </div>
       </div>

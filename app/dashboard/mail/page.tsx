@@ -6,8 +6,10 @@ import { apiUrl } from '@/lib/api';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import MailSection from '../components/MailSection';
 import type { MailItem } from '../types';
+import { useT } from '@/contexts/LocaleContext';
 
 export default function MailIndexPage() {
+  const t = useT();
   const router = useRouter();
   const [mailItems, setMailItems] = useState<MailItem[]>([]);
   const [mailLoading, setMailLoading] = useState(true);
@@ -43,11 +45,11 @@ export default function MailIndexPage() {
           setMailError(null);
         } else {
           if (!mounted) return;
-          setMailError('Mail bilgileri alınamadı.');
+          setMailError(t('mail_error_fetch_failed'));
         }
       } catch {
         if (!mounted) return;
-        setMailError('Mail bilgileri alınamadı.');
+        setMailError(t('mail_error_fetch_failed'));
       }
       if (mounted) setMailLoading(false);
     };
@@ -68,7 +70,7 @@ export default function MailIndexPage() {
 
   return (
     <div className="h-screen overflow-hidden">
-      <Suspense fallback={<div>Yükleniyor...</div>}>
+      <Suspense fallback={<div>{t('mail_loading')}</div>}>
         <MailSection
           loading={mailLoading}
           error={mailError}

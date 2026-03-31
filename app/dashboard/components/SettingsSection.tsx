@@ -167,10 +167,10 @@ export default function SettingsSection({
         <div className="mt-6 rounded-2xl border border-blue-500/20 bg-blue-500/[0.04] p-4">
           <div className="flex items-center gap-2 mb-3">
             <LuVault className="h-4 w-4 text-blue-400" />
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-blue-300">Yüksek Ekonomi</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-blue-300">{t('settings_advanced_title')}</p>
             {hasPending && (
               <span className="ml-auto flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-400">
-                <LuClock className="h-3 w-3" /> İnceleniyor
+                <LuClock className="h-3 w-3" /> {t('settings_advanced_reviewing')}
               </span>
             )}
           </div>
@@ -179,24 +179,20 @@ export default function SettingsSection({
             <div className="flex items-start gap-3 rounded-xl bg-white/[0.03] p-3">
               <LuCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
               <div>
-                <p className="text-sm font-semibold text-white">Başvurunuz alındı</p>
+                <p className="text-sm font-semibold text-white">{t('settings_advanced_success_title')}</p>
                 <p className="mt-0.5 text-xs text-white/40">
-                  Yüksek Ekonomi başvurunuz inceleniyor. Onaylanınca tüm bakiyeler sıfırlanır ve hazine paketi yüklenir.
+                  {t('settings_advanced_success_description')}
                 </p>
               </div>
             </div>
           ) : (
             <>
-              <p className="text-sm text-white/50 mb-4">
-                Sunucunuzu <span className="font-semibold text-white">Yüksek Ekonomi</span> kademesine yükseltmek için başvurun.
-                Onay sonrası tüm bakiyeler sıfırlanır ve hazine sistemi aktive edilir.{' '}
-                <span className="text-amber-400 font-medium">Bu işlem geri alınamaz.</span>
-              </p>
+              <p className="text-sm text-white/50 mb-4" dangerouslySetInnerHTML={{ __html: t('settings_advanced_apply_description') }} />
 
               <div className="space-y-3">
                 <div>
                   <label className="block text-xs text-white/40 mb-1">
-                    Başlangıç Hazine Paketi (Papel) — isteğe bağlı
+                    {t('settings_advanced_package_label')}
                   </label>
                   <input
                     type="number"
@@ -207,7 +203,7 @@ export default function SettingsSection({
                     className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/20 outline-none focus:border-blue-500/50"
                   />
                   <p className="mt-1 text-[11px] text-white/25">
-                    Developer tarafından onaylanırken hazineye yüklenecek başlangıç miktarı.
+                    {t('settings_advanced_package_hint')}
                   </p>
                 </div>
 
@@ -219,7 +215,7 @@ export default function SettingsSection({
                   onClick={handleApply}
                   className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-blue-500 disabled:opacity-50"
                 >
-                  {applyLoading ? 'Gönderiliyor...' : <><LuArrowRight className="h-4 w-4" /> Başvuruyu Gönder</>}
+                  {applyLoading ? t('settings_advanced_submitting') : <><LuArrowRight className="h-4 w-4" /> {t('settings_advanced_submit_button')}</>}
                 </button>
               </div>
             </>
@@ -231,39 +227,39 @@ export default function SettingsSection({
         <div className="mt-6 rounded-2xl border border-blue-500/20 bg-blue-500/[0.04] p-4">
           <div className="flex items-center gap-2">
             <LuVault className="h-4 w-4 text-blue-400" />
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-blue-300">Yüksek Ekonomi</p>
-            <span className="ml-auto rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">Aktif</span>
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-blue-300">{t('settings_advanced_title')}</p>
+            <span className="ml-auto rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">{t('settings_advanced_active')}</span>
           </div>
-          <p className="mt-2 text-sm text-white/40">Bu sunucu Yüksek Ekonomi kademesinde çalışıyor.</p>
+          <p className="mt-2 text-sm text-white/40">{t('settings_advanced_status_description')}</p>
 
           {/* IPO Başvurusu */}
           <div className="mt-4 border-t border-white/10 pt-4">
             {ipoListed && ipoListing ? (
               <div className="flex items-center gap-2">
                 <LuCheck className="h-4 w-4 text-emerald-400" />
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">Borsada Listelendi</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">{t('settings_ipo_listed_title')}</p>
                 <span className={`ml-auto rounded-full px-2 py-0.5 text-[10px] font-semibold ${
                   ipoListing.status === 'approved' ? 'bg-emerald-500/15 text-emerald-400'
                   : ipoListing.status === 'suspended' ? 'bg-yellow-500/15 text-yellow-400'
                   : 'bg-red-500/15 text-red-400'
-                }`}>{ipoListing.status === 'approved' ? 'Aktif' : ipoListing.status === 'suspended' ? 'Askıda' : 'Delisted'}</span>
+                }`}>{ipoListing.status === 'approved' ? t('settings_ipo_status_active') : ipoListing.status === 'suspended' ? t('settings_ipo_status_suspended') : t('settings_ipo_status_delisted')}</span>
               </div>
             ) : ipoPending || ipoSuccess ? (
               <div className="flex items-center gap-2">
                 <LuClock className="h-4 w-4 text-yellow-400" />
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-yellow-300">IPO Başvurusu İnceleniyor</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-yellow-300">{t('settings_ipo_pending_title')}</p>
               </div>
             ) : (
               <>
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-300 mb-2">Yatırım Borsasına Başvur (IPO)</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-300 mb-2">{t('settings_ipo_apply_title')}</p>
                 <p className="text-xs text-white/40 mb-3">
-                  Sunucunuzu yatırım borsasına açın. Yatırımcılar lot satın alabilir, siz hazineden temettü alabilirsiniz.
+                  {t('settings_ipo_apply_description')}
                 </p>
                 <div className="flex flex-col gap-2 sm:flex-row">
                   <input
                     type="number"
                     min={1}
-                    placeholder="Başlangıç fiyatı (Papel/lot)"
+                    placeholder={t('settings_ipo_price_placeholder')}
                     value={ipoPrice}
                     onChange={(e) => setIpoPrice(e.target.value)}
                     className="flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/30 focus:outline-none focus:ring-1 focus:ring-indigo-500"
@@ -278,12 +274,12 @@ export default function SettingsSection({
                       onChange={(e) => setIpoFounderRatio(e.target.value)}
                       className="w-24 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/30 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                     />
-                    <span className="text-xs text-white/40">founder (%51–80)</span>
+                    <span className="text-xs text-white/40">{t('settings_ipo_founder_label')}</span>
                   </div>
                 </div>
                 <div className="flex flex-col gap-1">
                   <label className="text-xs text-white/40">
-                    Tahmini halka arz tarihi <span className="text-white/25">(isteğe bağlı — 2 gün önce otomatik onaylanır)</span>
+                    {t('settings_ipo_date_label')} <span className="text-white/25">{t('settings_ipo_date_hint')}</span>
                   </label>
                   <input
                     type="date"
@@ -299,7 +295,7 @@ export default function SettingsSection({
                   disabled={ipoLoading}
                   className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-500 disabled:opacity-50"
                 >
-                  {ipoLoading ? 'Gönderiliyor...' : <><LuArrowRight className="h-3.5 w-3.5" /> Başvur</>}
+                  {ipoLoading ? t('settings_ipo_submitting') : <><LuArrowRight className="h-3.5 w-3.5" /> {t('settings_ipo_apply_button')}</>}
                 </button>
                 {ipoError && <p className="mt-2 text-xs text-red-400">{ipoError}</p>}
               </>
@@ -309,9 +305,9 @@ export default function SettingsSection({
       )}
 
       <div className="mt-6 rounded-2xl border border-white/10 bg-[#0b0d12]/60 p-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-red-300">Discoweb Activity Verilerimi Sil</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-red-300">{t('settings_delete_title')}</p>
         <p className="mt-2 text-sm text-white/60">
-          Mevcut sunucudaki veya tüm sunuculardaki Activity verilerinizi tamamen kaldırabilirsiniz.
+          {t('settings_delete_description')}
         </p>
         <button
           type="button"
@@ -323,7 +319,7 @@ export default function SettingsSection({
             setIsModalOpen(true);
           }}
         >
-          Discoweb activity verilerimi sil
+          {t('settings_delete_button')}
         </button>
 
         {message && <p className="mt-3 text-sm text-emerald-300">{message}</p>}
@@ -333,8 +329,8 @@ export default function SettingsSection({
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
           <div className="w-full max-w-md rounded-2xl bg-[#0f121a] p-6 shadow-2xl border border-white/10">
-            <h3 className="text-lg font-bold">Veri silme seçeneği</h3>
-            <p className="mt-2 text-sm text-white/70">Hangi verileri silmek istiyorsunuz?</p>
+            <h3 className="text-lg font-bold">{t('settings_delete_modal_title')}</h3>
+            <p className="mt-2 text-sm text-white/70">{t('settings_delete_modal_question')}</p>
             <div className="mt-4 space-y-3 text-sm">
               <label className="flex items-center gap-2">
                 <input
@@ -344,7 +340,7 @@ export default function SettingsSection({
                   onChange={() => setScope('current')}
                   className="h-4 w-4"
                 />
-                {currentGuildName ? `${currentGuildName} (şu anki sunucu)` : 'Şu anki sunucu verileri'}
+                {currentGuildName ? t('settings_delete_current_server', { serverName: currentGuildName }) : t('settings_delete_current_fallback')}
               </label>
               <label className="flex items-center gap-2">
                 <input
@@ -354,7 +350,7 @@ export default function SettingsSection({
                   onChange={() => setScope('all')}
                   className="h-4 w-4"
                 />
-                Tüm sunuculardaki Discord Activity verilerim
+                {t('settings_delete_all_servers')}
               </label>
             </div>
 
@@ -364,7 +360,7 @@ export default function SettingsSection({
                 onClick={() => setIsModalOpen(false)}
                 className="rounded-lg border border-white/10 px-3 py-1.5 text-sm text-white/70 hover:bg-white/5"
               >
-                İptal
+                {t('settings_delete_cancel')}
               </button>
               <button
                 type="button"
@@ -379,9 +375,9 @@ export default function SettingsSection({
                     });
                     const data = await response.json().catch(() => ({}));
                     if (!response.ok) {
-                      throw new Error(data.error || 'Silme işlemi başarısız.');
+                      throw new Error(data.error || t('settings_delete_error'));
                     }
-                    setMessage('Veriler başarıyla silindi. Yönlendiriliyorsunuz...');
+                    setMessage(t('settings_delete_success'));
                     setIsModalOpen(false);
 
                     // Oturum cookie'lerini ve auth verilerini temizle
@@ -396,7 +392,7 @@ export default function SettingsSection({
                     window.location.assign(redirectUrl);
                     return;
                   } catch (err: unknown) {
-                    setError(err instanceof Error ? err.message : 'Silme işlemi başarısız.');
+                    setError(err instanceof Error ? err.message : t('settings_delete_error'));
                   } finally {
                     setIsDeleting(false);
                   }
@@ -404,7 +400,7 @@ export default function SettingsSection({
                 disabled={isDeleting}
                 className="rounded-lg bg-red-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-red-500 disabled:opacity-50"
               >
-                {isDeleting ? 'Siliniyor...' : 'Onaylıyorum, sil'}
+                {isDeleting ? t('settings_delete_deleting') : t('settings_delete_confirm')}
               </button>
             </div>
           </div>

@@ -2,12 +2,14 @@
 
 import { useState } from 'react';
 import { LuShieldOff, LuLoader, LuLogIn } from 'react-icons/lu';
+import { useT } from '@/contexts/LocaleContext';
 
 type Props = {
   loginUrl: string;
 };
 
 export default function SessionExpiredModal({ loginUrl }: Props) {
+  const t = useT();
   const [clearing, setClearing] = useState(false);
 
   const handleRelogin = async () => {
@@ -39,26 +41,26 @@ export default function SessionExpiredModal({ loginUrl }: Props) {
 
           {/* Text */}
           <div>
-            <h2 className="text-lg font-bold text-white">Oturumunuz Sonlandı</h2>
+            <h2 className="text-lg font-bold text-white">{t('session_expired_title')}</h2>
             <p className="mt-2 text-sm text-white/50 leading-relaxed">
-              Güvenliğiniz için oturum süresi doldu. Devam etmek için Discord hesabınızla tekrar giriş yapın.
+              {t('session_expired_description')}
             </p>
           </div>
 
           {/* Info chips */}
           <div className="w-full flex flex-col gap-1.5 text-left rounded-xl bg-white/5 border border-white/8 p-3">
-            <p className="text-[11px] text-white/40 font-medium uppercase tracking-wider mb-1">Yapılacaklar</p>
+            <p className="text-[11px] text-white/40 font-medium uppercase tracking-wider mb-1">{t('session_expired_todo_title')}</p>
             <div className="flex items-center gap-2 text-xs text-white/60">
               <span className="w-4 h-4 rounded-full bg-rose-500/20 border border-rose-500/30 flex items-center justify-center text-[9px] text-rose-400 font-bold shrink-0">1</span>
-              Mevcut oturum çerezleri temizlenir
+              {t('session_expired_step1')}
             </div>
             <div className="flex items-center gap-2 text-xs text-white/60">
               <span className="w-4 h-4 rounded-full bg-rose-500/20 border border-rose-500/30 flex items-center justify-center text-[9px] text-rose-400 font-bold shrink-0">2</span>
-              Discord yetki ekranına yönlendirilirsiniz
+              {t('session_expired_step2')}
             </div>
             <div className="flex items-center gap-2 text-xs text-white/60">
               <span className="w-4 h-4 rounded-full bg-rose-500/20 border border-rose-500/30 flex items-center justify-center text-[9px] text-rose-400 font-bold shrink-0">3</span>
-              Yetkiler güncellenerek yeni oturum açılır
+              {t('session_expired_step3')}
             </div>
           </div>
 
@@ -71,18 +73,18 @@ export default function SessionExpiredModal({ loginUrl }: Props) {
             {clearing ? (
               <>
                 <LuLoader className="w-4 h-4 animate-spin" />
-                Hazırlanıyor...
+                {t('session_expired_button_loading')}
               </>
             ) : (
               <>
                 <LuLogIn className="w-4 h-4" />
-                Discord ile Tekrar Giriş Yap
+                {t('session_expired_button_text')}
               </>
             )}
           </button>
 
           <p className="text-[10px] text-white/25">
-            Oturumlar güvenlik nedeniyle 3 günde bir yenilenmektedir.
+            {t('session_expired_note')}
           </p>
         </div>
       </div>

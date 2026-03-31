@@ -14,84 +14,6 @@ type Props = {
   onEnter: () => void;
 };
 
-const TIPS = [
-  {
-    icon: (
-      <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 flex-shrink-0">
-        <path d="M8.75 2.75a.75.75 0 00-1.5 0v5.69L5.03 6.22a.75.75 0 00-1.06 1.06l3.5 3.5a.75.75 0 001.06 0l3.5-3.5a.75.75 0 00-1.06-1.06L8.75 8.44V2.75z" />
-        <path d="M3.5 9.75a.75.75 0 00-1.5 0v1.5A2.75 2.75 0 004.75 14h6.5A2.75 2.75 0 0014 11.25v-1.5a.75.75 0 00-1.5 0v1.5c0 .69-.56 1.25-1.25 1.25h-6.5c-.69 0-1.25-.56-1.25-1.25v-1.5z" />
-      </svg>
-    ),
-    text: 'Mesaj atarak ve sesli kanalda vakit geçirerek Papel kazanabilirsin.',
-  },
-  {
-    icon: (
-      <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 flex-shrink-0">
-        <path d="M1.5 2A1.5 1.5 0 000 3.5v2A1.5 1.5 0 001.5 7h13A1.5 1.5 0 0016 5.5v-2A1.5 1.5 0 0014.5 2h-13zM0 10.5A1.5 1.5 0 011.5 9h13a1.5 1.5 0 010 3h-13A1.5 1.5 0 010 10.5z" />
-      </svg>
-    ),
-    text: 'DiscoWeb Market\'te sunucu hisseleri alıp satabilir, portföy oluşturabilirsin.',
-  },
-  {
-    icon: (
-      <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 flex-shrink-0">
-        <path d="M2.5 3A1.5 1.5 0 001 4.5v.793c.026.009.051.02.076.032L7.674 8.51c.206.1.446.1.652 0l6.598-3.185A.755.755 0 0115 5.293V4.5A1.5 1.5 0 0013.5 3h-11z" />
-        <path d="M15 6.954L8.978 9.86a2.25 2.25 0 01-1.956 0L1 6.954V11.5A1.5 1.5 0 002.5 13h11a1.5 1.5 0 001.5-1.5V6.954z" />
-      </svg>
-    ),
-    text: 'Posta kutunda seni bekleyen ödüller ve sistem bildirimleri olabilir.',
-  },
-  {
-    icon: (
-      <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 flex-shrink-0">
-        <path fillRule="evenodd" d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm9 3a1 1 0 11-2 0 1 1 0 012 0zm-.25-6.25a.75.75 0 00-1.5 0v3.5a.75.75 0 001.5 0v-3.5z" />
-      </svg>
-    ),
-    text: 'Papel\'ini evrensel para birimi Mari\'ye dönüştürerek farklı sunucularda kullanabilirsin.',
-  },
-  {
-    icon: (
-      <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 flex-shrink-0">
-        <path d="M3.75 2a.75.75 0 00-.75.75v10.5a.75.75 0 001.28.53L8 10.06l3.72 3.72a.75.75 0 001.28-.53V2.75a.75.75 0 00-.75-.75h-8.5z" />
-      </svg>
-    ),
-    text: 'Aktif olarak rozet günleri biriktirerek özel etiketler ve ödüller kazanabilirsin.',
-  },
-  {
-    icon: (
-      <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 flex-shrink-0">
-        <path d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
-        <path fillRule="evenodd" d="M8 0a8 8 0 100 16A8 8 0 008 0zM1.5 8a6.5 6.5 0 1113 0 6.5 6.5 0 01-13 0z" />
-      </svg>
-    ),
-    text: 'Arkadaşlarını davet et, referans kodun üzerinden ekstra Papel kazan.',
-  },
-  {
-    icon: (
-      <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 flex-shrink-0">
-        <path d="M1 2.75C1 1.784 1.784 1 2.75 1h10.5c.966 0 1.75.784 1.75 1.75v7.5A1.75 1.75 0 0113.25 12H9.06l.038.48.016.2c.017.193.035.327.06.45a.75.75 0 01-.605.894l-.01.001a.75.75 0 01-.848-.532c-.067-.228-.107-.483-.131-.724L7.5 12.5H5a.75.75 0 01-.596-.295L3 10.5H2.75A1.75 1.75 0 011 8.75v-6zM2.75 2.5a.25.25 0 00-.25.25v6.25c0 .138.112.25.25.25h.5a.75.75 0 01.596.295l1.404 1.705H7.5a.75.75 0 01.75.75v.059l.013.191H13.25a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25H2.75z" />
-      </svg>
-    ),
-    text: 'Mağazadan indirim kuponları kullanarak daha avantajlı alışveriş yapabilirsin.',
-  },
-  {
-    icon: (
-      <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 flex-shrink-0">
-        <path d="M7.22 1.63a1 1 0 011.56 0l1.22 1.46 1.86-.38a1 1 0 011.16.9l.17 1.9 1.6 1.04a1 1 0 010 1.7l-1.6 1.04-.17 1.9a1 1 0 01-1.16.9l-1.86-.38-1.22 1.46a1 1 0 01-1.56 0L6 10.21l-1.86.38a1 1 0 01-1.16-.9l-.17-1.9L1.21 6.75a1 1 0 010-1.7l1.6-1.04.17-1.9a1 1 0 011.16-.9L6 1.59l1.22-1.46z" />
-      </svg>
-    ),
-    text: 'Aktif çekilişlere katılarak nadir ödüller ve Papel kazanabilirsin.',
-  },
-  {
-    icon: (
-      <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 flex-shrink-0">
-        <path d="M10.5 3.5a.5.5 0 00-1 0V4h-3v-.5a.5.5 0 00-1 0V4H4a2 2 0 00-2 2v6a2 2 0 002 2h8a2 2 0 002-2V6a2 2 0 00-2-2h-1.5v-.5zM9.5 5v.5a.5.5 0 01-1 0V5h-3v.5a.5.5 0 01-1 0V5H4a1 1 0 00-1 1v1h10V6a1 1 0 00-1-1h-1.5zM3 9h10v3a1 1 0 01-1 1H4a1 1 0 01-1-1V9z" />
-      </svg>
-    ),
-    text: 'Liderlik tablosundan sunucunun en aktif üyelerini ve sıralamanı görebilirsin.',
-  },
-];
-
 export default function SplashScreen({ onEnter }: Props) {
   const t = useT();
   const router = useRouter();
@@ -108,6 +30,84 @@ export default function SplashScreen({ onEnter }: Props) {
   const [tipIndex, setTipIndex] = useState(0);
   const [tipVisible, setTipVisible] = useState(true);
   const [isTouch, setIsTouch] = useState(false);
+
+  const TIPS = [
+    {
+      icon: (
+        <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 flex-shrink-0">
+          <path d="M8.75 2.75a.75.75 0 00-1.5 0v5.69L5.03 6.22a.75.75 0 00-1.06 1.06l3.5 3.5a.75.75 0 001.06 0l3.5-3.5a.75.75 0 00-1.06-1.06L8.75 8.44V2.75z" />
+          <path d="M3.5 9.75a.75.75 0 00-1.5 0v1.5A2.75 2.75 0 004.75 14h6.5A2.75 2.75 0 0014 11.25v-1.5a.75.75 0 00-1.5 0v1.5c0 .69-.56 1.25-1.25 1.25h-6.5c-.69 0-1.25-.56-1.25-1.25v-1.5z" />
+        </svg>
+      ),
+      textKey: 'splash_tip_earn_papel',
+    },
+    {
+      icon: (
+        <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 flex-shrink-0">
+          <path d="M1.5 2A1.5 1.5 0 000 3.5v2A1.5 1.5 0 001.5 7h13A1.5 1.5 0 0016 5.5v-2A1.5 1.5 0 0014.5 2h-13zM0 10.5A1.5 1.5 0 011.5 9h13a1.5 1.5 0 010 3h-13A1.5 1.5 0 010 10.5z" />
+        </svg>
+      ),
+      textKey: 'splash_tip_market_shares',
+    },
+    {
+      icon: (
+        <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 flex-shrink-0">
+          <path d="M2.5 3A1.5 1.5 0 001 4.5v.793c.026.009.051.02.076.032L7.674 8.51c.206.1.446.1.652 0l6.598-3.185A.755.755 0 0115 5.293V4.5A1.5 1.5 0 0013.5 3h-11z" />
+          <path d="M15 6.954L8.978 9.86a2.25 2.25 0 01-1.956 0L1 6.954V11.5A1.5 1.5 0 002.5 13h11a1.5 1.5 0 001.5-1.5V6.954z" />
+        </svg>
+      ),
+      textKey: 'splash_tip_mailbox_rewards',
+    },
+    {
+      icon: (
+        <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 flex-shrink-0">
+          <path fillRule="evenodd" d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm9 3a1 1 0 11-2 0 1 1 0 012 0zm-.25-6.25a.75.75 0 00-1.5 0v3.5a.75.75 0 001.5 0v-3.5z" />
+        </svg>
+      ),
+      textKey: 'splash_tip_universal_currency',
+    },
+    {
+      icon: (
+        <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 flex-shrink-0">
+          <path d="M3.75 2a.75.75 0 00-.75.75v10.5a.75.75 0 001.28.53L8 10.06l3.72 3.72a.75.75 0 001.28-.53V2.75a.75.75 0 00-.75-.75h-8.5z" />
+        </svg>
+      ),
+      textKey: 'splash_tip_badge_days',
+    },
+    {
+      icon: (
+        <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 flex-shrink-0">
+          <path d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
+          <path fillRule="evenodd" d="M8 0a8 8 0 100 16A8 8 0 008 0zM1.5 8a6.5 6.5 0 1113 0 6.5 6.5 0 01-13 0z" />
+        </svg>
+      ),
+      textKey: 'splash_tip_referral_code',
+    },
+    {
+      icon: (
+        <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 flex-shrink-0">
+          <path d="M1 2.75C1 1.784 1.784 1 2.75 1h10.5c.966 0 1.75.784 1.75 1.75v7.5A1.75 1.75 0 0113.25 12H9.06l.038.48.016.2c.017.193.035.327.06.45a.75.75 0 01-.605.894l-.01.001a.75.75 0 01-.848-.532c-.067-.228-.107-.483-.131-.724L7.5 12.5H5a.75.75 0 01-.596-.295L3 10.5H2.75A1.75 1.75 0 011 8.75v-6zM2.75 2.5a.25.25 0 00-.25.25v6.25c0 .138.112.25.25.25h.5a.75.75 0 01.596.295l1.404 1.705H7.5a.75.75 0 01.75.75v.059l.013.191H13.25a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25H2.75z" />
+        </svg>
+      ),
+      textKey: 'splash_tip_discount_coupons',
+    },
+    {
+      icon: (
+        <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 flex-shrink-0">
+          <path d="M7.22 1.63a1 1 0 011.56 0l1.22 1.46 1.86-.38a1 1 0 011.16.9l.17 1.9 1.6 1.04a1 1 0 010 1.7l-1.6 1.04-.17 1.9a1 1 0 01-1.16.9l-1.86-.38-1.22 1.46a1 1 0 01-1.56 0L6 10.21l-1.86.38a1 1 0 01-1.16-.9l-.17-1.9L1.21 6.75a1 1 0 010-1.7l1.6-1.04.17-1.9a1 1 0 011.16-.9L6 1.59l1.22-1.46z" />
+        </svg>
+      ),
+      textKey: 'splash_tip_giveaway_rewards',
+    },
+    {
+      icon: (
+        <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 flex-shrink-0">
+          <path d="M10.5 3.5a.5.5 0 00-1 0V4h-3v-.5a.5.5 0 00-1 0V4H4a2 2 0 00-2 2v6a2 2 0 002 2h8a2 2 0 002-2V6a2 2 0 00-2-2h-1.5v-.5zM9.5 5v.5a.5.5 0 01-1 0V5h-3v.5a.5.5 0 01-1 0V5H4a1 1 0 00-1 1v1h10V6a1 1 0 00-1-1h-1.5zM3 9h10v3a1 1 0 01-1 1H4a1 1 0 01-1-1V9z" />
+        </svg>
+      ),
+      textKey: 'splash_tip_leaderboard',
+    },
+  ];
 
   useEffect(() => {
     setIsTouch(navigator.maxTouchPoints > 0);
@@ -300,7 +300,7 @@ export default function SplashScreen({ onEnter }: Props) {
                 >
                   <span className="text-white/60 mt-0.5 flex-shrink-0">{TIPS[tipIndex].icon}</span>
                   <p className="text-sm text-white/60 leading-relaxed" style={{ textShadow: '0 1px 10px rgba(0,0,0,1)' }}>
-                    {TIPS[tipIndex].text}
+                    {t(TIPS[tipIndex].textKey)}
                   </p>
                 </div>
               </div>
@@ -332,7 +332,7 @@ export default function SplashScreen({ onEnter }: Props) {
           <div className="flex items-center gap-2.5">
             <span className="text-[11px] text-white/35">© {new Date().getFullYear()} DiscoWeb</span>
             <span className="text-white/20 text-xs">·</span>
-            <button type="button" onClick={() => setDevAboutOpen(true)} className="text-xs text-white/35 hover:text-white/65 transition-colors">Teşekkürler</button>
+            <button type="button" onClick={() => setDevAboutOpen(true)} className="text-xs text-white/35 hover:text-white/65 transition-colors">{t('splash_thanks_button')}</button>
             {isDeveloper && (
               <>
                 <span className="text-white/20 text-xs">·</span>

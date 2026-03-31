@@ -1,0 +1,42 @@
+-- Enable Row Level Security on all public tables that are currently missing it.
+-- The backend uses the service_role key which bypasses RLS, so no policies
+-- are needed for server-side access. This migration blocks anonymous/public access.
+
+ALTER TABLE IF EXISTS public.activity_sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.activity_participation ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.voice_participation ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.ads ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.client_error_log ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.server_treasury ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.app_config ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.economy_tier_applications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.referral_codes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.referral_usages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.referral_passive_income_log ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.server_listings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.ipo_applications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.investor_holdings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.dividend_payouts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.market_orders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.market_trades ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.market_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.server_penalties ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.mari_conversions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.server_activity_snapshots ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.ipo_tiers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.economy_applications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.economy_votes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.price_history ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.trades ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.server_mari_treasury ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.dividend_pool ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.dividend_history ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.treasury_holdings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.mari_daily_global ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.referral_links ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.referral_conversions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.referral_milestone_claims ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.bug_reports ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.suspicious_activity_log ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.member_badge_rewards ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.member_active_multipliers ENABLE ROW LEVEL SECURITY;

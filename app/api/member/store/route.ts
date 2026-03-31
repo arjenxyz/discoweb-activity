@@ -1,4 +1,3 @@
-import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { checkMaintenance } from '@/lib/maintenance';
@@ -73,72 +72,72 @@ export async function GET(request: Request) {
 
   const selectedGuildId = await getSelectedGuildId(request);
 
-  const { data: server, error: serverError } = await supabase
-    .from('servers')
-    .select('id')
-    .eq('discord_id', selectedGuildId)
-    .eq('is_setup', true)
-    .maybeSingle();
+  const [serverRes, sessionUserId] = await Promise.all([
+    supabase
+      .from('servers')
+      .select('id')
+      .eq('discord_id', selectedGuildId)
+      .eq('is_setup', true)
+      .maybeSingle(),
+    getSessionUserId(),
+  ]);
 
-  if (serverError || !server) {
+  if (serverRes.error || !serverRes.data) {
     return NextResponse.json({ error: 'server_not_found' }, { status: 404 });
   }
-
-  // Clean up expired store roles for this user (if logged in) even if bot is offline.
-  const sessionUserId = await getSessionUserId();
-  if (sessionUserId) {
-    await cleanupExpiredRolesForUser(supabaseClient, server.id, selectedGuildId ?? '', sessionUserId, process.env.DISCORD_BOT_TOKEN);
-  }
+  const server = serverRes.data;
 
   const now = new Date().toISOString();
-
   const url = new URL(request.url);
   const page = Math.max(1, Number(url.searchParams.get('page') ?? '1'));
   const limit = Math.min(100, Math.max(1, Number(url.searchParams.get('limit') ?? '20')));
   const offset = (page - 1) * limit;
 
-  const { data: promotions, error: promotionsError } = await supabase
-    .from('promotions')
-    .select('id,code,value,max_uses,used_count,status,expires_at,created_at')
-    .eq('server_id', server.id)
-    .eq('status', 'active')
-    .or(`expires_at.is.null,expires_at.gt.${now}`)
-    .order('created_at', { ascending: false })
-    .limit(10);
-
-  if (promotionsError) {
-    return NextResponse.json({ error: 'fetch_failed' }, { status: 500 });
-  }
-
-  const { data: items, error: itemsError } = await supabase
-    .from('store_items')
-    .select('id,title,description,price,status,role_id,duration_days,created_at')
-    .eq('server_id', server.id)
-    .eq('status', 'active')
-    .order('created_at', { ascending: false })
-    .range(offset, offset + limit - 1);
-
-  if (itemsError) {
-    return NextResponse.json({ error: 'fetch_failed' }, { status: 500 });
-  }
-
-  const hasMore = (items?.length ?? 0) >= limit;
-
-  // Kullanıcının sahip olduğu süresiz rol ID'lerini döndür
-  let ownedRoleIds: string[] = [];
-  if (sessionUserId) {
-    const { data: ownedOrders } = await supabase
-      .from('store_orders')
-      .select('role_id')
-      .eq('user_id', sessionUserId)
+  // Run all independent queries in parallel (including non-blocking role cleanup)
+  const [promotionsRes, itemsRes, ownedOrdersRes] = await Promise.all([
+    supabase
+      .from('promotions')
+      .select('id,code,value,max_uses,used_count,status,expires_at,created_at')
       .eq('server_id', server.id)
-      .eq('status', 'paid')
-      .is('expires_at', null)
-      .is('revoked_at', null);
-    ownedRoleIds = (ownedOrders ?? []).map((o: { role_id: string | null }) => o.role_id).filter((id): id is string => !!id);
+      .eq('status', 'active')
+      .or(`expires_at.is.null,expires_at.gt.${now}`)
+      .order('created_at', { ascending: false })
+      .limit(10),
+    supabase
+      .from('store_items')
+      .select('id,title,description,price,status,role_id,duration_days,created_at')
+      .eq('server_id', server.id)
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1),
+    sessionUserId
+      ? supabase
+          .from('store_orders')
+          .select('role_id')
+          .eq('user_id', sessionUserId)
+          .eq('server_id', server.id)
+          .eq('status', 'paid')
+          .is('expires_at', null)
+          .is('revoked_at', null)
+      : Promise.resolve({ data: null }),
+    // Fire-and-forget: cleanup expired roles without blocking the response
+    sessionUserId
+      ? cleanupExpiredRolesForUser(supabaseClient, server.id, selectedGuildId ?? '', sessionUserId, process.env.DISCORD_BOT_TOKEN).catch(() => {})
+      : Promise.resolve(),
+  ]);
+
+  if (promotionsRes.error) {
+    return NextResponse.json({ error: 'fetch_failed' }, { status: 500 });
+  }
+  if (itemsRes.error) {
+    return NextResponse.json({ error: 'fetch_failed' }, { status: 500 });
   }
 
-  return NextResponse.json({ promotions: promotions ?? [], items: items ?? [], hasMore, page, limit, ownedRoleIds });
+  const items = itemsRes.data;
+  const hasMore = (items?.length ?? 0) >= limit;
+  const ownedRoleIds = (ownedOrdersRes.data ?? []).map((o: { role_id: string | null }) => o.role_id).filter((id): id is string => !!id);
+
+  return NextResponse.json({ promotions: promotionsRes.data ?? [], items: items ?? [], hasMore, page, limit, ownedRoleIds });
 }
 
 export async function POST(request: Request) {
