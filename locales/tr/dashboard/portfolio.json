@@ -1,0 +1,12 @@
+{
+  "portfolio_title": "Portföy",
+  "portfolio_subtitle": "Sunucu lot pozisyonlarınız",
+  "portfolio_total_value": "Toplam Değer",
+  "portfolio_total_cost": "Toplam Maliyet",
+  "portfolio_unrealized_pl": "Gerçekleşmemiş Kar/Zarar",
+  "portfolio_empty_title": "Henüz pozisyon yok.",
+  "portfolio_empty_button": "Borsaya Göz At",
+  "portfolio_lots_info": "{lots} lot · ort. {price} MRI",
+  "portfolio_daily_sell_used": "Günlük satış kullanımı: {used}/{limit} lot",
+  "portfolio_market_price": "Piyasa: {price} MRI"
+}

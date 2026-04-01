@@ -1,0 +1,21 @@
+{
+  "cart_title": "Sepet",
+  "cart_item_count": "{itemCount} adet • {productCount} ürün",
+  "cart_empty": "Sepetiniz boş. Mağazadan ürün ekleyin.",
+  "cart_price_unit": "papel",
+  "cart_discount_applied": "-{percent}%",
+  "cart_discount_code": "Kod: {code} • Yeni fiyat: {price} papel",
+  "cart_apply_discount": "İndirimi Uygula",
+  "cart_remove": "Kaldır",
+  "cart_subtotal": "Ara Toplam",
+  "cart_discount": "İndirim",
+  "cart_total": "Toplam",
+  "cart_checkout": "Satın Al",
+  "cart_checking_out": "Ödeniyor...",
+  "cart_clear_aria": "Sepeti boşalt",
+  "cart_coupon_discount_percent": "%{percent} indirim",
+  "cart_coupon_empty_code": "Kod boş olamaz",
+  "cart_coupon_not_found": "Kod bulunamadı",
+  "cart_provider_error": "useCart must be used within CartProvider",
+  "cart_close_aria": "Kapat"
+}

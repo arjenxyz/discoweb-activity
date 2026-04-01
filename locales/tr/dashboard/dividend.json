@@ -1,0 +1,15 @@
+{
+  "dividend_title": "Temettüler",
+  "dividend_subtitle": "Lot sahipleri için haftalık Mari ödemeleri",
+  "dividend_no_server": "Temettüleri görüntülemek için Borsa'dan bir sunucu seçin.",
+  "dividend_this_week_pool": "Bu Haftaki Havuz",
+  "dividend_your_lots": "Lotlarınız",
+  "dividend_est_payout": "Tahmini Ödeme",
+  "dividend_next_distribution": "Sonraki Dağıtım",
+  "dividend_distribution_time": "Pazartesi 01:00 UTC",
+  "dividend_your_share": "Dolaşımdaki lotlardan payınız",
+  "dividend_payment_history": "Ödeme Geçmişi",
+  "dividend_no_payments": "Henüz temettü ödemesi yapılmadı.",
+  "dividend_week_of": "Hafta",
+  "dividend_lots_suffix": "lot"
+}

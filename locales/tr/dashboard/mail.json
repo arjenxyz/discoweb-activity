@@ -1,0 +1,17 @@
+{
+  "mail_messages_label": "Mesaj",
+  "mail_unread_label": "Okunmamış",
+  "mail_messages_deleted": "{count} mesaj silindi",
+  "mail_loading": "Yükleniyor...",
+  "mail_error_fetch_failed": "Mail bilgileri alınamadı.",
+  "mail_detail_loading_failed": "Mesaj yüklenemedi",
+  "mail_detail_not_found": "Mesaj bulunamadı",
+  "mail_detail_invalid": "Geçersiz mesaj",
+  "mail_detail_title": "Mesaj",
+  "mail_detail_loading": "Yükleniyor...",
+  "mail_detail_to_me": "bana",
+  "mail_detail_attachment_alt": "Ek",
+  "mail_detail_more_info": "Daha fazla bilgi için tıklayın",
+  "mail_detail_see_details": "Detayları Gör"
+
+}

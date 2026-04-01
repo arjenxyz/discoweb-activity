@@ -1,0 +1,19 @@
+{
+  "welcome_title": "Bem-vindo!",
+  "welcome_subtitle": "Para se juntar à nossa plataforma, você precisa criar um perfil.",
+  "welcome_create_profile_button": "Criar Perfil",
+  "welcome_loading": "Carregando...",
+  "welcome_success_title": "Você está pronto!",
+  "welcome_success_subtitle": "Redirecionando para o painel...",
+  "welcome_error_no_guild": "Informações do servidor não encontradas, tente novamente.",
+  "welcome_error_profile_create": "Falha ao criar o perfil.",
+  "welcome_error_generic": "Ocorreu um erro, tente novamente.",
+  "verify_role_title": "Acesso Necessário",
+  "verify_role_subtitle": "Você precisa ter o cargo de membro verificado.",
+  "verify_role_button": "Obter Cargo",
+  "verify_role_assigning": "Atribuindo...",
+  "verify_role_success_title": "Você foi verificado!",
+  "verify_role_success_subtitle": "Redirecionando para o painel...",
+  "verify_role_error_assign": "Falha ao atribuir o cargo.",
+  "verify_role_error_generic": "Ocorreu um erro, tente novamente."
+}

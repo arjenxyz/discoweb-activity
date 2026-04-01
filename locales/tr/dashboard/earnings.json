@@ -1,0 +1,15 @@
+{
+  "earnings_refresh_title": "Yenile",
+  "earnings_booster_active": "Booster",
+  "earnings_booster_inactive": "Boost: Yok",
+  "earnings_stat_messages_24h": "Son 24 saat · Mesaj",
+  "earnings_stat_voice_24h": "Son 24 saat · Ses (dk)",
+  "earnings_stat_total_messages": "Toplam Mesaj",
+  "earnings_stat_total_voice": "Toplam Ses (dk)",
+  "earnings_since_verified": "Doğrulanmadan beri",
+  "earnings_messages_suffix": "mesaj",
+  "earnings_voice_suffix": "dk ses",
+  "earnings_rate_tag": "tag",
+  "earnings_rate_boost": "boost",
+  "earnings_rate_currency": "papel"
+}

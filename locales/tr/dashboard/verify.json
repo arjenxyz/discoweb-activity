@@ -1,0 +1,10 @@
+{
+  "verify_role_error_role_assign_failed": "Rol ataması başarısız oldu. Bot sunucuda aktif olmayabilir veya rolün bot hiyerarşisinin üstünde olabilir. Sunucu ayarlarından bot rolünün, doğrulanmış üye rolünün üstünde olduğunu kontrol et.",
+  "verify_role_error_bot_missing_manage_roles": "Botun \"Rolleri Yönet\" yetkisi yok. Sunucu ayarlarından bota bu yetkiyi ver.",
+  "verify_role_error_bot_role_hierarchy": "Bot kendi rolünden yüksek bir rol atayamaz. Sunucu Ayarları → Roller bölümünden bot rolünü doğrulanmış üye rolünün üstüne taşı.",
+  "verify_role_main_title": "Bu kapıyı açmak için bir anahtara ihtiyacın var.",
+  "verify_role_main_description": "Doğrulanmış üye rolü alman yeterli. Tek tıkla seni içeri alalım.",
+  "verify_role_error_label": "hata:",
+  "verify_role_success_title": "Kapı açıldı!",
+  "verify_role_success_description": "DiscoWeb dünyasına giriş yapıyorsun..."
+}

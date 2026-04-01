@@ -1,0 +1,11 @@
+{
+  "session_expired_title": "Oturumunuz Sonlandı",
+  "session_expired_description": "Güvenliğiniz için oturum süresi doldu. Devam etmek için Discord hesabınızla tekrar giriş yapın.",
+  "session_expired_todo_title": "Yapılacaklar",
+  "session_expired_step1": "Mevcut oturum çerezleri temizlenir",
+  "session_expired_step2": "Discord yetki ekranına yönlendirilirsiniz",
+  "session_expired_step3": "Yetkiler güncellenerek yeni oturum açılır",
+  "session_expired_button_loading": "Hazırlanıyor...",
+  "session_expired_button_text": "Discord ile Tekrar Giriş Yap",
+  "session_expired_note": "Oturumlar güvenlik nedeniyle 3 günde bir yenilenmektedir."
+}

@@ -1,0 +1,12 @@
+{
+  "error_flood_detected": "Birden fazla hata tespit edildi",
+  "error_flood_count": "{count} adet",
+  "error_flood_message": "Lütfen sayfayı yenileyin veya yöneticiyle iletişime geçin.",
+  "error_reported": "Hata raporlandı",
+  "error_reporting": "Raporlanıyor...",
+  "error_occurred": "Arka planda hata oluştu",
+  "error_details_show": "Detay göster",
+  "error_details_hide": "Daralt",
+  "error_pending_count": "+{count} bekleyen hata",
+  "error_resend": "Tekrar Gönder"
+}

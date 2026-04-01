@@ -1,0 +1,21 @@
+{
+  "cron_dividend_freeze_active": "Global freeze aktif — temettü atlandı.",
+  "cron_dividend_note": "Haftalık temettü: {lotCount} lot × {perLotAmount} Papel ({weekId})",
+  "cron_dividend_success_log": "✅ Temettü dağıtıldı: {totalListings} sunucu, toplam {totalPaid} Papel ({weekId})",
+  "cron_dividend_started": "🕐 dividendPayout cron başladı: {timestamp}",
+  "cron_dividend_completed": "✅ dividendPayout cron tamamlandı.",
+  "cron_referral_freeze_active": "Global freeze aktif — referral pasif gelir atlandı.",
+  "cron_referral_note": "Referral pasif gelir ({weekId}): {referredUserId} harcamasından %{rate}",
+  "cron_referral_success_log": "✅ Referral pasif gelir: {totalPaid} Papel ödendi, {totalPending} Papel beklemede ({weekId})",
+  "cron_referral_started": "🕐 referralPassiveIncome cron başladı: {timestamp}",
+  "cron_referral_completed": "✅ referralPassiveIncome cron tamamlandı.",
+  "cron_referral_pending_payment": "Bekleyen referral ödemesi",
+  "cron_papel_freeze_active": "Global freeze aktif — updatePapelValue atlandı.",
+  "cron_papel_update_error": "Papel value update hatası ({guildId}):",
+  "cron_papel_success_log": "✅ Papel değer çarpanı güncellendi: {serverCount} sunucu",
+  "cron_halving_success_log": "✅ Halving: global supply={globalSupply}, earn_multiplier={earnMultiplier}",
+  "cron_vesting_success_log": "✅ Founder vesting güncellendi: {listingCount} listing",
+  "cron_orders_expired_log": "✅ Süresi dolan emirler iptal edildi: {orderCount} emir",
+  "cron_papel_started": "🕐 updatePapelValue cron başladı: {timestamp}",
+  "cron_papel_completed": "✅ updatePapelValue cron tamamlandı."
+}

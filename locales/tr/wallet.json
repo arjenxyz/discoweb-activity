@@ -8,7 +8,7 @@
   "transfer_subtitle": "Alıcıya papel transfer edin.",
   "transfer_recipient_label": "Alıcı ID",
   "transfer_recipient_placeholder": "Discord kullanıcı ID",
-  "transfer_amount_label": "Miktar (papel)",
+  "transfer_amount_label": "Miktar",
   "transfer_amount_placeholder": "Örn: 50",
   "transfer_cancel_button": "Vazgeç",
   "transfer_submit_button": "Gönder",

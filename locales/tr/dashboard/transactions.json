@@ -1,0 +1,23 @@
+{
+  "transactions_section_title": "İşlemler",
+  "transactions_section_subtitle": "Geçmiş satın alımların",
+  "transactions_empty": "Henüz işlem yok",
+  "transactions_loading": "İşlemler yükleniyor...",
+  "transactions_total_count": "{count} işlem",
+  "transactions_stat_total_spent": "Toplam Harcama",
+  "transactions_stat_pending": "Bekleyen",
+  "transactions_stat_refunded": "İade Edilen",
+  "transactions_stat_failed": "Başarısız",
+  "transactions_status_paid": "Ödendi",
+  "transactions_status_pending": "Bekliyor",
+  "transactions_status_refunded": "İade Edildi",
+  "transactions_status_failed": "Başarısız",
+  "transactions_order_product": "Ürün",
+  "transactions_order_amount_label": "Tutar",
+  "transactions_order_expires": "Bitiş",
+  "transactions_order_reference": "Referans",
+  "transactions_order_custom": "Özel Sipariş",
+  "transactions_order_failure_prefix": "Hata:",
+  "transactions_order_refund_button": "İade İste"
+}
+ 

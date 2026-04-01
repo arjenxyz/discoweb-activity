@@ -1,0 +1,13 @@
+{    
+  "transfer_success": "Transfer başarıyla tamamlandı",
+  "transfer_error_generic": "Transfer başarısız oldu",
+  "transfer_error_insufficient": "Yetersiz bakiye",
+  "transfer_error_invalid_amount": "Geçersiz tutar",
+  "transfer_error_invalid_amount_api": "Geçersiz tutar",
+  "transfer_error_invalid_payload": "Geçersiz istek",
+  "transfer_error_no_recipient": "Alıcı bulunamadı",
+  "transfer_error_self": "Kendinize transfer yapamazsınız",
+  "transfer_error_daily_limit": "Günlük limit aşıldı",
+  "transfer_error_maintenance": "Transfer şu an bakımda",
+  "transfer_error_unauthorized": "Yetkisiz işlem"
+}

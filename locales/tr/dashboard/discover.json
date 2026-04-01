@@ -1,0 +1,10 @@
+{ 
+  "discover_title": "Topluluk",
+  "discover_subtitle": "Öne çıkan sunucuları keşfet",
+  "discover_featured_badge": "Öne Çıkan",
+  "discover_join_button": "Katıl",
+  "discover_member_count": "{count} üye",
+  "discover_online_count": "{count} çevrimiçi",
+  "discover_empty_title": "Şu an öne çıkan sunucu yok",
+  "discover_empty_subtitle": "Yakında buraya sunucular eklenecek"
+}

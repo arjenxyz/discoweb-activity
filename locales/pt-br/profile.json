@@ -1,0 +1,9 @@
+{
+  "profile_welcome": "Bem-vindo!",
+  "profile_subtitle": "Suas informações do Discord e cargos aparecem aqui.",
+  "profile_loading": "Carregando perfil...",
+  "profile_login_required": "Faça login para ver as informações do perfil.",
+  "settings_code_management_hint": "Para adicionar códigos de promoção e desconto, clique nas opções 'Código de Promoção' ou 'Código de Desconto' no menu da conta no canto superior direito.",
+  "settings_account_details_hidden": "Os detalhes da conta não são exibidos nesta tela.",
+  "profile_section_label": "Perfil"
+}
