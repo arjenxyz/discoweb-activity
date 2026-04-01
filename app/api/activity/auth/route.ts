@@ -17,7 +17,7 @@ export async function POST(request: Request) {
   await logWebEvent(request, { event: 'activity_auth_attempt' });
 
   try {
-    const { code } = (await request.json()) as { code?: string };
+    const { code, locale: discordLocale } = (await request.json()) as { code?: string; locale?: string };
     const url = new URL(request.url);
     const guildId = url.searchParams.get('guild_id') || url.searchParams.get('guild_id');
 
@@ -223,6 +223,26 @@ const envFlags = {
           ],
           { onConflict: 'discord_id' },
         );
+      }
+
+      // Kullanıcının locale bilgisini kaydet (dil istatistikleri için)
+      if (discordLocale) {
+        const { data: dbUser } = await supabase
+          .from('users')
+          .select('id')
+          .eq('discord_id', user.id)
+          .maybeSingle();
+
+        if (dbUser) {
+          await supabase.from('user_locales').upsert(
+            {
+              user_id: dbUser.id,
+              discord_locale: discordLocale,
+              last_seen_at: new Date().toISOString(),
+            },
+            { onConflict: 'user_id' }
+          );
+        }
       }
 
       // Sadece Activity'nin açıldığı sunucu için member_profiles oluştur veya güncelle

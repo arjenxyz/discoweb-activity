@@ -240,7 +240,7 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
       const response = await fetch(apiUrl(`/api/activity/auth?guild_id=${encodeURIComponent(guildId)}`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code }),
+        body: JSON.stringify({ code, locale: sdkLocale }),
         signal,
       });
       if (signal.aborted) return;
