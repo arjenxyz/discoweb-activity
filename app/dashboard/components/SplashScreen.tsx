@@ -4,6 +4,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { MuteButton, VideoBackground } from './VideoBackground';
 import DeveloperAboutModal from './DeveloperAboutModal';
+import RulesModal, { hasAcceptedRules } from './RulesModal';
 import SupportMenu from './SupportMenu';
 import { apiUrl } from '@/lib/api';
 import fetchWithCreds from '@/lib/fetchWithCreds';
@@ -25,6 +26,7 @@ export default function SplashScreen({ onEnter }: Props) {
   const [isDeveloper, setIsDeveloper] = useState(false);
   const [isDeveloperChecked, setIsDeveloperChecked] = useState(false);
   const [devAboutOpen, setDevAboutOpen] = useState(false);
+  const [rulesOpen, setRulesOpen] = useState(false);
   const [user, setUser] = useState<{ username: string; avatarUrl: string } | null>(null);
   const [userLoading, setUserLoading] = useState(true);
   const [tipIndex, setTipIndex] = useState(0);
@@ -205,6 +207,10 @@ export default function SplashScreen({ onEnter }: Props) {
   const handleScreenClick = (e: React.MouseEvent) => {
     if (stillLoading || blocked) return;
     if ((e.target as HTMLElement).closest('button, a')) return;
+    if (!hasAcceptedRules()) {
+      setRulesOpen(true);
+      return;
+    }
     onEnter();
   };
 
@@ -349,6 +355,13 @@ export default function SplashScreen({ onEnter }: Props) {
       </div>
 
       {devAboutOpen && <DeveloperAboutModal onClose={() => setDevAboutOpen(false)} />}
+      {rulesOpen && (
+        <RulesModal
+          onAccept={() => { setRulesOpen(false); onEnter(); }}
+          onClose={() => setRulesOpen(false)}
+          openLink={openLink}
+        />
+      )}
     </div>
   );
 }

@@ -962,6 +962,19 @@
   "splash_tip_leaderboard": "Liderlik tablosundan sunucunun en aktif üyelerini ve sıralamanı görebilirsin.",
   "splash_thanks_button": "Teşekkürler",
 
+  "rules_modal_title": "Platform Kuralları",
+  "rules_modal_subtitle": "Devam etmeden önce kuralları okumalısın",
+  "rules_modal_rule_1": "DiscoWeb platformunu kötüye kullanmak, bug exploit yapmak veya hile kullanmak yasaktır.",
+  "rules_modal_rule_2": "Diğer kullanıcılara karşı saygılı ol. Hakaret, taciz ve spam kesinlikle yasaktır.",
+  "rules_modal_rule_3": "Papel ve Mari ekonomisini manipüle etmeye çalışmak (sahte işlem, bot kullanımı vb.) hesabının kalıcı olarak kapatılmasına neden olabilir.",
+  "rules_modal_rule_4": "Mağaza alışverişleri, transferler ve market işlemleri geri alınamaz. İşlem yapmadan önce dikkatli ol.",
+  "rules_modal_rule_5": "Platform yönetimi gerekli gördüğünde hesaplara müdahale etme, kısıtlama veya kapatma hakkını saklı tutar.",
+  "rules_modal_docs": "Dökümanlar",
+  "rules_modal_terms": "Kullanım Şartları",
+  "rules_modal_privacy": "Gizlilik Politikası",
+  "rules_modal_accept_text": "Yukarıdaki kuralları, kullanım şartlarını ve gizlilik politikasını okudum ve kabul ediyorum.",
+  "rules_modal_accept_button": "Kabul Et ve Devam Et",
+
   "store_product_owned_mobile": "Mevcut",
 
   "badge_active_label": "Aktif",
