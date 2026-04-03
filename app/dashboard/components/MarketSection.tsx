@@ -635,7 +635,7 @@ export default function MarketSection({ userId, economyApproved }: { userId?: st
           if (action === 'cast_vote') {
             if (!d.is_valid) setEcoActionMsg(t('market_vote_success_invalid'));
             else if (d.threshold_reached) setEcoActionMsg(t('market_vote_success_threshold'));
-            else setEcoActionMsg(t('market_vote_success_recorded', { vote_count: d.vote_count, threshold: eco?.vote_threshold ?? 100 }));
+            else { const th: number = eco?.vote_threshold ?? 100; setEcoActionMsg(t('market_vote_success_recorded', { vote_count: d.vote_count, threshold: th })); }
           } else {
             setEcoActionMsg(t('market_apply_success'));
           }
