@@ -1,3 +1,5 @@
+'use client';
+
 import { Suspense } from 'react';
 import ReferralSection from '../../dashboard/components/ReferralSection';
 import { useT } from '@/contexts/LocaleContext';
