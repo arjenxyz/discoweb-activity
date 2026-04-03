@@ -185,7 +185,7 @@ export default function DashboardHeader({
       />
 
       {/* Header — desktop full / mobile sadece bakiye */}
-      <header className={`md:fixed inset-x-0 top-0 flex items-center bg-[#0e1018]/95 backdrop-blur-xl border-b border-white/[0.06] px-4 sm:px-6 transition-all duration-200 relative ${
+      <header className={`md:fixed inset-x-0 top-0 flex items-center street-header backdrop-blur-xl px-4 sm:px-6 transition-all duration-200 relative ${
         isActivityEmbed ? 'h-auto pt-[env(safe-area-inset-top,0px)] pb-2 min-h-[4rem]' : 'h-16'
       } ${isProfileOpen ? 'z-[9991]' : 'z-30'}`}>
 
@@ -194,15 +194,15 @@ export default function DashboardHeader({
           <div className="h-9 w-9 overflow-hidden rounded-xl border border-white/10 bg-white/5">
             <Image src="/gif/cat.gif" alt="logo" className="h-full w-full object-cover" width={36} height={36} />
           </div>
-          <span className="text-white font-black text-lg tracking-tight">DiscoWeb</span>
+          <span className="text-white font-black text-lg tracking-tight italic neon-cyan">DiscoWeb</span>
         </div>
 
         {/* Mobil orta — logo + DiscoWeb yazısı birlikte */}
         <div className="lg:hidden absolute left-1/2 -translate-x-1/2 flex items-center gap-2 pointer-events-none">
-          <div className="h-8 w-8 overflow-hidden rounded-xl border border-white/10 bg-white/5 flex-shrink-0">
+          <div className="h-8 w-8 overflow-hidden rounded-xl border border-cyan-500/20 bg-white/5 flex-shrink-0">
             <Image src="/gif/cat.gif" alt="logo" className="h-full w-full object-cover" width={32} height={32} />
           </div>
-          <span className="text-white font-black text-lg tracking-tight">DiscoWeb</span>
+          <span className="text-white font-black text-lg tracking-tight italic neon-cyan">DiscoWeb</span>
         </div>
 
         {/* Orta — boşluk */}
@@ -390,7 +390,7 @@ export default function DashboardHeader({
       </header>
 
       {/* Mobil bottom bar */}
-      <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-[#0b0d12]/98 backdrop-blur-2xl border-t border-white/[0.08] pb-[env(safe-area-inset-bottom,0px)]">
+      <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 street-bottom-bar backdrop-blur-2xl pb-[env(safe-area-inset-bottom,0px)]">
         <div className="flex items-center gap-2 px-3 py-2">
           {/* Sol — Menüler butonu */}
           <button
@@ -452,7 +452,7 @@ export default function DashboardHeader({
 
         {/* Nav menüsü — yukarı açılır */}
         {mobileMenuOpen && (
-          <div className="absolute bottom-full left-0 right-0 mb-1 mx-2 z-50 rounded-2xl border border-white/10 bg-[#0f1116]/98 backdrop-blur-2xl shadow-2xl overflow-hidden max-h-[70vh] overflow-y-auto">
+          <div className="absolute bottom-full left-0 right-0 mb-1 mx-2 z-50 rounded-2xl border border-cyan-500/15 bg-[#060a14]/98 backdrop-blur-2xl shadow-2xl overflow-hidden max-h-[70vh] overflow-y-auto">
             {/* Bakiye satırı */}
             {!unauthorized && (
               <div className="flex items-center gap-2 px-3 pt-3 pb-2">
@@ -477,7 +477,7 @@ export default function DashboardHeader({
             <div className="px-2 pb-2 space-y-3">
               {NAV_GROUPS.filter(g => !g.requiresAuth || !unauthorized).map((group) => (
                 <div key={group.label}>
-                  <p className="px-3 pb-1 pt-1 text-[9px] font-semibold uppercase tracking-[0.3em] text-white/25">{group.label}</p>
+                  <p className="px-3 pb-1 pt-1 text-[9px] font-black italic uppercase tracking-[0.3em] text-cyan-400/30">{group.label}</p>
                   <div className="space-y-0.5">
                     {group.items.map((item) => {
                       const isActive = navigation.activeSection === item.key;
@@ -486,13 +486,14 @@ export default function DashboardHeader({
                           key={item.key}
                           type="button"
                           onClick={() => { handleNavClick(item.key); setMobileMenuOpen(false); }}
-                          className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
-                            isActive ? 'bg-white/10 text-white' : 'text-white/60 hover:bg-white/5 hover:text-white'
+                          className={`street-nav-item flex w-full items-center gap-3 px-3 py-2.5 text-sm font-bold uppercase tracking-wide transition-all ${
+                            isActive ? 'active text-white' : 'text-white/60 hover:text-white'
                           }`}
+                          style={{ fontSize: '12px' }}
                         >
-                          <span className={isActive ? 'text-white' : 'text-white/40'}>{item.icon}</span>
+                          <span className={isActive ? 'text-cyan-300' : 'text-white/40'}>{item.icon}</span>
                           <span>{item.label}</span>
-                          {isActive && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-white" />}
+                          {isActive && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-cyan-400 shadow-[0_0_6px_rgba(0,245,255,0.6)]" />}
                           {item.key === 'mail' && mailUnreadCount > 0 && (
                             <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white">
                               {mailUnreadCount > 9 ? '9+' : mailUnreadCount}

@@ -400,3 +400,241 @@ html, body {
   animation: slideUp 0.3s ease-out;
 }
 
+/* ═══════════════════════════════════════════════
+   STREET / URBAN BASKETBALL GAME THEME
+   ═══════════════════════════════════════════════ */
+
+/* Neon glow utilities */
+.neon-cyan {
+  text-shadow: 0 0 7px #00f5ff, 0 0 20px #00f5ff, 0 0 40px #00f5ff;
+}
+
+.neon-orange {
+  text-shadow: 0 0 7px #ff6b00, 0 0 20px #ff6b00, 0 0 40px #ff6b00;
+}
+
+.neon-purple {
+  text-shadow: 0 0 7px #a855f7, 0 0 20px #a855f7, 0 0 40px #a855f7;
+}
+
+.neon-border-cyan {
+  box-shadow: 0 0 5px #00f5ff44, 0 0 15px #00f5ff22, inset 0 0 5px #00f5ff11;
+}
+
+.neon-border-orange {
+  box-shadow: 0 0 5px #ff6b0044, 0 0 15px #ff6b0022, inset 0 0 5px #ff6b0011;
+}
+
+/* Street card with diagonal stripe pattern overlay */
+.street-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(0, 245, 255, 0.15);
+  background: linear-gradient(135deg, rgba(15, 20, 35, 0.95) 0%, rgba(10, 15, 30, 0.98) 100%);
+  border-radius: 1rem;
+}
+
+.street-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 8px,
+    rgba(0, 245, 255, 0.02) 8px,
+    rgba(0, 245, 255, 0.02) 9px
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+.street-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Graffiti-style label */
+.street-label {
+  display: inline-block;
+  background: #000;
+  color: #fff;
+  font-weight: 900;
+  font-style: italic;
+  padding: 2px 10px;
+  transform: skewX(-6deg);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border: 1px solid rgba(0, 245, 255, 0.3);
+}
+
+/* Glowing button — game style */
+.street-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.6rem 1.5rem;
+  border-radius: 0.75rem;
+  background: linear-gradient(135deg, #ff6b00 0%, #ff9500 100%);
+  color: #000;
+  border: none;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.street-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+  transform: translateX(-100%);
+  animation: streetBtnShine 3s ease-in-out infinite;
+}
+
+@keyframes streetBtnShine {
+  0%, 70%, 100% { transform: translateX(-100%); }
+  30% { transform: translateX(100%); }
+}
+
+.street-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(255, 107, 0, 0.4);
+}
+
+/* Progress bar — game style */
+.street-progress {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.street-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #00f5ff, #a855f7);
+  box-shadow: 0 0 10px #00f5ff66;
+  transition: width 0.5s ease;
+}
+
+/* Floating tag — game score style */
+.street-score {
+  font-family: inherit;
+  font-weight: 900;
+  font-style: italic;
+  font-size: 2rem;
+  line-height: 1;
+  background: linear-gradient(180deg, #fff 30%, #00f5ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 10px rgba(0, 245, 255, 0.3));
+}
+
+/* Stat number */
+.street-stat-number {
+  font-weight: 900;
+  font-style: italic;
+  background: linear-gradient(180deg, #fff 20%, #ff6b00 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Mobile bottom bar — game phone style */
+.street-bottom-bar {
+  background: linear-gradient(180deg, rgba(8, 12, 22, 0.95) 0%, rgba(5, 8, 18, 0.99) 100%) !important;
+  border-top: 1px solid rgba(0, 245, 255, 0.15) !important;
+  box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.5), 0 -1px 10px rgba(0, 245, 255, 0.05);
+}
+
+/* Header street style */
+.street-header {
+  background: linear-gradient(180deg, rgba(8, 12, 25, 0.97) 0%, rgba(8, 12, 25, 0.92) 100%) !important;
+  border-bottom: 1px solid rgba(0, 245, 255, 0.12) !important;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4), 0 1px 10px rgba(0, 245, 255, 0.05);
+}
+
+/* Game-style nav item with image bg */
+.street-nav-item {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.25s ease;
+}
+
+.street-nav-item:hover {
+  border-color: rgba(0, 245, 255, 0.25);
+  box-shadow: 0 0 15px rgba(0, 245, 255, 0.1);
+  transform: translateY(-1px);
+}
+
+.street-nav-item.active {
+  border-color: rgba(0, 245, 255, 0.35);
+  box-shadow: 0 0 20px rgba(0, 245, 255, 0.15), inset 0 0 20px rgba(0, 245, 255, 0.05);
+}
+
+/* Halftone dots pattern overlay */
+.halftone-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(0, 245, 255, 0.06) 1px, transparent 1px);
+  background-size: 6px 6px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Animated scan line */
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+.street-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0, 245, 255, 0.3), transparent);
+  animation: scanline 4s linear infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Street-themed body background */
+body.street-theme {
+  background: linear-gradient(180deg, #060a14 0%, #0a0e1a 50%, #08101e 100%) !important;
+}
+
+/* Glitch text effect for titles */
+@keyframes glitch {
+  0%, 90%, 100% { transform: translate(0); }
+  92% { transform: translate(-2px, 1px); }
+  94% { transform: translate(2px, -1px); }
+  96% { transform: translate(-1px, -1px); }
+  98% { transform: translate(1px, 1px); }
+}
+
+.street-title {
+  font-weight: 900;
+  font-style: italic;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.street-title:hover {
+  animation: glitch 0.5s ease-in-out;
+}
+

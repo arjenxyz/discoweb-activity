@@ -79,7 +79,7 @@ export default function SidebarNav({
 
   return (
     <aside
-      className={`sticky top-0 hidden h-screen flex-col border-r border-white/[0.06] bg-[#0b0d12] transition-all duration-300 lg:flex ${
+      className={`sticky top-0 hidden h-screen flex-col border-r border-cyan-500/10 bg-[#060a14] transition-all duration-300 lg:flex ${
         collapsed ? 'w-[72px]' : 'w-[240px]'
       }`}
     >
@@ -130,7 +130,7 @@ export default function SidebarNav({
         {NAV_GROUPS.filter(g => !g.requiresAuth || !unauthorized).map((group) => (
           <div key={group.label} className="space-y-0.5">
             {!collapsed && (
-              <p className="mb-2 px-3 text-[9px] font-semibold uppercase tracking-[0.3em] text-white/25">
+              <p className="mb-2 px-3 text-[9px] font-black uppercase tracking-[0.3em] text-cyan-400/30 italic">
                 {group.label}
               </p>
             )}
@@ -141,13 +141,13 @@ export default function SidebarNav({
                   key={key}
                   type="button"
                   onClick={() => onNavigate(key)}
-                  className={`group relative flex w-full items-center overflow-hidden rounded-xl transition-all duration-150 ${
+                  className={`street-nav-item group relative flex w-full items-center transition-all duration-200 ${
                     collapsed
                       ? 'h-10 w-10 justify-center mx-auto'
                       : 'gap-3 px-3 py-2.5'
                   } ${
                     active
-                      ? 'text-white'
+                      ? 'active text-white'
                       : 'text-white/45 hover:text-white/80'
                   }`}
                   title={collapsed ? label : undefined}
@@ -158,33 +158,33 @@ export default function SidebarNav({
                       <img
                         src={SECTION_BG[key]}
                         alt=""
-                        className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-0 group-hover:opacity-30 transition-opacity duration-300"
+                        className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-0 group-hover:opacity-40 transition-opacity duration-300"
                       />
                       {active && (
                         <img
                           src={SECTION_BG[key]}
                           alt=""
-                          className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-20"
+                          className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-25"
                         />
                       )}
                     </>
                   )}
-                  {/* Overlay */}
-                  <div className={`pointer-events-none absolute inset-0 rounded-xl transition-all duration-150 ${
-                    active ? 'bg-white/10' : 'group-hover:bg-white/[0.06]'
+                  {/* Overlay with gradient */}
+                  <div className={`pointer-events-none absolute inset-0 rounded-[1rem] transition-all duration-200 ${
+                    active ? 'bg-gradient-to-r from-cyan-500/15 via-transparent to-transparent' : 'group-hover:bg-white/[0.06]'
                   }`} />
                   <span className={`relative flex shrink-0 items-center justify-center rounded-lg transition-all ${
                     collapsed ? 'h-10 w-10' : 'h-7 w-7'
-                  } ${active ? 'text-white' : 'text-white/45 group-hover:text-white/70'}`}>
+                  } ${active ? 'text-cyan-300' : 'text-white/45 group-hover:text-white/70'}`}>
                     <Icon className="h-4 w-4" />
                   </span>
                   {!collapsed && (
-                    <span className={`relative text-sm font-medium leading-none ${active ? 'text-white' : ''}`}>
+                    <span className={`relative text-sm font-bold leading-none uppercase tracking-wide ${active ? 'text-white' : ''}`} style={{ fontSize: '12px' }}>
                       {label}
                     </span>
                   )}
                   {!collapsed && active && (
-                    <span className="relative ml-auto h-1.5 w-1.5 rounded-full bg-white/60" />
+                    <span className="relative ml-auto h-1.5 w-1.5 rounded-full bg-cyan-400 shadow-[0_0_6px_rgba(0,245,255,0.6)]" />
                   )}
                 </button>
               );

@@ -49,7 +49,7 @@ export default function OverviewSection({
   const totalsSince = (overviewStats as OverviewStatsExpanded)?.totalsSinceVerified;
   const verifiedSince = (overviewStats as OverviewStatsExpanded)?.verifiedSince;
 
-  const card = 'rounded-2xl border border-white/[0.10] bg-white/[0.05] p-4 sm:p-5';
+  const card = 'street-card p-4 sm:p-5';
 
   const greeting = (() => {
     const h = new Date().getHours();
@@ -68,14 +68,14 @@ export default function OverviewSection({
           <p className="text-xs font-medium text-white/30 mb-0.5">
             {greeting}{profile?.nickname ? `, ${profile.nickname}` : ''} 👋
           </p>
-          <h1 className="text-2xl font-black text-white tracking-tight">{t('overview_title')}</h1>
+          <h1 className="text-2xl font-black text-white tracking-tight street-title">{t('overview_title')}</h1>
           <p className="mt-1 text-sm text-white/40">
             {t('overview_subtitle')}
           </p>
         </div>
-        <div className="hidden sm:flex items-center gap-1.5 rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-1.5">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="text-[11px] font-medium text-white/40">{t('overview_live')}</span>
+        <div className="hidden sm:flex items-center gap-1.5 rounded-xl border border-cyan-500/20 bg-cyan-500/5 px-3 py-1.5 neon-border-cyan">
+          <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
+          <span className="text-[11px] font-bold text-cyan-300/70 uppercase tracking-wider">{t('overview_live')}</span>
         </div>
       </div>
 
@@ -104,7 +104,7 @@ export default function OverviewSection({
                 {/* Avatar + isim */}
                 <div className="flex items-center gap-4">
                   <div className="relative shrink-0">
-                    <div className="h-16 w-16 sm:h-20 sm:w-20 overflow-hidden rounded-2xl border border-white/10">
+                    <div className="h-16 w-16 sm:h-20 sm:w-20 overflow-hidden rounded-2xl border-2 border-cyan-500/30 neon-border-cyan">
                       {profile?.avatarUrl ? (
                         <Image src={profile.avatarUrl} alt="avatar" width={80} height={80} unoptimized className="h-full w-full object-cover" />
                       ) : (
@@ -113,7 +113,7 @@ export default function OverviewSection({
                         </div>
                       )}
                     </div>
-                    <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-emerald-400 border-2 border-[#0b0d12]" />
+                    <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-cyan-400 border-2 border-[#060a14] shadow-[0_0_8px_rgba(0,245,255,0.6)]" />
                   </div>
                   <div>
                     <p className="text-xl sm:text-2xl font-black text-white leading-tight tracking-tight">
@@ -196,12 +196,12 @@ export default function OverviewSection({
                 active: isBooster,
               },
             ].map(({ label, value, sub, icon, color, active }) => (
-              <div key={label} className={`rounded-2xl border p-4 transition-colors ${active ? 'border-white/[0.12] bg-white/[0.06]' : 'border-white/[0.06] bg-white/[0.02]'}`}>
+              <div key={label} className={`street-card p-4 transition-all halftone-overlay ${active ? 'border-cyan-500/20' : ''}`}>
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-[10px] font-semibold text-white/40 uppercase tracking-wider">{label}</span>
+                  <span className="street-label text-[9px]">{label}</span>
                   <span className={color}>{icon}</span>
                 </div>
-                <p className={`text-xl sm:text-2xl font-black tabular-nums ${active ? 'text-white' : 'text-white/20'}`}>{value}</p>
+                <p className={`text-xl sm:text-2xl font-black tabular-nums italic ${active ? 'street-stat-number' : 'text-white/20'}`}>{value}</p>
                 <p className="mt-0.5 text-[10px] text-white/30">{sub}</p>
               </div>
             ))}
@@ -238,7 +238,7 @@ export default function OverviewSection({
                   <button
                     onClick={onClaim}
                     disabled={claimLoading}
-                    className="flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-50 disabled:cursor-not-allowed px-5 py-2.5 text-sm font-bold text-black transition-colors"
+                    className="street-btn text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {claimLoading ? (
                       <div className="h-4 w-4 animate-spin rounded-full border-2 border-black/20 border-t-black/60" />

@@ -1,0 +1,9 @@
+{
+  "profile_welcome": "Welcome!",
+  "profile_subtitle": "Your Discord info and roles appear here.",
+  "profile_loading": "Loading profile...",
+  "profile_login_required": "Please sign in to view your profile info.",
+  "settings_code_management_hint": "To add promotion and discount codes, click the Promotion or Discount Code options in the account menu at the top right.",
+  "settings_account_details_hidden": "Account details are not shown on this screen.",
+  "profile_section_label": "Profile"
+}

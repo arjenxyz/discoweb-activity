@@ -1,0 +1,19 @@
+{
+  "welcome_title": "Welcome!",
+  "welcome_subtitle": "You need to create a profile to join our platform.",
+  "welcome_create_profile_button": "Create Profile",
+  "welcome_loading": "Loading...",
+  "welcome_success_title": "You're all set!",
+  "welcome_success_subtitle": "Redirecting to the dashboard...",
+  "welcome_error_no_guild": "Server info not found, please try again.",
+  "welcome_error_profile_create": "Profile creation failed.",
+  "welcome_error_generic": "An error occurred, please try again.",
+  "verify_role_title": "Access Required",
+  "verify_role_subtitle": "You need the verified member role.",
+  "verify_role_button": "Get Role",
+  "verify_role_assigning": "Assigning...",
+  "verify_role_success_title": "You're verified!",
+  "verify_role_success_subtitle": "Redirecting to the dashboard...",
+  "verify_role_error_assign": "Role assignment failed.",
+  "verify_role_error_generic": "An error occurred, please try again."
+}
