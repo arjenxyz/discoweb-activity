@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
-import { LuHouse, LuMail, LuStore, LuSettings, LuChevronRight, LuTicket, LuSend, LuTag, LuTrendingUp, LuChartBar, LuCompass, LuVault, LuLayoutGrid, LuGift, LuShieldCheck, LuWallet, LuCoins, LuRocket, LuBadgePlus, LuNewspaper } from 'react-icons/lu';
+import { LuHouse, LuMail, LuStore, LuSettings, LuChevronRight, LuTicket, LuSend, LuTag, LuTrendingUp, LuChartBar, LuCompass, LuVault, LuLayoutGrid, LuShieldCheck, LuWallet, LuCoins, LuRocket, LuBadgePlus, LuNewspaper } from 'react-icons/lu';
 import Image from 'next/image';
 import DiscordAgreementButton from '@/components/DiscordAgreementButton';
 import type { Notification, Section } from '../types';
@@ -130,7 +130,6 @@ export default function DashboardHeader({
       items: [
         { key: 'overview', label: t('nav_home'), icon: <LuHouse className="h-4 w-4" /> },
         { key: 'store', label: t('nav_store'), icon: <LuStore className="h-4 w-4" /> },
-        { key: 'raffles', label: t('nav_raffles'), icon: <LuGift className="h-4 w-4" /> },
         { key: 'tag-badge', label: t('nav_tag_badge'), icon: <LuShieldCheck className="h-4 w-4" /> },
         { key: 'discover', label: t('nav_community'), icon: <LuCompass className="h-4 w-4" /> },
         ...(isAdvancedEconomy ? [

@@ -16,7 +16,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   maintenance: 'bg-amber-500/10 text-amber-300 border-amber-500/20',
   sponsor: 'bg-purple-500/10 text-purple-300 border-purple-500/20',
   update: 'bg-green-500/10 text-green-300 border-green-500/20',
-  lottery: 'bg-pink-500/10 text-pink-300 border-pink-500/20',
+  lottery: 'bg-fuchsia-500/10 text-fuchsia-300 border-fuchsia-500/20',
   reward: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20',
 };
 

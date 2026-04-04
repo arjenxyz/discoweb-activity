@@ -20,7 +20,7 @@ const SENDER_CONFIG = {
   maintenance: { name: 'Bakım Ekibi', email: 'maintenance@system.local', avatar: '🔧', verified: true },
   sponsor: { name: 'İş Ortaklıkları', email: 'partnerships@system.local', avatar: '💼', verified: false },
   update: { name: 'Ürün Güncellemeleri', email: 'updates@system.local', avatar: '✨', verified: true },
-  lottery: { name: 'Kampanya Yönetimi', email: 'campaigns@system.local', avatar: '🎉', verified: false },
+  lottery: { name: 'Kampanya Yönetimi', email: 'campaigns@system.local', avatar: '📣', verified: false },
   reward: { name: 'Ödül Merkezi', email: 'rewards@system.local', avatar: '🎁', verified: true },
   order: { name: 'Sipariş Yönetimi', email: 'orders@system.local', avatar: '📦', verified: true },
 } as const;

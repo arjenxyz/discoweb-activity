@@ -99,7 +99,7 @@ export default function SplashScreen({ onEnter }: Props) {
           <path d="M7.22 1.63a1 1 0 011.56 0l1.22 1.46 1.86-.38a1 1 0 011.16.9l.17 1.9 1.6 1.04a1 1 0 010 1.7l-1.6 1.04-.17 1.9a1 1 0 01-1.16.9l-1.86-.38-1.22 1.46a1 1 0 01-1.56 0L6 10.21l-1.86.38a1 1 0 01-1.16-.9l-.17-1.9L1.21 6.75a1 1 0 010-1.7l1.6-1.04.17-1.9a1 1 0 011.16-.9L6 1.59l1.22-1.46z" />
         </svg>
       ),
-      textKey: 'splash_tip_giveaway_rewards',
+      textKey: 'splash_tip_badge_days',
     },
     {
       icon: (

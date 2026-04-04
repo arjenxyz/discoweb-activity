@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { LuChevronRight, LuGift, LuHouse, LuMail, LuStore, LuCompass, LuTrendingUp, LuVault, LuChartBar, LuWallet, LuCoins, LuRocket, LuBadgePlus, LuNewspaper, LuShieldCheck } from 'react-icons/lu';
+import { LuChevronRight, LuHouse, LuMail, LuStore, LuCompass, LuTrendingUp, LuVault, LuChartBar, LuWallet, LuCoins, LuRocket, LuBadgePlus, LuNewspaper, LuShieldCheck } from 'react-icons/lu';
 import type { MemberProfile, Section } from '../types';
 import { useT } from '@/contexts/LocaleContext';
 
@@ -27,7 +27,6 @@ export default function SidebarNav({
   const SECTION_BG: Partial<Record<Section, string>> = {
     overview:        '/menu-background/menu4.jpg',
     store:           '/menu-background/menu6.jpg',
-    raffles:         '/menu-background/menu7.jpg',
     discover:        '/menu-background/menu8.jpg',
     'tag-badge':     '/menu-background/menu8.jpg',
     market:          '/menu-background/menu9.jpg',
@@ -47,7 +46,6 @@ export default function SidebarNav({
       items: [
         { key: 'overview' as Section, label: t('nav_home'), icon: LuHouse },
         { key: 'store' as Section, label: t('nav_store'), icon: LuStore },
-        { key: 'raffles' as Section, label: t('nav_raffles'), icon: LuGift },
         { key: 'tag-badge' as Section, label: t('nav_tag_badge'), icon: LuShieldCheck },
         { key: 'discover' as Section, label: t('nav_community'), icon: LuCompass },
         ...(isAdvancedEconomy ? [

@@ -1,5 +1,5 @@
 // Ortak Section tipi
-export type Section = 'overview' | 'store' | 'raffles' | 'notifications' | 'profile' | 'settings' | 'mail' | 'transactions' | 'tracking' | 'leaderboard' | 'discover' | 'market' | 'treasury' | 'borsa' | 'borsa-detail' | 'portfolio' | 'dividend' | 'ipo-apply' | 'ipo' | 'economy-apply' | 'market-news' | 'tag-badge';
+export type Section = 'overview' | 'store' | 'notifications' | 'profile' | 'settings' | 'mail' | 'transactions' | 'tracking' | 'leaderboard' | 'discover' | 'market' | 'treasury' | 'borsa' | 'borsa-detail' | 'portfolio' | 'dividend' | 'ipo-apply' | 'ipo' | 'economy-apply' | 'market-news' | 'tag-badge';
 export type Notification = {
   id: string;
   title: string;
@@ -167,41 +167,6 @@ export type BadgeTier = {
   background_image?: string | null;
 };
 
-export type Raffle = {
-  id: string;
-  title: string;
-  description: string | null;
-  prizes: string[] | null;
-  start_date: string | null;
-  end_date: string | null;
-  min_tag_days: number;
-  winner_count: number;
-  prize_type: 'papel' | 'role' | 'custom' | 'timed_multiplier' | 'mari';
-  prize_papel_amount: number | null;
-  prize_role_id: string | null;
-  prize_multiplier_value?: number | null;
-  prize_multiplier_days?: number | null;
-  prize_mari_amount?: number | null;
-  eligibility_type?: 'tag' | 'everyone' | 'booster';
-  required_badge_tier_id?: string | null;
-  drawn_at: string | null;
-  entry_count?: number;
-};
-
-export type DrawnRaffle = {
-  id: string;
-  title: string;
-  drawn_at: string;
-  prize_type: string;
-  prize_papel_amount?: number | null;
-  prize_multiplier_value?: number | null;
-  prize_multiplier_days?: number | null;
-  prize_mari_amount?: number | null;
-  winner_count: number;
-  iWon: boolean;
-  winners: Array<{ user_id: string; username: string; avatar_url?: string | null }>;
-};
-
 export type BadgeInfo = {
   currentBadge: BadgeTier | null;
   nextBadge: BadgeTier | null;
@@ -210,8 +175,4 @@ export type BadgeInfo = {
   hasTag: boolean;
   earnMultiplier: number;
   allTiers: BadgeTier[];
-  activeRaffles: Raffle[];
-  eligibleRaffles: string[];
-  joinedRaffles: string[];
-  drawnRaffles: DrawnRaffle[];
 };

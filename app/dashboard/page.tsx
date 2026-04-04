@@ -15,7 +15,6 @@ import ProfileSection from './components/ProfileSection';
 import StoreSection from './components/StoreSection';
 import SettingsSection from './components/SettingsSection';
 import MailSection from './components/MailSection';
-import RafflesSection from './components/RafflesSection';
 import SessionExpiredModal from './components/SessionExpiredModal';
 import DiscoverSection from './components/DiscoverSection';
 import MarketSection from './components/MarketSection';
@@ -585,10 +584,10 @@ export default function DashboardPage() {
           setBadgeInfo(data);
         } else {
           // API hata döndürdüğünde loading ekranında takılmaması için boş set et
-          setBadgeInfo({ currentBadge: null, nextBadge: null, tagDays: 0, daysToNext: null, hasTag: false, earnMultiplier: 1, allTiers: [], activeRaffles: [], eligibleRaffles: [], joinedRaffles: [], drawnRaffles: [] });
+          setBadgeInfo({ currentBadge: null, nextBadge: null, tagDays: 0, daysToNext: null, hasTag: false, earnMultiplier: 1, allTiers: [] });
         }
       } catch {
-        setBadgeInfo({ currentBadge: null, nextBadge: null, tagDays: 0, daysToNext: null, hasTag: false, earnMultiplier: 1, allTiers: [], activeRaffles: [], eligibleRaffles: [], joinedRaffles: [], drawnRaffles: [] });
+        setBadgeInfo({ currentBadge: null, nextBadge: null, tagDays: 0, daysToNext: null, hasTag: false, earnMultiplier: 1, allTiers: [] });
       }
     };
 
@@ -1011,7 +1010,7 @@ export default function DashboardPage() {
     await refreshStoreItems(storePage + 1, true);
   };
 
-  const FULL_WIDTH_SECTIONS = ['mail', 'market', 'store', 'raffles', 'economy-apply'];
+  const FULL_WIDTH_SECTIONS = ['mail', 'market', 'store', 'economy-apply'];
   const mainWrapperClass = FULL_WIDTH_SECTIONS.includes(effectiveSection)
     ? (effectiveSection === 'store' && !isActivityEmbed)
       ? 'w-full max-w-4xl px-0 sm:px-6'
@@ -1026,9 +1025,7 @@ export default function DashboardPage() {
         ? isActivityEmbed
           ? 'md:pt-20 pb-28 gap-0 md:pb-0'
           : 'md:pt-20 pb-28 sm:pb-10 gap-0 sm:gap-6 md:pb-0'
-        : effectiveSection === 'raffles'
-          ? 'md:pt-20 pb-20 lg:pb-6 gap-0'
-          : effectiveSection === 'economy-apply'
+        : effectiveSection === 'economy-apply'
             ? 'md:pt-20 pb-20 lg:pb-6 gap-0'
             : 'md:pt-24 pb-20 lg:pb-6 gap-6';
 
@@ -1278,30 +1275,6 @@ export default function DashboardPage() {
                 onOpenPromotionsModal={openPromotionsModal}
                 onOpenDiscountsModal={openDiscountsModal}
                 currentGuildName={headerServer.data?.name ?? null}
-              />
-            )}
-
-            {effectiveSection === 'raffles' && !isSiteMaintenance && (
-              <RafflesSection
-                badgeInfo={badgeInfo}
-                loading={!badgeInfo && !unauthorized}
-                onJoinRaffle={async (raffleId) => {
-                  const response = await fetchWithCreds('/api/member/raffles/join', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ raffle_id: raffleId }),
-                  });
-                  if (!response.ok) {
-                    const data = (await response.json().catch(() => ({}))) as { error?: string };
-                    throw new Error(data.error ?? 'join_failed');
-                  }
-                  // Refresh badge info to reflect joined state
-                  const refreshed = await fetchWithCreds('/api/member/badges');
-                  if (refreshed.ok) {
-                    const data = (await refreshed.json()) as typeof badgeInfo;
-                    setBadgeInfo(data);
-                  }
-                }}
               />
             )}
 

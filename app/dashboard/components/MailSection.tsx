@@ -52,7 +52,7 @@ const CATEGORY_CONFIG: Record<string, { labelKey: string; icon: React.ReactNode;
   lottery: {
     labelKey: 'mail_category_lottery',
     icon: <LuGift />,
-    css: 'border-rose-500/30 bg-rose-500/10 text-rose-400',
+    css: 'border-fuchsia-500/30 bg-fuchsia-500/10 text-fuchsia-400',
   },
   reward: {
     labelKey: 'mail_category_reward',
@@ -66,7 +66,7 @@ const CATEGORY_CONFIG: Record<string, { labelKey: string; icon: React.ReactNode;
   },
 };
 
-const FIXED_CATEGORIES = ['announcement', 'system', 'update', 'maintenance', 'reward', 'lottery', 'sponsor', 'order'] as const;
+const FIXED_CATEGORIES = ['announcement', 'system', 'update', 'maintenance', 'reward', 'sponsor', 'order'] as const;
 
 type MailSectionProps = {
   loading: boolean;

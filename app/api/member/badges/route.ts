@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
 
-  const [{ data: tiers }, { data: profile }, { data: raffles }] = await Promise.all([
+  const [{ data: tiers }, { data: profile }] = await Promise.all([
     supabase
       .from('badge_tiers')
       .select('id,name,emoji,days_required,color,description,sort_order,reward_papel,reward_earn_multiplier,reward_message,role_id,background_image')
@@ -40,13 +40,6 @@ export async function GET(request: NextRequest) {
       .eq('guild_id', selectedGuildId)
       .eq('user_id', userId)
       .single(),
-    supabase
-      .from('raffles')
-      .select('id,title,description,prizes,start_date,end_date,min_tag_days,winner_count,prize_type,prize_papel_amount,prize_role_id,prize_multiplier_value,prize_multiplier_days,prize_mari_amount,eligibility_type,required_badge_tier_id,drawn_at')
-      .eq('guild_id', selectedGuildId)
-      .is('drawn_at', null)
-      .or('end_date.is.null,end_date.gt.' + new Date().toISOString())
-      .or('is_active.eq.true,start_date.gt.' + new Date().toISOString()),
   ]);
 
   // Same fallback as overview: treat tag as active if tag_granted_at is set, even if has_tag flag lags behind
@@ -183,104 +176,6 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  const activeRaffles = raffles ?? [];
-  // Fetch profile for is_booster check (already have hasTag/tagDays from above)
-  const { data: profileForBooster } = await supabase
-    .from('member_profiles')
-    .select('is_booster')
-    .eq('guild_id', selectedGuildId)
-    .eq('user_id', userId)
-    .maybeSingle();
-  const isBooster = profileForBooster?.is_booster === true;
-
-  const eligibleRaffles = activeRaffles
-    .filter((r: any) => {
-      const eligType = r.eligibility_type ?? 'tag';
-      if (eligType === 'everyone') return true;
-      if (eligType === 'booster') return isBooster;
-      return tagDays >= r.min_tag_days; // 'tag'
-    })
-    .map((r: any) => r.id);
-
-  // Katılım sayıları ve kullanıcının katıldığı çekilişler
-  let joinedRaffles: string[] = [];
-  const entryCounts: Record<string, number> = {};
-  if (activeRaffles.length > 0) {
-    const raffleIds = activeRaffles.map((r: { id: string }) => r.id);
-    const [{ data: entries }, { data: allEntries }] = await Promise.all([
-      supabase
-        .from('raffle_entries')
-        .select('raffle_id')
-        .eq('user_id', userId)
-        .in('raffle_id', raffleIds),
-      supabase
-        .from('raffle_entries')
-        .select('raffle_id')
-        .in('raffle_id', raffleIds),
-    ]);
-    joinedRaffles = (entries ?? []).map((e: { raffle_id: string }) => e.raffle_id);
-    for (const e of allEntries ?? []) {
-      entryCounts[e.raffle_id] = (entryCounts[e.raffle_id] ?? 0) + 1;
-    }
-  }
-
-  const activeRafflesWithCount = activeRaffles.map((r: any) => ({
-    ...r,
-    entry_count: entryCounts[r.id] ?? 0,
-  }));
-
-  // Fetch recently drawn raffles (last 14 days) with winner info
-  const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-  const now = new Date().toISOString();
-  // Fetch: manually drawn OR end_date passed (expired) in the last 7 days
-  const { data: drawnRafflesRaw } = await supabase
-    .from('raffles')
-    .select('id,title,drawn_at,end_date,prize_type,prize_papel_amount,prize_multiplier_value,prize_multiplier_days,prize_mari_amount,winner_count')
-    .eq('guild_id', selectedGuildId)
-    .or(`drawn_at.not.is.null,and(end_date.lt.${now},end_date.gte.${cutoff})`)
-    .order('drawn_at', { ascending: false, nullsFirst: false })
-    .limit(10);
-
-  let drawnRaffles: any[] = [];
-  if (drawnRafflesRaw && drawnRafflesRaw.length > 0) {
-    const drawnIds = drawnRafflesRaw.map((r: any) => r.id);
-
-    // Try is_winner column first; fall back to all entries if column doesn't exist yet
-    const { data: winnerByFlag, error: winnerFlagErr } = await supabase
-      .from('raffle_entries')
-      .select('raffle_id,user_id')
-      .in('raffle_id', drawnIds)
-      .eq('is_winner', true);
-
-    // If column missing (error) fall back to all entries for those raffles
-    const { data: allEntries } = winnerFlagErr
-      ? await supabase
-          .from('raffle_entries')
-          .select('raffle_id,user_id')
-          .in('raffle_id', drawnIds)
-      : { data: null };
-
-    const winnerEntries = winnerByFlag ?? allEntries ?? [];
-
-    const winnerUserIds = [...new Set(winnerEntries.map((e: any) => e.user_id))];
-    const { data: memberRows } = winnerUserIds.length
-      ? await supabase.from('members').select('user_id,username,avatar_url').in('user_id', winnerUserIds)
-      : { data: [] };
-    const memberMap: Record<string, { username: string; avatar_url?: string }> = {};
-    for (const m of memberRows ?? []) memberMap[(m as any).user_id] = m as any;
-    drawnRaffles = drawnRafflesRaw.map((r: any) => ({
-      ...r,
-      iWon: winnerEntries.some((e: any) => e.raffle_id === r.id && e.user_id === userId),
-      winners: winnerEntries
-        .filter((e: any) => e.raffle_id === r.id)
-        .map((e: any) => ({
-          user_id: e.user_id,
-          username: memberMap[e.user_id]?.username ?? e.user_id,
-          avatar_url: memberMap[e.user_id]?.avatar_url ?? null,
-        })),
-    }));
-  }
-
   return NextResponse.json({
     currentBadge,
     nextBadge,
@@ -289,9 +184,5 @@ export async function GET(request: NextRequest) {
     hasTag,
     earnMultiplier,
     allTiers: sortedTiers,
-    activeRaffles: activeRafflesWithCount,
-    eligibleRaffles,
-    joinedRaffles,
-    drawnRaffles,
   });
 }

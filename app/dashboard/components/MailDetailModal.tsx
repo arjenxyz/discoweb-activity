@@ -24,7 +24,7 @@ const SENDER_CONFIG: Record<string, SenderConfig> = {
   maintenance:  { nameKey: 'mail_sender_maintenance',  avatar: '🔧', verified: true },
   sponsor:      { nameKey: 'mail_sender_sponsor',      avatar: '💼', verified: false },
   update:       { nameKey: 'mail_sender_update',       avatar: '✨', verified: true },
-  lottery:      { nameKey: 'mail_sender_lottery',      avatar: '🎉', verified: false },
+  lottery:      { nameKey: 'mail_sender_lottery',      avatar: '📣', verified: false },
   reward:       { nameKey: 'mail_sender_reward',       avatar: '🎁', verified: true },
   order:        { nameKey: 'mail_sender_order',        avatar: '📦', verified: true },
 };
@@ -36,7 +36,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   maintenance:  'bg-amber-500/15 text-amber-400 border-amber-500/20',
   sponsor:      'bg-pink-500/15 text-pink-400 border-pink-500/20',
   update:       'bg-cyan-500/15 text-cyan-400 border-cyan-500/20',
-  lottery:      'bg-purple-500/15 text-purple-400 border-purple-500/20',
+  lottery:      'bg-fuchsia-500/15 text-fuchsia-400 border-fuchsia-500/20',
   reward:       'bg-emerald-500/15 text-emerald-400 border-emerald-500/20',
   order:        'bg-indigo-500/15 text-indigo-400 border-indigo-500/20',
 };
