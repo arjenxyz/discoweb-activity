@@ -14,7 +14,21 @@ import trWallet from '@/locales/tr/wallet.json';
 import trWelcome from '@/locales/tr/welcome.json';
 import trSupport from '@/locales/tr/support.json';
 
-export type SupportedLocale = 'tr';
+import enAuth from '@/locales/en/auth.json';
+import enDashboard from '@/locales/en/dashboard.json';
+import enDm from '@/locales/en/dm.json';
+import enErrors from '@/locales/en/errors.json';
+import enMail from '@/locales/en/mail.json';
+import enMisc from '@/locales/en/misc.json';
+import enNotifications from '@/locales/en/notifications.json';
+import enProfile from '@/locales/en/profile.json';
+import enStore from '@/locales/en/store.json';
+import enUI from '@/locales/en/ui.json';
+import enWallet from '@/locales/en/wallet.json';
+import enWelcome from '@/locales/en/welcome.json';
+import enSupport from '@/locales/en/support.json';
+
+export type SupportedLocale = 'tr' | 'en';
 
 export const translations: Record<SupportedLocale, Record<string, string>> = {
   tr: {
@@ -22,12 +36,20 @@ export const translations: Record<SupportedLocale, Record<string, string>> = {
     ...trNotifications, ...trPrivacy, ...trProfile, ...trStore, ...trUI, ...trWallet, ...trWelcome,
     ...trSupport,
   },
+  en: {
+    ...enAuth, ...enDashboard, ...enDm, ...enErrors, ...enMail, ...enMisc,
+    ...enNotifications, ...enProfile, ...enStore, ...enUI, ...enWallet, ...enWelcome,
+    ...enSupport,
+  },
 };
 
 /**
  * Discord locale string'ini desteklenen locale'e çevirir.
- * Şu anda sadece Türkçe destekleniyor.
+ * Turkish kullanıcılar Türkçe, diğerleri İngilizce görür.
  */
 export function resolveLocale(discordLocale: string | null | undefined): SupportedLocale {
-  return 'tr';
+  if (!discordLocale) return 'en';
+  const lang = discordLocale.toLowerCase().split('-')[0];
+  if (lang === 'tr') return 'tr';
+  return 'en';
 }
