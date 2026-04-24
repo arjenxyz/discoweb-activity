@@ -264,26 +264,26 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
   const [serverBanForm, setServerBanForm] = useState({ guildId: '', reason: '', expiresAt: '' });
 
   const MEMBER_BAN_REASONS = [
-    'Spam veya flood mesajları göndermek',
-    'Troll veya rahatsız edici davranış sergilemek',
-    'Taciz, tehdit veya hakaret etmek',
-    'Sunucu kurallarını ihlal etmek',
-    'Uygunsuz içerik paylaşmak',
     'Bot veya exploit kullanarak hile yapmak',
-    'Hesap güvenliğini ihlal etmek',
-    'Ekonomik dolandırıcılık yapmak',
-    'Diğer üyeleri rahatsız etmek',
+    'Hesap güvenliğini ihlal etmek (çoklu hesap, paylaşım)',
+    'Ekonomik dolandırıcılık yapmak (sahte işlemler, manipülasyon)',
+    'Sistemi kandırmaya yönelik hareketler (bot kullanımı, script)',
+    'Süpheli aktiviteler sergilemek (anormal işlem sıklığı)',
+    'Rate limiting kurallarını ihlal etmek (çok fazla işlem)',
+    'Diğer üyeleri etkilemek (negatif davranış)',
+    'Sunucu kurallarını ihlal etmek',
+    'Aktivite katılım koşullarını karşılamamak',
   ];
 
   const SERVER_BAN_REASONS = [
-    'Bot kötüye kullanımı veya exploit',
+    'Bot kötüye kullanımı veya exploit gerçekleştirmek',
+    'Güvenlik ihlali gerçekleştirmek (veri sızıntısı, hack)',
+    'Yönetim kararına uymamak (uyarılara rağmen devam)',
+    'Ekonomik sistemi manipüle etmek (borsa manipülasyonu)',
+    'Süpheli aktiviteler barındırmak (dolandırıcılık merkezi)',
     'Sunucu kurallarını ciddi şekilde ihlal etmek',
-    'Uygunsuz içerik barındırmak',
-    'Spam veya flood aktivitesi',
-    'Güvenlik ihlali gerçekleştirmek',
-    'Yönetim kararına uymamak',
-    'Ekonomik sistemi manipüle etmek',
-    'Diğer sunucuları etkilemek',
+    'Aktivite katılım koşullarını karşılamamak',
+    'Diğer sunucuları etkilemek (negatif etki)',
   ];
 
   useEffect(() => { fetchSection('overview'); }, []);
