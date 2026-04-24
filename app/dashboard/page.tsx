@@ -608,9 +608,14 @@ export default function DashboardPage() {
           setWalletBalance(prev => Number((prev + data.totalTransferred).toFixed(2)));
         }
         setPendingEarnings({ pending: 0, messageTotal: 0, voiceTotal: 0, count: 0 });
+      } else {
+        const errorData = await res.json().catch(() => ({ error: 'unknown' }));
+        console.error('[claim-earnings] API error:', errorData);
+        // Optionally show user error
       }
     } catch (err) {
       console.error('[claim-earnings] failed:', err);
+      // Optionally show user error
     }
     setClaimLoading(false);
   }, []);

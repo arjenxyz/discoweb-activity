@@ -67,96 +67,97 @@ export async function GET(request: Request) {
 
 /** POST — claim (settle) all pending earnings into wallet */
 export async function POST(request: Request) {
-  const maintenance = await checkMaintenance(['site']);
-  if (maintenance.blocked) {
-    return NextResponse.json({ error: 'maintenance', key: maintenance.key, reason: maintenance.reason }, { status: 503 });
-  }
+  try {
+    const maintenance = await checkMaintenance(['site']);
+    if (maintenance.blocked) {
+      return NextResponse.json({ error: 'maintenance', key: maintenance.key, reason: maintenance.reason }, { status: 503 });
+    }
 
-  const supabase = getSupabase();
-  if (!supabase) return NextResponse.json({ error: 'missing_service_role' }, { status: 500 });
+    const supabase = getSupabase();
+    if (!supabase) return NextResponse.json({ error: 'missing_service_role' }, { status: 500 });
 
-  const userId = await getSessionUserId();
-  if (!userId) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+    const userId = await getSessionUserId();
+    if (!userId) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 
-  const selectedGuildId = await getSelectedGuildId(request);
+    const selectedGuildId = await getSelectedGuildId(request);
 
-  // Find server internal id
-  const { data: server } = await supabase
-    .from('servers')
-    .select('id')
-    .eq('discord_id', selectedGuildId)
-    .eq('is_setup', true)
-    .maybeSingle();
+    // Find server internal id
+    const { data: server } = await supabase
+      .from('servers')
+      .select('id')
+      .eq('discord_id', selectedGuildId)
+      .eq('is_setup', true)
+      .maybeSingle();
 
-  if (!server) return NextResponse.json({ error: 'server_not_found' }, { status: 404 });
+    if (!server) return NextResponse.json({ error: 'server_not_found' }, { status: 404 });
 
-  // Fetch unsettled daily_earnings for this user + guild (bot may use Discord ID or internal ID)
-  const { data: rows } = await supabase
-    .from('daily_earnings')
-    .select('id,amount,source,metadata,created_at')
-    .or(`guild_id.eq.${server.id},guild_id.eq.${selectedGuildId}`)
-    .eq('user_id', userId)
-    .is('settled_at', null)
-    .is('deleted_at', null)
-    .order('created_at', { ascending: true });
+    // Fetch unsettled daily_earnings for this user + guild (bot may use Discord ID or internal ID)
+    const { data: rows } = await supabase
+      .from('daily_earnings')
+      .select('id,amount,source,metadata,created_at')
+      .or(`guild_id.eq.${server.id},guild_id.eq.${selectedGuildId}`)
+      .eq('user_id', userId)
+      .is('settled_at', null)
+      .is('deleted_at', null)
+      .order('created_at', { ascending: true });
 
-  if (!rows || rows.length === 0) {
-    return NextResponse.json({ totalTransferred: 0, count: 0 });
-  }
+    if (!rows || rows.length === 0) {
+      return NextResponse.json({ totalTransferred: 0, count: 0 });
+    }
 
-  // Sum amounts
-  const total = Number(rows.reduce((s: number, r: any) => s + Number(r.amount ?? 0), 0).toFixed(2));
+    // Sum amounts
+    const total = Number(rows.reduce((s: number, r: any) => s + Number(r.amount ?? 0), 0).toFixed(2));
 
-  // Get current balance
-  const { data: wallet } = await supabase
-    .from('member_wallets')
-    .select('balance')
-    .eq('guild_id', server.id)
-    .eq('user_id', userId)
-    .maybeSingle();
+    // Get current balance
+    const { data: wallet } = await supabase
+      .from('member_wallets')
+      .select('balance')
+      .eq('guild_id', server.id)
+      .eq('user_id', userId)
+      .maybeSingle();
 
-  const current = Number(wallet?.balance ?? 0);
-  let running = current;
+    const current = Number(wallet?.balance ?? 0);
+    let running = current;
 
-  // Upsert new balance (final)
-  const finalBalance = Number((current + total).toFixed(2));
-  await (supabase.from('member_wallets') as any).upsert({
-    guild_id: server.id,
-    user_id: userId,
-    balance: finalBalance,
-    updated_at: new Date().toISOString(),
-  }, { onConflict: 'guild_id,user_id' });
-
-  // Insert ledger entries per row (incrementing balance_after)
-  for (const r of rows) {
-    const amt = Number(r.amount ?? 0);
-    running = Number((running + amt).toFixed(2));
-    const type = r.source === 'voice' ? 'earn_voice' : 'earn_message';
-    await (supabase.from('wallet_ledger') as any).insert({
+    // Upsert new balance (final)
+    const finalBalance = Number((current + total).toFixed(2));
+    await (supabase.from('member_wallets') as any).upsert({
       guild_id: server.id,
       user_id: userId,
-      amount: amt,
-      type,
-      balance_after: running,
-      metadata: r.metadata ?? {},
-    });
-  }
+      balance: finalBalance,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'guild_id,user_id' });
 
-  // Mark daily_earnings as settled to avoid re-loading
-  const ids = rows.map((r: any) => r.id);
-  await supabase.from('daily_earnings').update({ settled_at: new Date().toISOString() }).in('id', ids as any[]);
+    // Insert ledger entries per row (incrementing balance_after)
+    for (const r of rows) {
+      const amt = Number(r.amount ?? 0);
+      running = Number((running + amt).toFixed(2));
+      const type = r.source === 'voice' ? 'earn_voice' : 'earn_message';
+      await (supabase.from('wallet_ledger') as any).insert({
+        guild_id: server.id,
+        user_id: userId,
+        amount: amt,
+        type,
+        balance_after: running,
+        metadata: r.metadata ?? {},
+      });
+    }
 
-  // Send claim mail
-  try {
-    const msgTotal = Number(rows.filter((r: any) => r.source === 'message').reduce((s: number, r: any) => s + Number(r.amount ?? 0), 0).toFixed(2));
-    const voiceTotal = Number(rows.filter((r: any) => r.source === 'voice').reduce((s: number, r: any) => s + Number(r.amount ?? 0), 0).toFixed(2));
-    // Use the guild ID that bot writes with (selectedGuildId = Discord guild ID)
-    const mailGuildId = selectedGuildId;
-    await supabase.from('system_mails').insert({
-      guild_id: mailGuildId,
-      user_id: userId,
-      title: 'Kazançlarınız Hesabınıza Tanımlandı',
-      body: `<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #374151; line-height: 1.6; font-size: 14px; max-width: 600px;">
+    // Mark daily_earnings as settled to avoid re-loading
+    const ids = rows.map((r: any) => r.id);
+    await supabase.from('daily_earnings').update({ settled_at: new Date().toISOString() }).in('id', ids as any[]);
+
+    // Send claim mail
+    try {
+      const msgTotal = Number(rows.filter((r: any) => r.source === 'message').reduce((s: number, r: any) => s + Number(r.amount ?? 0), 0).toFixed(2));
+      const voiceTotal = Number(rows.filter((r: any) => r.source === 'voice').reduce((s: number, r: any) => s + Number(r.amount ?? 0), 0).toFixed(2));
+      // Use the guild ID that bot writes with (selectedGuildId = Discord guild ID)
+      const mailGuildId = selectedGuildId;
+      await supabase.from('system_mails').insert({
+        guild_id: mailGuildId,
+        user_id: userId,
+        title: 'Kazançlarınız Hesabınıza Tanımlandı',
+        body: `<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #374151; line-height: 1.6; font-size: 14px; max-width: 600px;">
   <div style="margin-bottom: 24px; border-bottom: 1px solid #e5e7eb; padding-bottom: 16px;">
     <div style="display: flex; align-items: center; gap: 12px;">
       <span style="font-size: 20px;">💰</span>
@@ -179,13 +180,17 @@ export async function POST(request: Request) {
   </div>
   <div style="margin-top: 32px; padding-top: 16px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #9ca3af;">Bu bildirim otomatik sistem protokolleri tarafından oluşturulmuştur.</div>
 </div>`,
-      category: 'system',
-      status: 'published',
-      author_name: 'Sistem',
-    });
-  } catch (mailErr) {
-    console.error('[load-accrued] mail send failed', mailErr);
-  }
+        category: 'system',
+        status: 'published',
+        author_name: 'Sistem',
+      });
+    } catch (mailErr) {
+      console.error('[load-accrued] mail send failed', mailErr);
+    }
 
-  return NextResponse.json({ status: 'ok', totalTransferred: total, count: rows.length });
+    return NextResponse.json({ status: 'ok', totalTransferred: total, count: rows.length });
+  } catch (error) {
+    console.error('[load-accrued] POST error:', error);
+    return NextResponse.json({ error: 'internal_server_error' }, { status: 500 });
+  }
 }
