@@ -1095,5 +1095,18 @@
   "gate_server_banned_title": "Server Is Banned",
   "gate_server_banned_description": "Activity access for this server has been suspended temporarily or permanently under moderation policy.",
   "gate_server_banned_helper": "Server admins can contact support for the ban reason and appeal process. Access remains closed until review is completed.",
-  "dev_nav_bans": "Ban Management"
+  "dev_nav_bans": "Ban Management",
+  "gate_member_temp_banned_title": "Temporarily Banned",
+  "gate_member_temp_banned_description": "Your account is temporarily restricted from Activity access on this server.",
+  "gate_member_temp_banned_helper": "Your access will automatically reopen when the countdown finishes.",
+  "gate_member_perm_banned_title": "Permanently Banned",
+  "gate_member_perm_banned_description": "Your account is permanently restricted from Activity access on this server.",
+  "gate_member_perm_banned_helper": "If you believe this is a mistake, please contact server management for an appeal.",
+  "gate_server_temp_banned_title": "Server Temporarily Banned",
+  "gate_server_temp_banned_description": "Activity access for this server is temporarily suspended.",
+  "gate_server_temp_banned_helper": "Access will automatically reopen when the countdown finishes.",
+  "gate_server_perm_banned_title": "Server Permanently Banned",
+  "gate_server_perm_banned_description": "Activity access for this server is permanently suspended.",
+  "gate_server_perm_banned_helper": "Server admins may contact support to request an appeal review.",
+  "gate_ban_countdown": "Time left: {days}d {hours}h {minutes}m {seconds}s"
 }

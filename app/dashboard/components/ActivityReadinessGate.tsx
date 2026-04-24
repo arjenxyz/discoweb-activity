@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import WelcomeScreen from './WelcomeScreen';
 import VerifyRoleScreen from './VerifyRoleScreen';
 import DmScreen from './DmScreen';
@@ -47,6 +47,10 @@ type GateCopy = {
   title: string;
   description: string;
   helper: string;
+};
+
+type BanDebug = {
+  expiresAt?: string | null;
 };
 
 function getRoleAwareCopy(
@@ -151,7 +155,39 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry, onB
   const [copied, setCopied] = useState(false);
   const [muted, setMuted] = useState(true);
   const [infoOpen, setInfoOpen] = useState(false);
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  const [banRetryTriggered, setBanRetryTriggered] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+
+  const isBanStatus = readiness.status === 'member_banned' || readiness.status === 'server_banned';
+  const banExpiresAt = useMemo(() => {
+    if (!isBanStatus) return null;
+    const debug = (readiness.debug ?? {}) as BanDebug;
+    if (!debug.expiresAt) return null;
+    const ts = Date.parse(debug.expiresAt);
+    if (Number.isNaN(ts)) return null;
+    return ts;
+  }, [isBanStatus, readiness.debug]);
+  const isTemporaryBan = isBanStatus && banExpiresAt !== null;
+  const remainingMs = banExpiresAt ? Math.max(0, banExpiresAt - nowMs) : 0;
+
+  useEffect(() => {
+    if (!isTemporaryBan) return;
+    const timer = window.setInterval(() => setNowMs(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [isTemporaryBan]);
+
+  useEffect(() => {
+    setBanRetryTriggered(false);
+  }, [readiness.status, banExpiresAt]);
+
+  useEffect(() => {
+    if (!isTemporaryBan) return;
+    if (remainingMs > 0) return;
+    if (banRetryTriggered) return;
+    setBanRetryTriggered(true);
+    onRetry();
+  }, [banRetryTriggered, isTemporaryBan, onRetry, remainingMs]);
 
   const toggleMute = () => {
     const v = videoRef.current;
@@ -186,12 +222,21 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry, onB
     }
   };
 
-  const copy = getRoleAwareCopy(
+  let copy = getRoleAwareCopy(
     readiness.status,
     COPY_BY_STATUS[readiness.status],
     t,
     readiness.isAdmin,
   );
+  if (readiness.status === 'member_banned') {
+    copy = isTemporaryBan
+      ? { title: t('gate_member_temp_banned_title'), description: t('gate_member_temp_banned_description'), helper: t('gate_member_temp_banned_helper') }
+      : { title: t('gate_member_perm_banned_title'), description: t('gate_member_perm_banned_description'), helper: t('gate_member_perm_banned_helper') };
+  } else if (readiness.status === 'server_banned') {
+    copy = isTemporaryBan
+      ? { title: t('gate_server_temp_banned_title'), description: t('gate_server_temp_banned_description'), helper: t('gate_server_temp_banned_helper') }
+      : { title: t('gate_server_perm_banned_title'), description: t('gate_server_perm_banned_description'), helper: t('gate_server_perm_banned_helper') };
+  }
   const isBotMissing = readiness.status === 'bot_not_in_guild';
   const isAdmin = readiness.isAdmin && readiness.canInviteBot;
 
@@ -240,6 +285,16 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry, onB
       window.open(url, '_blank');
     }
   };
+
+  let countdownText: string | null = null;
+  if (isTemporaryBan) {
+    const totalSeconds = Math.floor(remainingMs / 1000);
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    countdownText = t('gate_ban_countdown', { days, hours, minutes, seconds });
+  }
 
 
   return (
@@ -298,6 +353,11 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry, onB
             <p className="text-xs text-white/45 leading-relaxed max-w-sm" style={{ textShadow: '0 1px 6px rgba(0,0,0,1)' }}>
               {copy.helper}
             </p>
+            {countdownText && (
+              <p className="text-xs font-semibold text-amber-300/90 leading-relaxed max-w-sm" style={{ textShadow: '0 1px 6px rgba(0,0,0,1)' }}>
+                {countdownText}
+              </p>
+            )}
           </div>
 
           {copied && <p className="text-xs font-semibold text-emerald-400">{t('gate_copied')}</p>}

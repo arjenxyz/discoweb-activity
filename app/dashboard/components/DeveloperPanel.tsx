@@ -258,6 +258,8 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
   const [banSearch, setBanSearch] = useState('');
   const [banSubmitting, setBanSubmitting] = useState(false);
   const [banLiftingId, setBanLiftingId] = useState<string | null>(null);
+  const [memberBanMode, setMemberBanMode] = useState<'temporary' | 'permanent'>('permanent');
+  const [serverBanMode, setServerBanMode] = useState<'temporary' | 'permanent'>('permanent');
   const [memberBanForm, setMemberBanForm] = useState({ userId: '', guildId: '', reason: '', expiresAt: '' });
   const [serverBanForm, setServerBanForm] = useState({ guildId: '', reason: '', expiresAt: '' });
 
@@ -546,6 +548,10 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
 
   const createMemberBan = async () => {
     if (!memberBanForm.userId.trim()) return;
+    if (memberBanMode === 'temporary' && !memberBanForm.expiresAt) {
+      setError('Geçici üye banı için bitiş tarihi zorunludur.');
+      return;
+    }
     setBanSubmitting(true);
     setError(null);
     try {
@@ -558,7 +564,8 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
           userId: memberBanForm.userId.trim(),
           guildId: memberBanForm.guildId.trim() || undefined,
           reason: memberBanForm.reason.trim() || undefined,
-          expiresAt: toIsoOrNull(memberBanForm.expiresAt),
+          expiresAt: memberBanMode === 'temporary' ? toIsoOrNull(memberBanForm.expiresAt) : null,
+          metadata: { ban_mode: memberBanMode },
         }),
       });
       const data = await res.json() as { error?: string };
@@ -574,6 +581,10 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
 
   const createServerBan = async () => {
     if (!serverBanForm.guildId.trim()) return;
+    if (serverBanMode === 'temporary' && !serverBanForm.expiresAt) {
+      setError('Geçici sunucu banı için bitiş tarihi zorunludur.');
+      return;
+    }
     setBanSubmitting(true);
     setError(null);
     try {
@@ -585,7 +596,8 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
           type: 'server',
           guildId: serverBanForm.guildId.trim(),
           reason: serverBanForm.reason.trim() || undefined,
-          expiresAt: toIsoOrNull(serverBanForm.expiresAt),
+          expiresAt: serverBanMode === 'temporary' ? toIsoOrNull(serverBanForm.expiresAt) : null,
+          metadata: { ban_mode: serverBanMode },
         }),
       });
       const data = await res.json() as { error?: string };
@@ -1321,6 +1333,22 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
       {banScope === 'member' ? (
         <div className="rounded-2xl border border-sky-500/20 bg-sky-500/5 p-4">
           <p className="text-xs font-semibold uppercase tracking-wider text-sky-300/90">Yeni Üye Banı</p>
+          <div className="mt-2 flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setMemberBanMode('permanent')}
+              className={`rounded-full border px-3 py-1 text-[11px] font-medium transition ${memberBanMode === 'permanent' ? 'border-rose-400/40 bg-rose-500/15 text-rose-300' : 'border-white/10 text-white/40 hover:text-white/70'}`}
+            >
+              Kalıcı
+            </button>
+            <button
+              type="button"
+              onClick={() => setMemberBanMode('temporary')}
+              className={`rounded-full border px-3 py-1 text-[11px] font-medium transition ${memberBanMode === 'temporary' ? 'border-amber-400/40 bg-amber-500/15 text-amber-300' : 'border-white/10 text-white/40 hover:text-white/70'}`}
+            >
+              Geçici
+            </button>
+          </div>
           <div className="mt-3 grid gap-2 md:grid-cols-2">
             <input
               value={memberBanForm.userId}
@@ -1334,12 +1362,18 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
               placeholder="guild_id (opsiyonel, boşsa global)"
               className="rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-xs text-white placeholder-white/25 outline-none focus:border-sky-400/40"
             />
-            <input
-              type="datetime-local"
-              value={memberBanForm.expiresAt}
-              onChange={(e) => setMemberBanForm((p) => ({ ...p, expiresAt: e.target.value }))}
-              className="rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-xs text-white outline-none focus:border-sky-400/40"
-            />
+            {memberBanMode === 'temporary' ? (
+              <input
+                type="datetime-local"
+                value={memberBanForm.expiresAt}
+                onChange={(e) => setMemberBanForm((p) => ({ ...p, expiresAt: e.target.value }))}
+                className="rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-xs text-white outline-none focus:border-sky-400/40"
+              />
+            ) : (
+              <div className="rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-xs text-white/45">
+                Kalıcı ban için bitiş tarihi gerekmez.
+              </div>
+            )}
             <button
               type="button"
               onClick={createMemberBan}
@@ -1360,6 +1394,22 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
       ) : (
         <div className="rounded-2xl border border-violet-500/20 bg-violet-500/5 p-4">
           <p className="text-xs font-semibold uppercase tracking-wider text-violet-300/90">Yeni Sunucu Banı</p>
+          <div className="mt-2 flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setServerBanMode('permanent')}
+              className={`rounded-full border px-3 py-1 text-[11px] font-medium transition ${serverBanMode === 'permanent' ? 'border-rose-400/40 bg-rose-500/15 text-rose-300' : 'border-white/10 text-white/40 hover:text-white/70'}`}
+            >
+              Kalıcı
+            </button>
+            <button
+              type="button"
+              onClick={() => setServerBanMode('temporary')}
+              className={`rounded-full border px-3 py-1 text-[11px] font-medium transition ${serverBanMode === 'temporary' ? 'border-amber-400/40 bg-amber-500/15 text-amber-300' : 'border-white/10 text-white/40 hover:text-white/70'}`}
+            >
+              Geçici
+            </button>
+          </div>
           <div className="mt-3 grid gap-2 md:grid-cols-2">
             <input
               value={serverBanForm.guildId}
@@ -1367,12 +1417,18 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
               placeholder="guild_id (zorunlu)"
               className="rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-xs text-white placeholder-white/25 outline-none focus:border-violet-400/40"
             />
-            <input
-              type="datetime-local"
-              value={serverBanForm.expiresAt}
-              onChange={(e) => setServerBanForm((p) => ({ ...p, expiresAt: e.target.value }))}
-              className="rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-xs text-white outline-none focus:border-violet-400/40"
-            />
+            {serverBanMode === 'temporary' ? (
+              <input
+                type="datetime-local"
+                value={serverBanForm.expiresAt}
+                onChange={(e) => setServerBanForm((p) => ({ ...p, expiresAt: e.target.value }))}
+                className="rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-xs text-white outline-none focus:border-violet-400/40"
+              />
+            ) : (
+              <div className="rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-xs text-white/45">
+                Kalıcı ban için bitiş tarihi gerekmez.
+              </div>
+            )}
           </div>
           <textarea
             value={serverBanForm.reason}
@@ -1396,6 +1452,7 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
         {(banScope === 'member' ? visibleMemberBans : visibleServerBans).map((ban) => {
           const expired = Boolean(ban.expires_at && new Date(ban.expires_at).getTime() <= Date.now());
           const active = ban.is_active && !expired;
+          const temporary = Boolean(ban.expires_at);
           const badge = active
             ? 'border-red-400/30 bg-red-500/10 text-red-300'
             : expired
@@ -1407,6 +1464,9 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
                 <div className="flex flex-wrap items-center gap-2">
                   <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase ${badge}`}>
                     {active ? 'Aktif' : expired ? 'Süresi Dolmuş' : 'Kaldırıldı'}
+                  </span>
+                  <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase ${temporary ? 'border-amber-400/30 bg-amber-500/10 text-amber-300' : 'border-rose-400/30 bg-rose-500/10 text-rose-300'}`}>
+                    {temporary ? 'Geçici' : 'Kalıcı'}
                   </span>
                   {'user_id' in ban ? (
                     <span className="text-[11px] text-sky-300">user: {ban.user_id}</span>
