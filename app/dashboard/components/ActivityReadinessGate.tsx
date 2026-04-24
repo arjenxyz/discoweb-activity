@@ -259,16 +259,10 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry, onB
     copy = isTemporaryBan
       ? { title: t('gate_member_temp_banned_title'), description: t('gate_member_temp_banned_description'), helper: t('gate_member_temp_banned_helper') }
       : { title: t('gate_member_perm_banned_title'), description: t('gate_member_perm_banned_description'), helper: t('gate_member_perm_banned_helper') };
-    if (banReason) {
-      copy.description = `${copy.description}\n\n**Ban Nedeni:** ${banReason}`;
-    }
   } else if (readiness.status === 'server_banned') {
     copy = isTemporaryBan
       ? { title: t('gate_server_temp_banned_title'), description: t('gate_server_temp_banned_description'), helper: t('gate_server_temp_banned_helper') }
       : { title: t('gate_server_perm_banned_title'), description: t('gate_server_perm_banned_description'), helper: t('gate_server_perm_banned_helper') };
-    if (banReason) {
-      copy.description = `${copy.description}\n\n**Ban Nedeni:** ${banReason}`;
-    }
   }
   const isBotMissing = readiness.status === 'bot_not_in_guild';
   const isAdmin = readiness.isAdmin && readiness.canInviteBot;
@@ -430,11 +424,16 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry, onB
               </button>
             )}
 
-            {banDetailsOpen && banReason && BAN_REASON_DETAILS[banReason] && (
+            {banDetailsOpen && banReason && (
               <div className="mt-4 rounded-lg border border-white/20 bg-black/40 p-4 backdrop-blur-md">
-                <p className="text-sm text-white/80 leading-relaxed">
-                  {BAN_REASON_DETAILS[banReason]}
+                <p className="text-sm font-semibold text-white mb-2">
+                  Reason: {banReason}
                 </p>
+                {BAN_REASON_DETAILS[banReason] && (
+                  <p className="text-sm text-white/80 leading-relaxed">
+                    {BAN_REASON_DETAILS[banReason]}
+                  </p>
+                )}
               </div>
             )}
           </div>
