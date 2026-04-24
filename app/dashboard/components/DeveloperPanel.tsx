@@ -264,22 +264,26 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
   const [serverBanForm, setServerBanForm] = useState({ guildId: '', reason: '', expiresAt: '' });
 
   const MEMBER_BAN_REASONS = [
-    'Spam mesajları',
-    'Troll davranışı',
-    'Taciz',
-    'Kuralları ihlal',
-    'Uygunsuz içerik',
-    'Bot kullanımı',
-    'Hesap güvenliği ihlali',
+    'Spam veya flood mesajları göndermek',
+    'Troll veya rahatsız edici davranış sergilemek',
+    'Taciz, tehdit veya hakaret etmek',
+    'Sunucu kurallarını ihlal etmek',
+    'Uygunsuz içerik paylaşmak',
+    'Bot veya exploit kullanarak hile yapmak',
+    'Hesap güvenliğini ihlal etmek',
+    'Ekonomik dolandırıcılık yapmak',
+    'Diğer üyeleri rahatsız etmek',
   ];
 
   const SERVER_BAN_REASONS = [
-    'Bot kötüye kullanımı',
-    'Sunucu kuralları ihlali',
-    'Uygunsuz içerik',
-    'Spam',
-    'Güvenlik ihlali',
-    'Yönetim kararı',
+    'Bot kötüye kullanımı veya exploit',
+    'Sunucu kurallarını ciddi şekilde ihlal etmek',
+    'Uygunsuz içerik barındırmak',
+    'Spam veya flood aktivitesi',
+    'Güvenlik ihlali gerçekleştirmek',
+    'Yönetim kararına uymamak',
+    'Ekonomik sistemi manipüle etmek',
+    'Diğer sunucuları etkilemek',
   ];
 
   useEffect(() => { fetchSection('overview'); }, []);
