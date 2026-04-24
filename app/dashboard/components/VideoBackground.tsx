@@ -1,6 +1,6 @@
 import type { RefObject } from 'react';
 
-const DEFAULT_VIDEO_URL = '/cdn/Storage/Thragg.mp4';
+const DEFAULT_VIDEO_URL = '/cdn/Storage/test.mp4';
 
 type VideoBackgroundProps = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
