@@ -52,6 +52,27 @@ type GateCopy = {
 
 type BanDebug = {
   expiresAt?: string | null;
+  reason?: string | null;
+};
+
+const BAN_REASON_DETAILS: Record<string, string> = {
+  'Bot veya exploit kullanarak hile yapmak': 'Aktivite sisteminde bot programları, exploit yazılımları veya diğer otomatik araçlar kullanarak hile yapmak, oyun dengesini bozmak ve diğer üyelerin adil oyun deneyimini etkilemek yasaklanmıştır. Bu tür davranışlar, aktivitenin ekonomik sistemini manipüle eder ve tüm topluluğa zarar verir.',
+  'Hesap güvenliğini ihlal etmek (çoklu hesap, paylaşım)': 'Birden fazla hesap kullanarak sistemi kandırmak, hesap paylaşımı yapmak veya hesap güvenliğini ihlal etmek kesinlikle yasaktır. Bu davranış, aktivitenin güvenliğini tehlikeye atar ve diğer üyelerin güvenini sarsar.',
+  'Ekonomik dolandırıcılık yapmak (sahte işlemler, manipülasyon)': 'Aktivite içindeki ekonomik sistemi manipüle etmek, sahte işlemler yapmak, borsa fiyatlarını yapay olarak etkilemek veya diğer üyeleri ekonomik olarak dolandırmak yasaklanmıştır. Bu tür davranışlar, aktivitenin ekonomik dengesini bozar.',
+  'Sistemi kandırmaya yönelik hareketler (bot kullanımı, script)': 'Aktivite sistemini kandırmak için botlar, scriptler veya diğer otomatik araçlar kullanmak yasaktır. Bu davranışlar, sistemin güvenliğini ve adilliğini tehlikeye atar.',
+  'Süpheli aktiviteler sergilemek (anormal işlem sıklığı)': 'Normalden çok daha yüksek sıklıkta işlemler yapmak, sistem kaynaklarını gereksiz yere tüketmek veya şüpheli davranışlar sergilemek yasaklanmıştır. Bu tür aktiviteler, sistem performansını düşürür ve diğer üyeleri etkiler.',
+  'Rate limiting kurallarını ihlal etmek (çok fazla işlem)': 'Aktivite tarafından belirlenen işlem sınırlarını aşmak veya rate limiting kurallarını ihlal etmek yasaktır. Bu davranışlar, sistemin stabil çalışmasını engeller.',
+  'Diğer üyeleri etkilemek (negatif davranış)': 'Diğer üyeleri rahatsız etmek, tehdit etmek, taciz etmek veya negatif davranışlar sergilemek yasaklanmıştır. Aktivite, tüm üyelerin olumlu bir deneyim yaşamasını sağlar.',
+  'Sunucu kurallarını ihlal etmek': 'Discord sunucusu kurallarını ihlal etmek, aktivite katılım koşullarını karşılamamak veya genel topluluk standartlarına uymamak yasaktır.',
+  'Aktivite katılım koşullarını karşılamamak': 'Aktiviteye katılmak için gerekli koşulları karşılamamak, gerekli rollere sahip olmamak veya katılım şartlarını ihlal etmek yasaktır.',
+  'Bot kötüye kullanımı veya exploit gerçekleştirmek': 'Sunucu botlarını kötüye kullanmak, exploit yazılımları çalıştırmak veya sistem açıklarından faydalanmak yasaklanmıştır.',
+  'Güvenlik ihlali gerçekleştirmek (veri sızıntısı, hack)': 'Sunucu güvenliğini ihlal etmek, veri sızdırmak, hack yapmak veya güvenlik açıklarından faydalanmak kesinlikle yasaktır.',
+  'Yönetim kararına uymamak (uyarılara rağmen devam)': 'Yönetim tarafından verilen uyarılara rağmen yasaklanmış davranışlara devam etmek veya yönetim kararlarına uymamak yasaktır.',
+  'Ekonomik sistemi manipüle etmek (borsa manipülasyonu)': 'Aktivitenin ekonomik sistemini manipüle etmek, borsa fiyatlarını yapay olarak etkilemek veya ekonomik dengesizlik yaratmak yasaklanmıştır.',
+  'Süpheli aktiviteler barındırmak (dolandırıcılık merkezi)': 'Sunucuda dolandırıcılık, hile veya diğer yasaklanmış aktiviteleri barındırmak veya teşvik etmek yasaktır.',
+  'Sunucu kurallarını ciddi şekilde ihlal etmek': 'Discord sunucusu kurallarını ciddi şekilde ihlal etmek, topluluk standartlarını aşmak veya ciddi disiplin ihlalleri yapmak yasaktır.',
+  'Aktivite katılım koşullarını karşılamamak': 'Aktivite katılım şartlarını karşılamamak, gerekli koşulları sağlamamak veya katılım kurallarını ihlal etmek yasaktır.',
+  'Diğer sunucuları etkilemek (negatif etki)': 'Diğer sunucuları olumsuz etkilemek, zarar vermek veya topluluklar arası sorunlar yaratmak yasaklanmıştır.',
 };
 
 function getRoleAwareCopy(
@@ -158,6 +179,7 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry, onB
   const [infoOpen, setInfoOpen] = useState(false);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [banRetryTriggered, setBanRetryTriggered] = useState(false);
+  const [banDetailsOpen, setBanDetailsOpen] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const isBanStatus = readiness.status === 'member_banned' || readiness.status === 'server_banned';
@@ -168,6 +190,11 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry, onB
     const ts = Date.parse(debug.expiresAt);
     if (Number.isNaN(ts)) return null;
     return ts;
+  }, [isBanStatus, readiness.debug]);
+  const banReason = useMemo(() => {
+    if (!isBanStatus) return null;
+    const debug = (readiness.debug ?? {}) as BanDebug;
+    return debug.reason ?? null;
   }, [isBanStatus, readiness.debug]);
   const isTemporaryBan = isBanStatus && banExpiresAt !== null;
   const remainingMs = banExpiresAt ? Math.max(0, banExpiresAt - nowMs) : 0;
@@ -233,10 +260,16 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry, onB
     copy = isTemporaryBan
       ? { title: t('gate_member_temp_banned_title'), description: t('gate_member_temp_banned_description'), helper: t('gate_member_temp_banned_helper') }
       : { title: t('gate_member_perm_banned_title'), description: t('gate_member_perm_banned_description'), helper: t('gate_member_perm_banned_helper') };
+    if (banReason) {
+      copy.description = `${copy.description}\n\n**Ban Nedeni:** ${banReason}`;
+    }
   } else if (readiness.status === 'server_banned') {
     copy = isTemporaryBan
       ? { title: t('gate_server_temp_banned_title'), description: t('gate_server_temp_banned_description'), helper: t('gate_server_temp_banned_helper') }
       : { title: t('gate_server_perm_banned_title'), description: t('gate_server_perm_banned_description'), helper: t('gate_server_perm_banned_helper') };
+    if (banReason) {
+      copy.description = `${copy.description}\n\n**Ban Nedeni:** ${banReason}`;
+    }
   }
   const isBotMissing = readiness.status === 'bot_not_in_guild';
   const isAdmin = readiness.isAdmin && readiness.canInviteBot;
@@ -386,6 +419,24 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry, onB
               <p className="text-xs font-semibold text-amber-300/90 leading-relaxed max-w-sm" style={{ textShadow: '0 1px 6px rgba(0,0,0,1)' }}>
                 {countdownText}
               </p>
+            )}
+
+            {isBanStatus && banReason && (
+              <button
+                type="button"
+                onClick={() => setBanDetailsOpen((v) => !v)}
+                className="rounded-full border border-blue-400/30 bg-blue-500/20 px-6 py-2 text-sm font-semibold text-blue-100 backdrop-blur-md transition hover:bg-blue-500/30"
+              >
+                {banDetailsOpen ? 'Detayları Gizle' : 'Daha Fazla Detay'}
+              </button>
+            )}
+
+            {banDetailsOpen && banReason && BAN_REASON_DETAILS[banReason] && (
+              <div className="mt-4 rounded-lg border border-white/20 bg-black/40 p-4 backdrop-blur-md">
+                <p className="text-sm text-white/80 leading-relaxed">
+                  {BAN_REASON_DETAILS[banReason]}
+                </p>
+              </div>
             )}
           </div>
 
