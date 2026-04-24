@@ -43,7 +43,6 @@
   "dashboard_leaderboard_load_more": "Show more",
   "dashboard_leaderboard_no_data": "No ranking data found.",
   "dashboard_leaderboard_unknown": "Unknown",
-
   "overview_stat_message_label": "Messages",
   "overview_stat_message_sub": "total messages",
   "overview_stat_voice_label": "Voice",
@@ -80,7 +79,6 @@
   "splash_maintenance_title": "Under Maintenance",
   "splash_terms": "Terms of Service",
   "splash_privacy": "Privacy Policy",
-
   "nav_group_discover": "Discover",
   "nav_group_borsa": "Exchange",
   "nav_group_account": "Account",
@@ -99,12 +97,10 @@
   "nav_economy_apply": "Advanced Economy",
   "nav_messages": "Messages",
   "nav_server": "Server",
-
   "greeting_morning": "Good morning",
   "greeting_afternoon": "Good afternoon",
   "greeting_evening": "Good evening",
   "greeting_night": "Good night",
-
   "overview_title": "Overview",
   "overview_subtitle": "Your activities on the server",
   "overview_live": "Live",
@@ -112,11 +108,9 @@
   "overview_badge_tag": "Tag",
   "overview_badge_booster": "Booster",
   "overview_since_verified": "Since Verified",
-
   "pending_earnings_title": "Pending Earnings",
   "pending_earnings_claim": "Claim Earnings",
   "pending_earnings_auto_note": "Unclaimed earnings are automatically transferred to your account every night at 00:00.",
-
   "discover_title": "Community",
   "discover_subtitle": "Discover featured servers",
   "discover_featured_badge": "Featured",
@@ -125,7 +119,6 @@
   "discover_online_count": "{count} online",
   "discover_empty_title": "No featured servers right now",
   "discover_empty_subtitle": "Servers will be added here soon",
-
   "raffles_title": "Raffles",
   "raffles_subtitle": "Events you can participate in",
   "raffles_active_count": "{count} active raffles",
@@ -149,7 +142,6 @@
   "raffles_role_label": "Role Prize",
   "raffles_surprise_label": "Surprise Prize",
   "raffles_default_desc": "Participate in this raffle to win a prize",
-
   "tracking_section_title": "Store Tracking",
   "tracking_section_label": "Active Purchases",
   "tracking_section_subtitle": "Your roles and their durations",
@@ -169,7 +161,6 @@
   "tracking_total_label": "Total",
   "tracking_live_update": "Live update",
   "tracking_tips_title": "Info",
-
   "transactions_section_title": "Transactions",
   "transactions_section_subtitle": "Your past purchases",
   "transactions_empty": "No transactions yet",
@@ -190,7 +181,6 @@
   "transactions_order_custom": "Custom Order",
   "transactions_order_failure_prefix": "Error:",
   "transactions_order_refund_button": "Request Refund",
-
   "transfer_success": "Transfer completed successfully",
   "transfer_error_generic": "Transfer failed",
   "transfer_error_insufficient": "Insufficient balance",
@@ -202,17 +192,14 @@
   "transfer_error_daily_limit": "Daily limit exceeded",
   "transfer_error_maintenance": "Transfer is under maintenance",
   "transfer_error_unauthorized": "Unauthorized transaction",
-
   "leaderboard_fetch_error": "Could not load leaderboard",
   "leaderboard_fetch_error_retry": "Try again",
-
   "header_convert_to_mari": "Convert to Mari",
   "market_apply_starting": "Starting application...",
   "treasury_collected": "Collected",
   "treasury_burned": "Burned",
   "treasury_dividends": "Dividends",
   "treasury_papel_unit": "Papel",
-
   "settings_section_title": "Settings",
   "settings_section_description": "Manage server settings",
   "settings_code_management_title": "Code Management",
@@ -232,7 +219,6 @@
   "settings_error_invalid_amount": "Invalid amount",
   "settings_error_invalid_package": "Invalid package",
   "settings_error_invalid_price": "Invalid price",
-
   "referral_your_code_label": "Your Referral Code",
   "referral_copy_button": "Copy",
   "referral_copied": "Copied!",
@@ -277,7 +263,6 @@
   "referral_error_increment_failed": "Update failed",
   "referral_error_invalid_amount": "Invalid amount",
   "referral_error_update_failed": "Update failed",
-
   "developer_panel_title": "Developer Panel",
   "developer_panel_error_prefix": "Error:",
   "developer_panel_maintenance_inactive": "Maintenance mode is off",
@@ -318,7 +303,6 @@
   "developer_page_title": "Developer Panel",
   "developer_page_not_authorized": "You don't have access to this page.",
   "developer_page_back": "Go Back",
-
   "coupon_applied_success": "Coupon successfully applied",
   "server_unknown": "Unknown Server",
   "profile_no_roles": "No roles",
@@ -329,7 +313,6 @@
   "ref": "Reference",
   "section": "Section",
   "textarea": "Text Area",
-
   "economy_apply_title": "Advanced Economy → Higher Economy",
   "economy_apply_subtitle": "Activate advanced economy features for your server",
   "economy_apply_feat_mari_title": "Mari Currency",
@@ -373,7 +356,6 @@
   "economy_apply_ack_label": "I have read and accept these warnings.",
   "economy_apply_next": "Continue",
   "economy_apply_back": "Go Back",
-
   "gate_ready_title": "Ready",
   "gate_ready_description": "You are ready to use the Activity",
   "gate_ready_helper": "Everything is working",
@@ -424,7 +406,6 @@
   "gate_support_message_generic": "Hello, I'm getting a \"{status}\" error when opening Activity for \"{serverName}\". Can you check it?",
   "gate_default_server_name": "this server",
   "gate_bot_invite_link_prefix": "Bot invite link: ",
-
   "borsa_back_button": "All Listings",
   "borsa_listing_not_found": "Listing not found.",
   "borda_today_label": "today",
@@ -467,7 +448,6 @@
   "borsa_success_bought": "Bought",
   "borsa_success_sold": "Sold",
   "borsa_success_trade_details": "{action} {lotCount} lots @{price} MRI",
-
   "borsa_section_title": "Exchange",
   "borsa_section_subtitle": "Buy and sell server lots with Mari",
   "borsa_list_my_server": "List My Server",
@@ -475,7 +455,6 @@
   "borsa_no_servers_found": "No listed servers found.",
   "borsa_mri_per_lot": "MRI/lot",
   "borsa_sold": "sold",
-
   "cart_title": "Cart",
   "cart_item_count": "{itemCount} qty • {productCount} items",
   "cart_empty": "Your cart is empty. Add items from the store.",
@@ -491,7 +470,6 @@
   "cart_checking_out": "Paying...",
   "cart_clear_aria": "Clear cart",
   "cart_close_aria": "Close",
-
   "developer_close_aria": "Close",
   "developer_title": "Developer & Designer",
   "developer_description": "DiscoWeb's sole developer. Working on full-stack web and Discord applications.",
@@ -501,7 +479,6 @@
   "developer_thanks_users": "For feedback and support",
   "developer_copyright": "© {year} DiscoWeb · All rights reserved",
   "developer_version": "v1.0",
-
   "dev_nav_overview": "Overview",
   "dev_nav_logs": "Logs",
   "dev_nav_suspicious": "Suspicious",
@@ -543,7 +520,6 @@
   "dev_invite_validity": "Valid until:",
   "dev_copy_button": "Copy",
   "dev_panel_title": "Dev Panel",
-
   "dev_log_type_all": "all",
   "dev_log_type_auth_login": "auth_login",
   "dev_log_type_auth_logout": "auth_logout",
@@ -553,19 +529,16 @@
   "dev_log_type_suggestion": "suggestion",
   "dev_log_type_error_log": "error_log",
   "dev_log_type_client_error": "client_error",
-
   "dev_report_user_label": "User:",
   "dev_report_server_label": "Server:",
   "dev_report_dev_note_title": "Developer Note",
   "dev_report_note_placeholder": "Add developer note...",
-
   "dev_suspicious_server_label": "Server:",
   "dev_suspicious_user_label": "User:",
   "dev_suspicious_reviewed": "Reviewed",
   "dev_suspicious_actioned": "Actioned",
   "dev_suspicious_dismissed": "Dismissed",
   "dev_suspicious_empty": "No suspicious activity recorded. Use the \"Scan Now\" button to start a scan.",
-
   "dev_report_status_reviewing": "🔍 Reviewing",
   "dev_report_status_need_info": "💬 Info Needed",
   "dev_report_status_critical": "⚠️ Critical",
@@ -577,7 +550,6 @@
   "dev_report_status_duplicate": "🔁 Known Issue",
   "dev_report_status_invalid": "🚫 Invalid",
   "dev_report_status_closed": "🔒 Closed",
-
   "dev_ads_empty": "No reports for this filter.",
   "dev_ads_invite_placeholder": "discord.gg/... invite link",
   "dev_ads_fetch_button": "Fetch",
@@ -590,7 +562,6 @@
   "dev_ads_status_active": "Displaying",
   "dev_ads_status_hidden": "Hidden",
   "dev_ads_delete": "Delete",
-
   "dividend_title": "Dividends",
   "dividend_subtitle": "Weekly Mari payouts for lot holders",
   "dividend_no_server": "Select a server from the Exchange to view dividends.",
@@ -604,7 +575,6 @@
   "dividend_no_payments": "No dividend payments yet.",
   "dividend_week_of": "Week of",
   "dividend_lots_suffix": "lots",
-
   "earnings_refresh_title": "Refresh",
   "earnings_booster_active": "Booster",
   "earnings_booster_inactive": "Boost: None",
@@ -618,7 +588,6 @@
   "earnings_rate_tag": "tag",
   "earnings_rate_boost": "boost",
   "earnings_rate_currency": "papel",
-
   "ipo_title": "Exchange Listing (IPO)",
   "ipo_subtitle": "List your server on the DiscoWeb exchange",
   "ipo_already_listed": "Already Listed",
@@ -667,7 +636,6 @@
   "ipo_info_4": "Weekly dividends paid every Monday to all lot holders",
   "ipo_info_5": "Treasury auto-buys if price drops 15% below day-1 price for 3+ days",
   "ipo_info_6": "Server delisted if price stays below 50% IPO price for 5+ days",
-
   "ipo_section_back": "Back",
   "ipo_section_back_to_exchange": "Back to Exchange",
   "ipo_section_data_not_found": "IPO data not found.",
@@ -704,11 +672,9 @@
   "ipo_section_error_purchase": "Purchase failed.",
   "ipo_section_success_bought": "Bought {count} lots @ {price} MRI",
   "ipo_section_vesting_schedule": "Day {day} — {percentage}% ({lots} lots)",
-
   "mail_messages_label": "Messages",
   "mail_unread_label": "Unread",
   "mail_messages_deleted": "{count} messages deleted",
-
   "market_news_title": "Market News",
   "market_news_time_ago_seconds": "{seconds}s ago",
   "market_news_time_ago_minutes": "{minutes}min ago",
@@ -719,7 +685,6 @@
   "market_news_empty_title": "No news yet.",
   "market_news_empty_subtitle": "It will appear here when the first major trade happens.",
   "market_news_load_more": "Load more ({count} remaining)",
-
   "market_error_insufficient_balance": "Insufficient Mari balance. Available: {available} MRI",
   "market_error_insufficient_lots": "Not enough lots.",
   "market_error_own_server": "You cannot invest in your own server.",
@@ -728,7 +693,6 @@
   "market_error_not_listed": "This server is not listed.",
   "market_error_order_failed": "Order could not be placed.",
   "market_error_generic": "An error occurred.",
-
   "market_convert_error_insufficient_papel": "Insufficient Papel balance.",
   "market_convert_error_server_limit": "You cannot convert more from this server today. (Limit: {limit} MRI)",
   "market_convert_error_global_limit": "You have reached your daily global limit. (Limit: {limit} MRI)",
@@ -736,7 +700,6 @@
   "market_convert_error_economy_not_approved": "This server has not yet joined advanced economy.",
   "market_convert_error_failed": "Conversion failed.",
   "market_convert_error_generic": "An error occurred.",
-
   "market_vote_error_already_voted": "You have already voted.",
   "market_vote_error_not_active": "Voting is not active.",
   "market_vote_error_not_enough_members": "500+ members required.",
@@ -748,7 +711,6 @@
   "market_vote_success_recorded": "Your vote was recorded. Total: {vote_count} / {threshold}",
   "market_apply_success": "✅ Application submitted. Developer will review (max 7 days).",
   "market_action_connection_error": "Connection error.",
-
   "market_info_direct_register": "• Your server has <span className=\"text-white/50 font-semibold\">500+ members</span>, you can register directly",
   "market_info_direct_approval": "• Application is approved by the developer <span className=\"text-white/50\">(max 7 days)</span>",
   "market_info_direct_contact": "Contact the server administrator to register.",
@@ -756,14 +718,11 @@
   "market_info_current_members": "• Current members: <span className=\"text-white/50 font-semibold\">{member_count}</span> (500+ required for direct application)",
   "market_info_approval_time": "• Application is approved by the developer <span className=\"text-white/50\">(max 7 days)</span>",
   "market_info_vote_contact": "Contact the server administrator to start a vote.",
-
   "market_convert_max_button": "MAX",
   "market_convert_preview": "You'll receive: ≈ {amount} MRI",
   "market_portfolio_avg_price": "avg {price} P",
   "market_portfolio_pl": "({pl} P)",
-
   "notifications_detail_link": "Detail link",
-
   "portfolio_title": "Portfolio",
   "portfolio_subtitle": "Your server lot positions",
   "portfolio_total_value": "Total Value",
@@ -774,7 +733,6 @@
   "portfolio_lots_info": "{lots} lots · avg {price} MRI",
   "portfolio_daily_sell_used": "Daily sell used: {used}/{limit} lots",
   "portfolio_market_price": "Market: {price} MRI",
-
   "raffles_drawer_title": "My Raffles",
   "raffles_drawer_active_count": "{count} active",
   "raffles_drawer_empty_title": "You haven't joined any yet",
@@ -794,7 +752,6 @@
   "raffles_back_button": "Back",
   "raffles_back_label": "Back",
   "raffles_close_label": "Close",
-
   "raffles_my_raffles_button": "My Raffles",
   "raffles_prize_papel_badge": "{amount} Papel",
   "raffles_prize_role_badge": "Role",
@@ -818,7 +775,6 @@
   "raffles_info_rule3": "• You can only join each raffle once; duplicate entries are prevented.",
   "raffles_info_rule4": "• Raffle results are announced by the admin; winners are notified via Discord and panel notifications.",
   "raffles_info_rule5": "• Even if your tag days are sufficient, you cannot join if the raffle has ended.",
-
   "referral_error_discord_sdk": "Discord SDK connection is not ready.",
   "referral_share_title": "DiscoWeb — Server Panel",
   "referral_share_description": "Server economy, store and exchange management!",
@@ -886,7 +842,6 @@
   "referral_advanced_error": "An error occurred.",
   "referral_share_link_title": "DiscoWeb — Server Panel",
   "referral_share_link_description": "Server economy, store and exchange management!",
-
   "session_expired_title": "Session Expired",
   "session_expired_description": "For your security, the session has expired. Log in again with your Discord account to continue.",
   "session_expired_todo_title": "What will happen",
@@ -896,7 +851,6 @@
   "session_expired_button_loading": "Preparing...",
   "session_expired_button_text": "Log in Again with Discord",
   "session_expired_note": "Sessions are renewed every 3 days for security purposes.",
-
   "verify_role_error_role_assign_failed": "Role assignment failed. The bot may not be active in the server or the role may be above the bot's hierarchy. Check that the bot role is above the verified member role in server settings.",
   "verify_role_error_bot_missing_manage_roles": "The bot does not have the \"Manage Roles\" permission. Grant this permission to the bot in server settings.",
   "verify_role_error_bot_role_hierarchy": "The bot cannot assign a role higher than its own. Move the bot role above the verified member role in Server Settings → Roles.",
@@ -905,12 +859,10 @@
   "verify_role_error_label": "error:",
   "verify_role_success_title": "Door opened!",
   "verify_role_success_description": "Entering the DiscoWeb world...",
-
   "tracking_duration_months": "{count} months",
   "tracking_duration_days": "{count} days",
   "tracking_duration_hours": "{count} hours",
   "tracking_duration_seconds": "{count} sec",
-
   "settings_delete_title": "Delete My DiscoWeb Activity Data",
   "settings_delete_description": "You can completely remove your Activity data from the current server or all servers.",
   "settings_delete_button": "Delete my DiscoWeb activity data",
@@ -923,14 +875,12 @@
   "settings_delete_confirm": "I confirm, delete",
   "settings_delete_deleting": "Deleting...",
   "settings_delete_success": "Data successfully deleted. Redirecting...",
-
   "settings_ipo_submitting": "Submitting...",
   "settings_ipo_founder_label": "founder (51–80%)",
   "settings_ipo_date_label": "Estimated IPO date",
   "settings_ipo_date_hint": "(optional — auto-approved 2 days before)",
   "settings_ipo_price_placeholder": "Starting price (Papel/lot)",
   "settings_ipo_apply_button": "Apply",
-
   "settings_advanced_title": "Advanced Economy",
   "settings_advanced_reviewing": "Under Review",
   "settings_advanced_active": "Active",
@@ -942,7 +892,6 @@
   "settings_advanced_package_hint": "The starting amount that will be loaded into the treasury when approved by the developer.",
   "settings_advanced_submit_button": "Submit Application",
   "settings_advanced_submitting": "Submitting...",
-
   "settings_ipo_listed_title": "Listed on Exchange",
   "settings_ipo_status_active": "Active",
   "settings_ipo_status_suspended": "Suspended",
@@ -950,7 +899,6 @@
   "settings_ipo_pending_title": "IPO Application Under Review",
   "settings_ipo_apply_title": "Apply to Investment Exchange (IPO)",
   "settings_ipo_apply_description": "Open your server to the investment exchange. Investors can buy lots and you can receive dividends from the treasury.",
-
   "splash_tip_earn_papel": "You can earn Papel by sending messages and spending time in voice channels.",
   "splash_tip_market_shares": "You can buy and sell server shares on the DiscoWeb Market and build a portfolio.",
   "splash_tip_mailbox_rewards": "There may be rewards and system notifications waiting for you in your mailbox.",
@@ -961,7 +909,6 @@
   "splash_tip_giveaway_rewards": "You can earn special rewards and extra perks by accumulating badge days.",
   "splash_tip_leaderboard": "You can see the most active members of your server and your ranking from the leaderboard.",
   "splash_thanks_button": "Thanks",
-
   "rules_modal_title": "Platform Rules",
   "rules_modal_subtitle": "You must read the rules before continuing",
   "rules_modal_rule_1": "Abusing the DiscoWeb platform, exploiting bugs or cheating is prohibited.",
@@ -974,9 +921,7 @@
   "rules_modal_privacy": "Privacy Policy",
   "rules_modal_accept_text": "I have read and accept the rules, terms of service and privacy policy above.",
   "rules_modal_accept_button": "Accept and Continue",
-
   "store_product_owned_mobile": "Owned",
-
   "badge_active_label": "Active",
   "badge_days_required": "{days} days required",
   "badge_days_left": "{days} days left",
@@ -1014,10 +959,8 @@
   "badge_total_papel": "{amount} papel across the full path",
   "badge_max_multiplier": "Max ×{multiplier} multiplier",
   "badge_load_error": "Could not load badge info.",
-
   "mail_loading": "Loading...",
   "mail_error_fetch_failed": "Could not retrieve mail information.",
-
   "mail_detail_loading_failed": "Could not load message",
   "mail_detail_not_found": "Message not found",
   "mail_detail_invalid": "Invalid message",
@@ -1027,19 +970,14 @@
   "mail_detail_attachment_alt": "Attachment",
   "mail_detail_more_info": "Click for more info",
   "mail_detail_see_details": "See Details",
-
   "referral_loading": "Loading...",
-
   "server_left_title": "It looks like you've left.",
   "server_left_description": "You need to be an active member of this server to access its store, wallet and all features.",
   "server_left_hint": "If you rejoin the server, you can continue where you left off.",
   "server_left_retry_button": "Try Again",
-
   "cart_coupon_discount_percent": "{percent}% off",
-
   "agreement_decline_aria": "I do not agree",
   "agreement_accept_aria": "I agree and continue",
-
   "error_flood_detected": "Multiple errors detected",
   "error_flood_count": "{count} errors",
   "error_flood_message": "Please refresh the page or contact an administrator.",
@@ -1050,7 +988,6 @@
   "error_details_hide": "Collapse",
   "error_pending_count": "+{count} pending errors",
   "error_resend": "Resend",
-
   "site_name": "DiscoWeb",
   "site_hero_badge": "Beta",
   "site_hero_title": "DiscoWeb",
@@ -1058,20 +995,17 @@
   "site_hero_cta": "Go to Panel",
   "site_bot_name": "DiscoWeb Bot",
   "site_bot_description": "Manage Your Server with Advanced Economy System, Role Management and More.",
-
   "cron_dividend_freeze_active": "Global freeze active — dividends skipped.",
   "cron_dividend_note": "Weekly dividend: {lotCount} lots × {perLotAmount} Papel ({weekId})",
   "cron_dividend_success_log": "✅ Dividends distributed: {totalListings} servers, total {totalPaid} Papel ({weekId})",
   "cron_dividend_started": "🕐 dividendPayout cron started: {timestamp}",
   "cron_dividend_completed": "✅ dividendPayout cron completed.",
-
   "cron_referral_freeze_active": "Global freeze active — referral passive income skipped.",
   "cron_referral_note": "Referral passive income ({weekId}): {rate}% of {referredUserId} spending",
   "cron_referral_success_log": "✅ Referral passive income: {totalPaid} Papel paid, {totalPending} Papel pending ({weekId})",
   "cron_referral_started": "🕐 referralPassiveIncome cron started: {timestamp}",
   "cron_referral_completed": "✅ referralPassiveIncome cron completed.",
   "cron_referral_pending_payment": "Pending referral payment",
-
   "cron_papel_freeze_active": "Global freeze active — updatePapelValue skipped.",
   "cron_papel_update_error": "Papel value update error ({guildId}):",
   "cron_papel_success_log": "✅ Papel value multiplier updated: {serverCount} servers",
@@ -1080,18 +1014,15 @@
   "cron_orders_expired_log": "✅ Expired orders cancelled: {orderCount} orders",
   "cron_papel_started": "🕐 updatePapelValue cron started: {timestamp}",
   "cron_papel_completed": "✅ updatePapelValue cron completed.",
-
   "auth_no_session_cookie": "[auth] No discord_session cookie found. Available cookies:",
   "auth_session_verification_failed": "[auth] discord_session cookie exists but verification failed (expired or invalid signature)",
   "auth_missing_auth_header": "[auth] Missing or invalid Authorization header:",
   "auth_bearer_verification_failed": "[auth] Bearer session token verification failed:",
   "auth_error_unauthorized": "unauthorized",
   "auth_error_invalid_origin": "invalid_origin",
-
   "cart_coupon_empty_code": "Code cannot be empty",
   "cart_coupon_not_found": "Code not found",
   "cart_provider_error": "useCart must be used within CartProvider",
-
   "devlog_treasury_title": "Treasury Deduction",
   "devlog_server": "Server",
   "devlog_spender": "Spender",
@@ -1137,5 +1068,32 @@
   "devlog_confiscated": "Burned",
   "devlog_triggered_by": "Triggered By",
   "devlog_global_freeze_activated": "Global Freeze Activated",
-  "devlog_global_freeze_deactivated": "Global Freeze Deactivated"
+  "devlog_global_freeze_deactivated": "Global Freeze Deactivated",
+  "gate_bot_not_in_guild_description_admin": "We verified that you are an admin. Our bot is not in this server right now.",
+  "gate_bot_not_in_guild_helper_admin": "To continue, please add our bot to your server.",
+  "gate_bot_not_in_guild_description_user": "Our bot is not in this server right now, so we have to stop you here.",
+  "gate_bot_not_in_guild_helper_user": "If this continues, please contact your server admins.",
+  "gate_server_setup_required_description_admin": "Some server setup steps are still incomplete.",
+  "gate_server_setup_required_helper_admin": "We verified your admin access. Please complete setup to continue.",
+  "gate_server_setup_required_description_user": "Server setup is not complete yet, so we cannot continue right now.",
+  "gate_server_setup_required_helper_user": "If this continues, please contact your server admins.",
+  "gate_server_not_registered_description_admin": "This server is not registered in the system yet.",
+  "gate_server_not_registered_helper_admin": "As an admin, you can register this server from the setup site.",
+  "gate_server_not_registered_description_user": "This server is not registered yet, so we cannot continue right now.",
+  "gate_server_not_registered_helper_user": "If this continues, please contact your server admins.",
+  "gate_missing_service_role_description_admin": "The required service role for the bot is not configured.",
+  "gate_missing_service_role_helper_admin": "Please select the service role in setup and try again.",
+  "gate_missing_service_role_description_user": "The required bot role is not configured on this server.",
+  "gate_missing_service_role_helper_user": "Please contact your server admins.",
+  "gate_missing_bot_token_description_admin": "The bot token setting is missing, so connection cannot be established.",
+  "gate_missing_bot_token_helper_admin": "Update the bot token in setup and try again.",
+  "gate_missing_bot_token_description_user": "A bot connection setting appears to be missing on this server.",
+  "gate_missing_bot_token_helper_user": "Please contact your server admins.",
+  "gate_member_banned_title": "You Are Banned",
+  "gate_member_banned_description": "Your account is temporarily or permanently restricted from Activity access on this server.",
+  "gate_member_banned_helper": "Please contact the server management for details. If you believe this is a mistake, you need to submit an appeal to the admins.",
+  "gate_server_banned_title": "Server Is Banned",
+  "gate_server_banned_description": "Activity access for this server has been suspended temporarily or permanently under moderation policy.",
+  "gate_server_banned_helper": "Server admins can contact support for the ban reason and appeal process. Access remains closed until review is completed.",
+  "dev_nav_bans": "Ban Management"
 }

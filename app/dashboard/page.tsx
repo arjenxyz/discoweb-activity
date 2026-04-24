@@ -1075,6 +1075,9 @@ export default function DashboardPage() {
         onRetry={() => {
           void checkActivityReadiness();
         }}
+        onBackToSplash={() => {
+          setSplashDone(false);
+        }}
       />
     );
   }

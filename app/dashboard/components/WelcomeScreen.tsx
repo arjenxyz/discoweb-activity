@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -23,7 +23,6 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
   const [phase, setPhase] = useState<Phase>('intro');
   const [error, setError] = useState<string | null>(null);
   const [errorCode, setErrorCode] = useState<string | null>(null);
-  const [reported, setReported] = useState(false);
   const [muted, setMuted] = useState(true);
   const [isDeveloper, setIsDeveloper] = useState(false);
   const [isDeveloperChecked, setIsDeveloperChecked] = useState(false);
@@ -105,7 +104,7 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
     <div className="relative isolate min-h-screen overflow-hidden bg-[#0b0d12] text-white">
       <VideoBackground videoRef={videoRef} src="/cdn/Storage/Test1.mp4" />
 
-      {/* Ses butonu — masaüstünde sağ üst */}
+      {/* Ses butonu â€” masaÃ¼stÃ¼nde saÄŸ Ã¼st */}
       <div className="hidden sm:flex absolute z-20 top-6 right-6 items-center gap-2">
         {isDeveloper && (
           <button
@@ -151,30 +150,6 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
                   <p className="text-xs font-mono text-red-400">{t('welcome_error_prefix')} <span className="font-bold">{errorCode}</span></p>
                 )}
                 <p className="text-sm text-red-300 leading-relaxed">{error}</p>
-                <button
-                  type="button"
-                  onClick={async () => {
-                    try {
-                      await fetchWithCreds('/api/admin/report-error', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                          status: errorCode ?? 'profile_create_error',
-                          guildId: readiness.guildId,
-                          guildName: readiness.guildName,
-                          userAgent: navigator.userAgent,
-                          timestamp: new Date().toISOString(),
-                          url: window.location.href,
-                        }),
-                      });
-                      setReported(true);
-                    } catch { /* sessizce geç */ }
-                  }}
-                  disabled={reported}
-                  className="self-start flex items-center gap-1.5 rounded-full border border-red-400/40 bg-red-500/25 px-4 py-1.5 text-xs font-semibold text-red-200 backdrop-blur-md transition hover:bg-red-500/40 disabled:opacity-50"
-                >
-                  {reported ? t('gate_reported_button') : t('gate_report_button')}
-                </button>
               </div>
             )}
             <div className="flex items-center gap-3 pt-2">
@@ -194,7 +169,7 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
                   t('welcome_create_profile_button')
                 )}
               </button>
-              {/* Mobilde ses butonu butonun sağında */}
+              {/* Mobilde ses butonu butonun saÄŸÄ±nda */}
               <div className="sm:hidden">
                 <MuteButton muted={muted} onToggle={toggleMute} src="/cdn/Storage/Test1.mp4" />
               </div>
@@ -205,9 +180,9 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
       {/* Orta alt footer */}
       <div className="absolute z-10 bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-2">
         <button type="button" onClick={() => openLink('https://discoweb.tech/terms')} className="text-xs text-white/50 hover:text-white/75 transition-colors">{t('splash_terms')}</button>
-        <span className="text-white/30 text-xs">·</span>
+        <span className="text-white/30 text-xs">Â·</span>
         <button type="button" onClick={() => openLink('https://discoweb.tech/privacy')} className="text-xs text-white/50 hover:text-white/75 transition-colors">{t('splash_privacy')}</button>
-        <span className="text-white/30 text-xs">·</span>
+        <span className="text-white/30 text-xs">Â·</span>
         <button type="button" onClick={() => setDevAboutOpen(true)} className="text-xs text-white/50 hover:text-white/75 transition-colors">Developer</button>
       </div>
 
@@ -238,3 +213,5 @@ function SuccessState({ t }: { t: (key: string) => string }) {
     </div>
   );
 }
+
+

@@ -7,6 +7,8 @@ import { checkMaintenance } from '@/lib/maintenance';
 type ReadinessStatus =
   | 'ready'
   | 'unauthorized'
+  | 'member_banned'
+  | 'server_banned'
   | 'missing_guild'
   | 'missing_service_role'
   | 'server_not_registered'
@@ -70,7 +72,7 @@ const buildResponse = (params: Partial<ReadinessResponse> & Pick<ReadinessRespon
 };
 
 const fetchWithRetry = async (url: string, init: RequestInit, retries = 2): Promise<Response> => {
-  let lastError: any;
+  let lastError: unknown;
   for (let attempt = 0; attempt <= retries; attempt += 1) {
     try {
       const response = await fetch(url, init);
@@ -220,6 +222,54 @@ export async function GET(request: Request) {
     NextResponse.json(buildResponse(payload), { status: 200 });
 
   // Bot kontrolü her şeyden önce
+  const nowIso = new Date().toISOString();
+
+  const { data: memberBan } = await supabase
+    .from('member_bans')
+    .select('id, guild_id, reason, expires_at')
+    .eq('user_id', session.userId)
+    .eq('is_active', true)
+    .or(`guild_id.eq.${guildId},guild_id.is.null`)
+    .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (memberBan) {
+    return nonOkStatus({
+      status: 'member_banned',
+      guildId,
+      debug: {
+        banId: memberBan.id,
+        reason: memberBan.reason ?? null,
+        expiresAt: memberBan.expires_at ?? null,
+        scope: memberBan.guild_id ? 'guild' : 'global',
+      },
+    });
+  }
+
+  const { data: serverBan } = await supabase
+    .from('server_bans')
+    .select('id, reason, expires_at')
+    .eq('guild_id', guildId)
+    .eq('is_active', true)
+    .or(`expires_at.is.null,expires_at.gt.${nowIso}`)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (serverBan) {
+    return nonOkStatus({
+      status: 'server_banned',
+      guildId,
+      debug: {
+        banId: serverBan.id,
+        reason: serverBan.reason ?? null,
+        expiresAt: serverBan.expires_at ?? null,
+      },
+    });
+  }
+
   const botToken = process.env.DISCORD_BOT_TOKEN;
   if (!botToken) {
     return nonOkStatus({ status: 'missing_bot_token', guildId, debug: { missingVars: ['DISCORD_BOT_TOKEN'], env: process.env.NODE_ENV } });

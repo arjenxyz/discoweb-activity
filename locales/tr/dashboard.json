@@ -43,7 +43,6 @@
   "dashboard_leaderboard_load_more": "Daha fazla göster",
   "dashboard_leaderboard_no_data": "Sıralama verisi bulunamadı.",
   "dashboard_leaderboard_unknown": "Bilinmiyor",
-  
   "overview_stat_message_label": "Mesaj",
   "overview_stat_message_sub": "toplam mesaj",
   "overview_stat_voice_label": "Sesli",
@@ -80,7 +79,6 @@
   "splash_maintenance_title": "Bakımdayız",
   "splash_terms": "Kullanım Şartları",
   "splash_privacy": "Gizlilik Politikası",
-
   "nav_group_discover": "Keşfet",
   "nav_group_borsa": "Borsa",
   "nav_group_account": "Hesap",
@@ -99,12 +97,10 @@
   "nav_economy_apply": "Yüksek Ekonomi",
   "nav_messages": "Mesajlar",
   "nav_server": "Sunucu",
-
   "greeting_morning": "Günaydın",
   "greeting_afternoon": "İyi günler",
   "greeting_evening": "İyi akşamlar",
   "greeting_night": "İyi geceler",
-
   "overview_title": "Genel Bakış",
   "overview_subtitle": "Sunucundaki aktivitelerin",
   "overview_live": "Canlı",
@@ -112,11 +108,9 @@
   "overview_badge_tag": "Tag",
   "overview_badge_booster": "Booster",
   "overview_since_verified": "Doğrulamadan Bu Yana",
-
   "pending_earnings_title": "Biriken Kazanç",
   "pending_earnings_claim": "Kazancı Al",
   "pending_earnings_auto_note": "Alınmayan kazançlar her gece 00:00'da otomatik olarak hesabınıza aktarılır.",
-
   "discover_title": "Topluluk",
   "discover_subtitle": "Öne çıkan sunucuları keşfet",
   "discover_featured_badge": "Öne Çıkan",
@@ -125,7 +119,6 @@
   "discover_online_count": "{count} çevrimiçi",
   "discover_empty_title": "Şu an öne çıkan sunucu yok",
   "discover_empty_subtitle": "Yakında buraya sunucular eklenecek",
-
   "raffles_title": "Çekilişler",
   "raffles_subtitle": "Katılabileceğin etkinlikler",
   "raffles_active_count": "{count} aktif çekiliş",
@@ -149,7 +142,6 @@
   "raffles_role_label": "Rol Ödülü",
   "raffles_surprise_label": "Sürpriz Ödül",
   "raffles_default_desc": "Bu çekilişe katılarak ödül kazanabilirsin",
-
   "tracking_section_title": "Mağaza Takip",
   "tracking_section_label": "Aktif Satın Alımlar",
   "tracking_section_subtitle": "Sahip olduğun roller ve süreler",
@@ -169,7 +161,6 @@
   "tracking_total_label": "Toplam",
   "tracking_live_update": "Canlı güncelleme",
   "tracking_tips_title": "Bilgi",
-
   "transactions_section_title": "İşlemler",
   "transactions_section_subtitle": "Geçmiş satın alımların",
   "transactions_empty": "Henüz işlem yok",
@@ -190,7 +181,6 @@
   "transactions_order_custom": "Özel Sipariş",
   "transactions_order_failure_prefix": "Hata:",
   "transactions_order_refund_button": "İade İste",
-
   "transfer_success": "Transfer başarıyla tamamlandı",
   "transfer_error_generic": "Transfer başarısız oldu",
   "transfer_error_insufficient": "Yetersiz bakiye",
@@ -202,17 +192,14 @@
   "transfer_error_daily_limit": "Günlük limit aşıldı",
   "transfer_error_maintenance": "Transfer şu an bakımda",
   "transfer_error_unauthorized": "Yetkisiz işlem",
-
   "leaderboard_fetch_error": "Liderlik tablosu yüklenemedi",
   "leaderboard_fetch_error_retry": "Tekrar dene",
-
   "header_convert_to_mari": "Mari'ye Çevir",
   "market_apply_starting": "Başvuru başlatılıyor...",
   "treasury_collected": "Toplanan",
   "treasury_burned": "Yakılan",
   "treasury_dividends": "Temettü",
   "treasury_papel_unit": "Papel",
-
   "settings_section_title": "Ayarlar",
   "settings_section_description": "Sunucu ayarlarını yönet",
   "settings_code_management_title": "Kod Yönetimi",
@@ -232,7 +219,6 @@
   "settings_error_invalid_amount": "Geçersiz tutar",
   "settings_error_invalid_package": "Geçersiz paket",
   "settings_error_invalid_price": "Geçersiz fiyat",
-
   "referral_your_code_label": "Referral Kodun",
   "referral_copy_button": "Kopyala",
   "referral_copied": "Kopyalandı!",
@@ -277,7 +263,6 @@
   "referral_error_increment_failed": "Güncelleme başarısız",
   "referral_error_invalid_amount": "Geçersiz tutar",
   "referral_error_update_failed": "Güncelleme başarısız",
-
   "developer_panel_title": "Geliştirici Paneli",
   "developer_panel_error_prefix": "Hata:",
   "developer_panel_maintenance_inactive": "Bakım modu kapalı",
@@ -318,7 +303,6 @@
   "developer_page_title": "Developer Panel",
   "developer_page_not_authorized": "Bu sayfaya erişim yetkiniz yok.",
   "developer_page_back": "Geri Dön",
-
   "coupon_applied_success": "Kupon başarıyla uygulandı",
   "server_unknown": "Bilinmeyen Sunucu",
   "profile_no_roles": "Rol yok",
@@ -329,7 +313,6 @@
   "ref": "Referans",
   "section": "Bölüm",
   "textarea": "Metin Alanı",
-
   "economy_apply_title": "Yüksek Ekonomi ? Gelişmiş Ekonomi",
   "economy_apply_subtitle": "Sunucunuz için gelişmiş ekonomi özellikleri aktifleştirin",
   "economy_apply_feat_mari_title": "Mari Para Birimi",
@@ -373,7 +356,6 @@
   "economy_apply_ack_label": "Bu uyarıları okudum ve kabul ediyorum.",
   "economy_apply_next": "Devam Et",
   "economy_apply_back": "Geri Dön",
-
   "gate_ready_title": "Hazır",
   "gate_ready_description": "Activity'yi kullanmaya hazırsın",
   "gate_ready_helper": "Her şey çalışıyor durumda",
@@ -424,7 +406,6 @@
   "gate_support_message_generic": "Merhaba, \"{serverName}\" sunucusu için Activity açılırken \"{status}\" hatası alıyorum. Kontrol edebilir misiniz?",
   "gate_default_server_name": "bu sunucu",
   "gate_bot_invite_link_prefix": "Bot davet linki: ",
-
   "borsa_back_button": "Tüm Listeler",
   "borsa_listing_not_found": "Listeleme bulunamadı.",
   "borda_today_label": "bugün",
@@ -467,7 +448,6 @@
   "borsa_success_bought": "Satın Alındı",
   "borsa_success_sold": "Satıldı",
   "borsa_success_trade_details": "{action} {lotCount} lot @{price} MRI",
-
   "borsa_section_title": "Borsa",
   "borsa_section_subtitle": "Sunucu lotlarını Mari ile al ve sat",
   "borsa_list_my_server": "Sunucumu Listele",
@@ -475,7 +455,6 @@
   "borsa_no_servers_found": "Listelenmiş sunucu bulunamadı.",
   "borsa_mri_per_lot": "MRI/lot",
   "borsa_sold": "satıldı",
-
   "cart_title": "Sepet",
   "cart_item_count": "{itemCount} adet • {productCount} ürün",
   "cart_empty": "Sepetiniz boş. Mağazadan ürün ekleyin.",
@@ -491,7 +470,6 @@
   "cart_checking_out": "Ödeniyor...",
   "cart_clear_aria": "Sepeti boşalt",
   "cart_close_aria": "Kapat",
-
   "developer_close_aria": "Kapat",
   "developer_title": "Developer & Designer",
   "developer_description": "DiscoWeb'in tek geliştiricisi. Full-stack web ve Discord uygulamaları üzerine çalışıyor.",
@@ -501,7 +479,6 @@
   "developer_thanks_users": "Geri bildirim ve destek için",
   "developer_copyright": "© {year} DiscoWeb · All rights reserved",
   "developer_version": "v1.0",
-
   "dev_nav_overview": "Genel Bakış",
   "dev_nav_logs": "Loglar",
   "dev_nav_suspicious": "Şüpheli",
@@ -543,31 +520,27 @@
   "dev_invite_validity": "Geçerlilik:",
   "dev_copy_button": "Kopyala",
   "dev_panel_title": "Dev Panel",
-
   "dev_log_type_all": "all",
   "dev_log_type_auth_login": "auth_login",
-  "dev_log_type_auth_logout": "auth_logout", 
+  "dev_log_type_auth_logout": "auth_logout",
   "dev_log_type_new_user": "new_user",
   "dev_log_type_new_server": "new_server",
   "dev_log_type_bug": "bug",
   "dev_log_type_suggestion": "suggestion",
   "dev_log_type_error_log": "error_log",
   "dev_log_type_client_error": "client_error",
-
   "dev_report_user_label": "Kullanıcı:",
   "dev_report_server_label": "Sunucu:",
   "dev_report_dev_note_title": "Developer Notu",
   "dev_report_note_placeholder": "Developer notu ekle...",
-
   "dev_suspicious_server_label": "Sunucu:",
   "dev_suspicious_user_label": "Kullanıcı:",
   "dev_suspicious_reviewed": "İncelendi",
-  "dev_suspicious_actioned": "İşlem Alındı", 
+  "dev_suspicious_actioned": "İşlem Alındı",
   "dev_suspicious_dismissed": "Yoksay",
   "dev_suspicious_empty": "Kayıtlı şüpheli hareket yok. Tarama başlatmak için \"Şimdi Tara\" butonunu kullan.",
-
   "dev_report_status_reviewing": "🔍 İnceleniyor",
-  "dev_report_status_need_info": "💬 Bilgi Gerekiyor", 
+  "dev_report_status_need_info": "💬 Bilgi Gerekiyor",
   "dev_report_status_critical": "⚠️ Kritik",
   "dev_report_status_fixed_pending": "🔧 Deploy Bekleniyor",
   "dev_report_status_planned_next": "🎯 Sonraki Sürüme",
@@ -577,7 +550,6 @@
   "dev_report_status_duplicate": "🔁 Bilinen Sorun",
   "dev_report_status_invalid": "🚫 Geçersiz",
   "dev_report_status_closed": "🔒 Kapalı",
-
   "dev_ads_empty": "Bu filtrede kayıtlı rapor yok.",
   "dev_ads_invite_placeholder": "discord.gg/... davet linki",
   "dev_ads_fetch_button": "Getir",
@@ -590,7 +562,6 @@
   "dev_ads_status_active": "Görüntüleniyor",
   "dev_ads_status_hidden": "Gizlendi",
   "dev_ads_delete": "Sil",
-
   "dividend_title": "Dividends",
   "dividend_subtitle": "Weekly Mari payouts for lot holders",
   "dividend_no_server": "Select a server from the Exchange to view dividends.",
@@ -604,7 +575,6 @@
   "dividend_no_payments": "No dividend payments yet.",
   "dividend_week_of": "Week of",
   "dividend_lots_suffix": "lots",
-
   "earnings_refresh_title": "Yenile",
   "earnings_booster_active": "Booster",
   "earnings_booster_inactive": "Boost: Yok",
@@ -618,7 +588,6 @@
   "earnings_rate_tag": "tag",
   "earnings_rate_boost": "boost",
   "earnings_rate_currency": "papel",
-
   "ipo_title": "Exchange Listing (IPO)",
   "ipo_subtitle": "List your server on the DiscoWeb exchange",
   "ipo_already_listed": "Already Listed",
@@ -667,7 +636,6 @@
   "ipo_info_4": "Weekly dividends paid every Monday to all lot holders",
   "ipo_info_5": "Treasury auto-buys if price drops 15% below day-1 price for 3+ days",
   "ipo_info_6": "Server delisted if price stays below 50% IPO price for 5+ days",
-
   "ipo_section_back": "Back",
   "ipo_section_back_to_exchange": "Back to Exchange",
   "ipo_section_data_not_found": "IPO data not found.",
@@ -704,14 +672,12 @@
   "ipo_section_error_purchase": "Purchase failed.",
   "ipo_section_success_bought": "Bought {count} lots @ {price} MRI",
   "ipo_section_vesting_schedule": "Day {day} — {percentage}% ({lots} lots)",
-
   "mail_messages_label": "Mesaj",
   "mail_unread_label": "Okunmamış",
   "mail_messages_deleted": "{count} mesaj silindi",
-
   "market_news_title": "Borsa Haberleri",
   "market_news_time_ago_seconds": "{seconds}s önce",
-  "market_news_time_ago_minutes": "{minutes}dk önce", 
+  "market_news_time_ago_minutes": "{minutes}dk önce",
   "market_news_time_ago_hours": "{hours}sa önce",
   "market_news_time_ago_days": "{days}g önce",
   "market_news_error_loading": "Yüklenemedi",
@@ -719,7 +685,6 @@
   "market_news_empty_title": "Henüz haber yok.",
   "market_news_empty_subtitle": "İlk büyük işlem gerçekleştiğinde burada görünecek.",
   "market_news_load_more": "Daha fazla yükle ({count} kaldı)",
-
   "market_error_insufficient_balance": "Yetersiz Mari bakiyesi. Mevcut: {available} MRI",
   "market_error_insufficient_lots": "Yeterli lot yok.",
   "market_error_own_server": "Kendi sunucunuza yatırım yapamazsınız.",
@@ -728,7 +693,6 @@
   "market_error_not_listed": "Bu sunucu listede değil.",
   "market_error_order_failed": "Emir gönderilemedi.",
   "market_error_generic": "Bir hata oluştu.",
-
   "market_convert_error_insufficient_papel": "Yeterli papel bakiyesi yok.",
   "market_convert_error_server_limit": "Bugün bu sunucudan daha fazla dönüşüm yapamazsın. (Limit: {limit} MRI)",
   "market_convert_error_global_limit": "Günlük global limitine ulaştın. (Limit: {limit} MRI)",
@@ -736,7 +700,6 @@
   "market_convert_error_economy_not_approved": "Bu sunucu henüz yüksek ekonomiye geçmedi.",
   "market_convert_error_failed": "Dönüşüm başarısız.",
   "market_convert_error_generic": "Bir hata oluştu.",
-
   "market_vote_error_already_voted": "Zaten oy verdin.",
   "market_vote_error_not_active": "Oylama aktif değil.",
   "market_vote_error_not_enough_members": "500+ üye gerekli.",
@@ -748,7 +711,6 @@
   "market_vote_success_recorded": "Oyun kaydedildi. Toplam: {vote_count} / {threshold}",
   "market_apply_success": "✅ Başvuru gönderildi. Developer inceleyecek (max 7 gün).",
   "market_action_connection_error": "Bağlantı hatası.",
-
   "market_info_direct_register": "• Sunucunuzun <span className=\"text-white/50 font-semibold\">500+ üyesi</span> var, direkt kayıt yapabilirsiniz",
   "market_info_direct_approval": "• Başvuru developer tarafından onaylanır <span className=\"text-white/50\">(max 7 gün)</span>",
   "market_info_direct_contact": "Kayıt için sunucu yöneticisine başvurun.",
@@ -756,14 +718,11 @@
   "market_info_current_members": "• Şu an üye sayısı: <span className=\"text-white/50 font-semibold\">{member_count}</span> (direkt başvuru için 500+ gerekli)",
   "market_info_approval_time": "• Başvuru developer tarafından onaylanır <span className=\"text-white/50\">(max 7 gün)</span>",
   "market_info_vote_contact": "Oylama başlatmak için sunucu yöneticisine başvurun.",
-
   "market_convert_max_button": "MAX",
   "market_convert_preview": "Alacaksın: ≈ {amount} MRI",
   "market_portfolio_avg_price": "ort. {price} P",
   "market_portfolio_pl": "({pl} P)",
-
   "notifications_detail_link": "Detay bağlantısı",
-
   "portfolio_title": "Portfolio",
   "portfolio_subtitle": "Your server lot positions",
   "portfolio_total_value": "Total Value",
@@ -774,7 +733,6 @@
   "portfolio_lots_info": "{lots} lots · avg {price} MRI",
   "portfolio_daily_sell_used": "Daily sell used: {used}/{limit} lots",
   "portfolio_market_price": "Market: {price} MRI",
-
   "raffles_drawer_title": "Çekilişlerim",
   "raffles_drawer_active_count": "{count} aktif",
   "raffles_drawer_empty_title": "Henüz katılmadın",
@@ -794,7 +752,6 @@
   "raffles_back_button": "Geri",
   "raffles_back_label": "Geri",
   "raffles_close_label": "Kapat",
-
   "raffles_my_raffles_button": "Çekilişlerim",
   "raffles_prize_papel_badge": "{amount} Papel",
   "raffles_prize_role_badge": "Rol",
@@ -818,7 +775,6 @@
   "raffles_info_rule3": "• Her çekilişe yalnızca bir kez katılabilirsiniz; çift kayıt engellenmiştir.",
   "raffles_info_rule4": "• Çekiliş sonuçları admin tarafından açıklanır; kazananlar Discord ve panel bildirimiyle haberdar edilir.",
   "raffles_info_rule5": "• Tag süreniz yeterliyse bile çekiliş süresi dolmuşsa katılım yapılamaz.",
-
   "referral_error_discord_sdk": "Discord SDK bağlantısı hazır değil.",
   "referral_share_title": "DiscoWeb — Sunucu Paneli",
   "referral_share_description": "Sunucu ekonomisi, mağaza ve borsa yönetimi!",
@@ -886,7 +842,6 @@
   "referral_advanced_error": "Bir hata oluştu.",
   "referral_share_link_title": "DiscoWeb — Sunucu Paneli",
   "referral_share_link_description": "Sunucu ekonomisi, mağaza ve borsa yönetimi!",
-
   "session_expired_title": "Oturumunuz Sonlandı",
   "session_expired_description": "Güvenliğiniz için oturum süresi doldu. Devam etmek için Discord hesabınızla tekrar giriş yapın.",
   "session_expired_todo_title": "Yapılacaklar",
@@ -896,7 +851,6 @@
   "session_expired_button_loading": "Hazırlanıyor...",
   "session_expired_button_text": "Discord ile Tekrar Giriş Yap",
   "session_expired_note": "Oturumlar güvenlik nedeniyle 3 günde bir yenilenmektedir.",
-
   "verify_role_error_role_assign_failed": "Rol ataması başarısız oldu. Bot sunucuda aktif olmayabilir veya rolün bot hiyerarşisinin üstünde olabilir. Sunucu ayarlarından bot rolünün, doğrulanmış üye rolünün üstünde olduğunu kontrol et.",
   "verify_role_error_bot_missing_manage_roles": "Botun \"Rolleri Yönet\" yetkisi yok. Sunucu ayarlarından bota bu yetkiyi ver.",
   "verify_role_error_bot_role_hierarchy": "Bot kendi rolünden yüksek bir rol atayamaz. Sunucu Ayarları → Roller bölümünden bot rolünü doğrulanmış üye rolünün üstüne taşı.",
@@ -905,12 +859,10 @@
   "verify_role_error_label": "hata:",
   "verify_role_success_title": "Kapı açıldı!",
   "verify_role_success_description": "DiscoWeb dünyasına giriş yapıyorsun...",
-
   "tracking_duration_months": "{count} ay",
   "tracking_duration_days": "{count} gün",
   "tracking_duration_hours": "{count} saat",
   "tracking_duration_seconds": "{count} sn",
-
   "settings_delete_title": "Discoweb Activity Verilerimi Sil",
   "settings_delete_description": "Mevcut sunucudaki veya tüm sunuculardaki Activity verilerinizi tamamen kaldırabilirsiniz.",
   "settings_delete_button": "Discoweb activity verilerimi sil",
@@ -923,14 +875,12 @@
   "settings_delete_confirm": "Onaylıyorum, sil",
   "settings_delete_deleting": "Siliniyor...",
   "settings_delete_success": "Veriler başarıyla silindi. Yönlendiriliyorsunuz...",
-
   "settings_ipo_submitting": "Gönderiliyor...",
   "settings_ipo_founder_label": "founder (%51–80)",
   "settings_ipo_date_label": "Tahmini halka arz tarihi",
   "settings_ipo_date_hint": "(isteğe bağlı — 2 gün önce otomatik onaylanır)",
   "settings_ipo_price_placeholder": "Başlangıç fiyatı (Papel/lot)",
   "settings_ipo_apply_button": "Başvur",
-
   "settings_advanced_title": "Yüksek Ekonomi",
   "settings_advanced_reviewing": "İnceleniyor",
   "settings_advanced_active": "Aktif",
@@ -942,7 +892,6 @@
   "settings_advanced_package_hint": "Developer tarafından onaylanırken hazineye yüklenecek başlangıç miktarı.",
   "settings_advanced_submit_button": "Başvuruyu Gönder",
   "settings_advanced_submitting": "Gönderiliyor...",
-
   "settings_ipo_listed_title": "Borsada Listelendi",
   "settings_ipo_status_active": "Aktif",
   "settings_ipo_status_suspended": "Askıda",
@@ -950,7 +899,6 @@
   "settings_ipo_pending_title": "IPO Başvurusu İnceleniyor",
   "settings_ipo_apply_title": "Yatırım Borsasına Başvur (IPO)",
   "settings_ipo_apply_description": "Sunucunuzu yatırım borsasına açın. Yatırımcılar lot satın alabilir, siz hazineden temettü alabilirsiniz.",
-
   "splash_tip_earn_papel": "Mesaj atarak ve sesli kanalda vakit geçirerek Papel kazanabilirsin.",
   "splash_tip_market_shares": "DiscoWeb Market'te sunucu hisseleri alıp satabilir, portföy oluşturabilirsin.",
   "splash_tip_mailbox_rewards": "Posta kutusunda seni bekleyen ödüller ve sistem bildirimleri olabilir.",
@@ -961,7 +909,6 @@
   "splash_tip_giveaway_rewards": "Rozet günleri biriktirerek özel ödüller ve ek avantajlar kazanabilirsin.",
   "splash_tip_leaderboard": "Liderlik tablosundan sunucunun en aktif üyelerini ve sıralamanı görebilirsin.",
   "splash_thanks_button": "Teşekkürler",
-
   "rules_modal_title": "Platform Kuralları",
   "rules_modal_subtitle": "Devam etmeden önce kuralları okumalısın",
   "rules_modal_rule_1": "DiscoWeb platformunu kötüye kullanmak, bug exploit yapmak veya hile kullanmak yasaktır.",
@@ -974,9 +921,7 @@
   "rules_modal_privacy": "Gizlilik Politikası",
   "rules_modal_accept_text": "Yukarıdaki kuralları, kullanım şartlarını ve gizlilik politikasını okudum ve kabul ediyorum.",
   "rules_modal_accept_button": "Kabul Et ve Devam Et",
-
   "store_product_owned_mobile": "Mevcut",
-
   "badge_active_label": "Aktif",
   "badge_days_required": "{days} gün gerekli",
   "badge_days_left": "{days} gün kaldı",
@@ -1014,10 +959,8 @@
   "badge_total_papel": "Tüm yolda {amount} papel",
   "badge_max_multiplier": "Max ×{multiplier} çarpan",
   "badge_load_error": "Rozet bilgisi yüklenemedi.",
-
   "mail_loading": "Yükleniyor...",
   "mail_error_fetch_failed": "Mail bilgileri alınamadı.",
-
   "mail_detail_loading_failed": "Mesaj yüklenemedi",
   "mail_detail_not_found": "Mesaj bulunamadı",
   "mail_detail_invalid": "Geçersiz mesaj",
@@ -1027,19 +970,14 @@
   "mail_detail_attachment_alt": "Ek",
   "mail_detail_more_info": "Daha fazla bilgi için tıklayın",
   "mail_detail_see_details": "Detayları Gör",
-
   "referral_loading": "Yükleniyor...",
-
   "server_left_title": "Görünüşe göre ayrılmışsın.",
   "server_left_description": "Bu sunucunun mağazasına, cüzdanına ve tüm özelliklerine erişmek için sunucuda aktif üye olman gerekiyor.",
   "server_left_hint": "Sunucuya geri katılırsan kaldığın yerden devam edebilirsin.",
   "server_left_retry_button": "Tekrar Dene",
-
   "cart_coupon_discount_percent": "%{percent} indirim",
-
   "agreement_decline_aria": "Kabul etmiyorum",
   "agreement_accept_aria": "Kabul ediyorum ve devam et",
-
   "error_flood_detected": "Birden fazla hata tespit edildi",
   "error_flood_count": "{count} adet",
   "error_flood_message": "Lütfen sayfayı yenileyin veya yöneticiyle iletişime geçin.",
@@ -1050,7 +988,6 @@
   "error_details_hide": "Daralt",
   "error_pending_count": "+{count} bekleyen hata",
   "error_resend": "Tekrar Gönder",
-
   "site_name": "DiscoWeb",
   "site_hero_badge": "Beta",
   "site_hero_title": "DiscoWeb",
@@ -1058,20 +995,17 @@
   "site_hero_cta": "Panele Git",
   "site_bot_name": "DiscoWeb Bot",
   "site_bot_description": "Gelişmiş Ekonomi Sistemi, Rol Yönetimi ve Daha Fazlası ile Sunucunuzu Yönetin.",
-
   "cron_dividend_freeze_active": "Global freeze aktif — temettü atlandı.",
   "cron_dividend_note": "Haftalık temettü: {lotCount} lot × {perLotAmount} Papel ({weekId})",
   "cron_dividend_success_log": "✅ Temettü dağıtıldı: {totalListings} sunucu, toplam {totalPaid} Papel ({weekId})",
   "cron_dividend_started": "🕐 dividendPayout cron başladı: {timestamp}",
   "cron_dividend_completed": "✅ dividendPayout cron tamamlandı.",
-
   "cron_referral_freeze_active": "Global freeze aktif — referral pasif gelir atlandı.",
   "cron_referral_note": "Referral pasif gelir ({weekId}): {referredUserId} harcamasından %{rate}",
   "cron_referral_success_log": "✅ Referral pasif gelir: {totalPaid} Papel ödendi, {totalPending} Papel beklemede ({weekId})",
   "cron_referral_started": "🕐 referralPassiveIncome cron başladı: {timestamp}",
   "cron_referral_completed": "✅ referralPassiveIncome cron tamamlandı.",
   "cron_referral_pending_payment": "Bekleyen referral ödemesi",
-
   "cron_papel_freeze_active": "Global freeze aktif — updatePapelValue atlandı.",
   "cron_papel_update_error": "Papel value update hatası ({guildId}):",
   "cron_papel_success_log": "✅ Papel değer çarpanı güncellendi: {serverCount} sunucu",
@@ -1080,18 +1014,15 @@
   "cron_orders_expired_log": "✅ Süresi dolan emirler iptal edildi: {orderCount} emir",
   "cron_papel_started": "🕐 updatePapelValue cron başladı: {timestamp}",
   "cron_papel_completed": "✅ updatePapelValue cron tamamlandı.",
-
   "auth_no_session_cookie": "[auth] No discord_session cookie found. Available cookies:",
   "auth_session_verification_failed": "[auth] discord_session cookie exists but verification failed (expired or invalid signature)",
   "auth_missing_auth_header": "[auth] Missing or invalid Authorization header:",
   "auth_bearer_verification_failed": "[auth] Bearer session token verification failed:",
   "auth_error_unauthorized": "unauthorized",
   "auth_error_invalid_origin": "invalid_origin",
-
   "cart_coupon_empty_code": "Kod boş olamaz",
   "cart_coupon_not_found": "Kod bulunamadı",
   "cart_provider_error": "useCart must be used within CartProvider",
-
   "devlog_treasury_title": "Hazineye Kesinti",
   "devlog_server": "Sunucu",
   "devlog_spender": "Harcayan",
@@ -1137,5 +1068,32 @@
   "devlog_confiscated": "Yakılan",
   "devlog_triggered_by": "İşlemi Yapan",
   "devlog_global_freeze_activated": "Global Freeze Aktive Edildi",
-  "devlog_global_freeze_deactivated": "Global Freeze Kaldırıldı"
+  "devlog_global_freeze_deactivated": "Global Freeze Kaldırıldı",
+  "gate_bot_not_in_guild_description_admin": "Yetkili eri?iminizi do?rulad?k; ancak botumuz ?u anda bu sunucuda bulunmuyor. Bu nedenle i?lemlere g?venli ?ekilde devam edebilmemiz i?in ?nce botun sunucuya eklenmesi gerekiyor.",
+  "gate_bot_not_in_guild_helper_admin": "?sterseniz a?a??daki \"Bot Ekle\" ad?m?n? kullanarak kurulumu birka? saniye i?inde tamamlayabilirsiniz. Kurulum sonras? tekrar deneyebilirsiniz.",
+  "gate_bot_not_in_guild_description_user": "?u anda botumuz bu sunucuda aktif olmad??? i?in i?lemi burada durdurmam?z gerekiyor. Bu durum sizden kaynaklanan bir hata de?ildir.",
+  "gate_bot_not_in_guild_helper_user": "Sorun devam ederse l?tfen sunucu y?neticileriyle ileti?ime ge?in ve botun sunucuya eklendi?ini do?rulamalar?n? rica edin.",
+  "gate_server_setup_required_description_admin": "Sunucu kurulumunun temel ad?mlar? tan?ml? g?r?n?yor; ancak baz? zorunlu ayarlar hen?z tamamlanmad??? i?in s?rece devam edemiyoruz.",
+  "gate_server_setup_required_helper_admin": "Yetkili oldu?unuzu do?rulad?k. L?tfen kurulum paneline ge?ip eksik alanlar? tamamlay?n; ard?ndan yeniden deneyin.",
+  "gate_server_setup_required_description_user": "Sunucu kurulumu hen?z tam olarak tamamlanmad??? i?in ?u anda eri?imi s?rd?remiyoruz. Sistem, eksik yap?land?rmay? otomatik olarak tespit etti.",
+  "gate_server_setup_required_helper_user": "Bu durum d?zelmezse sunucu yetkilileriyle ileti?ime ge?erek kurulumun tamamlanmas?n? talep etmenizi ?neririz.",
+  "gate_server_not_registered_description_admin": "Bu sunucu sistemde hen?z kay?tl? g?r?nm?yor. Kay?t i?lemi tamamlanmadan Activity ?zelliklerini g?venli bi?imde ba?latam?yoruz.",
+  "gate_server_not_registered_helper_admin": "Sunucu y?neticisi olarak kurulum sitesinden h?zl?ca kay?t i?lemini tamamlayabilirsiniz. ??lem bitti?inde tekrar deneyin.",
+  "gate_server_not_registered_description_user": "Bu sunucu hen?z sistemde kay?tl? olmad??? i?in eri?im ?u anda k?s?tlanm??t?r. Bu nedenle i?leminize devam edemiyoruz.",
+  "gate_server_not_registered_helper_user": "L?tfen sunucu y?neticileriyle ileti?ime ge?ip sunucu kayd?n?n tamamlanmas?n? isteyin; sonras?nda yeniden deneyebilirsiniz.",
+  "gate_missing_service_role_description_admin": "Botun do?ru ?al??abilmesi i?in gereken hizmet rol? hen?z yap?land?r?lmam?? g?r?n?yor. Bu nedenle yetki kontrolleri tamamlanam?yor.",
+  "gate_missing_service_role_helper_admin": "Kurulum sayfas?nda hizmet rol?n? se?ip kaydettikten sonra tekrar deneyin. Gerekirse bot rol izinlerini de kontrol edebilirsiniz.",
+  "gate_missing_service_role_description_user": "Sunucuda botun ?al??mas? i?in gerekli rol ayar? eksik oldu?u i?in i?leminizi ?u anda s?rd?remiyoruz.",
+  "gate_missing_service_role_helper_user": "L?tfen sunucu y?neticilerine bu rol yap?land?rmas?n?n tamamlanmas? gerekti?ini iletin ve daha sonra yeniden deneyin.",
+  "gate_missing_bot_token_description_admin": "Bot ba?lant?s? i?in gerekli kimlik bilgisi (token) ayar? eksik veya ge?ersiz g?r?n?yor. Bu nedenle sunucuyla g?venli ba?lant? kurulam?yor.",
+  "gate_missing_bot_token_helper_admin": "Kurulum panelinden bot token bilgisini g?ncelleyip kaydettikten sonra tekrar deneyin. Gerekirse botu yeniden davet etmek de yard?mc? olabilir.",
+  "gate_missing_bot_token_description_user": "Sunucudaki bot ba?lant? yap?land?rmas?nda eksik bir ayar tespit edildi?i i?in i?lemi ?u anda tamamlayam?yoruz.",
+  "gate_missing_bot_token_helper_user": "L?tfen bu durumu sunucu y?neticilerine iletin ve bot yap?land?rmas?n? kontrol etmelerini rica edin; ard?ndan yeniden deneyebilirsiniz.",
+  "gate_member_banned_title": "Banland?n?z",
+  "gate_member_banned_description": "Hesab?n?z bu sunucuda Activity eri?iminden ge?ici veya kal?c? olarak k?s?tlanm??t?r.",
+  "gate_member_banned_helper": "Detayl? bilgi i?in sunucu y?netimiyle ileti?ime ge?ebilirsiniz. E?er bunun bir hata oldu?unu d???n?yorsan?z yetkililere itiraz iletmeniz gerekir.",
+  "gate_server_banned_title": "Sunucu Banland?",
+  "gate_server_banned_description": "Bu sunucu i?in Activity eri?imi y?netim politikalar? kapsam?nda ge?ici veya kal?c? olarak durdurulmu?tur.",
+  "gate_server_banned_helper": "Sunucu yetkilileri ban nedeni ve s?reci i?in destek kanal? ?zerinden ba?vuru yapabilir. ?nceleme tamamlanana kadar eri?im a??lamaz.",
+  "dev_nav_bans": "Ban Yönetimi"
 }

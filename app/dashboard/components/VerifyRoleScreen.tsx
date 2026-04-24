@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import type { ActivityReadiness } from './ActivityReadinessGate';
@@ -24,7 +24,6 @@ export default function VerifyRoleScreen({ readiness, onRetry }: Props) {
   const [phase, setPhase] = useState<Phase>('idle');
   const [error, setError] = useState<string | null>(null);
   const [errorCode, setErrorCode] = useState<string | null>(null);
-  const [reported, setReported] = useState(false);
   const [muted, setMuted] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -69,7 +68,7 @@ export default function VerifyRoleScreen({ readiness, onRetry }: Props) {
     <div className="relative isolate min-h-screen overflow-hidden bg-[#0b0d12] text-white">
       <VideoBackground videoRef={videoRef} src="/cdn/Storage/Test4.mp4" />
 
-      {/* Ses butonu — masaüstünde sağ üst */}
+      {/* Ses butonu â€” masaÃ¼stÃ¼nde saÄŸ Ã¼st */}
       <div className="hidden sm:block absolute z-20 top-6 right-6">
         <MuteButton muted={muted} onToggle={toggleMute} src="/cdn/Storage/Test4.mp4" />
       </div>
@@ -103,30 +102,6 @@ export default function VerifyRoleScreen({ readiness, onRetry }: Props) {
                   <p className="text-xs font-mono text-red-400">{t('verify_role_error_label')} <span className="font-bold">{errorCode}</span></p>
                 )}
                 <p className="text-sm text-red-300 leading-relaxed">{error}</p>
-                <button
-                  type="button"
-                  onClick={async () => {
-                    try {
-                      await fetchWithCreds('/api/admin/report-error', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                          status: errorCode ?? 'verify_role_error',
-                          guildId: readiness.guildId,
-                          guildName: readiness.guildName,
-                          userAgent: navigator.userAgent,
-                          timestamp: new Date().toISOString(),
-                          url: window.location.href,
-                        }),
-                      });
-                      setReported(true);
-                    } catch { /* sessizce geç */ }
-                  }}
-                  disabled={reported}
-                  className="self-start flex items-center gap-1.5 rounded-full border border-red-400/40 bg-red-500/25 px-4 py-1.5 text-xs font-semibold text-red-200 backdrop-blur-md transition hover:bg-red-500/40 disabled:opacity-50"
-                >
-                  {reported ? t('gate_reported_button') : t('gate_report_button')}
-                </button>
               </div>
             )}
             <div className="flex items-center gap-3 pt-2">
@@ -145,7 +120,7 @@ export default function VerifyRoleScreen({ readiness, onRetry }: Props) {
                   t('verify_role_button')
                 )}
               </button>
-              {/* Mobilde ses butonu butonun sağında */}
+              {/* Mobilde ses butonu butonun saÄŸÄ±nda */}
               <div className="sm:hidden">
                 <MuteButton muted={muted} onToggle={toggleMute} src="/cdn/Storage/Test3.mp4" />
               </div>
@@ -180,3 +155,5 @@ function SuccessState() {
     </div>
   );
 }
+
+

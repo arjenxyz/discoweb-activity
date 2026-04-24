@@ -1,10 +1,9 @@
-'use client';
+﻿'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import WelcomeScreen from './WelcomeScreen';
 import VerifyRoleScreen from './VerifyRoleScreen';
 import DmScreen from './DmScreen';
-import fetchWithCreds from '@/lib/fetchWithCreds';
 import { getDiscordSdk } from '@/lib/discordSdk';
 import { VideoBackground, MuteButton } from './VideoBackground';
 import { useT } from '@/contexts/LocaleContext';
@@ -12,6 +11,8 @@ import { useT } from '@/contexts/LocaleContext';
 export type ActivityReadinessStatus =
   | 'ready'
   | 'unauthorized'
+  | 'member_banned'
+  | 'server_banned'
   | 'missing_guild'
   | 'missing_service_role'
   | 'server_not_registered'
@@ -39,6 +40,7 @@ type GateProps = {
   readiness: ActivityReadiness;
   loading: boolean;
   onRetry: () => void;
+  onBackToSplash: () => void;
 };
 
 type GateCopy = {
@@ -47,13 +49,94 @@ type GateCopy = {
   helper: string;
 };
 
+function getRoleAwareCopy(
+  status: ActivityReadinessStatus,
+  base: GateCopy,
+  t: (key: string) => string,
+  isAdmin: boolean,
+): GateCopy {
+  if (status === 'bot_not_in_guild') {
+    return isAdmin
+      ? {
+          ...base,
+          description: t('gate_bot_not_in_guild_description_admin'),
+          helper: t('gate_bot_not_in_guild_helper_admin'),
+        }
+      : {
+          ...base,
+          description: t('gate_bot_not_in_guild_description_user'),
+          helper: t('gate_bot_not_in_guild_helper_user'),
+        };
+  }
 
-export default function ActivityReadinessGate({ readiness, loading, onRetry }: GateProps) {
+  if (status === 'server_setup_required') {
+    return isAdmin
+      ? {
+          ...base,
+          description: t('gate_server_setup_required_description_admin'),
+          helper: t('gate_server_setup_required_helper_admin'),
+        }
+      : {
+          ...base,
+          description: t('gate_server_setup_required_description_user'),
+          helper: t('gate_server_setup_required_helper_user'),
+        };
+  }
+
+  if (status === 'server_not_registered') {
+    return isAdmin
+      ? {
+          ...base,
+          description: t('gate_server_not_registered_description_admin'),
+          helper: t('gate_server_not_registered_helper_admin'),
+        }
+      : {
+          ...base,
+          description: t('gate_server_not_registered_description_user'),
+          helper: t('gate_server_not_registered_helper_user'),
+        };
+  }
+
+  if (status === 'missing_service_role') {
+    return isAdmin
+      ? {
+          ...base,
+          description: t('gate_missing_service_role_description_admin'),
+          helper: t('gate_missing_service_role_helper_admin'),
+        }
+      : {
+          ...base,
+          description: t('gate_missing_service_role_description_user'),
+          helper: t('gate_missing_service_role_helper_user'),
+        };
+  }
+
+  if (status === 'missing_bot_token') {
+    return isAdmin
+      ? {
+          ...base,
+          description: t('gate_missing_bot_token_description_admin'),
+          helper: t('gate_missing_bot_token_helper_admin'),
+        }
+      : {
+          ...base,
+          description: t('gate_missing_bot_token_description_user'),
+          helper: t('gate_missing_bot_token_helper_user'),
+        };
+  }
+
+  return base;
+}
+
+
+export default function ActivityReadinessGate({ readiness, loading, onRetry, onBackToSplash }: GateProps) {
   const t = useT();
 
   const COPY_BY_STATUS: Record<ActivityReadinessStatus, GateCopy> = {
     ready: { title: t('gate_ready_title'), description: t('gate_ready_description'), helper: t('gate_ready_helper') },
     unauthorized: { title: t('gate_unauthorized_title'), description: t('gate_unauthorized_description'), helper: t('gate_unauthorized_helper') },
+    member_banned: { title: t('gate_member_banned_title'), description: t('gate_member_banned_description'), helper: t('gate_member_banned_helper') },
+    server_banned: { title: t('gate_server_banned_title'), description: t('gate_server_banned_description'), helper: t('gate_server_banned_helper') },
     missing_guild: { title: t('gate_missing_guild_title'), description: t('gate_missing_guild_description'), helper: t('gate_missing_guild_helper') },
     missing_service_role: { title: t('gate_missing_service_role_title'), description: t('gate_missing_service_role_description'), helper: t('gate_missing_service_role_helper') },
     server_not_registered: { title: t('gate_server_not_registered_title'), description: t('gate_server_not_registered_description'), helper: t('gate_server_not_registered_helper') },
@@ -67,7 +150,7 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
   };
   const [copied, setCopied] = useState(false);
   const [muted, setMuted] = useState(true);
-  const [reportedStatus, setReportedStatus] = useState<string | null>(null);
+  const [infoOpen, setInfoOpen] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const toggleMute = () => {
@@ -76,40 +159,6 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
     if (v.muted) { v.muted = false; v.volume = 1; v.play().catch(() => {}); }
     else { v.muted = true; }
     setMuted(v.muted);
-  };
-
-  const STATUS_TO_CODE: Partial<Record<ActivityReadinessStatus, string>> = {
-    server_not_registered: 'DW-2001',
-    server_setup_required: 'DW-2002',
-    bot_not_in_guild: 'DW-2003',
-    discord_api_error: 'DW-2004',
-    missing_service_role: 'DW-2005',
-    missing_bot_token: 'DW-2006',
-    unauthorized: 'DW-3001',
-    user_not_in_guild: 'DW-3002',
-    missing_user_profile: 'DW-3003',
-  };
-
-  const REPORTABLE = new Set(['discord_api_error', 'missing_service_role', 'missing_bot_token', 'server_not_registered', 'server_setup_required']);
-  const alreadyReported = reportedStatus === readiness.status;
-
-  const handleReport = async () => {
-    try {
-      await fetchWithCreds('/api/admin/report-error', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          status: readiness.status,
-          guildId: readiness.guildId,
-          guildName: readiness.guildName,
-          debug: readiness.debug,
-          userAgent: navigator.userAgent,
-          timestamp: new Date().toISOString(),
-          url: window.location.href,
-        }),
-      });
-      setReportedStatus(readiness.status);
-    } catch { /* silently pass */ }
   };
   if (readiness.status === 'missing_guild') {
     return <DmScreen />;
@@ -137,25 +186,26 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
     }
   };
 
-  const copy = useMemo(() => COPY_BY_STATUS[readiness.status], [readiness.status]);
+  const copy = getRoleAwareCopy(
+    readiness.status,
+    COPY_BY_STATUS[readiness.status],
+    t,
+    readiness.isAdmin,
+  );
   const isBotMissing = readiness.status === 'bot_not_in_guild';
   const isAdmin = readiness.isAdmin && readiness.canInviteBot;
 
-  const supportMessage = useMemo(() => {
-    const serverName = readiness.guildName ?? readiness.guildId ?? t('gate_default_server_name');
-    const botLink = readiness.inviteUrl ? `\n${t('gate_bot_invite_link_prefix')}${readiness.inviteUrl}` : '';
-    if (isBotMissing && isAdmin) {
-      return t('gate_support_message_admin_bot_missing', { serverName, botLink });
-    }
-    if (isBotMissing) {
-      return t('gate_support_message_user_bot_missing', { serverName, botLink });
-    }
-    return t('gate_support_message_generic', { serverName, status: readiness.status });
-  }, [isAdmin, isBotMissing, readiness.guildId, readiness.guildName, readiness.inviteUrl, readiness.status, t]);
+  const serverName = readiness.guildName ?? readiness.guildId ?? t('gate_default_server_name');
+  const botLink = readiness.inviteUrl ? `\n${t('gate_bot_invite_link_prefix')}${readiness.inviteUrl}` : '';
+  const supportMessage = isBotMissing && isAdmin
+    ? t('gate_support_message_admin_bot_missing', { serverName, botLink })
+    : isBotMissing
+      ? t('gate_support_message_user_bot_missing', { serverName, botLink })
+      : t('gate_support_message_generic', { serverName, status: readiness.status });
 
   const copyToClipboard = async (text: string) => {
     try {
-      // Discord Activity'de clipboard API çalışmaz, execCommand fallback
+      // Discord Activity'de clipboard API Ã§alÄ±ÅŸmaz, execCommand fallback
       const el = document.createElement('textarea');
       el.value = text;
       el.style.cssText = 'position:fixed;opacity:0;pointer-events:none';
@@ -196,10 +246,37 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
     <div className="relative isolate min-h-screen overflow-hidden bg-[#0b0d12] text-white">
       <VideoBackground videoRef={videoRef} src="/cdn/Storage/Thragg.mp4" />
 
-      {/* Ses butonu — masaüstünde sağ üst */}
-      <div className="hidden sm:block absolute z-20 top-6 right-6">
+      {/* Ses butonu â€” masaÃ¼stÃ¼nde saÄŸ Ã¼st */}
+      <div className="hidden sm:flex absolute z-20 top-6 right-6 items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setInfoOpen((v) => !v)}
+          className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-black/20 text-white/70 backdrop-blur-sm transition hover:bg-black/35 hover:text-white"
+          aria-label="Bilgi paneli"
+        >
+          <span className="text-sm font-bold leading-none">i</span>
+        </button>
         <MuteButton muted={muted} onToggle={toggleMute} src="/cdn/Storage/Thragg.mp4" />
       </div>
+
+      {infoOpen && (
+        <div className="hidden sm:flex absolute z-20 top-20 right-6 w-80 flex-col gap-3 rounded-2xl border border-white/15 bg-black/55 p-4 text-white/85 backdrop-blur-md">
+          <button
+            type="button"
+            onClick={() => {
+              setInfoOpen(false);
+              onBackToSplash();
+            }}
+            className="w-full rounded-xl border border-white/25 bg-white/10 px-3 py-2 text-left text-xs font-semibold text-white transition hover:bg-white/20"
+          >
+            Karşılama ekranına dön
+          </button>
+          <p className="text-xs text-white/80">{copy.title}</p>
+          <p className="text-xs text-white/60">{copy.description}</p>
+          <p className="text-xs text-white/45">{copy.helper}</p>
+          <p className="text-[11px] font-mono text-white/35">{readiness.status}</p>
+        </div>
+      )}
 
       <main className="relative z-10 flex min-h-screen w-full flex-col items-start justify-center gap-0 px-8 sm:px-16">
         <div className="flex flex-col gap-5 max-w-lg">
@@ -223,40 +300,42 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
             </p>
           </div>
 
-          {REPORTABLE.has(readiness.status) && (
-            <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 backdrop-blur-md flex flex-col gap-2">
-              <p className="text-xs font-mono text-red-300">
-                {STATUS_TO_CODE[readiness.status] && (
-                  <span className="font-bold text-red-200">{STATUS_TO_CODE[readiness.status]} · </span>
-                )}
-                <span className="font-bold">{readiness.status}</span>
-                {readiness.debug && <> · {JSON.stringify(readiness.debug)}</>}
-              </p>
-              <button
-                type="button"
-                onClick={handleReport}
-                disabled={alreadyReported}
-                className="self-start flex items-center gap-1.5 rounded-full border border-red-400/40 bg-red-500/25 px-4 py-1.5 text-xs font-semibold text-red-200 backdrop-blur-md transition hover:bg-red-500/40 disabled:opacity-50"
-              >
-                {alreadyReported ? t('gate_reported_button') : (
-                  <>
-                    <svg viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3">
-                      <path d="M3.5 2a.5.5 0 01.5-.5h8a.5.5 0 01.354.854L9.207 5.5l3.147 3.146A.5.5 0 0112 9.5H4.5V14a.5.5 0 01-1 0V2z" />
-                    </svg>
-                    {t('gate_report_button')}
-                  </>
-                )}
-              </button>
-            </div>
-          )}
-
           {copied && <p className="text-xs font-semibold text-emerald-400">{t('gate_copied')}</p>}
 
           <div className="flex flex-wrap items-center gap-2 pt-2">
             {/* Mobilde ses butonu */}
             <div className="sm:hidden">
-              <MuteButton muted={muted} onToggle={toggleMute} src="/cdn/Storage/Test4.mp4" />
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setInfoOpen((v) => !v)}
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-black/20 text-white/70 backdrop-blur-sm transition hover:bg-black/35 hover:text-white"
+                  aria-label="Bilgi paneli"
+                >
+                  <span className="text-sm font-bold leading-none">i</span>
+                </button>
+                <MuteButton muted={muted} onToggle={toggleMute} src="/cdn/Storage/Test4.mp4" />
+              </div>
             </div>
+
+            {infoOpen && (
+              <div className="sm:hidden w-full rounded-2xl border border-white/15 bg-black/55 p-4 text-white/85 backdrop-blur-md flex flex-col gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setInfoOpen(false);
+                    onBackToSplash();
+                  }}
+                  className="w-full rounded-xl border border-white/25 bg-white/10 px-3 py-2 text-left text-xs font-semibold text-white transition hover:bg-white/20"
+                >
+                  Karşılama ekranına dön
+                </button>
+                <p className="text-xs text-white/80">{copy.title}</p>
+                <p className="text-xs text-white/60">{copy.description}</p>
+                <p className="text-xs text-white/45">{copy.helper}</p>
+                <p className="text-[11px] font-mono text-white/35">{readiness.status}</p>
+              </div>
+            )}
 
             <button
               type="button"

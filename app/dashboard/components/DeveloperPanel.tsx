@@ -155,7 +155,7 @@ const prettyJson = (value: unknown) => {
   try { return JSON.stringify(value, null, 2); } catch { return String(value); }
 };
 
-type TabId = 'overview' | 'logs' | 'apps' | 'servers' | 'profiles' | 'ads' | 'suspicious' | 'reports';
+type TabId = 'overview' | 'logs' | 'apps' | 'servers' | 'profiles' | 'ads' | 'suspicious' | 'reports' | 'bans';
 
 type BugReport = {
   id: string;
@@ -170,6 +170,35 @@ type BugReport = {
   updated_at?: string | null;
 };
 
+type BanScope = 'member' | 'server';
+
+type MemberBan = {
+  id: string;
+  user_id: string;
+  guild_id?: string | null;
+  reason?: string | null;
+  is_active: boolean;
+  created_by?: string | null;
+  created_at: string;
+  expires_at?: string | null;
+  lifted_at?: string | null;
+  lifted_by?: string | null;
+  metadata?: Record<string, unknown> | null;
+};
+
+type ServerBan = {
+  id: string;
+  guild_id: string;
+  reason?: string | null;
+  is_active: boolean;
+  created_by?: string | null;
+  created_at: string;
+  expires_at?: string | null;
+  lifted_at?: string | null;
+  lifted_by?: string | null;
+  metadata?: Record<string, unknown> | null;
+};
+
 const NAV_ITEMS: { id: TabId; labelKey: string; Icon: React.ElementType; accent: string }[] = [
   { id: 'overview',   labelKey: 'dev_nav_overview',   Icon: LuLayoutDashboard, accent: 'text-[#7289da]' },
   { id: 'logs',       labelKey: 'dev_nav_logs',       Icon: LuScrollText,      accent: 'text-emerald-400' },
@@ -179,6 +208,7 @@ const NAV_ITEMS: { id: TabId; labelKey: string; Icon: React.ElementType; accent:
   { id: 'profiles',   labelKey: 'dev_nav_profiles',   Icon: LuUsers,           accent: 'text-sky-400' },
   { id: 'ads',        labelKey: 'dev_nav_ads',        Icon: LuMegaphone,       accent: 'text-pink-400' },
   { id: 'reports',    labelKey: 'dev_nav_reports',    Icon: LuBug,             accent: 'text-orange-400' },
+  { id: 'bans',       labelKey: 'dev_nav_bans',       Icon: LuShield,          accent: 'text-rose-400' },
 ];
 
 export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClose, variant = 'panel' }: Props) {
@@ -219,6 +249,17 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
   const [adSuccess, setAdSuccess] = useState(false);
   const [inviteUrl, setInviteUrl] = useState('');
   const [preview, setPreview] = useState<Omit<Ad, 'id' | 'active'> | null>(null);
+  const [banScope, setBanScope] = useState<BanScope>('member');
+  const [memberBans, setMemberBans] = useState<MemberBan[]>([]);
+  const [serverBans, setServerBans] = useState<ServerBan[]>([]);
+  const [banActiveOnly, setBanActiveOnly] = useState(true);
+  const [banSortBy, setBanSortBy] = useState<'created_at' | 'expires_at'>('created_at');
+  const [banSortDir, setBanSortDir] = useState<'desc' | 'asc'>('desc');
+  const [banSearch, setBanSearch] = useState('');
+  const [banSubmitting, setBanSubmitting] = useState(false);
+  const [banLiftingId, setBanLiftingId] = useState<string | null>(null);
+  const [memberBanForm, setMemberBanForm] = useState({ userId: '', guildId: '', reason: '', expiresAt: '' });
+  const [serverBanForm, setServerBanForm] = useState({ guildId: '', reason: '', expiresAt: '' });
 
   useEffect(() => { fetchSection('overview'); }, []);
   useEffect(() => { if (activeTab !== 'overview') fetchSection(activeTab); }, [activeTab]);
@@ -259,6 +300,9 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
         return;
       } else if (section === 'reports') {
         await fetchReports(reportFilter, reportTypeFilter);
+        return;
+      } else if (section === 'bans') {
+        await fetchBans();
         return;
       }
     } catch (e) {
@@ -457,6 +501,147 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
       setSuspiciousFlags((prev) => prev.map((f) => f.id === id ? { ...f, status } : f));
     } catch (e) { setError(e instanceof Error ? e.message : String(e)); }
   };
+
+  const fetchBans = async () => {
+    setLoadingTab(true);
+    try {
+      const query = new URLSearchParams({
+        type: 'all',
+        active: banActiveOnly ? 'true' : 'false',
+      });
+      const res = await fetch(apiUrl(`/api/admin/bans?${query.toString()}`), { credentials: 'include' });
+      const data = await res.json() as { member?: MemberBan[]; server?: ServerBan[]; error?: string };
+      if (!res.ok) throw new Error(data.error ?? String(res.status));
+      setMemberBans(data.member ?? []);
+      setServerBans(data.server ?? []);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setLoadingTab(false);
+    }
+  };
+
+  const changeBanActiveOnly = async (value: boolean) => {
+    setBanActiveOnly(value);
+    if (activeTab !== 'bans') return;
+    setLoadingTab(true);
+    try {
+      const query = new URLSearchParams({
+        type: 'all',
+        active: value ? 'true' : 'false',
+      });
+      const res = await fetch(apiUrl(`/api/admin/bans?${query.toString()}`), { credentials: 'include' });
+      const data = await res.json() as { member?: MemberBan[]; server?: ServerBan[]; error?: string };
+      if (!res.ok) throw new Error(data.error ?? String(res.status));
+      setMemberBans(data.member ?? []);
+      setServerBans(data.server ?? []);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setLoadingTab(false);
+    }
+  };
+
+  const toIsoOrNull = (value: string) => (value ? new Date(value).toISOString() : null);
+
+  const createMemberBan = async () => {
+    if (!memberBanForm.userId.trim()) return;
+    setBanSubmitting(true);
+    setError(null);
+    try {
+      const res = await fetch(apiUrl('/api/admin/bans'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          type: 'member',
+          userId: memberBanForm.userId.trim(),
+          guildId: memberBanForm.guildId.trim() || undefined,
+          reason: memberBanForm.reason.trim() || undefined,
+          expiresAt: toIsoOrNull(memberBanForm.expiresAt),
+        }),
+      });
+      const data = await res.json() as { error?: string };
+      if (!res.ok) throw new Error(data.error ?? String(res.status));
+      setMemberBanForm({ userId: '', guildId: '', reason: '', expiresAt: '' });
+      await fetchBans();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBanSubmitting(false);
+    }
+  };
+
+  const createServerBan = async () => {
+    if (!serverBanForm.guildId.trim()) return;
+    setBanSubmitting(true);
+    setError(null);
+    try {
+      const res = await fetch(apiUrl('/api/admin/bans'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          type: 'server',
+          guildId: serverBanForm.guildId.trim(),
+          reason: serverBanForm.reason.trim() || undefined,
+          expiresAt: toIsoOrNull(serverBanForm.expiresAt),
+        }),
+      });
+      const data = await res.json() as { error?: string };
+      if (!res.ok) throw new Error(data.error ?? String(res.status));
+      setServerBanForm({ guildId: '', reason: '', expiresAt: '' });
+      await fetchBans();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBanSubmitting(false);
+    }
+  };
+
+  const liftBan = async (type: BanScope, id: string) => {
+    setBanLiftingId(id);
+    setError(null);
+    try {
+      const res = await fetch(apiUrl('/api/admin/bans'), {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ type, id }),
+      });
+      const data = await res.json() as { error?: string };
+      if (!res.ok) throw new Error(data.error ?? String(res.status));
+      await fetchBans();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBanLiftingId(null);
+    }
+  };
+
+  const applyBanSearch = <T extends MemberBan | ServerBan>(rows: T[]) => {
+    const q = banSearch.trim().toLowerCase();
+    if (!q) return rows;
+    return rows.filter((row) => {
+      const keys = [
+        'user_id' in row ? row.user_id : '',
+        row.guild_id ?? '',
+        row.reason ?? '',
+        row.created_by ?? '',
+        row.lifted_by ?? '',
+      ].join(' ').toLowerCase();
+      return keys.includes(q);
+    });
+  };
+
+  const sortBanRows = <T extends MemberBan | ServerBan>(rows: T[]) => {
+    const dir = banSortDir === 'asc' ? 1 : -1;
+    const score = (v?: string | null) => (v ? new Date(v).getTime() : -8640000000000000);
+    return [...rows].sort((a, b) => (score(a[banSortBy]) - score(b[banSortBy])) * dir);
+  };
+
+  const visibleMemberBans = sortBanRows(applyBanSearch(memberBans));
+  const visibleServerBans = sortBanRows(applyBanSearch(serverBans));
 
   const generateInvite = async (guildId: string) => {
     setInviteLoading(true); setInviteResult(null); setError(null);
@@ -1075,6 +1260,199 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
     </div>
   );
 
+  const bansSection = (
+    <div className="flex flex-col gap-4">
+      <div className="rounded-2xl border border-white/10 bg-[#0b0d12] p-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setBanScope('member')}
+              className={`rounded-full border px-3 py-1 text-[11px] font-medium transition ${banScope === 'member' ? 'border-sky-400/40 bg-sky-500/15 text-sky-300' : 'border-white/10 text-white/40 hover:text-white/70'}`}
+            >
+              Üye Banları
+            </button>
+            <button
+              type="button"
+              onClick={() => setBanScope('server')}
+              className={`rounded-full border px-3 py-1 text-[11px] font-medium transition ${banScope === 'server' ? 'border-violet-400/40 bg-violet-500/15 text-violet-300' : 'border-white/10 text-white/40 hover:text-white/70'}`}
+            >
+              Sunucu Banları
+            </button>
+          </div>
+
+          <label className="ml-auto flex items-center gap-2 text-[11px] text-white/60">
+            <input
+              type="checkbox"
+              checked={banActiveOnly}
+              onChange={(e) => { void changeBanActiveOnly(e.target.checked); }}
+              className="h-3.5 w-3.5 rounded border-white/20 bg-black/30"
+            />
+            Sadece aktif banlar
+          </label>
+        </div>
+
+        <div className="mt-3 grid gap-2 md:grid-cols-3">
+          <input
+            value={banSearch}
+            onChange={(e) => setBanSearch(e.target.value)}
+            placeholder="Ara: user_id, guild_id, sebep, işlem yapan"
+            className="rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-xs text-white placeholder-white/25 outline-none focus:border-[#5865F2]/40"
+          />
+          <select
+            value={banSortBy}
+            onChange={(e) => setBanSortBy(e.target.value as 'created_at' | 'expires_at')}
+            className="rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-xs text-white outline-none focus:border-[#5865F2]/40"
+          >
+            <option value="created_at">Sıralama: Oluşturulma Tarihi</option>
+            <option value="expires_at">Sıralama: Bitiş Tarihi</option>
+          </select>
+          <select
+            value={banSortDir}
+            onChange={(e) => setBanSortDir(e.target.value as 'desc' | 'asc')}
+            className="rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-xs text-white outline-none focus:border-[#5865F2]/40"
+          >
+            <option value="desc">Yeni - Eski</option>
+            <option value="asc">Eski - Yeni</option>
+          </select>
+        </div>
+      </div>
+
+      {banScope === 'member' ? (
+        <div className="rounded-2xl border border-sky-500/20 bg-sky-500/5 p-4">
+          <p className="text-xs font-semibold uppercase tracking-wider text-sky-300/90">Yeni Üye Banı</p>
+          <div className="mt-3 grid gap-2 md:grid-cols-2">
+            <input
+              value={memberBanForm.userId}
+              onChange={(e) => setMemberBanForm((p) => ({ ...p, userId: e.target.value }))}
+              placeholder="user_id (zorunlu)"
+              className="rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-xs text-white placeholder-white/25 outline-none focus:border-sky-400/40"
+            />
+            <input
+              value={memberBanForm.guildId}
+              onChange={(e) => setMemberBanForm((p) => ({ ...p, guildId: e.target.value }))}
+              placeholder="guild_id (opsiyonel, boşsa global)"
+              className="rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-xs text-white placeholder-white/25 outline-none focus:border-sky-400/40"
+            />
+            <input
+              type="datetime-local"
+              value={memberBanForm.expiresAt}
+              onChange={(e) => setMemberBanForm((p) => ({ ...p, expiresAt: e.target.value }))}
+              className="rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-xs text-white outline-none focus:border-sky-400/40"
+            />
+            <button
+              type="button"
+              onClick={createMemberBan}
+              disabled={banSubmitting || !memberBanForm.userId.trim()}
+              className="rounded-xl border border-sky-400/30 bg-sky-500/15 px-3 py-2 text-xs font-semibold text-sky-200 transition hover:bg-sky-500/25 disabled:opacity-40"
+            >
+              {banSubmitting ? 'Kaydediliyor...' : 'Üye Banı Ekle'}
+            </button>
+          </div>
+          <textarea
+            value={memberBanForm.reason}
+            onChange={(e) => setMemberBanForm((p) => ({ ...p, reason: e.target.value }))}
+            rows={3}
+            placeholder="Ban sebebi (detaylı)"
+            className="mt-2 w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-xs text-white placeholder-white/25 outline-none focus:border-sky-400/40"
+          />
+        </div>
+      ) : (
+        <div className="rounded-2xl border border-violet-500/20 bg-violet-500/5 p-4">
+          <p className="text-xs font-semibold uppercase tracking-wider text-violet-300/90">Yeni Sunucu Banı</p>
+          <div className="mt-3 grid gap-2 md:grid-cols-2">
+            <input
+              value={serverBanForm.guildId}
+              onChange={(e) => setServerBanForm((p) => ({ ...p, guildId: e.target.value }))}
+              placeholder="guild_id (zorunlu)"
+              className="rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-xs text-white placeholder-white/25 outline-none focus:border-violet-400/40"
+            />
+            <input
+              type="datetime-local"
+              value={serverBanForm.expiresAt}
+              onChange={(e) => setServerBanForm((p) => ({ ...p, expiresAt: e.target.value }))}
+              className="rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-xs text-white outline-none focus:border-violet-400/40"
+            />
+          </div>
+          <textarea
+            value={serverBanForm.reason}
+            onChange={(e) => setServerBanForm((p) => ({ ...p, reason: e.target.value }))}
+            rows={3}
+            placeholder="Ban sebebi (detaylı)"
+            className="mt-2 w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-xs text-white placeholder-white/25 outline-none focus:border-violet-400/40"
+          />
+          <button
+            type="button"
+            onClick={createServerBan}
+            disabled={banSubmitting || !serverBanForm.guildId.trim()}
+            className="mt-2 rounded-xl border border-violet-400/30 bg-violet-500/15 px-3 py-2 text-xs font-semibold text-violet-200 transition hover:bg-violet-500/25 disabled:opacity-40"
+          >
+            {banSubmitting ? 'Kaydediliyor...' : 'Sunucu Banı Ekle'}
+          </button>
+        </div>
+      )}
+
+      <div className="flex flex-col gap-3 max-h-[620px] overflow-y-auto pr-1">
+        {(banScope === 'member' ? visibleMemberBans : visibleServerBans).map((ban) => {
+          const expired = Boolean(ban.expires_at && new Date(ban.expires_at).getTime() <= Date.now());
+          const active = ban.is_active && !expired;
+          const badge = active
+            ? 'border-red-400/30 bg-red-500/10 text-red-300'
+            : expired
+              ? 'border-amber-400/30 bg-amber-500/10 text-amber-300'
+              : 'border-white/10 bg-white/5 text-white/40';
+          return (
+            <div key={ban.id} className="rounded-2xl border border-white/[0.08] bg-[#0b0d12] p-4">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase ${badge}`}>
+                    {active ? 'Aktif' : expired ? 'Süresi Dolmuş' : 'Kaldırıldı'}
+                  </span>
+                  {'user_id' in ban ? (
+                    <span className="text-[11px] text-sky-300">user: {ban.user_id}</span>
+                  ) : (
+                    <span className="text-[11px] text-violet-300">guild: {ban.guild_id}</span>
+                  )}
+                  {ban.guild_id && 'user_id' in ban && (
+                    <span className="text-[11px] text-white/35">guild: {ban.guild_id}</span>
+                  )}
+                </div>
+                <span className="text-[10px] text-white/25">{formatDate(ban.created_at)}</span>
+              </div>
+
+              <p className="mt-2 text-xs text-white/75 whitespace-pre-wrap">{ban.reason || 'Sebep belirtilmedi.'}</p>
+
+              <div className="mt-2 grid gap-1 text-[10px] text-white/35 md:grid-cols-2">
+                <span>Ban ID: {ban.id}</span>
+                <span>Oluşturan: {ban.created_by ?? '—'}</span>
+                <span>Bitiş: {formatDate(ban.expires_at ?? null)}</span>
+                <span>Kaldırılma: {formatDate(ban.lifted_at ?? null)}</span>
+              </div>
+
+              {active && (
+                <button
+                  type="button"
+                  onClick={() => liftBan(banScope, ban.id)}
+                  disabled={banLiftingId === ban.id}
+                  className="mt-3 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-3 py-1.5 text-[11px] font-semibold text-emerald-300 transition hover:bg-emerald-500/20 disabled:opacity-40"
+                >
+                  {banLiftingId === ban.id ? 'İşleniyor...' : 'Unban'}
+                </button>
+              )}
+            </div>
+          );
+        })}
+
+        {(banScope === 'member' ? visibleMemberBans : visibleServerBans).length === 0 && (
+          <div className="flex flex-col items-center gap-2 py-12 text-white/25">
+            <LuShield className="w-8 h-8" />
+            <p className="text-xs">Bu filtrede ban kaydı bulunamadı.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
   const SECTION_CONTENT: Record<TabId, React.ReactNode> = {
     overview:   overviewSection,
     logs:       logsSection,
@@ -1084,6 +1462,7 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
     ads:        adsSection,
     suspicious: suspiciousSection,
     reports:    reportsSection,
+    bans:       bansSection,
   };
 
   const activeNav = NAV_ITEMS.find(n => n.id === activeTab)!;
