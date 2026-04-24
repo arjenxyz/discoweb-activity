@@ -194,11 +194,11 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry }: G
 
   return (
     <div className="relative isolate min-h-screen overflow-hidden bg-[#0b0d12] text-white">
-      <VideoBackground videoRef={videoRef} src="/cdn/Storage/Test3.mp4" />
+      <VideoBackground videoRef={videoRef} src="/cdn/Storage/Thragg.mp4" />
 
       {/* Ses butonu — masaüstünde sağ üst */}
       <div className="hidden sm:block absolute z-20 top-6 right-6">
-        <MuteButton muted={muted} onToggle={toggleMute} src="/cdn/Storage/Test3.mp4" />
+        <MuteButton muted={muted} onToggle={toggleMute} src="/cdn/Storage/Thragg.mp4" />
       </div>
 
       <main className="relative z-10 flex min-h-screen w-full flex-col items-start justify-center gap-0 px-8 sm:px-16">
