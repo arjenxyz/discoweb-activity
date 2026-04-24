@@ -309,27 +309,30 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry, onB
           className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-black/20 text-white/70 backdrop-blur-sm transition hover:bg-black/35 hover:text-white"
           aria-label="Bilgi paneli"
         >
-          <span className="text-sm font-bold leading-none">i</span>
+          <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4">
+            <path fillRule="evenodd" d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm9 3a1 1 0 11-2 0 1 1 0 012 0zm-.25-6.25a.75.75 0 00-1.5 0v3.5a.75.75 0 001.5 0v-3.5z" />
+          </svg>
         </button>
         <MuteButton muted={muted} onToggle={toggleMute} src="/cdn/Storage/Thragg.mp4" />
       </div>
 
       {infoOpen && (
-        <div className="hidden sm:flex absolute z-20 top-20 right-6 w-80 flex-col gap-3 rounded-2xl border border-white/15 bg-black/55 p-4 text-white/85 backdrop-blur-md">
-          <button
-            type="button"
-            onClick={() => {
-              setInfoOpen(false);
-              onBackToSplash();
-            }}
-            className="w-full rounded-xl border border-white/25 bg-white/10 px-3 py-2 text-left text-xs font-semibold text-white transition hover:bg-white/20"
-          >
-            Karşılama ekranına dön
-          </button>
-          <p className="text-xs text-white/80">{copy.title}</p>
-          <p className="text-xs text-white/60">{copy.description}</p>
-          <p className="text-xs text-white/45">{copy.helper}</p>
-          <p className="text-[11px] font-mono text-white/35">{readiness.status}</p>
+        <div className="hidden sm:flex absolute z-20 top-12 right-6 w-52 rounded-xl border border-white/10 bg-[#0b0d12]/95 backdrop-blur-xl shadow-2xl overflow-hidden">
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+          <div className="py-1.5">
+            <MenuItem
+              icon={
+                <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4">
+                  <path d="M7.22 1.63a1 1 0 011.56 0l1.22 1.46 1.86-.38a1 1 0 011.16.9l.17 1.9 1.6 1.04a1 1 0 010 1.7l-1.6 1.04-.17 1.9a1 1 0 01-1.16.9l-1.86-.38-1.22 1.46a1 1 0 01-1.56 0L6 10.21l-1.86.38a1 1 0 01-1.16-.9l-.17-1.9L1.21 6.75a1 1 0 010-1.7l1.6-1.04.17-1.9a1 1 0 011.16-.9L6 1.59l1.22-1.46z" />
+                </svg>
+              }
+              label="Karşılama ekranına dön"
+              onClick={() => {
+                setInfoOpen(false);
+                onBackToSplash();
+              }}
+            />
+          </div>
         </div>
       )}
 
@@ -372,28 +375,31 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry, onB
                   className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-black/20 text-white/70 backdrop-blur-sm transition hover:bg-black/35 hover:text-white"
                   aria-label="Bilgi paneli"
                 >
-                  <span className="text-sm font-bold leading-none">i</span>
+                  <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4">
+                    <path fillRule="evenodd" d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm9 3a1 1 0 11-2 0 1 1 0 012 0zm-.25-6.25a.75.75 0 00-1.5 0v3.5a.75.75 0 001.5 0v-3.5z" />
+                  </svg>
                 </button>
                 <MuteButton muted={muted} onToggle={toggleMute} src="/cdn/Storage/Test4.mp4" />
               </div>
             </div>
 
             {infoOpen && (
-              <div className="sm:hidden w-full rounded-2xl border border-white/15 bg-black/55 p-4 text-white/85 backdrop-blur-md flex flex-col gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setInfoOpen(false);
-                    onBackToSplash();
-                  }}
-                  className="w-full rounded-xl border border-white/25 bg-white/10 px-3 py-2 text-left text-xs font-semibold text-white transition hover:bg-white/20"
-                >
-                  Karşılama ekranına dön
-                </button>
-                <p className="text-xs text-white/80">{copy.title}</p>
-                <p className="text-xs text-white/60">{copy.description}</p>
-                <p className="text-xs text-white/45">{copy.helper}</p>
-                <p className="text-[11px] font-mono text-white/35">{readiness.status}</p>
+              <div className="sm:hidden w-full rounded-xl border border-white/10 bg-[#0b0d12]/95 backdrop-blur-xl shadow-2xl overflow-hidden">
+                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+                <div className="py-1.5">
+                  <MenuItem
+                    icon={
+                      <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4">
+                        <path d="M7.22 1.63a1 1 0 011.56 0l1.22 1.46 1.86-.38a1 1 0 011.16.9l.17 1.9 1.6 1.04a1 1 0 010 1.7l-1.6 1.04-.17 1.9a1 1 0 01-1.16.9l-1.86-.38-1.22 1.46a1 1 0 01-1.56 0L6 10.21l-1.86.38a1 1 0 01-1.16-.9l-.17-1.9L1.21 6.75a1 1 0 010-1.7l1.6-1.04.17-1.9a1 1 0 011.16-.9L6 1.59l1.22-1.46z" />
+                      </svg>
+                    }
+                    label="Karşılama ekranına dön"
+                    onClick={() => {
+                      setInfoOpen(false);
+                      onBackToSplash();
+                    }}
+                  />
+                </div>
               </div>
             )}
 
@@ -444,6 +450,25 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry, onB
         </div>
       </main>
     </div>
+  );
+}
+
+function MenuItem({ icon, label, onClick }: {
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-full flex items-center gap-3 px-3.5 py-2.5 text-left transition hover:bg-white/5 text-white/80 hover:text-white"
+    >
+      <span className="flex-shrink-0 opacity-70">{icon}</span>
+      <div className="flex flex-col gap-0.5">
+        <span className="text-sm font-semibold leading-none">{label}</span>
+      </div>
+    </button>
   );
 }
 
