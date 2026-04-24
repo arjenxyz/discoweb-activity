@@ -41,6 +41,7 @@ type GateProps = {
   loading: boolean;
   onRetry: () => void;
   onBackToSplash: () => void;
+  openLink?: (url: string) => Promise<void>;
 };
 
 type GateCopy = {
@@ -133,7 +134,7 @@ function getRoleAwareCopy(
 }
 
 
-export default function ActivityReadinessGate({ readiness, loading, onRetry, onBackToSplash }: GateProps) {
+export default function ActivityReadinessGate({ readiness, loading, onRetry, onBackToSplash, openLink }: GateProps) {
   const t = useT();
 
   const COPY_BY_STATUS: Record<ActivityReadinessStatus, GateCopy> = {
@@ -332,6 +333,31 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry, onB
                 onBackToSplash();
               }}
             />
+            {openLink && (
+              <>
+                <div className="my-1 h-px bg-white/5 mx-3" />
+                <MenuItem
+                  icon={
+                    <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4">
+                      <path d="M13.545 2.907a13.227 13.227 0 00-3.257-1.011.05.05 0 00-.052.025c-.141.25-.297.577-.406.833a12.19 12.19 0 00-3.658 0 8.258 8.258 0 00-.412-.833.051.051 0 00-.052-.025c-1.125.194-2.22.534-3.257 1.011a.041.041 0 00-.021.018C.356 6.024-.213 9.047.066 12.032c.001.014.01.028.021.037a13.276 13.276 0 003.995 2.02.05.05 0 00.056-.019c.308-.42.582-.863.818-1.329a.05.05 0 00-.01-.059.051.051 0 00-.018-.011 8.875 8.875 0 01-1.248-.595.05.05 0 01-.02-.066.051.051 0 01.015-.019c.084-.063.168-.129.248-.195a.05.05 0 01.051-.007c2.619 1.196 5.454 1.196 8.041 0a.052.052 0 01.053.007c.08.066.164.132.248.195a.051.051 0 01-.004.085 8.254 8.254 0 01-1.249.594.05.05 0 00-.03.03.052.052 0 00.003.041c.24.465.515.909.817 1.329a.05.05 0 00.056.019 13.235 13.235 0 004.001-2.02.049.049 0 00.021-.037c.334-3.451-.559-6.449-2.366-9.106a.034.034 0 00-.02-.019zm-8.198 7.307c-.789 0-1.438-.724-1.438-1.612 0-.889.637-1.613 1.438-1.613.807 0 1.45.73 1.438 1.613 0 .888-.637 1.612-1.438 1.612zm5.316 0c-.788 0-1.438-.724-1.438-1.612 0-.889.637-1.613 1.438-1.613.807 0 1.451.73 1.438 1.613 0 .888-.631 1.612-1.438 1.612z" />
+                    </svg>
+                  }
+                  label="Discord"
+                  sub="Destek kanalı"
+                  onClick={() => { setInfoOpen(false); openLink('https://discord.gg/fDPsYhvKmu'); }}
+                />
+                <MenuItem
+                  icon={
+                    <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4">
+                      <path d="M1 2.75C1 1.784 1.784 1 2.75 1h10.5c.966 0 1.75.784 1.75 1.75v7.5A1.75 1.75 0 0113.25 12H9.06l.038.48.016.2c.017.193.035.327.06.45a.75.75 0 01-.605.894l-.01.001a.75.75 0 01-.848-.532c-.067-.228-.107-.483-.131-.724L7.5 12.5H5a.75.75 0 01-.596-.295L3 10.5H2.75A1.75 1.75 0 011 8.75v-6zM2.75 2.5a.25.25 0 00-.25.25v6.25c0 .138.112.25.25.25h.5a.75.75 0 01.596.295l1.404 1.705H7.5a.75.75 0 01.75.75v.059l.013.191H13.25a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25H2.75z" />
+                    </svg>
+                  }
+                  label="Dokümantasyon"
+                  sub="Kılavuzlar"
+                  onClick={() => { setInfoOpen(false); openLink('https://discoweb.tech/docs'); }}
+                />
+              </>
+            )}
           </div>
         </div>
       )}
@@ -399,6 +425,31 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry, onB
                       onBackToSplash();
                     }}
                   />
+                  {openLink && (
+                    <>
+                      <div className="my-1 h-px bg-white/5 mx-3" />
+                      <MenuItem
+                        icon={
+                          <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4">
+                            <path d="M13.545 2.907a13.227 13.227 0 00-3.257-1.011.05.05 0 00-.052.025c-.141.25-.297.577-.406.833a12.19 12.19 0 00-3.658 0 8.258 8.258 0 00-.412-.833.051.051 0 00-.052-.025c-1.125.194-2.22.534-3.257 1.011a.041.041 0 00-.021.018C.356 6.024-.213 9.047.066 12.032c.001.014.01.028.021.037a13.276 13.276 0 003.995 2.02.05.05 0 00.056-.019c.308-.42.582-.863.818-1.329a.05.05 0 00-.01-.059.051.051 0 00-.018-.011 8.875 8.875 0 01-1.248-.595.05.05 0 01-.02-.066.051.051 0 01.015-.019c.084-.063.168-.129.248-.195a.05.05 0 01.051-.007c2.619 1.196 5.454 1.196 8.041 0a.052.052 0 01.053.007c.08.066.164.132.248.195a.051.051 0 01-.004.085 8.254 8.254 0 01-1.249.594.05.05 0 00-.03.03.052.052 0 00.003.041c.24.465.515.909.817 1.329a.05.05 0 00.056.019 13.235 13.235 0 004.001-2.02.049.049 0 00.021-.037c.334-3.451-.559-6.449-2.366-9.106a.034.034 0 00-.02-.019zm-8.198 7.307c-.789 0-1.438-.724-1.438-1.612 0-.889.637-1.613 1.438-1.613.807 0 1.45.73 1.438 1.613 0 .888-.637 1.612-1.438 1.612zm5.316 0c-.788 0-1.438-.724-1.438-1.612 0-.889.637-1.613 1.438-1.613.807 0 1.451.73 1.438 1.613 0 .888-.631 1.612-1.438 1.612z" />
+                          </svg>
+                        }
+                        label="Discord"
+                        sub="Destek kanalı"
+                        onClick={() => { setInfoOpen(false); openLink('https://discord.gg/fDPsYhvKmu'); }}
+                      />
+                      <MenuItem
+                        icon={
+                          <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4">
+                            <path d="M1 2.75C1 1.784 1.784 1 2.75 1h10.5c.966 0 1.75.784 1.75 1.75v7.5A1.75 1.75 0 0113.25 12H9.06l.038.48.016.2c.017.193.035.327.06.45a.75.75 0 01-.605.894l-.01.001a.75.75 0 01-.848-.532c-.067-.228-.107-.483-.131-.724L7.5 12.5H5a.75.75 0 01-.596-.295L3 10.5H2.75A1.75 1.75 0 011 8.75v-6zM2.75 2.5a.25.25 0 00-.25.25v6.25c0 .138.112.25.25.25h.5a.75.75 0 01.596.295l1.404 1.705H7.5a.75.75 0 01.75.75v.059l.013.191H13.25a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25H2.75z" />
+                          </svg>
+                        }
+                        label="Dokümantasyon"
+                        sub="Kılavuzlar"
+                        onClick={() => { setInfoOpen(false); openLink('https://discoweb.tech/docs'); }}
+                      />
+                    </>
+                  )}
                 </div>
               </div>
             )}
@@ -453,9 +504,10 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry, onB
   );
 }
 
-function MenuItem({ icon, label, onClick }: {
+function MenuItem({ icon, label, sub, onClick }: {
   icon: React.ReactNode;
   label: string;
+  sub?: string;
   onClick: () => void;
 }) {
   return (
@@ -467,6 +519,7 @@ function MenuItem({ icon, label, onClick }: {
       <span className="flex-shrink-0 opacity-70">{icon}</span>
       <div className="flex flex-col gap-0.5">
         <span className="text-sm font-semibold leading-none">{label}</span>
+        {sub && <span className="text-[11px] text-white/30 leading-none">{sub}</span>}
       </div>
     </button>
   );

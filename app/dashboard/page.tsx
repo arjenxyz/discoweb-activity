@@ -1078,6 +1078,7 @@ export default function DashboardPage() {
         onBackToSplash={() => {
           setSplashDone(false);
         }}
+        openLink={openLink}
       />
     );
   }
