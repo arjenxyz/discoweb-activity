@@ -71,7 +71,6 @@ const BAN_REASON_DETAILS: Record<string, string> = {
   'Ekonomik sistemi manipüle etmek (borsa manipülasyonu)': 'Aktivitenin ekonomik sistemini manipüle etmek, borsa fiyatlarını yapay olarak etkilemek veya ekonomik dengesizlik yaratmak yasaklanmıştır.',
   'Süpheli aktiviteler barındırmak (dolandırıcılık merkezi)': 'Sunucuda dolandırıcılık, hile veya diğer yasaklanmış aktiviteleri barındırmak veya teşvik etmek yasaktır.',
   'Sunucu kurallarını ciddi şekilde ihlal etmek': 'Discord sunucusu kurallarını ciddi şekilde ihlal etmek, topluluk standartlarını aşmak veya ciddi disiplin ihlalleri yapmak yasaktır.',
-  'Aktivite katılım koşullarını karşılamamak': 'Aktivite katılım şartlarını karşılamamak, gerekli koşulları sağlamamak veya katılım kurallarını ihlal etmek yasaktır.',
   'Diğer sunucuları etkilemek (negatif etki)': 'Diğer sunucuları olumsuz etkilemek, zarar vermek veya topluluklar arası sorunlar yaratmak yasaklanmıştır.',
 };
 
