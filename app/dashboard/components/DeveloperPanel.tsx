@@ -263,6 +263,25 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
   const [memberBanForm, setMemberBanForm] = useState({ userId: '', guildId: '', reason: '', expiresAt: '' });
   const [serverBanForm, setServerBanForm] = useState({ guildId: '', reason: '', expiresAt: '' });
 
+  const MEMBER_BAN_REASONS = [
+    'Spam mesajları',
+    'Troll davranışı',
+    'Taciz',
+    'Kuralları ihlal',
+    'Uygunsuz içerik',
+    'Bot kullanımı',
+    'Hesap güvenliği ihlali',
+  ];
+
+  const SERVER_BAN_REASONS = [
+    'Bot kötüye kullanımı',
+    'Sunucu kuralları ihlali',
+    'Uygunsuz içerik',
+    'Spam',
+    'Güvenlik ihlali',
+    'Yönetim kararı',
+  ];
+
   useEffect(() => { fetchSection('overview'); }, []);
   useEffect(() => { if (activeTab !== 'overview') fetchSection(activeTab); }, [activeTab]);
   useEffect(() => { if (activeTab === 'ads') fetchAds(); }, [activeTab]);
@@ -1390,6 +1409,18 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
             placeholder="Ban sebebi (detaylı)"
             className="mt-2 w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-xs text-white placeholder-white/25 outline-none focus:border-sky-400/40"
           />
+          <div className="mt-2 flex flex-wrap gap-1">
+            {MEMBER_BAN_REASONS.map((reason) => (
+              <button
+                key={reason}
+                type="button"
+                onClick={() => setMemberBanForm((p) => ({ ...p, reason: reason }))}
+                className="rounded-lg border border-white/10 bg-black/20 px-2 py-1 text-[10px] text-white/70 transition hover:bg-white/10 hover:text-white"
+              >
+                {reason}
+              </button>
+            ))}
+          </div>
         </div>
       ) : (
         <div className="rounded-2xl border border-violet-500/20 bg-violet-500/5 p-4">
@@ -1437,6 +1468,18 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
             placeholder="Ban sebebi (detaylı)"
             className="mt-2 w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-xs text-white placeholder-white/25 outline-none focus:border-violet-400/40"
           />
+          <div className="mt-2 flex flex-wrap gap-1">
+            {SERVER_BAN_REASONS.map((reason) => (
+              <button
+                key={reason}
+                type="button"
+                onClick={() => setServerBanForm((p) => ({ ...p, reason: reason }))}
+                className="rounded-lg border border-white/10 bg-black/20 px-2 py-1 text-[10px] text-white/70 transition hover:bg-white/10 hover:text-white"
+              >
+                {reason}
+              </button>
+            ))}
+          </div>
           <button
             type="button"
             onClick={createServerBan}
