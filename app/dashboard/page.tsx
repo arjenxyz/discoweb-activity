@@ -67,6 +67,7 @@ export default function DashboardPage() {
   }, []);
 
   const [splashDone, setSplashDone] = useState(false);
+  const dashboardMusicRef = useRef<HTMLAudioElement | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<MemberProfile | null>(null);
@@ -135,6 +136,24 @@ export default function DashboardPage() {
       }
     } catch {}
   }, []);
+
+  useEffect(() => {
+    if (!splashDone) return;
+
+    const audio = new Audio('/music.mp3');
+    audio.loop = true;
+    audio.volume = 0.35;
+    dashboardMusicRef.current = audio;
+    void audio.play().catch(() => {});
+
+    return () => {
+      audio.pause();
+      audio.currentTime = 0;
+      if (dashboardMusicRef.current === audio) {
+        dashboardMusicRef.current = null;
+      }
+    };
+  }, [splashDone]);
 
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [notificationsModalOpen, setNotificationsModalOpen] = useState(false);
