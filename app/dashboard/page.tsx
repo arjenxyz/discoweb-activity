@@ -18,7 +18,6 @@ import MailSection from './components/MailSection';
 import SessionExpiredModal from './components/SessionExpiredModal';
 import DiscoverSection from './components/DiscoverSection';
 import MarketSection from './components/MarketSection';
-import TreasuryCard from './components/TreasuryCard';
 import BorsaSection from './components/BorsaSection';
 import BorsaDetailSection from './components/BorsaDetailSection';
 import PortfolioSection from './components/PortfolioSection';
@@ -200,6 +199,8 @@ export default function DashboardPage() {
   const ADVANCED_ONLY_SECTIONS: Section[] = ['borsa', 'borsa-detail', 'portfolio', 'dividend', 'ipo-apply', 'ipo', 'market-news', 'market', 'treasury'];
   const effectiveSection = unauthorized && activeSection !== 'store'
     ? 'overview'
+    : activeSection === 'treasury'
+      ? 'overview'
     : (!economyApproved && ADVANCED_ONLY_SECTIONS.includes(activeSection as Section))
       ? 'economy-apply'
       : activeSection;
@@ -1342,11 +1343,6 @@ export default function DashboardPage() {
             )}
             {effectiveSection === 'market' && (
               <MarketSection userId={profile?.userId} economyApproved={economyApproved} />
-            )}
-            {effectiveSection === 'treasury' && (
-              <div className="p-4 sm:p-6 lg:p-8">
-                <TreasuryCard />
-              </div>
             )}
 
             {effectiveSection === 'borsa' && (

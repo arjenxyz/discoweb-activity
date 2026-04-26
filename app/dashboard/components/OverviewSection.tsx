@@ -12,7 +12,6 @@ import {
   LuCoins,
 } from 'react-icons/lu';
 import type { MemberProfile, OverviewStats, OrderStats, OverviewStatsExpanded, BadgeInfo } from '../types';
-import TreasuryCard from './TreasuryCard';
 
 type OverviewSectionProps = {
   overviewLoading: boolean;
@@ -288,9 +287,6 @@ export default function OverviewSection({
 
         </>
       )}
-
-      {/* HAZİNE KARTI (sadece Yüksek Ekonomi sunucularında görünür) */}
-      <TreasuryCard />
 
     </section>
   );

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { LuChevronRight, LuHouse, LuMail, LuStore, LuCompass, LuTrendingUp, LuVault, LuChartBar, LuWallet, LuCoins, LuRocket, LuBadgePlus, LuNewspaper, LuShieldCheck } from 'react-icons/lu';
+import { LuChevronRight, LuHouse, LuMail, LuStore, LuCompass, LuTrendingUp, LuChartBar, LuWallet, LuCoins, LuRocket, LuBadgePlus, LuNewspaper, LuShieldCheck } from 'react-icons/lu';
 import type { MemberProfile, Section } from '../types';
 import { useT } from '@/contexts/LocaleContext';
 
@@ -43,7 +43,6 @@ export default function SidebarNav({
         { key: 'discover' as Section, label: t('nav_community'), icon: LuCompass },
         ...(isAdvancedEconomy ? [
           { key: 'market' as Section, label: t('nav_exchange'), icon: LuTrendingUp },
-          { key: 'treasury' as Section, label: t('nav_treasury'), icon: LuVault },
         ] : []),
       ],
     },

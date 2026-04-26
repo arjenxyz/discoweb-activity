@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 
-import { LuHouse, LuMail, LuStore, LuSettings, LuChevronRight, LuSend, LuTag, LuTrendingUp, LuChartBar, LuCompass, LuVault, LuLayoutGrid, LuShieldCheck, LuWallet, LuCoins, LuRocket, LuBadgePlus, LuNewspaper } from 'react-icons/lu';
+import { LuHouse, LuMail, LuStore, LuSettings, LuChevronRight, LuSend, LuTag, LuTrendingUp, LuChartBar, LuCompass, LuLayoutGrid, LuShieldCheck, LuWallet, LuCoins, LuRocket, LuBadgePlus, LuNewspaper } from 'react-icons/lu';
 import Image from 'next/image';
 import DiscordAgreementButton from '@/components/DiscordAgreementButton';
 import type { Notification, Section } from '../types';
@@ -134,7 +134,6 @@ export default function DashboardHeader({
         { key: 'discover', label: t('nav_community'), icon: <LuCompass className="h-4 w-4" /> },
         ...(isAdvancedEconomy ? [
           { key: 'market' as Section, label: t('nav_exchange'), icon: <LuTrendingUp className="h-4 w-4" /> },
-          { key: 'treasury' as Section, label: t('nav_treasury'), icon: <LuVault className="h-4 w-4" /> },
         ] : []),
       ],
     },
