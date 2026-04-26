@@ -1051,7 +1051,7 @@ export default function DashboardPage() {
           ? 'md:pt-20 pb-28 gap-0 md:pb-0'
           : 'md:pt-20 pb-28 sm:pb-10 gap-0 sm:gap-6 md:pb-0'
         : effectiveSection === 'economy-apply'
-            ? 'md:pt-20 pb-20 lg:pb-6 gap-0'
+            ? 'py-0 gap-0'
             : 'md:pt-24 pb-20 lg:pb-6 gap-6';
 
   // Splash — readiness sorgulanmadan önce gösterilir
