@@ -17,7 +17,7 @@ export default function EconomyApplySection() {
       </div>
 
       <p className="pointer-events-none absolute bottom-4 right-5 text-xs font-medium tracking-wide text-white/55 sm:bottom-6 sm:right-8">
-        yakında kullanıma sunulacak.
+        Yakında kullanıma sunulacak.
       </p>
     </section>
   );

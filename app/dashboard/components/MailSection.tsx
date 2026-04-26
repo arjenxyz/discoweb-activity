@@ -72,7 +72,6 @@ type MailSectionProps = {
   loading: boolean;
   error: string | null;
   items: MailItem[];
-  serverName?: string;
   onOpenMail?: (mail: MailItem) => void;
   onBack?: () => void;
 };
@@ -81,7 +80,6 @@ export default function MailSection({
   loading,
   error,
   items,
-  serverName,
   onOpenMail,
   onBack,
 }: MailSectionProps) {
@@ -229,12 +227,6 @@ export default function MailSection({
 
   return (
     <section className="relative w-full h-screen overflow-hidden bg-[#0b0d12] flex flex-col">
-      {serverName && (
-        <div className="px-4 py-2 bg-[#1f2430] border-b border-white/10 text-sm text-white/80">
-          <span className="font-semibold text-white">{t('dashboard_server_label')}:</span> {serverName}
-        </div>
-      )}
-
       {/* Background decorations */}
       <div className="absolute top-0 left-0 w-96 h-96 bg-[#5865F2]/10 rounded-full blur-[100px] pointer-events-none" />
       <div className="absolute bottom-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-[80px] pointer-events-none" />

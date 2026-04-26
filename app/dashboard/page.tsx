@@ -1320,7 +1320,6 @@ export default function DashboardPage() {
                 loading={mailLoading}
                 error={mailError}
                 items={mailItems}
-                serverName={activeServerName}
                 onOpenMail={async (mail) => {
                   setActiveMail(mail);
                   if (!mail.is_read) {
