@@ -1,9 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
 
-import { LuHouse, LuMail, LuStore, LuSettings, LuChevronRight, LuTicket, LuSend, LuTag, LuTrendingUp, LuChartBar, LuCompass, LuVault, LuLayoutGrid, LuShieldCheck, LuWallet, LuCoins, LuRocket, LuBadgePlus, LuNewspaper } from 'react-icons/lu';
+import { LuHouse, LuMail, LuStore, LuSettings, LuChevronRight, LuSend, LuTag, LuTrendingUp, LuChartBar, LuCompass, LuVault, LuLayoutGrid, LuShieldCheck, LuWallet, LuCoins, LuRocket, LuBadgePlus, LuNewspaper } from 'react-icons/lu';
 import Image from 'next/image';
 import DiscordAgreementButton from '@/components/DiscordAgreementButton';
 import type { Notification, Section } from '../types';
@@ -92,19 +91,20 @@ export default function DashboardHeader({
   isAdvancedEconomy = false,
 }: DashboardHeaderProps) {
   const t = useT();
-  const router = useRouter();
+  const getRandomGif = () => RANDOM_GIFS[Math.floor(Math.random() * RANDOM_GIFS.length)];
 
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [currentGif, setCurrentGif] = useState(RANDOM_GIFS[0]);
-  const [fetchedIcons, setFetchedIcons] = useState<Record<string, string | null>>({});
+  const [currentGif, setCurrentGif] = useState(getRandomGif);
+  const [, setFetchedIcons] = useState<Record<string, string | null>>({});
   const fetchedIconsSeenRef = useRef<Set<string>>(new Set());
 
-  useEffect(() => {
-    if (isProfileOpen) {
-      setCurrentGif(RANDOM_GIFS[Math.floor(Math.random() * RANDOM_GIFS.length)]);
+  const toggleProfileOpen = () => {
+    if (!isProfileOpen) {
+      setCurrentGif(getRandomGif());
     }
-  }, [isProfileOpen]);
+    setIsProfileOpen((prev) => !prev);
+  };
 
   useEffect(() => {
     if (!server?.guilds || server.guilds.length === 0) return;
@@ -190,7 +190,7 @@ export default function DashboardHeader({
 
         {/* Sol — logo (sadece desktop) */}
         <div className="hidden lg:flex items-center gap-3 min-w-fit">
-          <div className="h-9 w-9 overflow-hidden rounded-xl border border-white/10 bg-white/5">
+          <div className="h-9 w-9 overflow-hidden">
             <Image src="/indir.gif" alt="logo" className="h-full w-full object-cover" width={36} height={36} />
           </div>
           <span className="text-white font-black text-lg tracking-tight">DiscoWeb</span>
@@ -198,7 +198,7 @@ export default function DashboardHeader({
 
         {/* Mobil orta — logo + DiscoWeb yazısı birlikte */}
         <div className="lg:hidden absolute left-1/2 -translate-x-1/2 flex items-center gap-2 pointer-events-none">
-          <div className="h-8 w-8 overflow-hidden rounded-xl border border-white/10 bg-white/5 flex-shrink-0">
+          <div className="h-8 w-8 overflow-hidden flex-shrink-0">
             <Image src="/indir.gif" alt="logo" className="h-full w-full object-cover" width={32} height={32} />
           </div>
           <span className="text-white font-black text-lg tracking-tight">DiscoWeb</span>
@@ -243,7 +243,7 @@ export default function DashboardHeader({
             <div className="relative hidden lg:block">
               <button
                 type="button"
-                onClick={() => setIsProfileOpen(!isProfileOpen)}
+                onClick={toggleProfileOpen}
                 className={`flex items-center gap-2 rounded-full border p-1 pr-3 transition-all ${
                   isProfileOpen ? 'border-white/20 bg-white/10' : 'border-transparent hover:border-white/10 hover:bg-white/5'
                 }`}
@@ -419,7 +419,7 @@ export default function DashboardHeader({
           {!unauthorized ? (
             <button
               type="button"
-              onClick={() => { setIsProfileOpen(o => !o); setMobileMenuOpen(false); }}
+              onClick={() => { toggleProfileOpen(); setMobileMenuOpen(false); }}
               className={`flex items-center gap-2 rounded-2xl border px-3 py-2 transition-all ${
                 isProfileOpen ? 'border-white/20 bg-white/10' : 'border-white/[0.06] bg-white/[0.04] hover:bg-white/[0.08]'
               }`}
