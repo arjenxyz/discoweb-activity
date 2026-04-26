@@ -1,20 +1,18 @@
 'use client';
 
-import Image from 'next/image';
-
 export default function EconomyApplySection() {
   return (
-    <section className="relative flex min-h-[70vh] w-full items-center justify-center px-4 py-8 sm:px-8">
-      <div className="relative w-full max-w-3xl">
-        <Image
-          src="/yakinda.png"
-          alt="Yakinda"
-          width={1200}
-          height={800}
-          className="h-auto w-full object-contain"
-          priority
-        />
-      </div>
+    <section className="relative h-full min-h-full w-full overflow-hidden">
+      <video
+        src="/video/invincible.mp4"
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="absolute inset-0 h-full w-full object-cover"
+      />
+
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/45 via-black/15 to-transparent" />
 
       <p className="pointer-events-none absolute bottom-4 right-5 text-xs font-medium tracking-wide text-white/55 sm:bottom-6 sm:right-8">
         Yakında kullanıma sunulacak.
