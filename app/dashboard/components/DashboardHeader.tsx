@@ -191,7 +191,7 @@ export default function DashboardHeader({
         {/* Sol — logo (sadece desktop) */}
         <div className="hidden lg:flex items-center gap-3 min-w-fit">
           <div className="h-9 w-9 overflow-hidden">
-            <Image src="/indir.gif" alt="logo" className="h-full w-full object-cover" width={36} height={36} />
+            <Image src="/inv-omni.png" alt="logo" className="h-full w-full object-cover" width={36} height={36} />
           </div>
           <span className="text-white font-black text-lg tracking-tight">DiscoWeb</span>
         </div>
@@ -199,7 +199,7 @@ export default function DashboardHeader({
         {/* Mobil orta — logo + DiscoWeb yazısı birlikte */}
         <div className="lg:hidden absolute left-1/2 -translate-x-1/2 flex items-center gap-2 pointer-events-none">
           <div className="h-8 w-8 overflow-hidden flex-shrink-0">
-            <Image src="/indir.gif" alt="logo" className="h-full w-full object-cover" width={32} height={32} />
+            <Image src="/inv-omni.png" alt="logo" className="h-full w-full object-cover" width={32} height={32} />
           </div>
           <span className="text-white font-black text-lg tracking-tight">DiscoWeb</span>
         </div>
