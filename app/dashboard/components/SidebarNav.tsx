@@ -25,19 +25,12 @@ export default function SidebarNav({
   const [collapsed, setCollapsed] = useState(false);
 
   const SECTION_BG: Partial<Record<Section, string>> = {
-    overview:        '/menu-background/menu4.jpg',
-    store:           '/menu-background/menu6.jpg',
-    discover:        '/menu-background/menu8.jpg',
-    'tag-badge':     '/menu-background/menu8.jpg',
-    market:          '/menu-background/menu9.jpg',
-    treasury:        '/menu-background/menu10.jpg',
-    borsa:           '/menu-background/menu11.jpg',
-    portfolio:       '/menu-background/menu4.jpg',
-    dividend:        '/menu-background/menu9.jpg',
-    'ipo-apply':     '/menu-background/menu10.jpg',
-    'market-news':   '/menu-background/menu11.jpg',
-    'economy-apply': '/menu-background/menu7.jpg',
-    mail:            '/menu-background/menu8.jpg',
+    overview:        '/menu-background/varyant.jpg',
+    store:           '/menu-background/varyant2.jpg',
+    discover:        '/menu-background/varyant3.jpg',
+    'tag-badge':     '/menu-background/varyant4.jpg',
+    'economy-apply': '/menu-background/varyant5.jpg',
+    mail:            '/menu-background/varyant6.jpg',
   };
 
   const NAV_GROUPS = [
