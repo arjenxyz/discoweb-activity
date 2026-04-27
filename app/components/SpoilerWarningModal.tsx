@@ -81,7 +81,7 @@ export default function SpoilerWarningModal() {
             {/* Büyütülmüş Sağ Alt Buton */}
             <button
               onClick={handleAccept}
-              className="shrink-0 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-3.5 text-base font-bold text-white transition-all hover:from-blue-500 hover:to-purple-500 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-[#0f1420] shadow-[0_0_25px_rgba(124,58,237,0.4)]"
+              className="shrink-0 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 px-8 py-3.5 text-base font-bold text-white transition-all hover:bg-white/20 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-[#0f1420] shadow-lg"
             >
               Anladım
             </button>
