@@ -1,11 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useLocale } from '@/contexts/LocaleContext';
+import Image from 'next/image';
 
 export default function SpoilerWarningModal() {
   const [isVisible, setIsVisible] = useState(false);
-  const { locale } = useLocale();
+
+  useEffect(() => {
+    // Component yüklendiğinde kullanıcının uyarıyı görüp görmediğini kontrol et
+    const hasSeenWarning = localStorage.getItem('hasSeenSpoilerWarning');
+    if (!hasSeenWarning) {
+      setIsVisible(true);
+    }
+  }, []);
 
   // Prime Video URL'sini belirle - tüm diller için aynı global link
   const getPrimeVideoUrl = () => {
@@ -38,9 +45,11 @@ export default function SpoilerWarningModal() {
         </video>
 
         {/* Sol Üst Logo */}
-        <img
+        <Image
           src="/logo.png"
           alt="Logo"
+          width={40}
+          height={40}
           className="absolute top-6 left-6 z-20 h-10 w-auto drop-shadow-xl"
           onError={(e) => {
             e.currentTarget.style.display = 'none';
@@ -64,7 +73,7 @@ export default function SpoilerWarningModal() {
               Bu uygulama, tutkulu <strong className="text-amber-400 font-bold">Invincible</strong> hayranları tarafından hazırlanmış bir fan projesidir.
             </p>
             <p>
-              Arşivimizde dizinin kritik anlarına dair <strong className="text-red-500 font-bold">spoiler'lar</strong> yer almaktadır.
+              Arşivimizde dizinin kritik anlarına dair <strong className="text-red-500 font-bold">spoiler&apos;lar</strong> yer almaktadır.
             </p>
             <p className="text-gray-300 italic">
               Eğer serüveni henüz tamamlamadıysan, yolculuğuna gölge düşmemesi için dikkatli ol!
@@ -84,10 +93,13 @@ export default function SpoilerWarningModal() {
                 onClick={handleWatchInvincible}
                 className="w-fit rounded-xl bg-white/10 backdrop-blur-md border border-white/20 py-3 text-base font-bold text-white transition-all hover:bg-white/20 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-[#0f1420] shadow-lg flex items-center gap-2 px-4"
               >
-                <img
+                <Image
                   src="/icons/prime-video-logo.svg"
                   alt="Prime Video"
+                  width={20}
+                  height={20}
                   className="h-5 w-auto"
+                  unoptimized
                   onError={(e) => {
                     // Fallback to text if logo doesn't load
                     e.currentTarget.style.display = 'none';
