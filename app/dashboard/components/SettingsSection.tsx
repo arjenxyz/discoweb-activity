@@ -196,26 +196,48 @@ export default function SettingsSection({
   return (
     <section className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
-        <aside className="sticky top-6 self-start space-y-4 rounded-3xl border border-white/10 bg-[#0b0d12]/70 p-5 shadow-[0_24px_80px_-48px_rgba(0,0,0,0.4)]">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-white/50">Bölümler</p>
+        <aside className="sticky top-0 hidden h-screen flex-col border-r border-white/[0.06] bg-[#0b0d12] lg:flex">
+          <div className="flex h-16 shrink-0 items-center gap-3 px-4">
+            <div className="h-8 w-8 shrink-0 overflow-hidden rounded-lg border border-white/10 bg-white/5 flex items-center justify-center text-xs font-bold text-white/40">
+              A
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-white leading-tight">Ayarlar</p>
+              <p className="text-[10px] text-white/35">Genel Menü</p>
+            </div>
           </div>
-          {[
-            { id: 'sound', label: 'Ses Ayarları', Icon: LuVolume2 },
-            { id: 'language', label: 'Dil Seçimi', Icon: LuGlobe },
-            { id: 'account', label: 'Hesap Verileri', Icon: LuUser },
-            { id: 'contracts', label: 'Sözleşmeler', Icon: LuFileCheck },
-          ].map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => setActiveTab(item.id as 'sound' | 'language' | 'account' | 'contracts')}
-              className={`flex w-full items-center gap-3 rounded-3xl px-4 py-3 text-left text-sm font-semibold transition ${activeTab === item.id ? 'bg-indigo-600 text-white shadow-sm' : 'bg-white/5 text-white/80 hover:bg-white/10'}`}
-            >
-              <item.Icon className="h-4 w-4" />
-              {item.label}
-            </button>
-          ))}
+
+          <div className="mx-3 border-t border-white/[0.06]" />
+
+          <nav className="mt-4 flex-1 overflow-y-auto px-3 pb-6 space-y-5">
+            <div className="space-y-0.5">
+              <p className="mb-2 px-3 text-[9px] font-semibold uppercase tracking-[0.3em] text-white/25">AYARLAR</p>
+              {[
+                { id: 'sound', label: 'Ses Ayarları', icon: LuVolume2 },
+                { id: 'language', label: 'Dil Seçimi', icon: LuGlobe },
+                { id: 'account', label: 'Hesap Verileri', icon: LuUser },
+                { id: 'contracts', label: 'Sözleşmeler', icon: LuFileCheck },
+              ].map((item) => {
+                const active = activeTab === item.id;
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setActiveTab(item.id as 'sound' | 'language' | 'account' | 'contracts')}
+                    className={`group relative flex w-full items-center overflow-hidden rounded-xl ${active ? 'text-white' : 'text-white/45 hover:text-white/80'} ${active ? 'bg-white/5' : ''}`}
+                  >
+                    <span className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${active ? 'bg-white/10 text-white' : 'bg-white/5 text-white/50 group-hover:bg-white/10 group-hover:text-white'}`}>
+                      <Icon className="h-4 w-4" />
+                    </span>
+                    <span className="relative ml-3 text-sm font-medium leading-none">{item.label}</span>
+                    {active && <span className="relative ml-auto h-1.5 w-1.5 rounded-full bg-white/60" />}
+                    <span className="pointer-events-none absolute inset-0 rounded-xl transition-colors duration-150" />
+                  </button>
+                );
+              })}
+            </div>
+          </nav>
         </aside>
 
         <div className="space-y-6">
