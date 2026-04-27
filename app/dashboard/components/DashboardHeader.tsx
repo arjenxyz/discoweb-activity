@@ -92,22 +92,10 @@ export default function DashboardHeader({
 }: DashboardHeaderProps) {
   const t = useT();
   const getRandomGif = () => RANDOM_GIFS[Math.floor(Math.random() * RANDOM_GIFS.length)];
-  const formatIstanbulTime = () => {
-    const date = new Date();
-    const timeString = date.toLocaleTimeString('tr-TR', {
-      hour12: false,
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      timeZone: 'Europe/Istanbul',
-    });
-    return `UTC+03 ${timeString}`;
-  };
 
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [currentGif, setCurrentGif] = useState(getRandomGif);
-  const [istanbulTime, setIstanbulTime] = useState(formatIstanbulTime);
   const [, setFetchedIcons] = useState<Record<string, string | null>>({});
   const fetchedIconsSeenRef = useRef<Set<string>>(new Set());
 
@@ -117,14 +105,6 @@ export default function DashboardHeader({
     }
     setIsProfileOpen((prev) => !prev);
   };
-
-  useEffect(() => {
-    const interval = window.setInterval(() => {
-      setIstanbulTime(formatIstanbulTime());
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, []);
 
   useEffect(() => {
     if (!server?.guilds || server.guilds.length === 0) return;
@@ -214,7 +194,6 @@ export default function DashboardHeader({
           </div>
           <div className="flex flex-col gap-0.5">
             <span className="text-white font-black text-lg tracking-tight">DiscoWeb</span>
-            <span className="text-[11px] text-white/50">{istanbulTime}</span>
           </div>
         </div>
 
@@ -225,7 +204,6 @@ export default function DashboardHeader({
           </div>
           <div className="flex flex-col gap-0.5 items-center">
             <span className="text-white font-black text-lg tracking-tight">DiscoWeb</span>
-            <span className="text-[11px] text-white/50">{istanbulTime}</span>
           </div>
         </div>
 

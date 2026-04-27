@@ -1,7 +1,6 @@
 'use client';
 
 import Image from 'next/image';
-import { useState, useEffect } from 'react';
 import { useT } from '@/contexts/LocaleContext';
 import {
   LuMessageSquare,
@@ -44,20 +43,6 @@ export default function OverviewSection({
   onClaim,
 }: OverviewSectionProps) {
   const t = useT();
-  const [serverTime, setServerTime] = useState('');
-
-  useEffect(() => {
-    const updateTime = () => {
-      const now = new Date();
-      const istanbulTime = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Istanbul' }));
-      const formatted = `UTC+3 ${istanbulTime.toLocaleDateString('tr-TR')} ${istanbulTime.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}`;
-      setServerTime(formatted);
-    };
-    updateTime();
-    const interval = setInterval(updateTime, 60000); // update every minute
-    return () => clearInterval(interval);
-  }, []);
-
   const hasTag = (overviewStats as OverviewStatsExpanded)?.hasTag ?? false;
   const isBooster = (overviewStats as OverviewStatsExpanded)?.isBooster ?? false;
   const totalsSince = (overviewStats as OverviewStatsExpanded)?.totalsSinceVerified;
@@ -77,20 +62,14 @@ export default function OverviewSection({
     <section className="flex flex-col gap-4 p-4 sm:p-6">
 
       {/* SAYFA BAŞLIĞI */}
-      <div className="flex items-end justify-between">
-        <div>
-          <p className="text-xs font-medium text-white/30 mb-0.5">
-            {greeting}{profile?.nickname ? `, ${profile.nickname}` : ''} 👋
-          </p>
-          <h1 className="text-2xl font-black text-white tracking-tight">{t('overview_title')}</h1>
-          <p className="mt-1 text-sm text-white/40">
-            {t('overview_subtitle')}
-          </p>
-        </div>
-        <div className="hidden sm:flex items-center gap-1.5 rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-1.5">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-          <span className="text-[11px] font-medium text-white/40">Sunucu Zamanı: {serverTime}</span>
-        </div>
+      <div>
+        <p className="text-xs font-medium text-white/30 mb-0.5">
+          {greeting}{profile?.nickname ? `, ${profile.nickname}` : ''} 👋
+        </p>
+        <h1 className="text-2xl font-black text-white tracking-tight">{t('overview_title')}</h1>
+        <p className="mt-1 text-sm text-white/40">
+          {t('overview_subtitle')}
+        </p>
       </div>
 
       {overviewLoading ? (
