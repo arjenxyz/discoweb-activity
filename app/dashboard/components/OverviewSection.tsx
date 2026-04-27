@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { useState, useEffect } from 'react';
 import { useT } from '@/contexts/LocaleContext';
 import {
   LuMessageSquare,
@@ -43,6 +44,20 @@ export default function OverviewSection({
   onClaim,
 }: OverviewSectionProps) {
   const t = useT();
+  const [serverTime, setServerTime] = useState('');
+
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      const istanbulTime = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Istanbul' }));
+      const formatted = `UTC+3 ${istanbulTime.toLocaleDateString('tr-TR')} ${istanbulTime.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}`;
+      setServerTime(formatted);
+    };
+    updateTime();
+    const interval = setInterval(updateTime, 60000); // update every minute
+    return () => clearInterval(interval);
+  }, []);
+
   const hasTag = (overviewStats as OverviewStatsExpanded)?.hasTag ?? false;
   const isBooster = (overviewStats as OverviewStatsExpanded)?.isBooster ?? false;
   const totalsSince = (overviewStats as OverviewStatsExpanded)?.totalsSinceVerified;
@@ -73,8 +88,8 @@ export default function OverviewSection({
           </p>
         </div>
         <div className="hidden sm:flex items-center gap-1.5 rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-1.5">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="text-[11px] font-medium text-white/40">{t('overview_live')}</span>
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+          <span className="text-[11px] font-medium text-white/40">Sunucu Zamanı: {serverTime}</span>
         </div>
       </div>
 

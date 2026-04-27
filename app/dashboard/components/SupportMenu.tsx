@@ -53,7 +53,7 @@ export default function SupportMenu({ openLink, section }: Props) {
                 }
                 label={t('support_menu_discord_label')}
                 sub={t('support_menu_discord_sub')}
-                onClick={() => { setOpen(false); openLink('https://discord.gg/fDPsYhvKmu'); }}
+                onClick={() => { setOpen(false); openLink('https://discord.gg/vxK95JTFPw'); }}
               />
               <MenuItem
                 icon={
