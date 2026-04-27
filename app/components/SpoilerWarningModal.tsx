@@ -36,13 +36,22 @@ export default function SpoilerWarningModal() {
 
         {/* Logo in top-left corner */}
         <img
-          src="/logo.png"
+          src="/icon-192x192.png"
           alt="Logo"
           className="absolute top-4 left-4 z-20 h-8 w-auto rounded-lg shadow-lg"
           onError={(e) => {
-            console.error('Logo failed to load:', e);
+            console.error('Logo failed to load:', {
+              src: e.currentTarget.src,
+              error: e.type,
+              naturalWidth: e.currentTarget.naturalWidth,
+              naturalHeight: e.currentTarget.naturalHeight
+            });
             e.currentTarget.style.display = 'none';
           }}
+          onLoad={() => {
+            console.log('Logo loaded successfully');
+          }}
+        />
         />
 
         {/* Overlay to ensure text readability */}
