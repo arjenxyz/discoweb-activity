@@ -88,7 +88,7 @@ export default function SpoilerWarningModal() {
           {/* Alt Kısım: Not ve Butonlar */}
           <div className="flex flex-col sm:flex-row items-end sm:items-center justify-between gap-6 mt-auto">
             <p className="text-sm text-gray-400 font-medium">
-              Bu uyarıyı bir daha karşına çıkarmayacağız, söz!
+              Bu uyarı bir daha gösterilmeyecek.
             </p>
             
             {/* Butonlar */}
@@ -99,11 +99,12 @@ export default function SpoilerWarningModal() {
                 className="w-fit rounded-lg bg-white/10 backdrop-blur-md border border-white/20 py-2 text-sm font-semibold text-white transition-all hover:bg-white/20 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-[#0f1420] shadow-lg flex items-center gap-2 px-3"
               >
                 <Image
-                  src="/prime-video.png"
+                  src="/icons/prime-video-logo.svg"
                   alt="Prime Video"
                   width={16}
                   height={16}
                   className="h-4 w-auto"
+                  unoptimized
                   onError={(e) => {
                     // Fallback to text if logo doesn't load
                     e.currentTarget.style.display = 'none';
