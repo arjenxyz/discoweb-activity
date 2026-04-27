@@ -39,6 +39,10 @@ export default function SpoilerWarningModal() {
           src="/logo.png"
           alt="Logo"
           className="absolute top-4 left-4 z-20 h-8 w-auto rounded-lg shadow-lg"
+          onError={(e) => {
+            console.error('Logo failed to load:', e);
+            e.currentTarget.style.display = 'none';
+          }}
         />
 
         {/* Overlay to ensure text readability */}
@@ -54,12 +58,9 @@ export default function SpoilerWarningModal() {
           </div>
 
           {/* Title */}
-          <div className="mb-3 flex items-center justify-center gap-2">
-            <LuTriangleAlert className="h-5 w-5 text-amber-400" />
-            <h2 className="text-center text-xl font-bold text-white drop-shadow-lg">
-              Spoiler Uyarısı
-            </h2>
-          </div>
+          <h2 className="mb-3 text-center text-xl font-bold text-white drop-shadow-lg">
+            Spoiler Uyarısı
+          </h2>
 
           {/* Content */}
           <div className="mb-6 space-y-3 text-center text-sm text-white/90 drop-shadow-md">
