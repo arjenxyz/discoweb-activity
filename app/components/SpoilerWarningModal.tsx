@@ -4,27 +4,27 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 
 export default function SpoilerWarningModal() {
-  const [isVisible, setIsVisible] = useState(false);
-  const [countdown, setCountdown] = useState(5);
-  const [isButtonDisabled, setIsButtonDisabled] = useState(true);
-
-  useEffect(() => {
+  const [isVisible, setIsVisible] = useState(() => {
     // Component yüklendiğinde kullanıcının uyarıyı görüp görmediğini kontrol et
     const hasSeenWarning = localStorage.getItem('hasSeenSpoilerWarning');
-    if (!hasSeenWarning) {
-      setIsVisible(true);
-    }
-  }, []);
+    return !hasSeenWarning;
+  });
+  const [countdown, setCountdown] = useState(5);
+  const [isButtonDisabled, setIsButtonDisabled] = useState(true);
 
   useEffect(() => {
     // Modal göründüğünde geri sayımı başlat
     if (isVisible && countdown > 0) {
       const timer = setTimeout(() => {
-        setCountdown(countdown - 1);
+        setCountdown(prev => {
+          const newCountdown = prev - 1;
+          if (newCountdown === 0) {
+            setIsButtonDisabled(false);
+          }
+          return newCountdown;
+        });
       }, 1000);
       return () => clearTimeout(timer);
-    } else if (countdown === 0) {
-      setIsButtonDisabled(false);
     }
   }, [isVisible, countdown]);
 
@@ -133,7 +133,7 @@ export default function SpoilerWarningModal() {
                     }
                   }}
                 />
-                <span className="prime-text">Prime Video</span>
+                <span className="prime-text">Prime Video&apos;da izle</span>
               </button>
               
               {/* Anladım Butonu */}
