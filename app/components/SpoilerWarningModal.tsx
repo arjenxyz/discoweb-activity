@@ -41,10 +41,13 @@ export default function SpoilerWarningModal() {
     const primeUrl = getPrimeVideoUrl();
     // Discord Activity için farklı yaklaşım
     if (window.location.protocol === 'https:' && window.location.hostname.includes('discord')) {
-      // Discord Activity ortamında olduğumuzu varsayalım
-      console.log('Discord Activity detected, opening Prime Video');
+      // Discord Activity ortamında location.href kullanarak yönlendir
+      console.log('Discord Activity detected, redirecting to Prime Video');
+      window.location.href = primeUrl;
+    } else {
+      // Normal web ortamında yeni sekme aç
+      window.open(primeUrl, '_blank');
     }
-    window.open(primeUrl, '_blank');
   };
 
   const handleAccept = () => {
