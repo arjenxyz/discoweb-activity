@@ -1,7 +1,9 @@
 import { promises as fs } from 'fs';
 import path from 'path';
+import { promises as fs } from 'fs';
 import { NextResponse } from 'next/server';
 
+const DEFAULT_MUSIC_TRACK = '/music/music.mp3';
 export const runtime = 'nodejs';
 
 export async function GET() {
@@ -12,8 +14,8 @@ export async function GET() {
       .filter((file) => file.toLowerCase().endsWith('.mp3'))
       .map((file) => `/music/${file}`);
 
-    return NextResponse.json({ tracks: tracks.length > 0 ? tracks : ['/music/music.mp3'] });
+    return NextResponse.json({ tracks: tracks.length > 0 ? tracks : [DEFAULT_MUSIC_TRACK] });
   } catch {
-    return NextResponse.json({ tracks: ['/music/music.mp3'] });
+    return NextResponse.json({ tracks: [DEFAULT_MUSIC_TRACK] });
   }
 }

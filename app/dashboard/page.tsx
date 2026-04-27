@@ -65,6 +65,7 @@ export default function DashboardPage() {
     window.open(url, '_blank', 'noopener,noreferrer');
   }, []);
 
+  const DEFAULT_MUSIC_TRACK = '/music/music.mp3';
   const [splashDone, setSplashDone] = useState(false);
   const dashboardMusicRef = useRef<HTMLAudioElement | null>(null);
   const [musicReady, setMusicReady] = useState(false);
@@ -156,11 +157,11 @@ export default function DashboardPage() {
         const data = await response.json();
         const tracks = Array.isArray(data.tracks) && data.tracks.length > 0
           ? data.tracks
-          : ['/music/music.mp3'];
+          : [DEFAULT_MUSIC_TRACK];
         const shuffled = shufflePlaylist(tracks);
         musicPlaylistRef.current = shuffled;
       } catch {
-        musicPlaylistRef.current = ['/music/music.mp3'];
+        musicPlaylistRef.current = [DEFAULT_MUSIC_TRACK];
       } finally {
         if (isMounted) setMusicReady(true);
       }
