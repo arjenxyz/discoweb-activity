@@ -320,7 +320,7 @@ export default function SettingsSection({
         <div className="space-y-2 rounded-2xl border border-white/10 bg-[#0b0d12]/60 p-4">
           {[
             { id: 'sound', label: 'Ses Ayarları', Icon: LuVolume2 },
-            { id: 'language', label: 'Dil Seçimi', Icon: LuGlobe2 },
+            { id: 'language', label: 'Dil Seçimi', Icon: LuGlobe },
             { id: 'account', label: 'Hesap Verileri', Icon: LuUser },
             { id: 'contracts', label: 'Onaylanan Sözleşmeler', Icon: LuFileCheck },
           ].map((item) => (
