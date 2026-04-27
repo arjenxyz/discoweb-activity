@@ -1,6 +1,5 @@
 import { promises as fs } from 'fs';
 import path from 'path';
-import { promises as fs } from 'fs';
 import { NextResponse } from 'next/server';
 
 const DEFAULT_MUSIC_TRACK = '/music/music.mp3';
