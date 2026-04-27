@@ -4,13 +4,17 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 
 export default function SpoilerWarningModal() {
-  const [isVisible, setIsVisible] = useState(() => {
-    // Component yüklendiğinde kullanıcının uyarıyı görüp görmediğini kontrol et
-    const hasSeenWarning = localStorage.getItem('hasSeenSpoilerWarning');
-    return !hasSeenWarning;
-  });
+  const [isVisible, setIsVisible] = useState(false);
   const [countdown, setCountdown] = useState(5);
   const [isButtonDisabled, setIsButtonDisabled] = useState(true);
+
+  useEffect(() => {
+    // Component mount olduğunda localStorage kontrolü yap
+    const hasSeenWarning = localStorage.getItem('hasSeenSpoilerWarning');
+    if (!hasSeenWarning) {
+      setIsVisible(true);
+    }
+  }, []);
 
   useEffect(() => {
     // Modal göründüğünde geri sayımı başlat
