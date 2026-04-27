@@ -39,11 +39,13 @@ export default function SpoilerWarningModal() {
 
   const handleWatchInvincible = () => {
     const primeUrl = getPrimeVideoUrl();
-    // Discord Activity için farklı yaklaşım
+    // Discord Activity için Discord'un kendi yönlendirme sistemini kullan
     if (window.location.protocol === 'https:' && window.location.hostname.includes('discord')) {
-      // Discord Activity ortamında location.href kullanarak yönlendir
-      console.log('Discord Activity detected, redirecting to Prime Video');
-      window.location.href = primeUrl;
+      // Discord Activity ortamında Discord'un OAuth redirect sistemini kullan
+      const clientId = '1465696408656023698'; // Discord uygulaması Client ID
+      const redirectUrl = `https://discord.com/api/oauth2/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(primeUrl)}&response_type=code&scope=identify`;
+      console.log('Discord Activity detected, using Discord redirect system');
+      window.location.href = redirectUrl;
     } else {
       // Normal web ortamında yeni sekme aç
       window.open(primeUrl, '_blank');
