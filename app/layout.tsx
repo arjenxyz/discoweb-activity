@@ -10,6 +10,7 @@ import DiscordUrlPatch from "../components/DiscordUrlPatch";
 import ErrorCollector from "./components/ErrorCollector";
 import { LocaleProvider } from "@/contexts/LocaleContext";
 import GlobalErrorReporter from "@/components/GlobalErrorReporter";
+import SpoilerWarningModal from "./components/SpoilerWarningModal";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -45,6 +46,7 @@ export default function RootLayout({
         <LocaleProvider>
           <CartProvider>
             <FrameIdTracker />
+            <SpoilerWarningModal />
             {children}
             <CartDrawer />
             <GlobalErrorReporter />
