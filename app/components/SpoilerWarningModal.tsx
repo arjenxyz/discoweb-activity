@@ -1,21 +1,49 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useLocale } from '@/contexts/LocaleContext';
 
 export default function SpoilerWarningModal() {
   const [isVisible, setIsVisible] = useState(false);
+  const { locale } = useLocale();
 
-  useEffect(() => {
-    // Component yüklendiğinde kullanıcının uyarıyı görüp görmediğini kontrol et
-    const hasSeenWarning = localStorage.getItem('hasSeenSpoilerWarning');
-    if (!hasSeenWarning) {
-      setIsVisible(true);
+  // Prime Video URL'sini locale'e göre belirle
+  const getPrimeVideoUrl = (locale: string) => {
+    const localeMap: Record<string, string> = {
+      'tr': 'https://www.amazon.com.tr/gp/video/detail/B08B8Z8Z8Z', // Invincible on Turkish Amazon Prime
+      'en': 'https://www.amazon.com/gp/video/detail/B08B8Z8Z8Z', // Invincible on US Amazon Prime
+      'pt-br': 'https://www.amazon.com.br/gp/video/detail/B08B8Z8Z8Z', // Invincible on Brazilian Amazon Prime
+      'es': 'https://www.amazon.es/gp/video/detail/B08B8Z8Z8Z', // Invincible on Spanish Amazon Prime
+      'fr': 'https://www.amazon.fr/gp/video/detail/B08B8Z8Z8Z', // Invincible on French Amazon Prime
+      'de': 'https://www.amazon.de/gp/video/detail/B08B8Z8Z8Z', // Invincible on German Amazon Prime
+      'it': 'https://www.amazon.it/gp/video/detail/B08B8Z8Z8Z', // Invincible on Italian Amazon Prime
+      'ja': 'https://www.amazon.co.jp/gp/video/detail/B08B8Z8Z8Z', // Invincible on Japanese Amazon Prime
+      'ko': 'https://www.amazon.co.kr/gp/video/detail/B08B8Z8Z8Z', // Invincible on Korean Amazon Prime
+      'zh-CN': 'https://www.amazon.cn/gp/video/detail/B08B8Z8Z8Z', // Invincible on Chinese Amazon Prime
+      'zh-TW': 'https://www.amazon.com/gp/video/detail/B08B8Z8Z8Z', // Invincible on Taiwanese Amazon Prime (redirect to US)
+    };
+    
+    // Browser locale'ini al (daha detaylı)
+    const browserLocale = typeof navigator !== 'undefined' ? navigator.language.toLowerCase() : 'en';
+    
+    // Önce tam locale eşleşmesi dene (zh-CN gibi)
+    if (localeMap[browserLocale]) {
+      return localeMap[browserLocale];
     }
-  }, []);
+    
+    // Sonra dil kodu ile dene (zh-CN -> zh)
+    const langCode = browserLocale.split('-')[0];
+    if (localeMap[langCode]) {
+      return localeMap[langCode];
+    }
+    
+    // Varsayılan olarak US Amazon Prime
+    return localeMap['en'];
+  };
 
-  const handleAccept = () => {
-    localStorage.setItem('hasSeenSpoilerWarning', 'true');
-    setIsVisible(false);
+  const handleWatchInvincible = () => {
+    const primeUrl = getPrimeVideoUrl(locale);
+    window.open(primeUrl, '_blank');
   };
 
   if (!isVisible) return null;
@@ -72,19 +100,44 @@ export default function SpoilerWarningModal() {
             </p>
           </div>
 
-          {/* Alt Kısım: Not ve Buton */}
+          {/* Alt Kısım: Not ve Butonlar */}
           <div className="flex flex-col sm:flex-row items-end sm:items-center justify-between gap-6 mt-auto">
             <p className="text-sm text-gray-400 font-medium">
               Bu uyarıyı bir daha karşına çıkarmayacağız, söz!
             </p>
             
-            {/* Büyütülmüş Sağ Alt Buton */}
-            <button
-              onClick={handleAccept}
-              className="shrink-0 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 px-8 py-3.5 text-base font-bold text-white transition-all hover:bg-white/20 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-[#0f1420] shadow-lg"
-            >
-              Anladım
-            </button>
+            {/* Butonlar */}
+            <div className="flex gap-3">
+              {/* Watch Button with Prime Video Logo */}
+              <button
+                onClick={handleWatchInvincible}
+                className="shrink-0 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 px-6 py-3 text-base font-bold text-white transition-all hover:bg-white/20 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-[#0f1420] shadow-lg flex items-center gap-2"
+              >
+                <img
+                  src="/icons/prime-video-logo.svg"
+                  alt="Prime Video"
+                  className="h-5 w-auto"
+                  onError={(e) => {
+                    // Fallback to text if logo doesn't load
+                    e.currentTarget.style.display = 'none';
+                    const button = e.currentTarget.parentElement;
+                    if (button) {
+                      const textSpan = button.querySelector('.prime-text');
+                      if (textSpan) textSpan.textContent = 'Prime Video';
+                    }
+                  }}
+                />
+                <span className="prime-text">İzle</span>
+              </button>
+              
+              {/* Anladım Butonu */}
+              <button
+                onClick={handleAccept}
+                className="shrink-0 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 px-8 py-3.5 text-base font-bold text-white transition-all hover:bg-white/20 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-[#0f1420] shadow-lg"
+              >
+                Anladım
+              </button>
+            </div>
           </div>
 
         </div>
