@@ -1153,7 +1153,7 @@ export default function DashboardPage() {
     await refreshStoreItems(storePage + 1, true);
   };
 
-  const FULL_WIDTH_SECTIONS = ['mail', 'market', 'store', 'economy-apply'];
+  const FULL_WIDTH_SECTIONS = ['mail', 'market', 'store', 'economy-apply', 'settings'];
   const mainWrapperClass = FULL_WIDTH_SECTIONS.includes(effectiveSection)
     ? (effectiveSection === 'store' && !isActivityEmbed)
       ? 'w-full max-w-4xl px-0 sm:px-6'
@@ -1225,7 +1225,7 @@ export default function DashboardPage() {
     <div className="h-screen bg-[#0b0d12] text-white overflow-hidden flex flex-col">
       <div className="flex flex-1 min-h-0">
         {/* Sidebar */}
-        {effectiveSection !== 'mail' && !unauthorized && (
+        {effectiveSection !== 'mail' && effectiveSection !== 'settings' && !unauthorized && (
           <SidebarNav
             effectiveSection={effectiveSection}
             unauthorized={unauthorized}
