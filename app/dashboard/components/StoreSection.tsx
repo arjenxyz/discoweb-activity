@@ -237,7 +237,7 @@ export default function StoreSection({
                           );
                         }
                         return (
-                          <div className={`relative z-10 grid grid-cols-[auto_1fr] gap-2 mt-4 transition-all duration-300 ease-out overflow-hidden ${purchaseLoadingId === item.id || purchaseFeedback[item.id] ? 'max-h-[60px] opacity-100' : 'max-h-0 opacity-0 group-hover:max-h-[60px] group-hover:opacity-100'}`}>
+                          <div className={`relative z-10 grid grid-cols-[auto_1fr] gap-2 mt-4 transition-all duration-300 ease-out overflow-hidden max-h-[60px] ${purchaseLoadingId === item.id || purchaseFeedback[item.id] ? 'opacity-100 pointer-events-auto' : 'opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto'}`}>
                             {(() => {
                               const isInCart = cart?.items.some(it => it.itemId === item.id);
                               return (
