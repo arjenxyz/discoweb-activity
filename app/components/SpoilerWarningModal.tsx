@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { LuTriangleAlert } from 'react-icons/lu';
+import { LuTriangleAlert, LuAlertTriangle } from 'react-icons/lu';
 
 export default function SpoilerWarningModal() {
   const [isVisible, setIsVisible] = useState(() => {
@@ -47,9 +47,12 @@ export default function SpoilerWarningModal() {
           </div>
 
           {/* Title */}
-          <h2 className="mb-3 text-center text-xl font-bold text-white drop-shadow-lg">
-            ⚠️ Spoiler Uyarısı
-          </h2>
+          <div className="mb-3 flex items-center justify-center gap-2">
+            <LuAlertTriangle className="h-5 w-5 text-amber-400" />
+            <h2 className="text-center text-xl font-bold text-white drop-shadow-lg">
+              Spoiler Uyarısı
+            </h2>
+          </div>
 
           {/* Content */}
           <div className="mb-6 space-y-3 text-center text-sm text-white/90 drop-shadow-md">
