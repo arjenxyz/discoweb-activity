@@ -36,7 +36,7 @@ export default function SpoilerWarningModal() {
 
         {/* Logo in top-left corner */}
         <img
-          src="/icon-192x192.png"
+          src="/logo.png"
           alt="Logo"
           className="absolute top-4 left-4 z-20 h-8 w-auto rounded-lg shadow-lg"
           onError={(e) => {
@@ -51,7 +51,6 @@ export default function SpoilerWarningModal() {
           onLoad={() => {
             console.log('Logo loaded successfully');
           }}
-        />
         />
 
         {/* Overlay to ensure text readability */}
