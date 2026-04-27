@@ -35,6 +35,11 @@ export default function SpoilerWarningModal() {
 
   const handleWatchInvincible = () => {
     const primeUrl = getPrimeVideoUrl();
+    // Discord Activity için farklı yaklaşım
+    if (window.location.protocol === 'https:' && window.location.hostname.includes('discord')) {
+      // Discord Activity ortamında olduğumuzu varsayalım
+      console.log('Discord Activity detected, opening Prime Video');
+    }
     window.open(primeUrl, '_blank');
   };
 
