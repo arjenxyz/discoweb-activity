@@ -2,7 +2,7 @@
 
 export default function EconomyApplySection() {
   return (
-    <section className="relative h-full min-h-full w-full overflow-hidden">
+    <section className="relative flex-1 min-h-0 w-full overflow-hidden">
       <video
         src="/video/invincible.mp4"
         autoPlay

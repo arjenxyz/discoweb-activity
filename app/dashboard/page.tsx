@@ -1389,7 +1389,7 @@ export default function DashboardPage() {
             )}
 
             {effectiveSection === 'economy-apply' && (
-              <div className="w-full min-h-full">
+              <div className="flex flex-1 min-h-0 w-full">
                 <EconomyApplySection />
               </div>
             )}
