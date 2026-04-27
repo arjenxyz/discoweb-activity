@@ -96,15 +96,14 @@ export default function SpoilerWarningModal() {
               {/* Watch Button with Prime Video Logo */}
               <button
                 onClick={handleWatchInvincible}
-                className="w-fit rounded-lg bg-white/10 backdrop-blur-md border border-white/20 py-2 text-sm font-semibold text-white transition-all hover:bg-white/20 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-[#0f1420] shadow-lg flex items-center gap-2 px-3"
+                className="w-fit rounded-lg bg-white/10 backdrop-blur-md border border-white/20 py-2 text-sm font-semibold text-white transition-all hover:bg-white/20 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-[#0f1420] shadow-lg flex items-center gap-2 px-4"
               >
                 <Image
-                  src="/icons/prime-video-logo.svg"
+                  src="/prime-video.png"
                   alt="Prime Video"
                   width={16}
                   height={16}
                   className="h-4 w-auto"
-                  unoptimized
                   onError={(e) => {
                     // Fallback to text if logo doesn't load
                     e.currentTarget.style.display = 'none';
@@ -115,7 +114,7 @@ export default function SpoilerWarningModal() {
                     }
                   }}
                 />
-                <span className="prime-text">İzle</span>
+                <span className="prime-text">Prime Video</span>
               </button>
               
               {/* Anladım Butonu */}
