@@ -194,33 +194,67 @@ export default function SettingsSection({
     </div>
   );
   return (
-    <section className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-6">
-      <h2 className="text-lg font-semibold">Hesap Ayarları</h2>
-      <div className="mt-6 grid gap-4 lg:grid-cols-[240px_1fr]">
-        <div className="space-y-2 rounded-2xl border border-white/10 bg-[#0b0d12]/60 p-4">
+    <section className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mb-8 rounded-3xl border border-white/10 bg-[#0b121a]/80 p-6 shadow-[0_0_0_1px_rgba(255,255,255,0.04)]">
+        <p className="text-sm font-semibold uppercase tracking-[0.3em] text-indigo-300">Ayarlar</p>
+        <h1 className="mt-4 text-3xl font-semibold tracking-tight text-white">Dashboard Ayarları</h1>
+        <p className="mt-3 max-w-2xl text-sm text-slate-400">
+          Ses, dil, hesap ve sözleşme onayları gibi en önemli tercihleriniz burada toplanıyor. Bu alan, ayarlarınızı hızlıca gözden geçirmenizi sağlar.
+        </p>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
+        <aside className="space-y-4 rounded-3xl border border-white/10 bg-[#0b0d12]/70 p-5 shadow-[0_24px_80px_-48px_rgba(0,0,0,0.4)]">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-white/50">Bölümler</p>
+          </div>
           {[
             { id: 'sound', label: 'Ses Ayarları', Icon: LuVolume2 },
             { id: 'language', label: 'Dil Seçimi', Icon: LuGlobe },
             { id: 'account', label: 'Hesap Verileri', Icon: LuUser },
-            { id: 'contracts', label: 'Onaylanan Sözleşmeler', Icon: LuFileCheck },
+            { id: 'contracts', label: 'Sözleşmeler', Icon: LuFileCheck },
           ].map((item) => (
             <button
               key={item.id}
               type="button"
               onClick={() => setActiveTab(item.id as 'sound' | 'language' | 'account' | 'contracts')}
-              className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-semibold transition ${activeTab === item.id ? 'bg-indigo-600 text-white' : 'bg-white/5 text-white/80 hover:bg-white/10'}`}
+              className={`flex w-full items-center gap-3 rounded-3xl px-4 py-3 text-left text-sm font-semibold transition ${activeTab === item.id ? 'bg-indigo-600 text-white shadow-sm' : 'bg-white/5 text-white/80 hover:bg-white/10'}`}
             >
               <item.Icon className="h-4 w-4" />
               {item.label}
             </button>
           ))}
-        </div>
+        </aside>
 
-        <div className="rounded-2xl border border-white/10 bg-[#0b0d12]/60 p-4">
-          {activeTab === 'sound' && soundSettingsContent}
-          {activeTab === 'language' && languageSettingsContent}
-          {activeTab === 'account' && accountSettingsContent}
-          {activeTab === 'contracts' && contractsSettingsContent}
+        <div className="space-y-6">
+          <div className="rounded-3xl border border-white/10 bg-[#0b0d12]/70 p-6 shadow-[0_24px_80px_-48px_rgba(0,0,0,0.4)]">
+            <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <h2 className="text-xl font-semibold text-white">{activeTab === 'sound' ? 'Ses Ayarları' : activeTab === 'language' ? 'Dil Seçimi' : activeTab === 'account' ? 'Hesap Verileri' : 'Sözleşmeler'}</h2>
+                <p className="mt-2 text-sm text-white/60">
+                  {activeTab === 'sound'
+                    ? 'Müzik tercihlerinizi burada yönetin.'
+                    : activeTab === 'language'
+                      ? 'Arayüz dilini seçin ve tercihlerinizi kaydedin.'
+                      : activeTab === 'account'
+                        ? 'Discord hesabınıza ait temel bilgileri görüntüleyin.'
+                        : 'Onayladığınız sözleşmeleri buradan takip edebilirsiniz.'}
+                </p>
+              </div>
+            </div>
+
+            {activeTab === 'sound' && soundSettingsContent}
+            {activeTab === 'language' && languageSettingsContent}
+            {activeTab === 'account' && accountSettingsContent}
+            {activeTab === 'contracts' && contractsSettingsContent}
+          </div>
+
+          <div className="rounded-3xl border border-white/10 bg-[#0b0d12]/60 p-6">
+            <p className="text-sm font-semibold text-white">Ayarlar Sayfası Bilgisi</p>
+            <p className="mt-3 text-sm text-white/60">
+              Bu sayfa, hesabınızın en önemli ayarlarını tek bir yerde toplar. Seçtiğiniz dil ve ses tercihleri, tarayıcınızda otomatik olarak saklanır.
+            </p>
+          </div>
         </div>
       </div>
     </section>
