@@ -1,12 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
+import { getDiscordSdk } from '@/lib/discordSdk';
 
 export default function SpoilerWarningModal() {
   const [isVisible, setIsVisible] = useState(false);
   const [countdown, setCountdown] = useState(5);
   const [isButtonDisabled, setIsButtonDisabled] = useState(true);
+  const linkSdkRef = useRef<InstanceType<Awaited<typeof import('@discord/embedded-app-sdk')>['DiscordSDK']> | null>(null);
 
   useEffect(() => {
     // Component mount olduğunda localStorage kontrolü yap
@@ -37,19 +39,29 @@ export default function SpoilerWarningModal() {
     return 'https://www.primevideo.com/detail/0K677J96WQ96K6UY6BL15O70CO';
   };
 
-  const handleWatchInvincible = () => {
-    const primeUrl = getPrimeVideoUrl();
-    // Discord Activity için Discord'un kendi yönlendirme sistemini kullan
-    if (window.location.protocol === 'https:' && window.location.hostname.includes('discord')) {
-      // Discord Activity ortamında Discord'un OAuth redirect sistemini kullan
-      const clientId = '1465696408656023698'; // Discord uygulaması Client ID
-      const redirectUrl = `https://discord.com/api/oauth2/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(primeUrl)}&response_type=code&scope=identify`;
-      console.log('Discord Activity detected, using Discord redirect system');
-      window.location.href = redirectUrl;
-    } else {
-      // Normal web ortamında yeni sekme aç
-      window.open(primeUrl, '_blank');
+  const openExternalLink = async (url: string) => {
+    try {
+      const existing = getDiscordSdk();
+      if (existing) {
+        await existing.commands.openExternalLink({ url });
+        return;
+      }
+
+      if (!linkSdkRef.current) {
+        const { DiscordSDK } = await import('@discord/embedded-app-sdk');
+        const sdk = new DiscordSDK(process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!);
+        await sdk.ready();
+        linkSdkRef.current = sdk;
+      }
+
+      await linkSdkRef.current.commands.openExternalLink({ url });
+    } catch {
+      window.open(url, '_blank');
     }
+  };
+
+  const handleWatchInvincible = () => {
+    openExternalLink(getPrimeVideoUrl());
   };
 
   const handleAccept = () => {
