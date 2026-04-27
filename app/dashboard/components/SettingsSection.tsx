@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { LuVault, LuArrowRight, LuCheck, LuClock, LuVolume2, LuGlobe, LuUser, LuFileCheck } from 'react-icons/lu';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { apiUrl } from '@/lib/api';
-import { useLocale, useT } from '@/contexts/LocaleContext';
+import { useLocale } from '@/contexts/LocaleContext';
 import type { MemberProfile } from '../types';
 
 type SettingsSectionProps = {
@@ -16,6 +16,7 @@ type SettingsSectionProps = {
 
 export default function SettingsSection({
   currentGuildName,
+  profile,
 }: SettingsSectionProps) {
   const { locale, setDiscordLocale, t } = useLocale();
   const [isModalOpen, setIsModalOpen] = useState(false);
