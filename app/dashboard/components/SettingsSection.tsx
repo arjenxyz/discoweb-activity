@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { LuVolume2, LuGlobe, LuUser, LuFileCheck, LuCheck } from 'react-icons/lu';
 import { useLocale } from '@/contexts/LocaleContext';
 import type { MemberProfile } from '../types';
@@ -7,15 +8,27 @@ import type { MemberProfile } from '../types';
 type SettingsSectionProps = {
   onOpenPromotionsModal: () => void;
   onOpenDiscountsModal: () => void;
-  currentGuildName?: string | null;
   profile?: MemberProfile | null;
 };
 
 export default function SettingsSection({
-  currentGuildName,
   profile,
 }: SettingsSectionProps) {
-  const { locale, setDiscordLocale, t } = useLocale();
+  const { locale, setDiscordLocale } = useLocale();
+  const [serverTime, setServerTime] = useState('');
+
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      const istanbulTime = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Istanbul' }));
+      const formatted = `UTC+3 ${istanbulTime.toLocaleDateString('tr-TR')} ${istanbulTime.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}`;
+      setServerTime(formatted);
+    };
+    updateTime();
+    const interval = setInterval(updateTime, 60000); // update every minute
+    return () => clearInterval(interval);
+  }, []);
+
   const greeting = (() => {
     const h = new Date().getHours();
     if (h < 6) return 'İyi geceler';
@@ -24,46 +37,47 @@ export default function SettingsSection({
     return 'İyi akşamlar';
   })();
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [scope, setScope] = useState<'current' | 'all'>('current');
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'sound' | 'language' | 'account' | 'contracts'>('sound');
-  const [soundEnabled, setSoundEnabled] = useState(true);
-  const [soundVolume, setSoundVolume] = useState(70);
-  const [acceptedContracts, setAcceptedContracts] = useState<Record<string, boolean>>({
-    privacy_policy: false,
-    terms_of_service: false,
-    data_processing: false,
+  const [soundEnabled, setSoundEnabled] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    const stored = window.localStorage.getItem('dashboard_music_enabled');
+    return stored !== null ? stored === 'true' : true;
   });
-
-  const contractItems = [
-    { key: 'privacy_policy', title: 'Gizlilik Politikası', description: 'Kişisel verilerin nasıl işlendiğini kabul ettiniz.' },
-    { key: 'terms_of_service', title: 'Kullanım Şartları', description: 'Servis kullanım kurallarını ve sorumlulukları kabul ettiniz.' },
-    { key: 'data_processing', title: 'Veri İşleme Onayı', description: 'Veri işleme ve analiz için izin verdiniz.' },
-  ];
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const storedEnabled = window.localStorage.getItem('dashboard_music_enabled');
-    const storedVolume = window.localStorage.getItem('dashboard_music_volume');
-    const storedContracts = window.localStorage.getItem('dashboard_accepted_contracts');
-
-    if (storedEnabled !== null) setSoundEnabled(storedEnabled === 'true');
-    if (storedVolume !== null) {
-      const parsed = Number(storedVolume);
-      if (Number.isFinite(parsed)) setSoundVolume(Math.min(100, Math.max(0, parsed)));
+  const [soundVolume, setSoundVolume] = useState(() => {
+    if (typeof window === 'undefined') return 70;
+    const stored = window.localStorage.getItem('dashboard_music_volume');
+    if (stored !== null) {
+      const parsed = Number(stored);
+      if (Number.isFinite(parsed)) return Math.min(100, Math.max(0, parsed));
     }
-    if (storedContracts) {
+    return 70;
+  });
+  const [acceptedContracts, setAcceptedContracts] = useState<Record<string, boolean>>(() => {
+    if (typeof window === 'undefined') return {
+      privacy_policy: false,
+      terms_of_service: false,
+      data_processing: false,
+    };
+    const stored = window.localStorage.getItem('dashboard_accepted_contracts');
+    if (stored) {
       try {
-        const parsed = JSON.parse(storedContracts) as Record<string, boolean>;
-        setAcceptedContracts((prev) => ({ ...prev, ...parsed }));
+        const parsed = JSON.parse(stored) as Record<string, boolean>;
+        return {
+          privacy_policy: false,
+          terms_of_service: false,
+          data_processing: false,
+          ...parsed,
+        };
       } catch {
         // ignore invalid stored value
       }
     }
-  }, []);
+    return {
+      privacy_policy: false,
+      terms_of_service: false,
+      data_processing: false,
+    };
+  });
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -204,14 +218,20 @@ export default function SettingsSection({
     <section className="flex flex-col gap-4 p-4 sm:p-6">
 
       {/* SAYFA BAŞLIĞI */}
-      <div>
-        <p className="text-xs font-medium text-white/30 mb-0.5">
-          {greeting}{profile?.nickname ? `, ${profile.nickname}` : ''} 👋
-        </p>
-        <h1 className="text-2xl font-black text-white tracking-tight">Ayarlar</h1>
-        <p className="mt-1 text-sm text-white/40">
-          Uygulama tercihlerinizi yönetin ve hesabınızı özelleştirin.
-        </p>
+      <div className="flex items-end justify-between">
+        <div>
+          <p className="text-xs font-medium text-white/30 mb-0.5">
+            {greeting}{profile?.nickname ? `, ${profile.nickname}` : ''} 👋
+          </p>
+          <h1 className="text-2xl font-black text-white tracking-tight">Ayarlar</h1>
+          <p className="mt-1 text-sm text-white/40">
+            Uygulama tercihlerinizi yönetin ve hesabınızı özelleştirin.
+          </p>
+        </div>
+        <div className="hidden sm:flex items-center gap-1.5 rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-1.5">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+          <span className="text-[11px] font-medium text-white/40">Sunucu Zamanı: {serverTime}</span>
+        </div>
       </div>
 
       {/* TAB BUTTONS */}
