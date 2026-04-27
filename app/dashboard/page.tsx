@@ -183,11 +183,11 @@ export default function DashboardPage() {
         const response = await fetch('/api/dashboard-music', { cache: 'no-store' });
         if (!response.ok) throw new Error('playlist fetch failed');
         const data = await response.json();
-        const tracks = Array.isArray(data.tracks) && data.tracks.length > 0
-          ? data.tracks
-          : [DEFAULT_MUSIC_TRACK];
-        const shuffled = shufflePlaylist(tracks);
-        musicPlaylistRef.current = shuffled;
+        const tracks = Array.isArray(data.tracks)
+          ? data.tracks.filter((track): track is string => typeof track === 'string' && track.toLowerCase().endsWith('.mp3'))
+          : [];
+        const playlist = tracks.length > 0 ? shufflePlaylist(tracks) : [DEFAULT_MUSIC_TRACK];
+        musicPlaylistRef.current = playlist;
       } catch {
         musicPlaylistRef.current = [DEFAULT_MUSIC_TRACK];
       } finally {
