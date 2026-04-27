@@ -24,6 +24,11 @@ export default function SpoilerWarningModal() {
     window.open(primeUrl, '_blank');
   };
 
+  const handleAccept = () => {
+    localStorage.setItem('hasSeenSpoilerWarning', 'true');
+    setIsVisible(false);
+  };
+
   if (!isVisible) return null;
 
   return (
