@@ -137,7 +137,7 @@ export default function SpoilerWarningModal() {
                     }
                   }}
                 />
-                <span className="prime-text">Prime Video&apos;da izle</span>
+                <span className="prime-text">Invincible izle</span>
               </button>
               
               {/* Anladım Butonu */}
