@@ -136,24 +136,6 @@ export default function DashboardPage() {
     } catch {}
   }, []);
 
-  useEffect(() => {
-    if (!splashDone) return;
-
-    const audio = new Audio('/music.mp3');
-    audio.loop = true;
-    audio.volume = 0.35;
-    dashboardMusicRef.current = audio;
-    void audio.play().catch(() => {});
-
-    return () => {
-      audio.pause();
-      audio.currentTime = 0;
-      if (dashboardMusicRef.current === audio) {
-        dashboardMusicRef.current = null;
-      }
-    };
-  }, [splashDone]);
-
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [notificationsModalOpen, setNotificationsModalOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -193,6 +175,25 @@ export default function DashboardPage() {
   const activeServerName = headerServer.data?.name ?? t('server_unknown');
   const [activityReadiness, setActivityReadiness] = useState<ActivityReadiness | null>(null);
   const [activityReadinessLoading, setActivityReadinessLoading] = useState(true);
+
+  useEffect(() => {
+    if (!splashDone || activityReadinessLoading || activityReadiness?.blocking) return;
+    if (dashboardMusicRef.current) return;
+
+    const audio = new Audio('/music.mp3');
+    audio.loop = true;
+    audio.volume = 0.6;
+    dashboardMusicRef.current = audio;
+    void audio.play().catch(() => {});
+
+    return () => {
+      audio.pause();
+      audio.currentTime = 0;
+      if (dashboardMusicRef.current === audio) {
+        dashboardMusicRef.current = null;
+      }
+    };
+  }, [splashDone, activityReadinessLoading, activityReadiness?.blocking]);
 
   const isBlockedByReadiness = Boolean(activityReadiness?.blocking);
 
