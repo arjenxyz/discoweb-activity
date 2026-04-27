@@ -29,13 +29,11 @@ export default function SettingsSection({
     return () => clearInterval(interval);
   }, []);
 
-  const greeting = (() => {
-    const h = new Date().getHours();
-    if (h < 6) return 'İyi geceler';
-    if (h < 12) return 'Günaydın';
-    if (h < 18) return 'İyi günler';
-    return 'İyi akşamlar';
-  })();
+  const contractItems = [
+    { key: 'privacy_policy', title: 'Gizlilik Politikası', description: 'Kişisel verilerin nasıl işlendiğini kabul ettiniz.' },
+    { key: 'terms_of_service', title: 'Kullanım Şartları', description: 'Servis kullanım kurallarını ve sorumlulukları kabul ettiniz.' },
+    { key: 'data_processing', title: 'Veri İşleme Onayı', description: 'Veri işleme ve analiz için izin verdiniz.' },
+  ];
 
   const [activeTab, setActiveTab] = useState<'sound' | 'language' | 'account' | 'contracts'>('sound');
   const [soundEnabled, setSoundEnabled] = useState(() => {
