@@ -1339,7 +1339,6 @@ export default function DashboardPage() {
                   profile={profile}
                   renderPapelAmount={renderPapelAmount}
                   formatRoleColor={formatRoleColor}
-                  badgeInfo={badgeInfo}
                   pendingEarnings={pendingEarnings}
                   claimLoading={claimLoading}
                   onClaim={claimEarnings}
