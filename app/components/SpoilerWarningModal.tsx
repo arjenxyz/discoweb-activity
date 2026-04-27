@@ -5,6 +5,8 @@ import Image from 'next/image';
 
 export default function SpoilerWarningModal() {
   const [isVisible, setIsVisible] = useState(false);
+  const [countdown, setCountdown] = useState(5);
+  const [isButtonDisabled, setIsButtonDisabled] = useState(true);
 
   useEffect(() => {
     // Component yüklendiğinde kullanıcının uyarıyı görüp görmediğini kontrol et
@@ -13,6 +15,18 @@ export default function SpoilerWarningModal() {
       setIsVisible(true);
     }
   }, []);
+
+  useEffect(() => {
+    // Modal göründüğünde geri sayımı başlat
+    if (isVisible && countdown > 0) {
+      const timer = setTimeout(() => {
+        setCountdown(countdown - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    } else if (countdown === 0) {
+      setIsButtonDisabled(false);
+    }
+  }, [isVisible, countdown]);
 
   // Prime Video URL'sini belirle - tüm diller için aynı global link
   const getPrimeVideoUrl = () => {
@@ -120,9 +134,14 @@ export default function SpoilerWarningModal() {
               {/* Anladım Butonu */}
               <button
                 onClick={handleAccept}
-                className="w-fit rounded-lg bg-white/10 backdrop-blur-md border border-white/20 py-2 text-sm font-semibold text-white transition-all hover:bg-white/20 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-[#0f1420] shadow-lg px-4"
+                disabled={isButtonDisabled}
+                className={`w-fit rounded-lg border border-white/20 py-2 text-sm font-semibold text-white transition-all focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-[#0f1420] shadow-lg px-4 ${
+                  isButtonDisabled
+                    ? 'bg-gray-500/50 backdrop-blur-md cursor-not-allowed opacity-70'
+                    : 'bg-white/10 backdrop-blur-md hover:bg-white/20 hover:scale-105 active:scale-95'
+                }`}
               >
-                Anladım
+                {isButtonDisabled ? countdown : 'Anladım'}
               </button>
             </div>
           </div>
