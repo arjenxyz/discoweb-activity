@@ -7,42 +7,13 @@ export default function SpoilerWarningModal() {
   const [isVisible, setIsVisible] = useState(false);
   const { locale } = useLocale();
 
-  // Prime Video URL'sini locale'e göre belirle
-  const getPrimeVideoUrl = (locale: string) => {
-    const localeMap: Record<string, string> = {
-      'tr': 'https://www.amazon.com.tr/gp/video/detail/B08B8Z8Z8Z', // Invincible on Turkish Amazon Prime
-      'en': 'https://www.amazon.com/gp/video/detail/B08B8Z8Z8Z', // Invincible on US Amazon Prime
-      'pt-br': 'https://www.amazon.com.br/gp/video/detail/B08B8Z8Z8Z', // Invincible on Brazilian Amazon Prime
-      'es': 'https://www.amazon.es/gp/video/detail/B08B8Z8Z8Z', // Invincible on Spanish Amazon Prime
-      'fr': 'https://www.amazon.fr/gp/video/detail/B08B8Z8Z8Z', // Invincible on French Amazon Prime
-      'de': 'https://www.amazon.de/gp/video/detail/B08B8Z8Z8Z', // Invincible on German Amazon Prime
-      'it': 'https://www.amazon.it/gp/video/detail/B08B8Z8Z8Z', // Invincible on Italian Amazon Prime
-      'ja': 'https://www.amazon.co.jp/gp/video/detail/B08B8Z8Z8Z', // Invincible on Japanese Amazon Prime
-      'ko': 'https://www.amazon.co.kr/gp/video/detail/B08B8Z8Z8Z', // Invincible on Korean Amazon Prime
-      'zh-CN': 'https://www.amazon.cn/gp/video/detail/B08B8Z8Z8Z', // Invincible on Chinese Amazon Prime
-      'zh-TW': 'https://www.amazon.com/gp/video/detail/B08B8Z8Z8Z', // Invincible on Taiwanese Amazon Prime (redirect to US)
-    };
-    
-    // Browser locale'ini al (daha detaylı)
-    const browserLocale = typeof navigator !== 'undefined' ? navigator.language.toLowerCase() : 'en';
-    
-    // Önce tam locale eşleşmesi dene (zh-CN gibi)
-    if (localeMap[browserLocale]) {
-      return localeMap[browserLocale];
-    }
-    
-    // Sonra dil kodu ile dene (zh-CN -> zh)
-    const langCode = browserLocale.split('-')[0];
-    if (localeMap[langCode]) {
-      return localeMap[langCode];
-    }
-    
-    // Varsayılan olarak US Amazon Prime
-    return localeMap['en'];
+  // Prime Video URL'sini belirle - tüm diller için aynı global link
+  const getPrimeVideoUrl = () => {
+    return 'https://www.primevideo.com/detail/0K677J96WQ96K6UY6BL15O70CO';
   };
 
   const handleWatchInvincible = () => {
-    const primeUrl = getPrimeVideoUrl(locale);
+    const primeUrl = getPrimeVideoUrl();
     window.open(primeUrl, '_blank');
   };
 
@@ -111,7 +82,7 @@ export default function SpoilerWarningModal() {
               {/* Watch Button with Prime Video Logo */}
               <button
                 onClick={handleWatchInvincible}
-                className="shrink-0 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 px-6 py-3 text-base font-bold text-white transition-all hover:bg-white/20 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-[#0f1420] shadow-lg flex items-center gap-2"
+                className="w-fit rounded-xl bg-white/10 backdrop-blur-md border border-white/20 py-3 text-base font-bold text-white transition-all hover:bg-white/20 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-[#0f1420] shadow-lg flex items-center gap-2 px-4"
               >
                 <img
                   src="/icons/prime-video-logo.svg"
@@ -133,7 +104,7 @@ export default function SpoilerWarningModal() {
               {/* Anladım Butonu */}
               <button
                 onClick={handleAccept}
-                className="shrink-0 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 px-8 py-3.5 text-base font-bold text-white transition-all hover:bg-white/20 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-[#0f1420] shadow-lg"
+                className="w-fit rounded-xl bg-white/10 backdrop-blur-md border border-white/20 py-3.5 text-base font-bold text-white transition-all hover:bg-white/20 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-[#0f1420] shadow-lg px-6"
               >
                 Anladım
               </button>
