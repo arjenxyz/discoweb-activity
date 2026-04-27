@@ -319,7 +319,7 @@ export default function BugReportModal({ onClose, section }: Props) {
                   {activeReportStatus === 'not_found' && (
                     <button
                       type="button"
-                      onClick={() => window.open('https://discord.gg/fDPsYhvKmu', '_blank', 'noopener,noreferrer')}
+                      onClick={() => window.open('https://discord.gg/vxK95JTFPw', '_blank', 'noopener,noreferrer')}
                       className="w-full rounded-xl border border-[#5865F2]/30 bg-[#5865F2]/10 py-2.5 text-sm font-semibold text-[#5865F2] hover:bg-[#5865F2]/20 transition flex items-center justify-center gap-2"
                     >
                       <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4">
@@ -485,7 +485,7 @@ export default function BugReportModal({ onClose, section }: Props) {
                   {selectedReport.status === 'not_found' && (
                     <button
                       type="button"
-                      onClick={() => window.open('https://discord.gg/fDPsYhvKmu', '_blank', 'noopener,noreferrer')}
+                      onClick={() => window.open('https://discord.gg/vxK95JTFPw', '_blank', 'noopener,noreferrer')}
                       className="w-full rounded-xl border border-[#5865F2]/30 bg-[#5865F2]/10 py-2.5 text-sm font-semibold text-[#5865F2] hover:bg-[#5865F2]/20 transition flex items-center justify-center gap-2"
                     >
                       <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4">

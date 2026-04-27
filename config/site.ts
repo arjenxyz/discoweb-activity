@@ -13,7 +13,7 @@ export const siteConfig = {
   },
   links: {
     docs: "https://discowebtr.vercel.app/docs",
-    support: "https://discord.gg/fDPsYhvKmu",
+    support: "https://discord.gg/vxK95JTFPw",
     github: "https://github.com/arjenxyz"
   }
 };

@@ -370,7 +370,7 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry, onB
                   }
                   label="Discord"
                   sub="Destek kanalı"
-                  onClick={() => { setInfoOpen(false); openLink('https://discord.gg/fDPsYhvKmu'); }}
+                  onClick={() => { setInfoOpen(false); openLink('https://discord.gg/vxK95JTFPw'); }}
                 />
                 <MenuItem
                   icon={
@@ -485,7 +485,7 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry, onB
                         }
                         label="Discord"
                         sub="Destek kanalı"
-                        onClick={() => { setInfoOpen(false); openLink('https://discord.gg/fDPsYhvKmu'); }}
+                        onClick={() => { setInfoOpen(false); openLink('https://discord.gg/vxK95JTFPw'); }}
                       />
                       <MenuItem
                         icon={
