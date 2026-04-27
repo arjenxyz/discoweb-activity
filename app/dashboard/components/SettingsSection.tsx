@@ -29,6 +29,14 @@ export default function SettingsSection({
     return () => clearInterval(interval);
   }, []);
 
+  const greeting = (() => {
+    const h = new Date().getHours();
+    if (h < 6) return 'İyi geceler';
+    if (h < 12) return 'Günaydın';
+    if (h < 18) return 'İyi günler';
+    return 'İyi akşamlar';
+  })();
+
   const contractItems = [
     { key: 'privacy_policy', title: 'Gizlilik Politikası', description: 'Kişisel verilerin nasıl işlendiğini kabul ettiniz.' },
     { key: 'terms_of_service', title: 'Kullanım Şartları', description: 'Servis kullanım kurallarını ve sorumlulukları kabul ettiniz.' },
