@@ -92,10 +92,22 @@ export default function DashboardHeader({
 }: DashboardHeaderProps) {
   const t = useT();
   const getRandomGif = () => RANDOM_GIFS[Math.floor(Math.random() * RANDOM_GIFS.length)];
+  const formatIstanbulTime = () => {
+    const date = new Date();
+    const timeString = date.toLocaleTimeString('tr-TR', {
+      hour12: false,
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      timeZone: 'Europe/Istanbul',
+    });
+    return `UTC+03 ${timeString}`;
+  };
 
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [currentGif, setCurrentGif] = useState(getRandomGif);
+  const [istanbulTime, setIstanbulTime] = useState(formatIstanbulTime);
   const [, setFetchedIcons] = useState<Record<string, string | null>>({});
   const fetchedIconsSeenRef = useRef<Set<string>>(new Set());
 
@@ -105,6 +117,14 @@ export default function DashboardHeader({
     }
     setIsProfileOpen((prev) => !prev);
   };
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setIstanbulTime(formatIstanbulTime());
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     if (!server?.guilds || server.guilds.length === 0) return;
@@ -192,7 +212,10 @@ export default function DashboardHeader({
           <div className="h-9 w-9 overflow-hidden rounded-full">
             <Image src="/inv-omni.png" alt="logo" className="h-full w-full object-cover" width={36} height={36} />
           </div>
-          <span className="text-white font-black text-lg tracking-tight">DiscoWeb</span>
+          <div className="flex flex-col gap-0.5">
+            <span className="text-white font-black text-lg tracking-tight">DiscoWeb</span>
+            <span className="text-[11px] text-white/50">{istanbulTime}</span>
+          </div>
         </div>
 
         {/* Mobil orta — logo + DiscoWeb yazısı birlikte */}
@@ -200,7 +223,10 @@ export default function DashboardHeader({
           <div className="h-8 w-8 overflow-hidden rounded-full flex-shrink-0">
             <Image src="/inv-omni.png" alt="logo" className="h-full w-full object-cover" width={32} height={32} />
           </div>
-          <span className="text-white font-black text-lg tracking-tight">DiscoWeb</span>
+          <div className="flex flex-col gap-0.5 items-center">
+            <span className="text-white font-black text-lg tracking-tight">DiscoWeb</span>
+            <span className="text-[11px] text-white/50">{istanbulTime}</span>
+          </div>
         </div>
 
         {/* Orta — boşluk */}
