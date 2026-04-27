@@ -290,6 +290,14 @@ export default function DashboardPage() {
       void playTrack(musicPlaylistRef.current[currentIndex]);
     };
 
+    const handleAudioError = () => {
+      console.warn('Dashboard music track failed, skipping to next track:', audio.src);
+      if (musicPlaylistRef.current.length > 1) {
+        currentIndex = (currentIndex + 1) % musicPlaylistRef.current.length;
+        void playTrack(musicPlaylistRef.current[currentIndex]);
+      }
+    };
+
     const handleSettingsChange = () => {
       if (!dashboardMusicRef.current) return;
       updateAudioFromSettings();
@@ -297,6 +305,7 @@ export default function DashboardPage() {
 
     window.addEventListener('dashboard-music-settings-changed', handleSettingsChange);
     audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('error', handleAudioError);
     dashboardMusicRef.current = audio;
     void playTrack(musicPlaylistRef.current[currentIndex]);
 
@@ -304,6 +313,7 @@ export default function DashboardPage() {
       document.removeEventListener('pointerdown', onUserGesture, true);
       window.removeEventListener('dashboard-music-settings-changed', handleSettingsChange);
       audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('error', handleAudioError);
       audio.pause();
       audio.currentTime = 0;
       if (dashboardMusicRef.current === audio) {
