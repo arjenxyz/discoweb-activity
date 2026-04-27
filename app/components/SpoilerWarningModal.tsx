@@ -1,18 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { LuTriangleAlert } from 'react-icons/lu';
 
 export default function SpoilerWarningModal() {
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
+  const [isVisible, setIsVisible] = useState(() => {
     // Check if user has already seen the warning
+    if (typeof window === 'undefined') return false;
     const hasSeenWarning = localStorage.getItem('hasSeenSpoilerWarning');
-    if (!hasSeenWarning) {
-      setIsVisible(true);
-    }
-  }, []);
+    return !hasSeenWarning;
+  });
 
   const handleAccept = () => {
     localStorage.setItem('hasSeenSpoilerWarning', 'true');
