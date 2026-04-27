@@ -222,15 +222,37 @@ export default function DashboardPage() {
     let currentIndex = 0;
     const audio = new Audio(musicPlaylistRef.current[currentIndex]);
     audio.preload = 'auto';
+    audio.volume = 1;
+    audio.muted = false;
     audio.loop = musicPlaylistRef.current.length === 1;
-    audio.volume = 0.7;
 
-    const playTrack = async (track: string) => {
-      audio.src = track;
+    const tryPlay = async () => {
       try {
         await audio.play();
+        return true;
       } catch {
-        // ignore autoplay restrictions, dashboard still loads normally
+        return false;
+      }
+    };
+
+    let pendingGesture = false;
+    const onUserGesture = async () => {
+      if (pendingGesture) {
+        pendingGesture = false;
+        if (await tryPlay()) {
+          document.removeEventListener('pointerdown', onUserGesture, true);
+        }
+      }
+    };
+
+    const playTrack = async (track: string) => {
+      if (audio.src !== track) {
+        audio.src = track;
+      }
+      const played = await tryPlay();
+      if (!played) {
+        pendingGesture = true;
+        document.addEventListener('pointerdown', onUserGesture, true);
       }
     };
 
@@ -244,6 +266,7 @@ export default function DashboardPage() {
     void playTrack(musicPlaylistRef.current[currentIndex]);
 
     return () => {
+      document.removeEventListener('pointerdown', onUserGesture, true);
       audio.removeEventListener('ended', handleEnded);
       audio.pause();
       audio.currentTime = 0;
