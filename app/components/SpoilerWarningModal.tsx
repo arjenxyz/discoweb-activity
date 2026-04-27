@@ -38,7 +38,7 @@ export default function SpoilerWarningModal() {
         <img
           src="/logo.png"
           alt="Logo"
-          className="absolute top-4 left-4 z-20 h-8 w-auto rounded-lg shadow-lg"
+          className="absolute top-4 left-6 z-20 h-10 w-auto rounded-lg shadow-lg"
           onError={(e) => {
             console.error('Logo failed to load:', {
               src: e.currentTarget.src,
@@ -58,12 +58,6 @@ export default function SpoilerWarningModal() {
 
         {/* Content Overlay */}
         <div className="relative z-10">
-          {/* Icon */}
-          <div className="mb-4 flex justify-center">
-            <div className="rounded-full bg-amber-500/20 backdrop-blur-sm p-3 border border-amber-400/30">
-              <LuTriangleAlert className="h-8 w-8 text-amber-400" />
-            </div>
-          </div>
 
           {/* Title */}
           <h2 className="mb-3 text-center text-xl font-bold text-white drop-shadow-lg">
