@@ -34,6 +34,13 @@ export default function SpoilerWarningModal() {
           <div className="absolute inset-0 bg-gradient-to-br from-blue-900 to-purple-900 rounded-2xl" />
         </video>
 
+        {/* Logo in top-left corner */}
+        <img
+          src="/logo.png"
+          alt="Logo"
+          className="absolute top-4 left-4 z-20 h-8 w-auto rounded-lg shadow-lg"
+        />
+
         {/* Overlay to ensure text readability */}
         <div className="absolute inset-0 bg-black/40 rounded-2xl" />
 
