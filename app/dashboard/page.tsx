@@ -67,6 +67,16 @@ export default function DashboardPage() {
 
   const [splashDone, setSplashDone] = useState(false);
   const dashboardMusicRef = useRef<HTMLAudioElement | null>(null);
+  const [musicReady, setMusicReady] = useState(false);
+  const musicPlaylistRef = useRef<string[]>([]);
+  const shufflePlaylist = useCallback((tracks: string[]) => {
+    const list = [...tracks];
+    for (let i = list.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [list[i], list[j]] = [list[j], list[i]];
+    }
+    return list;
+  }, []);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<MemberProfile | null>(null);
@@ -136,6 +146,33 @@ export default function DashboardPage() {
     } catch {}
   }, []);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadPlaylist = async () => {
+      try {
+        const response = await fetch('/api/dashboard-music', { cache: 'no-store' });
+        if (!response.ok) throw new Error('playlist fetch failed');
+        const data = await response.json();
+        const tracks = Array.isArray(data.tracks) && data.tracks.length > 0
+          ? data.tracks
+          : ['/music/music.mp3'];
+        const shuffled = shufflePlaylist(tracks);
+        musicPlaylistRef.current = shuffled;
+      } catch {
+        musicPlaylistRef.current = ['/music/music.mp3'];
+      } finally {
+        if (isMounted) setMusicReady(true);
+      }
+    };
+
+    void loadPlaylist();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [shufflePlaylist]);
+
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [notificationsModalOpen, setNotificationsModalOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -177,23 +214,43 @@ export default function DashboardPage() {
   const [activityReadinessLoading, setActivityReadinessLoading] = useState(true);
 
   useEffect(() => {
-    if (!splashDone || activityReadinessLoading || activityReadiness?.blocking) return;
+    if (!splashDone || activityReadinessLoading || activityReadiness?.blocking || !musicReady) return;
     if (dashboardMusicRef.current) return;
+    if (musicPlaylistRef.current.length === 0) return;
 
-    const audio = new Audio('/music.mp3');
-    audio.loop = true;
-    audio.volume = 0.6;
+    let currentIndex = 0;
+    const audio = new Audio(musicPlaylistRef.current[currentIndex]);
+    audio.preload = 'auto';
+    audio.loop = musicPlaylistRef.current.length === 1;
+    audio.volume = 0.7;
+
+    const playTrack = async (track: string) => {
+      audio.src = track;
+      try {
+        await audio.play();
+      } catch {
+        // ignore autoplay restrictions, dashboard still loads normally
+      }
+    };
+
+    const handleEnded = () => {
+      currentIndex = (currentIndex + 1) % musicPlaylistRef.current.length;
+      void playTrack(musicPlaylistRef.current[currentIndex]);
+    };
+
+    audio.addEventListener('ended', handleEnded);
     dashboardMusicRef.current = audio;
-    void audio.play().catch(() => {});
+    void playTrack(musicPlaylistRef.current[currentIndex]);
 
     return () => {
+      audio.removeEventListener('ended', handleEnded);
       audio.pause();
       audio.currentTime = 0;
       if (dashboardMusicRef.current === audio) {
         dashboardMusicRef.current = null;
       }
     };
-  }, [splashDone, activityReadinessLoading, activityReadiness?.blocking]);
+  }, [splashDone, activityReadinessLoading, activityReadiness?.blocking, musicReady]);
 
   const isBlockedByReadiness = Boolean(activityReadiness?.blocking);
 
