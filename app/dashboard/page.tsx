@@ -70,6 +70,34 @@ export default function DashboardPage() {
   const dashboardMusicRef = useRef<HTMLAudioElement | null>(null);
   const [musicReady, setMusicReady] = useState(false);
   const musicPlaylistRef = useRef<string[]>([]);
+  const MUSIC_ENABLED_KEY = 'dashboard_music_enabled';
+  const MUSIC_VOLUME_KEY = 'dashboard_music_volume';
+
+  const getSavedMusicEnabled = () => {
+    if (typeof window === 'undefined') return true;
+    const value = window.localStorage.getItem(MUSIC_ENABLED_KEY);
+    return value === null ? true : value === 'true';
+  };
+
+  const getSavedMusicVolume = () => {
+    if (typeof window === 'undefined') return 0.7;
+    const value = window.localStorage.getItem(MUSIC_VOLUME_KEY);
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? Math.min(1, Math.max(0, parsed)) : 0.7;
+  };
+
+  const updateAudioFromSettings = () => {
+    if (!dashboardMusicRef.current) return;
+    const enabled = getSavedMusicEnabled();
+    const volume = getSavedMusicVolume();
+    dashboardMusicRef.current.muted = !enabled;
+    dashboardMusicRef.current.volume = volume;
+    if (!enabled) {
+      dashboardMusicRef.current.pause();
+    } else if (dashboardMusicRef.current.paused) {
+      void dashboardMusicRef.current.play().catch(() => {});
+    }
+  };
   const shufflePlaylist = useCallback((tracks: string[]) => {
     const list = [...tracks];
     for (let i = list.length - 1; i > 0; i -= 1) {
@@ -222,11 +250,12 @@ export default function DashboardPage() {
     let currentIndex = 0;
     const audio = new Audio(musicPlaylistRef.current[currentIndex]);
     audio.preload = 'auto';
-    audio.volume = 1;
-    audio.muted = false;
     audio.loop = musicPlaylistRef.current.length === 1;
 
     const tryPlay = async () => {
+      const enabled = getSavedMusicEnabled();
+      audio.muted = !enabled;
+      audio.volume = getSavedMusicVolume();
       try {
         await audio.play();
         return true;
@@ -261,12 +290,19 @@ export default function DashboardPage() {
       void playTrack(musicPlaylistRef.current[currentIndex]);
     };
 
+    const handleSettingsChange = () => {
+      if (!dashboardMusicRef.current) return;
+      updateAudioFromSettings();
+    };
+
+    window.addEventListener('dashboard-music-settings-changed', handleSettingsChange);
     audio.addEventListener('ended', handleEnded);
     dashboardMusicRef.current = audio;
     void playTrack(musicPlaylistRef.current[currentIndex]);
 
     return () => {
       document.removeEventListener('pointerdown', onUserGesture, true);
+      window.removeEventListener('dashboard-music-settings-changed', handleSettingsChange);
       audio.removeEventListener('ended', handleEnded);
       audio.pause();
       audio.currentTime = 0;
@@ -1386,6 +1422,7 @@ export default function DashboardPage() {
                 onOpenPromotionsModal={openPromotionsModal}
                 onOpenDiscountsModal={openDiscountsModal}
                 currentGuildName={headerServer.data?.name ?? null}
+                profile={profile}
               />
             )}
 
