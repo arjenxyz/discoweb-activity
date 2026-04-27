@@ -195,16 +195,8 @@ export default function SettingsSection({
   );
   return (
     <section className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mb-8 rounded-3xl border border-white/10 bg-[#0b121a]/80 p-6 shadow-[0_0_0_1px_rgba(255,255,255,0.04)]">
-        <p className="text-sm font-semibold uppercase tracking-[0.3em] text-indigo-300">Ayarlar</p>
-        <h1 className="mt-4 text-3xl font-semibold tracking-tight text-white">Dashboard Ayarları</h1>
-        <p className="mt-3 max-w-2xl text-sm text-slate-400">
-          Ses, dil, hesap ve sözleşme onayları gibi en önemli tercihleriniz burada toplanıyor. Bu alan, ayarlarınızı hızlıca gözden geçirmenizi sağlar.
-        </p>
-      </div>
-
       <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
-        <aside className="space-y-4 rounded-3xl border border-white/10 bg-[#0b0d12]/70 p-5 shadow-[0_24px_80px_-48px_rgba(0,0,0,0.4)]">
+        <aside className="sticky top-6 self-start space-y-4 rounded-3xl border border-white/10 bg-[#0b0d12]/70 p-5 shadow-[0_24px_80px_-48px_rgba(0,0,0,0.4)]">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.25em] text-white/50">Bölümler</p>
           </div>
@@ -247,13 +239,6 @@ export default function SettingsSection({
             {activeTab === 'language' && languageSettingsContent}
             {activeTab === 'account' && accountSettingsContent}
             {activeTab === 'contracts' && contractsSettingsContent}
-          </div>
-
-          <div className="rounded-3xl border border-white/10 bg-[#0b0d12]/60 p-6">
-            <p className="text-sm font-semibold text-white">Ayarlar Sayfası Bilgisi</p>
-            <p className="mt-3 text-sm text-white/60">
-              Bu sayfa, hesabınızın en önemli ayarlarını tek bir yerde toplar. Seçtiğiniz dil ve ses tercihleri, tarayıcınızda otomatik olarak saklanır.
-            </p>
           </div>
         </div>
       </div>
