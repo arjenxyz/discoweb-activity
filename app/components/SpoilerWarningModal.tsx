@@ -96,15 +96,14 @@ export default function SpoilerWarningModal() {
               {/* Watch Button with Prime Video Logo */}
               <button
                 onClick={handleWatchInvincible}
-                className="w-fit rounded-xl bg-white/10 backdrop-blur-md border border-white/20 py-3 text-base font-bold text-white transition-all hover:bg-white/20 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-[#0f1420] shadow-lg flex items-center gap-2 px-4"
+                className="w-fit rounded-lg bg-white/10 backdrop-blur-md border border-white/20 py-2 text-sm font-semibold text-white transition-all hover:bg-white/20 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-[#0f1420] shadow-lg flex items-center gap-2 px-3"
               >
                 <Image
-                  src="/icons/prime-video-logo.svg"
+                  src="/prime-video.png"
                   alt="Prime Video"
-                  width={20}
-                  height={20}
-                  className="h-5 w-auto"
-                  unoptimized
+                  width={16}
+                  height={16}
+                  className="h-4 w-auto"
                   onError={(e) => {
                     // Fallback to text if logo doesn't load
                     e.currentTarget.style.display = 'none';
@@ -121,7 +120,7 @@ export default function SpoilerWarningModal() {
               {/* Anladım Butonu */}
               <button
                 onClick={handleAccept}
-                className="w-fit rounded-xl bg-white/10 backdrop-blur-md border border-white/20 py-3.5 text-base font-bold text-white transition-all hover:bg-white/20 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-[#0f1420] shadow-lg px-6"
+                className="w-fit rounded-lg bg-white/10 backdrop-blur-md border border-white/20 py-2 text-sm font-semibold text-white transition-all hover:bg-white/20 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-[#0f1420] shadow-lg px-4"
               >
                 Anladım
               </button>
