@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { LuVault, LuArrowRight, LuCheck, LuClock, LuVolume2, LuGlobe2, LuUser, LuFileCheck } from 'react-icons/lu';
+import { LuVault, LuArrowRight, LuCheck, LuClock, LuVolume2, LuGlobe, LuUser, LuFileCheck } from 'react-icons/lu';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { apiUrl } from '@/lib/api';
 import { useLocale, useT } from '@/contexts/LocaleContext';
