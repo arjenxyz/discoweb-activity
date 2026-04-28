@@ -8,7 +8,6 @@ export default function SpoilerWarningModal() {
   const [isVisible, setIsVisible] = useState(false);
   const [countdown, setCountdown] = useState(5);
   const [isButtonDisabled, setIsButtonDisabled] = useState(true);
-  const [activityLog, setActivityLog] = useState<string | null>(null);
   const linkSdkRef = useRef<InstanceType<Awaited<typeof import('@discord/embedded-app-sdk')>['DiscordSDK']> | null>(null);
 
   useEffect(() => {
@@ -42,7 +41,6 @@ export default function SpoilerWarningModal() {
 
   const openExternalLink = async (url: string) => {
     try {
-      setActivityLog('Discord Activity: bağlantı Discord tarafından açılıyor...');
       const existing = getDiscordSdk();
       if (existing) {
         await existing.commands.openExternalLink({ url });
@@ -58,7 +56,6 @@ export default function SpoilerWarningModal() {
 
       await linkSdkRef.current.commands.openExternalLink({ url });
     } catch {
-      setActivityLog('Discord Activity: bağlantı açılamadı, tarayıcıda açılıyor...');
       window.open(url, '_blank');
     }
   };
@@ -134,9 +131,6 @@ export default function SpoilerWarningModal() {
               <p className="text-sm text-gray-400 font-medium">
                 Bu uyarı bir daha gösterilmeyecek.
               </p>
-              {activityLog ? (
-                <p className="mt-1 text-xs text-emerald-300/90">{activityLog}</p>
-              ) : null}
             </div>
             
             {/* Butonlar */}
