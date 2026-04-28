@@ -46,16 +46,17 @@ export default function DuyuruPage() {
   const checkDeveloperStatus = async () => {
     try {
       const token = localStorage.getItem('discord_bearer_token');
+      console.log('Token found:', !!token);
       if (!token) return;
 
       const response = await fetch(apiUrl('/api/activity/is-developer'), {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        setIsDeveloper(!!data.isDeveloper);
-      }
+      console.log('Developer check response status:', response.status);
+      const data = await response.json();
+      console.log('Developer check data:', data);
+      setIsDeveloper(!!data.isDeveloper);
     } catch (err) {
       console.error('Developer kontrolü hatası:', err);
     }
