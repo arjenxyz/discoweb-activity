@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServiceClient } from '@/lib/supabaseServiceClient';
 
-import { NextRequest, NextResponse } from 'next/server';
-import { getSupabaseServiceClient } from '@/lib/supabaseServiceClient';
-
 export async function GET(request: NextRequest) {
   try {
     const supabaseServiceClient = getSupabaseServiceClient();
