@@ -41,6 +41,7 @@ import { sanitizeHtml } from '@/lib/sanitizeHtml';
 import { useRealtimeDashboard } from '@/lib/utils/useRealtimeDashboard';
 import { useT } from '@/contexts/LocaleContext';
 import { getDiscordSdk } from '@/lib/discordSdk';
+import DuyuruPage from './duyuru/page';
 import type {
   MemberProfile,
   Notification,
@@ -1466,10 +1467,7 @@ export default function DashboardPage() {
             )}
 
             {effectiveSection === 'duyuru' && !isSiteMaintenance && (
-              <div className="p-6">
-                <h1 className="text-2xl font-bold text-white mb-4">Duyuru</h1>
-                <p className="text-white/70">Bu bölüm yakında aktif olacak.</p>
-              </div>
+              <DuyuruPage />
             )}
 
             {effectiveSection === 'discover' && (
