@@ -27,9 +27,10 @@ export default function SidebarNav({
   const SECTION_BG: Partial<Record<Section, string>> = {
     overview:        '/menu-background/varyant.jpg',
     store:           '/menu-background/varyant2.jpg',
-    discover:        '/menu-background/varyant3.jpg',
-    'tag-badge':     '/menu-background/varyant4.jpg',
-    'economy-apply': '/menu-background/varyant5.jpg',
+    discoweb:        '/menu-background/varyant3.jpg',
+    discover:        '/menu-background/varyant4.jpg',
+    'tag-badge':     '/menu-background/varyant5.jpg',
+    'economy-apply': '/menu-background/varyant6.jpg',
     mail:            '/menu-background/varyant6.jpg',
   };
 
@@ -40,6 +41,7 @@ export default function SidebarNav({
         { key: 'overview' as Section, label: t('nav_home'), icon: LuHouse },
         { key: 'store' as Section, label: t('nav_store'), icon: LuStore },
         { key: 'tag-badge' as Section, label: t('nav_tag_badge'), icon: LuShieldCheck },
+        { key: 'discoweb' as Section, label: t('nav_discoweb'), icon: LuNewspaper },
         { key: 'discover' as Section, label: t('nav_community'), icon: LuCompass },
         ...(isAdvancedEconomy ? [
           { key: 'market' as Section, label: t('nav_exchange'), icon: LuTrendingUp },

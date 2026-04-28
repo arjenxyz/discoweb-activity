@@ -16,6 +16,7 @@ import StoreSection from './components/StoreSection';
 import SettingsSection from './components/SettingsSection';
 import MailSection from './components/MailSection';
 import SessionExpiredModal from './components/SessionExpiredModal';
+import DiscoWebSection from './components/DiscoWebSection';
 import DiscoverSection from './components/DiscoverSection';
 import MarketSection from './components/MarketSection';
 import BorsaSection from './components/BorsaSection';
@@ -1465,6 +1466,9 @@ export default function DashboardPage() {
               />
             )}
 
+            {effectiveSection === 'discoweb' && (
+              <DiscoWebSection onOpenAnnouncements={() => setActiveSection('mail')} />
+            )}
             {effectiveSection === 'discover' && (
               <DiscoverSection />
             )}
