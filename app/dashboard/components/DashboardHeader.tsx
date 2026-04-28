@@ -161,6 +161,21 @@ export default function DashboardHeader({
   // Düz liste — bottom bar "Şu an" etiketi için
   const navItems = NAV_GROUPS.flatMap(g => g.items);
 
+  const logoWhiteStyle: React.CSSProperties = {
+    backgroundImage: 'linear-gradient(105deg, #fff 0%, #fff 35%, rgba(255,255,255,0.95) 45%, #fff 55%, #fff 100%)',
+    backgroundSize: '300% 100%',
+    WebkitBackgroundClip: 'text',
+    backgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+  };
+  const logoBlueStyle: React.CSSProperties = {
+    backgroundImage: 'linear-gradient(105deg, #5865F2 0%, #5865F2 35%, #a5b4ff 45%, #5865F2 55%, #5865F2 100%)',
+    backgroundSize: '300% 100%',
+    WebkitBackgroundClip: 'text',
+    backgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+  };
+
   const handleNavClick = (key: Section) => {
     navigation.onNavigate(key);
   };
@@ -189,21 +204,19 @@ export default function DashboardHeader({
 
         {/* Sol — logo (sadece desktop) */}
         <div className="hidden lg:flex items-center gap-1.5 min-w-fit">
-          <div className="h-9 w-9 overflow-hidden rounded-full">
-            <Image src="/inv-omni.png" alt="logo" className="h-full w-full object-cover" width={36} height={36} />
-          </div>
           <div className="flex flex-col gap-0.5">
-            <span className="text-white font-black text-lg tracking-tight">DiscoWeb</span>
+            <span className="font-black text-lg tracking-tight leading-none" style={logoWhiteStyle}>
+              Disco<span style={logoBlueStyle}>Web</span>
+            </span>
           </div>
         </div>
 
         {/* Mobil orta — logo + DiscoWeb yazısı birlikte */}
         <div className="lg:hidden absolute left-1/2 -translate-x-1/2 flex items-center gap-1 pointer-events-none">
-          <div className="h-8 w-8 overflow-hidden rounded-full flex-shrink-0">
-            <Image src="/inv-omni.png" alt="logo" className="h-full w-full object-cover" width={32} height={32} />
-          </div>
           <div className="flex flex-col gap-0.5 items-center">
-            <span className="text-white font-black text-lg tracking-tight">DiscoWeb</span>
+            <span className="font-black text-lg tracking-tight leading-none" style={logoWhiteStyle}>
+              Disco<span style={logoBlueStyle}>Web</span>
+            </span>
           </div>
         </div>
 
