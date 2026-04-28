@@ -4,12 +4,18 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 
 export default function SpoilerWarningModal() {
-  const [isVisible, setIsVisible] = useState(() => {
-    const hasSeenWarning = localStorage.getItem('hasSeenSpoilerWarning');
-    return !hasSeenWarning;
-  });
+  const [isVisible, setIsVisible] = useState(false);
   const [countdown, setCountdown] = useState(5);
   const [isButtonDisabled, setIsButtonDisabled] = useState(true);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const hasSeenWarning = localStorage.getItem('hasSeenSpoilerWarning');
+    if (!hasSeenWarning) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setIsVisible(true);
+    }
+  }, []);
 
   useEffect(() => {
     // Modal göründüğünde geri sayımı başlat
