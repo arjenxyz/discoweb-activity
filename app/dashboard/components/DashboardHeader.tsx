@@ -207,9 +207,9 @@ export default function DashboardHeader({
         <style>{`@keyframes titleShine{0%,60%{background-position:100% 0}100%{background-position:-100% 0}}`}</style>
 
         {/* Sol — logo (sadece desktop) */}
-        <div className="hidden lg:flex items-center gap-1.5 min-w-fit">
+        <div className="hidden lg:flex items-center gap-1.5 min-w-fit ml-2">
           <div className="flex flex-col gap-0.5">
-            <span className="font-black text-2xl sm:text-3xl tracking-tight leading-none" style={logoWhiteStyle}>
+            <span className="font-black text-xl sm:text-2xl tracking-tight leading-none" style={logoWhiteStyle}>
               Disco<span style={logoBlueStyle}>Web</span>
             </span>
           </div>
@@ -218,7 +218,7 @@ export default function DashboardHeader({
         {/* Mobil orta — logo + DiscoWeb yazısı birlikte */}
         <div className="lg:hidden absolute left-1/2 -translate-x-1/2 flex items-center gap-1 pointer-events-none">
           <div className="flex flex-col gap-0.5 items-center">
-            <span className="font-black text-2xl tracking-tight leading-none" style={logoWhiteStyle}>
+            <span className="font-black text-xl tracking-tight leading-none" style={logoWhiteStyle}>
               Disco<span style={logoBlueStyle}>Web</span>
             </span>
           </div>
