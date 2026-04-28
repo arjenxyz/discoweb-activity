@@ -5,17 +5,25 @@ export const dynamic = 'force-dynamic';
 
 const DEV_GUILD_ID = process.env.DISCORD_GUILD_ID ?? '';
 const DEV_ROLE_ID = process.env.DEVELOPER_ROLE_ID ?? '';
+const DEV_USER_ID = process.env.DEVELOPER_DISCORD_USER_ID ?? '';
 
 export async function GET(request: Request) {
   console.log('is-developer API called');
-  if (!DEV_GUILD_ID || !DEV_ROLE_ID) {
-    console.log('Missing env vars:', { DEV_GUILD_ID: !!DEV_GUILD_ID, DEV_ROLE_ID: !!DEV_ROLE_ID });
-    return NextResponse.json({ isDeveloper: false });
-  }
-
+  
   const auth = await requireSessionUser(request);
   console.log('Auth result:', auth.ok, auth.userId);
   if (!auth.ok) return NextResponse.json({ isDeveloper: false });
+
+  // Check if user ID matches developer user ID (simple fallback)
+  if (DEV_USER_ID && auth.userId === DEV_USER_ID) {
+    console.log('User is developer by user ID match');
+    return NextResponse.json({ isDeveloper: true });
+  }
+
+  if (!DEV_GUILD_ID || !DEV_ROLE_ID) {
+    console.log('Missing env vars for role check:', { DEV_GUILD_ID: !!DEV_GUILD_ID, DEV_ROLE_ID: !!DEV_ROLE_ID });
+    return NextResponse.json({ isDeveloper: false });
+  }
 
   const botToken = process.env.DISCORD_BOT_TOKEN;
   if (!botToken) {
