@@ -167,6 +167,7 @@ export default function DashboardHeader({
     WebkitBackgroundClip: 'text',
     backgroundClip: 'text',
     WebkitTextFillColor: 'transparent',
+    animation: 'titleShine 4s ease-in-out infinite',
   };
   const logoBlueStyle: React.CSSProperties = {
     backgroundImage: 'linear-gradient(105deg, #5865F2 0%, #5865F2 35%, #a5b4ff 45%, #5865F2 55%, #5865F2 100%)',
@@ -174,6 +175,7 @@ export default function DashboardHeader({
     WebkitBackgroundClip: 'text',
     backgroundClip: 'text',
     WebkitTextFillColor: 'transparent',
+    animation: 'titleShine 4s ease-in-out infinite',
   };
 
   const handleNavClick = (key: Section) => {
@@ -202,10 +204,12 @@ export default function DashboardHeader({
         isActivityEmbed ? 'h-auto pt-[env(safe-area-inset-top,0px)] pb-2 min-h-[4rem]' : 'h-16'
       } ${isProfileOpen ? 'z-[9991]' : 'z-30'}`}>
 
+        <style>{`@keyframes titleShine{0%,60%{background-position:100% 0}100%{background-position:-100% 0}}`}</style>
+
         {/* Sol — logo (sadece desktop) */}
         <div className="hidden lg:flex items-center gap-1.5 min-w-fit">
           <div className="flex flex-col gap-0.5">
-            <span className="font-black text-lg tracking-tight leading-none" style={logoWhiteStyle}>
+            <span className="font-black text-2xl sm:text-3xl tracking-tight leading-none" style={logoWhiteStyle}>
               Disco<span style={logoBlueStyle}>Web</span>
             </span>
           </div>
@@ -214,7 +218,7 @@ export default function DashboardHeader({
         {/* Mobil orta — logo + DiscoWeb yazısı birlikte */}
         <div className="lg:hidden absolute left-1/2 -translate-x-1/2 flex items-center gap-1 pointer-events-none">
           <div className="flex flex-col gap-0.5 items-center">
-            <span className="font-black text-lg tracking-tight leading-none" style={logoWhiteStyle}>
+            <span className="font-black text-2xl tracking-tight leading-none" style={logoWhiteStyle}>
               Disco<span style={logoBlueStyle}>Web</span>
             </span>
           </div>
