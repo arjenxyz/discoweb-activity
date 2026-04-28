@@ -31,7 +31,7 @@ export default function DuyuruPage() {
 
   const loadMessages = async () => {
     try {
-      const response = await fetch(apiUrl('/api/duyuru'));
+      const response = await fetch(apiUrl(`/api/duyuru?lang=${t('locale')}`));
       if (response.ok) {
         const data = await response.json();
         setMessages(data.messages || []);
