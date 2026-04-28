@@ -3,7 +3,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { MuteButton, VideoBackground } from './VideoBackground';
-import DeveloperAboutModal from './DeveloperAboutModal';
 import RulesModal, { hasAcceptedRules } from './RulesModal';
 import SupportMenu from './SupportMenu';
 import { apiUrl } from '@/lib/api';
@@ -25,7 +24,6 @@ export default function SplashScreen({ onEnter }: Props) {
   const [maintenanceChecked, setMaintenanceChecked] = useState(false);
   const [isDeveloper, setIsDeveloper] = useState(false);
   const [isDeveloperChecked, setIsDeveloperChecked] = useState(false);
-  const [devAboutOpen, setDevAboutOpen] = useState(false);
   const [rulesOpen, setRulesOpen] = useState(false);
   const [user, setUser] = useState<{ username: string; avatarUrl: string } | null>(null);
   const [userLoading, setUserLoading] = useState(true);
@@ -338,7 +336,6 @@ export default function SplashScreen({ onEnter }: Props) {
           <div className="flex items-center gap-2.5">
             <span className="text-[11px] text-white/35">© {new Date().getFullYear()} DiscoWeb</span>
             <span className="text-white/20 text-xs">·</span>
-            <button type="button" onClick={() => setDevAboutOpen(true)} className="text-xs text-white/35 hover:text-white/65 transition-colors">{t('splash_thanks_button')}</button>
             {isDeveloper && (
               <>
                 <span className="text-white/20 text-xs">·</span>
@@ -354,7 +351,6 @@ export default function SplashScreen({ onEnter }: Props) {
         </div>
       </div>
 
-      {devAboutOpen && <DeveloperAboutModal onClose={() => setDevAboutOpen(false)} />}
       {rulesOpen && (
         <RulesModal
           onAccept={() => { setRulesOpen(false); onEnter(); }}
