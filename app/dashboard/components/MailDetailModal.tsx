@@ -77,7 +77,7 @@ export default function MailDetailModal({ mail, onClose, onDelete, onStar }: Mai
 
   // Okundu işaretle
   useEffect(() => {
-    if (mail && !mail.is_read) {
+    if (mail && !mail.is_read && mail.category !== 'reward') {
       void (async () => {
         try {
           await fetchWithCreds(apiUrl('/api/mail'), {

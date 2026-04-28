@@ -642,7 +642,7 @@ export default function MailSection({
             <button
               type="button"
               onClick={async () => {
-                const ids = filtered.filter(m => !m.is_read).map(m => m.id);
+                const ids = filtered.filter(m => !m.is_read && m.category !== 'reward').map(m => m.id);
                 if (ids.length === 0) return showToast(t('mail_no_unread'), 'error');
                 try {
                   const res = await fetchWithCreds(apiUrl('/api/mail'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids }) });

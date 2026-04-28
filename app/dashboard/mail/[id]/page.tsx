@@ -59,7 +59,7 @@ export default function MailPage() {
         } else {
           setMail(found);
           setError(null);
-          if (!found.is_read) {
+          if (!found.is_read && found.category !== 'reward') {
             try {
               await fetchWithCreds(apiUrl('/api/mail'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: found.id }) });
             } catch {}
