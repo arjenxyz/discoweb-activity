@@ -1,23 +1,15 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { getDiscordSdk } from '@/lib/discordSdk';
 
 export default function SpoilerWarningModal() {
-  const [isVisible, setIsVisible] = useState(false);
+  const [isVisible, setIsVisible] = useState(() => {
+    const hasSeenWarning = localStorage.getItem('hasSeenSpoilerWarning');
+    return !hasSeenWarning;
+  });
   const [countdown, setCountdown] = useState(5);
   const [isButtonDisabled, setIsButtonDisabled] = useState(true);
-  const [activityLog, setActivityLog] = useState<string | null>(null);
-  const linkSdkRef = useRef<InstanceType<Awaited<typeof import('@discord/embedded-app-sdk')>['DiscordSDK']> | null>(null);
-
-  useEffect(() => {
-    // Component mount olduğunda localStorage kontrolü yap
-    const hasSeenWarning = localStorage.getItem('hasSeenSpoilerWarning');
-    if (!hasSeenWarning) {
-      setIsVisible(true);
-    }
-  }, []);
 
   useEffect(() => {
     // Modal göründüğünde geri sayımı başlat
@@ -40,31 +32,8 @@ export default function SpoilerWarningModal() {
     return 'https://www.primevideo.com/detail/0K677J96WQ96K6UY6BL15O70CO';
   };
 
-  const openExternalLink = async (url: string) => {
-    try {
-      setActivityLog('Discord Activity: bağlantı Discord tarafından açılıyor...');
-      const existing = getDiscordSdk();
-      if (existing) {
-        await existing.commands.openExternalLink({ url });
-        return;
-      }
-
-      if (!linkSdkRef.current) {
-        const { DiscordSDK } = await import('@discord/embedded-app-sdk');
-        const sdk = new DiscordSDK(process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!);
-        await sdk.ready();
-        linkSdkRef.current = sdk;
-      }
-
-      await linkSdkRef.current.commands.openExternalLink({ url });
-    } catch {
-      setActivityLog('Discord Activity: bağlantı açılamadı, tarayıcıda açılıyor...');
-      window.open(url, '_blank');
-    }
-  };
-
   const handleWatchInvincible = () => {
-    openExternalLink(getPrimeVideoUrl());
+    window.open(getPrimeVideoUrl(), '_blank');
   };
 
   const handleAccept = () => {
@@ -130,14 +99,9 @@ export default function SpoilerWarningModal() {
 
           {/* Alt Kısım: Not ve Butonlar */}
           <div className="flex flex-col sm:flex-row items-end sm:items-center justify-between gap-6 mt-auto">
-            <div>
-              <p className="text-sm text-gray-400 font-medium">
-                Bu uyarı bir daha gösterilmeyecek.
-              </p>
-              {activityLog ? (
-                <p className="mt-1 text-xs text-emerald-300/90">{activityLog}</p>
-              ) : null}
-            </div>
+            <p className="text-sm text-gray-400 font-medium">
+              Bu uyarı bir daha gösterilmeyecek.
+            </p>
             
             {/* Butonlar */}
             <div className="flex gap-3">
