@@ -126,12 +126,17 @@ export default function DashboardHeader({
 
   const NAV_GROUPS: Array<{ label: string; requiresAuth?: boolean; items: Array<{ key: Section; label: string; icon: JSX.Element }> }> = [
     {
+      label: t('nav_group_discoweb'),
+      items: [
+        { key: 'duyuru', label: t('nav_duyuru'), icon: <LuNewspaper className="h-4 w-4" /> },
+      ],
+    },
+    {
       label: t('nav_group_discover'),
       items: [
         { key: 'overview', label: t('nav_home'), icon: <LuHouse className="h-4 w-4" /> },
         { key: 'store', label: t('nav_store'), icon: <LuStore className="h-4 w-4" /> },
         { key: 'tag-badge', label: t('nav_tag_badge'), icon: <LuShieldCheck className="h-4 w-4" /> },
-        { key: 'discoweb', label: t('nav_discoweb'), icon: <LuNewspaper className="h-4 w-4" /> },
         { key: 'discover', label: t('nav_community'), icon: <LuCompass className="h-4 w-4" /> },
         ...(isAdvancedEconomy ? [
           { key: 'market' as Section, label: t('nav_exchange'), icon: <LuTrendingUp className="h-4 w-4" /> },

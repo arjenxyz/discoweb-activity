@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { LuChevronRight, LuHouse, LuMail, LuStore, LuCompass, LuTrendingUp, LuChartBar, LuWallet, LuCoins, LuRocket, LuBadgePlus, LuNewspaper, LuShieldCheck } from 'react-icons/lu';
+import { LuChevronRight, LuHouse, LuMail, LuStore, LuMegaphone, LuCompass, LuTrendingUp, LuChartBar, LuWallet, LuCoins, LuRocket, LuBadgePlus, LuNewspaper, LuShieldCheck } from 'react-icons/lu';
 import type { MemberProfile, Section } from '../types';
 import { useT } from '@/contexts/LocaleContext';
 
@@ -25,23 +25,31 @@ export default function SidebarNav({
   const [collapsed, setCollapsed] = useState(false);
 
   const SECTION_BG: Partial<Record<Section, string>> = {
+    duyuru:         '/menu-background/varyant6.jpg',
     overview:        '/menu-background/varyant.jpg',
     store:           '/menu-background/varyant2.jpg',
-    discoweb:        '/menu-background/varyant3.jpg',
-    discover:        '/menu-background/varyant4.jpg',
-    'tag-badge':     '/menu-background/varyant5.jpg',
-    'economy-apply': '/menu-background/varyant6.jpg',
+    discover:        '/menu-background/varyant3.jpg',
+    'tag-badge':     '/menu-background/varyant4.jpg',
+    'economy-apply': '/menu-background/varyant5.jpg',
     mail:            '/menu-background/varyant6.jpg',
   };
 
   const NAV_GROUPS = [
+
+    {
+      label: t('nav_group_discoweb'),
+      requiresAuth: true,
+      items: [
+        { key: 'duyuru' as Section, label: t('nav_duyuru'), icon: LuMegaphone },
+      ],
+    },
+
     {
       label: t('nav_group_discover'),
       items: [
         { key: 'overview' as Section, label: t('nav_home'), icon: LuHouse },
         { key: 'store' as Section, label: t('nav_store'), icon: LuStore },
         { key: 'tag-badge' as Section, label: t('nav_tag_badge'), icon: LuShieldCheck },
-        { key: 'discoweb' as Section, label: t('nav_discoweb'), icon: LuNewspaper },
         { key: 'discover' as Section, label: t('nav_community'), icon: LuCompass },
         ...(isAdvancedEconomy ? [
           { key: 'market' as Section, label: t('nav_exchange'), icon: LuTrendingUp },
@@ -147,16 +155,18 @@ export default function SidebarNav({
                   {/* Buton arkaplan görseli */}
                   {SECTION_BG[key] && (
                     <>
-                      <img
-                        src={SECTION_BG[key]}
+                      <Image
+                        src={SECTION_BG[key]!}
                         alt=""
-                        className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-0 group-hover:opacity-30 transition-opacity duration-300"
+                        fill
+                        className="pointer-events-none object-cover opacity-0 group-hover:opacity-30 transition-opacity duration-300"
                       />
                       {active && (
-                        <img
-                          src={SECTION_BG[key]}
+                        <Image
+                          src={SECTION_BG[key]!}
                           alt=""
-                          className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-20"
+                          fill
+                          className="pointer-events-none object-cover opacity-20"
                         />
                       )}
                     </>
