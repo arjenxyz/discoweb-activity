@@ -239,19 +239,25 @@ export default function StoreSection({
                         return (
                           <div className={`relative z-10 grid grid-cols-[auto_1fr] gap-2 mt-4 transition-all duration-300 ease-out overflow-hidden max-h-[60px] ${purchaseLoadingId === item.id || purchaseFeedback[item.id] ? 'opacity-100 pointer-events-auto' : 'opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto'}`}>
                             {(() => {
-                              const isInCart = cart?.items.some(it => it.itemId === item.id);
+                              const cartQty = cart?.items.find(it => it.itemId === item.id)?.qty ?? 0;
+                              const isInCart = cartQty > 0;
                               return (
                                 <button
                                   type="button"
                                   onClick={() => onAddToCart(item)}
                                   title={isInCart ? t('store_in_cart') : t('store_add_to_cart')}
-                                  className={`flex items-center justify-center w-10 h-10 rounded-xl border backdrop-blur-md transition-all active:scale-95 ${
+                                  className={`relative flex items-center justify-center w-10 h-10 rounded-xl border backdrop-blur-md transition-all active:scale-95 ${
                                     isInCart
                                       ? 'border-emerald-500/30 bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30'
                                       : 'border-white/10 bg-white/10 text-white/80 hover:bg-white/20 hover:text-white'
                                   }`}
                                 >
                                   <LuShoppingCart className="w-4 h-4" />
+                                  {cartQty > 0 ? (
+                                    <span className="absolute -top-1 -right-1 inline-flex h-5 min-w-[18px] items-center justify-center rounded-full bg-emerald-400 px-1.5 text-[10px] font-bold text-black">
+                                      {cartQty}
+                                    </span>
+                                  ) : null}
                                 </button>
                               );
                             })()}
@@ -287,7 +293,8 @@ export default function StoreSection({
                 {/* Mobile cards */}
                 <div className="sm:hidden space-y-3 flex-1">
                   {items.map((item) => {
-                    const isInCart = cart?.items.some(it => it.itemId === item.id);
+                    const cartQty = cart?.items.find(it => it.itemId === item.id)?.qty ?? 0;
+                    const isInCart = cartQty > 0;
                     const feedback = purchaseFeedback[item.id];
                     const isLoading = purchaseLoadingId === item.id;
                     const isOwned = item.role_id ? ownedRoleIds.includes(item.role_id) && (item.duration_days ?? 0) === 0 : false;
@@ -349,13 +356,18 @@ export default function StoreSection({
                                 <button
                                   type="button"
                                   onClick={() => onAddToCart(item)}
-                                  className={`flex items-center justify-center w-8 h-8 rounded-lg border transition-all active:scale-90 ${
+                                  className={`relative flex items-center justify-center w-8 h-8 rounded-lg border transition-all active:scale-90 ${
                                     isInCart
                                       ? 'border-emerald-500/30 bg-emerald-500/20 text-emerald-400'
                                       : 'border-white/10 bg-white/5 text-white/50'
                                   }`}
                                 >
                                   <LuShoppingCart className="w-3.5 h-3.5" />
+                                  {cartQty > 0 ? (
+                                    <span className="absolute -top-1 -right-1 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-emerald-400 px-1 text-[9px] font-bold text-black">
+                                      {cartQty}
+                                    </span>
+                                  ) : null}
                                 </button>
                                 <button
                                   type="button"
