@@ -756,6 +756,7 @@ export default function DashboardPage() {
           setWalletBalance(prev => Number((prev + data.totalTransferred).toFixed(2)));
         }
         setPendingEarnings({ pending: 0, messageTotal: 0, voiceTotal: 0, count: 0 });
+        await refreshWalletBalance();
       } else {
         const errorData = await res.json().catch(() => ({ error: 'unknown' }));
         console.error('[claim-earnings] API error:', errorData);
@@ -766,7 +767,7 @@ export default function DashboardPage() {
       // Optionally show user error
     }
     setClaimLoading(false);
-  }, []);
+  }, [refreshWalletBalance]);
 
   const refreshStoreItems = useCallback(async (page = 1, append = false) => {
     if (page === 1) {
