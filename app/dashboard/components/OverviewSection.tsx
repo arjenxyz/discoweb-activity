@@ -72,7 +72,7 @@ export default function OverviewSection({
   })();
 
   return (
-    <section className="flex flex-col gap-4 p-4 sm:p-6">
+    <section className="flex flex-col gap-3 pt-4 pb-4 px-4 sm:pt-5 sm:pb-5 sm:px-5">
 
       {/* SAYFA BAŞLIĞI */}
       <div className="flex items-end justify-between">
