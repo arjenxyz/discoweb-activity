@@ -291,7 +291,7 @@ export default function StoreSection({
                 </div>
 
                 {/* Mobile cards */}
-                <div className="sm:hidden space-y-3 flex-1">
+                <div className="sm:hidden space-y-3 flex-1 pb-28">
                   {items.map((item) => {
                     const cartQty = cart?.items.find(it => it.itemId === item.id)?.qty ?? 0;
                     const isInCart = cartQty > 0;
