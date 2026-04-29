@@ -982,7 +982,7 @@ export default function MarketSection({ userId, economyApproved }: { userId?: st
               </div>
             </div>
           ) : (
-            <div className="mt-4 space-y-2 px-5 sm:px-8 pb-6">
+            <div className="mt-4 space-y-2 px-5 sm:px-8 pb-28 md:pb-20">
               {listings.map((listing, idx) => {
                 const { pct } = priceDiff(listing);
                 const up = pct >= 0;
@@ -1051,7 +1051,7 @@ export default function MarketSection({ userId, economyApproved }: { userId?: st
 
       {/* ── PORTFOLIO TAB ── */}
       {tab === 'portfolio' && (
-        <div className="relative z-10 pb-6">
+        <div className="relative z-10 pb-28 md:pb-20">
           {portfolioLoading ? (
             <div className="px-5 sm:px-8 mt-4 space-y-3"><SkeletonCard/><SkeletonCard/></div>
           ) : portfolio.length === 0 ? (
