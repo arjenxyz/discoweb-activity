@@ -456,7 +456,7 @@ export default function MailSection({
           </div>
 
           {/* Mail List */}
-          <div className="flex-1 overflow-y-auto p-2 md:p-4 space-y-1.5 md:space-y-2 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto p-2 md:p-4 pb-28 md:pb-8 space-y-1.5 md:space-y-2 custom-scrollbar">
             {loading && (
               <div className="flex flex-col items-center justify-center h-64 text-white/50">
                 <LuRefreshCw className="w-8 h-8 animate-spin mb-3" />
