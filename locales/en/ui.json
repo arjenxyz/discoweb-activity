@@ -27,5 +27,12 @@
   "confirm_dialog_default_title": "Confirm",
   "confirm_dialog_yes": "Yes",
   "confirm_dialog_cancel": "Cancel",
-  "session_ended": "Your session has ended"
+  "session_ended": "Your session has ended",
+  "spoiler_warning_title": "Spoiler Warning",
+  "spoiler_warning_description_1": "This app is a fan project made by passionate Invincible fans.",
+  "spoiler_warning_description_2": "Our archive contains spoilers for the show's most critical moments.",
+  "spoiler_warning_description_3": "If you haven't finished the journey yet, be careful so the story doesn't get ruined.",
+  "spoiler_warning_note": "This warning won't be shown again.",
+  "spoiler_warning_watch_button": "Watch Invincible",
+  "spoiler_warning_accept_button": "Got it"
 }

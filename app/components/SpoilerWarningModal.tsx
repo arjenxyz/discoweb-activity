@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { getDiscordSdk } from '@/lib/discordSdk';
+import { useT } from '@/contexts/LocaleContext';
 
 export default function SpoilerWarningModal() {
   const [isVisible, setIsVisible] = useState(false);
@@ -60,6 +61,8 @@ export default function SpoilerWarningModal() {
     }
   };
 
+  const t = useT();
+
   const handleWatchInvincible = () => {
     openExternalLink(getPrimeVideoUrl());
   };
@@ -109,19 +112,19 @@ export default function SpoilerWarningModal() {
           
           {/* Başlık */}
           <h2 className="mb-4 text-3xl font-black tracking-wide text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] uppercase">
-            Spoiler Uyarısı
+            {t('spoiler_warning_title')}
           </h2>
 
           {/* Geliştirilmiş Metinler */}
           <div className="mb-8 space-y-4 text-base text-white/95 drop-shadow-md">
             <p>
-              Bu uygulama, tutkulu <strong className="text-amber-400 font-bold">Invincible</strong> hayranları tarafından hazırlanmış bir fan projesidir.
+              {t('spoiler_warning_description_1')}
             </p>
             <p>
-              Arşivimizde dizinin kritik anlarına dair <strong className="text-red-500 font-bold">spoiler&apos;lar</strong> yer almaktadır.
+              {t('spoiler_warning_description_2')}
             </p>
             <p className="text-gray-300 italic">
-              Eğer serüveni henüz tamamlamadıysan, yolculuğuna gölge düşmemesi için dikkatli ol!
+              {t('spoiler_warning_description_3')}
             </p>
           </div>
 
@@ -129,7 +132,7 @@ export default function SpoilerWarningModal() {
           <div className="flex flex-col sm:flex-row items-end sm:items-center justify-between gap-6 mt-auto">
             <div>
               <p className="text-sm text-gray-400 font-medium">
-                Bu uyarı bir daha gösterilmeyecek.
+                {t('spoiler_warning_note')}
               </p>
             </div>
             
@@ -156,7 +159,7 @@ export default function SpoilerWarningModal() {
                     }
                   }}
                 />
-                <span className="prime-text">Invincible izle</span>
+                <span className="prime-text">{t('spoiler_warning_watch_button')}</span>
               </button>
               
               {/* Anladım Butonu */}
@@ -169,7 +172,7 @@ export default function SpoilerWarningModal() {
                     : 'bg-white/10 backdrop-blur-md hover:bg-white/20 hover:scale-105 active:scale-95'
                 }`}
               >
-                {isButtonDisabled ? countdown : 'Anladım'}
+                {isButtonDisabled ? countdown : t('spoiler_warning_accept_button')}
               </button>
             </div>
           </div>

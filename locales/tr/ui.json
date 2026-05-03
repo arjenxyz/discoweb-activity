@@ -27,5 +27,12 @@
   "confirm_dialog_default_title": "Onay",
   "confirm_dialog_yes": "Evet",
   "confirm_dialog_cancel": "İptal",
-  "session_ended": "Oturumunuz sonlandı"
+  "session_ended": "Oturumunuz sonlandı",
+  "spoiler_warning_title": "Spoiler Uyarısı",
+  "spoiler_warning_description_1": "Bu uygulama, tutkulu Invincible hayranları tarafından hazırlanmış bir fan projesidir.",
+  "spoiler_warning_description_2": "Arşivimizde dizinin kritik anlarına dair spoiler'lar yer almaktadır.",
+  "spoiler_warning_description_3": "Eğer serüveni henüz tamamlamadıysan, yolculuğuna gölge düşmemesi için dikkatli ol!",
+  "spoiler_warning_note": "Bu uyarı bir daha gösterilmeyecek.",
+  "spoiler_warning_watch_button": "Invincible izle",
+  "spoiler_warning_accept_button": "Anladım"
 }
