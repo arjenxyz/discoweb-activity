@@ -1,12 +1,17 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import type { MutableRefObject } from 'react';
 import { useT } from '@/contexts/LocaleContext';
 
 type Obstacle = {
   x: number;
   width: number;
   height: number;
+  type: 'pig' | 'bat' | 'rino';
+  frame: number;
+  frameTime: number;
+  y: number;
 };
 
 const CANVAS_WIDTH = 920;
@@ -19,11 +24,19 @@ const GRAVITY = 1900;
 const JUMP_VELOCITY = -690;
 const BASE_SPEED = 220;
 const MAX_SPEED = 540;
+const DINO_FRAME_SIZE = 24;
+const DINO_RUN_START_FRAME = 4;
+const DINO_RUN_FRAMES = 6;
+const DINO_FRAME_STEP = 0.1;
 
 export default function PlayEarnSection() {
   const t = useT();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const backgroundImageRef = useRef<HTMLImageElement | null>(null);
+  const dinoImageRef = useRef<HTMLImageElement | null>(null);
+  const pigImageRef = useRef<HTMLImageElement | null>(null);
+  const batImageRef = useRef<HTMLImageElement | null>(null);
+  const rinoImageRef = useRef<HTMLImageElement | null>(null);
   const rafRef = useRef<number | null>(null);
   const scoreRef = useRef(0);
   const velocityYRef = useRef(0);
@@ -104,13 +117,50 @@ export default function PlayEarnSection() {
     ctx.lineTo(CANVAS_WIDTH, GROUND_Y);
     ctx.stroke();
 
-    ctx.fillStyle = '#22c55e';
-    ctx.fillRect(PLAYER_X, playerYRef.current, PLAYER_WIDTH, PLAYER_HEIGHT);
+    const dinoImg = dinoImageRef.current;
+    if (dinoImg) {
+      const timeSec = elapsedMsRef.current / 1000;
+      const frame = DINO_RUN_START_FRAME + (Math.floor(timeSec / DINO_FRAME_STEP) % DINO_RUN_FRAMES);
+      ctx.drawImage(
+        dinoImg,
+        frame * DINO_FRAME_SIZE,
+        0,
+        DINO_FRAME_SIZE,
+        DINO_FRAME_SIZE,
+        PLAYER_X,
+        playerYRef.current,
+        PLAYER_WIDTH,
+        PLAYER_HEIGHT,
+      );
+    } else {
+      ctx.fillStyle = '#22c55e';
+      ctx.fillRect(PLAYER_X, playerYRef.current, PLAYER_WIDTH, PLAYER_HEIGHT);
+    }
 
-    ctx.fillStyle = '#f97316';
     for (const obs of obstaclesRef.current) {
-      const y = GROUND_Y - obs.height;
-      ctx.fillRect(obs.x, y, obs.width, obs.height);
+      const y = obs.y;
+      const source =
+        obs.type === 'pig' ? pigImageRef.current :
+          obs.type === 'bat' ? batImageRef.current :
+            rinoImageRef.current;
+      const frameW = obs.type === 'pig' ? 36 : obs.type === 'bat' ? 46 : 52;
+      const frameH = obs.type === 'pig' ? 30 : obs.type === 'bat' ? 30 : 34;
+      if (source) {
+        ctx.drawImage(
+          source,
+          obs.frame * frameW,
+          0,
+          frameW,
+          frameH,
+          obs.x,
+          y,
+          obs.width,
+          obs.height,
+        );
+      } else {
+        ctx.fillStyle = '#f97316';
+        ctx.fillRect(obs.x, y, obs.width, obs.height);
+      }
     }
 
     ctx.fillStyle = 'rgba(255,255,255,0.85)';
@@ -142,15 +192,39 @@ export default function PlayEarnSection() {
 
     spawnTimerRef.current -= dt;
     if (spawnTimerRef.current <= 0) {
-      const h = 28 + nextRand() * 34;
-      const w = 18 + nextRand() * 20;
-      obstaclesRef.current.push({ x: CANVAS_WIDTH + 10, width: w, height: h });
+      const roll = nextRand();
+      const type: Obstacle['type'] = roll < 0.34 ? 'pig' : roll < 0.67 ? 'bat' : 'rino';
+      const conf = type === 'pig'
+        ? { w: 40, h: 34, y: GROUND_Y - 34 }
+        : type === 'bat'
+          ? { w: 46, h: 30, y: GROUND_Y - 30 - (nextRand() * 50) }
+          : { w: 52, h: 34, y: GROUND_Y - 34 };
+      obstaclesRef.current.push({
+        x: CANVAS_WIDTH + 10,
+        width: conf.w,
+        height: conf.h,
+        type,
+        frame: 0,
+        frameTime: 0,
+        y: conf.y,
+      });
       const spawnInterval = Math.max(0.7, 1.6 - scoreRef.current * 0.002);
       spawnTimerRef.current = spawnInterval;
     }
 
     obstaclesRef.current = obstaclesRef.current
-      .map((obs) => ({ ...obs, x: obs.x - speed * dt }))
+      .map((obs) => {
+        const nextFrameTime = obs.frameTime + dt;
+        const frameCount = obs.type === 'pig' ? 16 : obs.type === 'bat' ? 7 : 6;
+        const frameStep = obs.type === 'rino' ? 0.09 : 0.1;
+        const nextFrame = nextFrameTime >= frameStep ? (obs.frame + 1) % frameCount : obs.frame;
+        return {
+          ...obs,
+          x: obs.x - speed * dt,
+          frame: nextFrame,
+          frameTime: nextFrameTime >= frameStep ? 0 : nextFrameTime,
+        };
+      })
       .filter((obs) => obs.x + obs.width > -20);
 
     const playerTop = playerYRef.current;
@@ -158,8 +232,8 @@ export default function PlayEarnSection() {
     const playerRight = PLAYER_X + PLAYER_WIDTH;
 
     const hit = obstaclesRef.current.some((obs) => {
-      const obsTop = GROUND_Y - obs.height;
-      const obsBottom = GROUND_Y;
+      const obsTop = obs.y;
+      const obsBottom = obs.y + obs.height;
       const obsRight = obs.x + obs.width;
       return PLAYER_X < obsRight && playerRight > obs.x && playerTop < obsBottom && playerBottom > obsTop;
     });
@@ -256,6 +330,29 @@ export default function PlayEarnSection() {
     return () => {
       mounted = false;
     };
+  }, []);
+
+  useEffect(() => {
+    const load = (src: string, ref: MutableRefObject<HTMLImageElement | null>) =>
+      new Promise<void>((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          ref.current = img;
+          resolve();
+        };
+        img.onerror = () => resolve();
+        img.src = src;
+      });
+
+    void Promise.all([
+      load('/games/dino/dino.png', dinoImageRef),
+      load('/games/dino/pig.png', pigImageRef),
+      load('/games/dino/bat.png', batImageRef),
+      load('/games/dino/rino.png', rinoImageRef),
+    ]).then(() => {
+      const ctx = canvasRef.current?.getContext('2d');
+      if (ctx) draw(ctx);
+    });
   }, []);
 
   return (
