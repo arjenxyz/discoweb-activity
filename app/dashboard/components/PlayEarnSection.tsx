@@ -12,6 +12,8 @@ type Obstacle = {
   frame: number;
   frameTime: number;
   y: number;
+  speedX: number;
+  passed?: boolean;
 };
 
 const CANVAS_WIDTH = 920;
@@ -20,23 +22,30 @@ const GROUND_Y = 240;
 const PLAYER_X = 96;
 const PLAYER_WIDTH = 36;
 const PLAYER_HEIGHT = 52;
-const GRAVITY = 1900;
-const JUMP_VELOCITY = -690;
-const BASE_SPEED = 220;
+const GRAVITY = 800;
+const JUMP_VELOCITY = -300;
+const BASE_SPEED = 120;
 const MAX_SPEED = 540;
 const DINO_FRAME_SIZE = 24;
 const DINO_RUN_START_FRAME = 4;
 const DINO_RUN_FRAMES = 6;
 const DINO_FRAME_STEP = 0.1;
+const PARALLAX_BASE_SPEED = 10;
+const PARALLAX_MULTIPLIER = 1.4;
 
 export default function PlayEarnSection() {
   const t = useT();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const backgroundImageRef = useRef<HTMLImageElement | null>(null);
+  const parallaxRefs = useRef<Array<HTMLImageElement | null>>([null, null, null, null, null, null]);
+  const parallaxOffsetsRef = useRef<number[]>([0, 0, 0, 0, 0, 0]);
   const dinoImageRef = useRef<HTMLImageElement | null>(null);
   const pigImageRef = useRef<HTMLImageElement | null>(null);
   const batImageRef = useRef<HTMLImageElement | null>(null);
   const rinoImageRef = useRef<HTMLImageElement | null>(null);
+  const bgmRef = useRef<HTMLAudioElement | null>(null);
+  const jumpSfxRef = useRef<HTMLAudioElement | null>(null);
+  const hurtSfxRef = useRef<HTMLAudioElement | null>(null);
   const rafRef = useRef<number | null>(null);
   const scoreRef = useRef(0);
   const velocityYRef = useRef(0);
@@ -50,12 +59,15 @@ export default function PlayEarnSection() {
 
   const [score, setScore] = useState(0);
   const [running, setRunning] = useState(false);
+  const [lives, setLives] = useState(5);
+  const livesRef = useRef(5);
   const [gameOver, setGameOver] = useState(false);
   const [bestScore, setBestScore] = useState(0);
   const [award, setAward] = useState<number | null>(null);
   const [themeLabel, setThemeLabel] = useState<'supabase' | 'fallback'>('fallback');
   const runRef = useRef<{ runId: string; startedAt: string } | null>(null);
   const runFinishRequestedRef = useRef(false);
+  const hitInvulnUntilRef = useRef(0);
 
   const currentSpeed = useMemo(() => Math.min(MAX_SPEED, BASE_SPEED + score * 0.12), [score]);
 
@@ -67,7 +79,14 @@ export default function PlayEarnSection() {
   const jump = () => {
     if (!runningRef.current) return;
     const onGround = playerYRef.current >= GROUND_Y - PLAYER_HEIGHT - 0.5;
-    if (onGround) velocityYRef.current = JUMP_VELOCITY;
+    if (onGround) {
+      velocityYRef.current = JUMP_VELOCITY;
+      const sfx = jumpSfxRef.current;
+      if (sfx) {
+        sfx.currentTime = 0;
+        void sfx.play().catch(() => {});
+      }
+    }
   };
 
   const resetGameState = () => {
@@ -80,6 +99,8 @@ export default function PlayEarnSection() {
     randSeedRef.current = (Date.now() % 2147483647) || 123456789;
     lastTimeRef.current = null;
     setScore(0);
+    setLives(5);
+    livesRef.current = 5;
     setGameOver(false);
     setAward(null);
     runFinishRequestedRef.current = false;
@@ -97,18 +118,37 @@ export default function PlayEarnSection() {
   const draw = (ctx: CanvasRenderingContext2D) => {
     ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-    const bg = backgroundImageRef.current;
-    if (bg) {
-      ctx.drawImage(bg, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-      ctx.fillStyle = 'rgba(8,12,22,0.35)';
-      ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    const p = parallaxRefs.current;
+    const hasParallax = p.every(Boolean);
+    if (hasParallax) {
+      for (let i = 0; i < p.length; i += 1) {
+        const img = p[i];
+        if (!img) continue;
+        const offset = parallaxOffsetsRef.current[i];
+        const imgW = img.width;
+        const imgH = img.height;
+        const scaledH = CANVAS_HEIGHT;
+        const scaledW = (imgW / Math.max(1, imgH)) * scaledH;
+        let x = -offset;
+        while (x < CANVAS_WIDTH) {
+          ctx.drawImage(img, x, 0, scaledW, scaledH);
+          x += scaledW;
+        }
+      }
     } else {
-      const grd = ctx.createLinearGradient(0, 0, 0, CANVAS_HEIGHT);
-      grd.addColorStop(0, '#0f172a');
-      grd.addColorStop(1, '#111827');
-      ctx.fillStyle = grd;
-      ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+      const bg = backgroundImageRef.current;
+      if (bg) {
+        ctx.drawImage(bg, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+      } else {
+        const grd = ctx.createLinearGradient(0, 0, 0, CANVAS_HEIGHT);
+        grd.addColorStop(0, '#0f172a');
+        grd.addColorStop(1, '#111827');
+        ctx.fillStyle = grd;
+        ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+      }
     }
+    ctx.fillStyle = 'rgba(8,12,22,0.2)';
+    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
     ctx.strokeStyle = 'rgba(255,255,255,0.25)';
     ctx.lineWidth = 2;
@@ -166,7 +206,8 @@ export default function PlayEarnSection() {
     ctx.fillStyle = 'rgba(255,255,255,0.85)';
     ctx.font = 'bold 20px monospace';
     ctx.fillText(`SCORE ${Math.floor(scoreRef.current)}`, 20, 34);
-    ctx.fillText(`SPEED ${Math.floor(Math.min(MAX_SPEED, BASE_SPEED + scoreRef.current * 0.12))}`, 20, 62);
+    ctx.fillText(`SPEED ${Math.floor(currentSpeed)}`, 20, 62);
+    ctx.fillText(`LIVES ${lives}`, 20, 90);
   };
 
   const loop = (now: number) => {
@@ -178,8 +219,18 @@ export default function PlayEarnSection() {
     const dt = Math.min(0.032, (now - lastTimeRef.current) / 1000);
     lastTimeRef.current = now;
 
-    const speed = Math.min(MAX_SPEED, BASE_SPEED + scoreRef.current * 0.12);
+    const speedBoost = Math.min(2.2, 1 + scoreRef.current * 0.03);
     elapsedMsRef.current += dt * 1000;
+
+    for (let i = 0; i < parallaxOffsetsRef.current.length; i += 1) {
+      const layerSpeed = PARALLAX_BASE_SPEED * (PARALLAX_MULTIPLIER ** i);
+      const img = parallaxRefs.current[i];
+      if (!img) continue;
+      const imgW = img.width;
+      const imgH = img.height;
+      const scaledW = (imgW / Math.max(1, imgH)) * CANVAS_HEIGHT;
+      parallaxOffsetsRef.current[i] = (parallaxOffsetsRef.current[i] + (layerSpeed * dt)) % Math.max(1, scaledW);
+    }
     scoreRef.current += dt * 100;
     setScore(Math.floor(scoreRef.current));
 
@@ -195,10 +246,10 @@ export default function PlayEarnSection() {
       const roll = nextRand();
       const type: Obstacle['type'] = roll < 0.34 ? 'pig' : roll < 0.67 ? 'bat' : 'rino';
       const conf = type === 'pig'
-        ? { w: 40, h: 34, y: GROUND_Y - 34 }
+        ? { w: 40 * 0.6, h: 34 * 0.6, y: GROUND_Y - (34 * 0.6), speedX: 80 }
         : type === 'bat'
-          ? { w: 46, h: 30, y: GROUND_Y - 30 - (nextRand() * 50) }
-          : { w: 52, h: 34, y: GROUND_Y - 34 };
+          ? { w: 46 * 0.6, h: 30 * 0.6, y: GROUND_Y - (30 * 0.6) - (nextRand() * 36), speedX: 100 }
+          : { w: 52 * 0.6, h: 34 * 0.6, y: GROUND_Y - (34 * 0.6), speedX: 150 };
       obstaclesRef.current.push({
         x: CANVAS_WIDTH + 10,
         width: conf.w,
@@ -207,8 +258,9 @@ export default function PlayEarnSection() {
         frame: 0,
         frameTime: 0,
         y: conf.y,
+        speedX: conf.speedX,
       });
-      const spawnInterval = Math.max(0.7, 1.6 - scoreRef.current * 0.002);
+      const spawnInterval = Math.max(0.7, 2 - scoreRef.current * 0.04);
       spawnTimerRef.current = spawnInterval;
     }
 
@@ -220,28 +272,51 @@ export default function PlayEarnSection() {
         const nextFrame = nextFrameTime >= frameStep ? (obs.frame + 1) % frameCount : obs.frame;
         return {
           ...obs,
-          x: obs.x - speed * dt,
+          x: obs.x - Math.min(MAX_SPEED, obs.speedX * speedBoost) * dt,
           frame: nextFrame,
           frameTime: nextFrameTime >= frameStep ? 0 : nextFrameTime,
         };
       })
       .filter((obs) => obs.x + obs.width > -20);
 
-    const playerTop = playerYRef.current;
-    const playerBottom = playerYRef.current + PLAYER_HEIGHT;
-    const playerRight = PLAYER_X + PLAYER_WIDTH;
+    for (const obs of obstaclesRef.current) {
+      if ((obs.x + obs.width) < PLAYER_X && !obs.passed) {
+        obs.passed = true;
+        scoreRef.current += 1;
+        setScore(Math.floor(scoreRef.current));
+      }
+    }
 
+    const playerTop = playerYRef.current;
     const hit = obstaclesRef.current.some((obs) => {
       const obsTop = obs.y;
       const obsBottom = obs.y + obs.height;
       const obsRight = obs.x + obs.width;
-      return PLAYER_X < obsRight && playerRight > obs.x && playerTop < obsBottom && playerBottom > obsTop;
+      const px = PLAYER_X + (PLAYER_WIDTH * 0.25); // Flutter: width 0.5, x offset 0.25
+      const pw = PLAYER_WIDTH * 0.5;
+      const py = playerTop + (PLAYER_HEIGHT * 0.15); // Flutter: height 0.7, y offset 0.15
+      const ph = PLAYER_HEIGHT * 0.7;
+      return px < obsRight && (px + pw) > obs.x && py < obsBottom && (py + ph) > obsTop;
     });
 
-    if (hit) {
+    if (hit && elapsedMsRef.current > hitInvulnUntilRef.current) {
+      hitInvulnUntilRef.current = elapsedMsRef.current + 1000;
+      const hurt = hurtSfxRef.current;
+      if (hurt) {
+        hurt.currentTime = 0;
+        void hurt.play().catch(() => {});
+      }
+      const remainingLives = Math.max(0, livesRef.current - 1);
+      livesRef.current = remainingLives;
+      setLives(remainingLives);
+      if (remainingLives > 0) {
+        draw(ctx);
+        rafRef.current = requestAnimationFrame(loop);
+        return;
+      }
       const finalScore = Math.floor(scoreRef.current);
       const durationMs = Math.max(1, Math.floor(elapsedMsRef.current));
-      const obstaclesPassed = Math.max(0, obstaclesRef.current.length);
+      const obstaclesPassed = Math.floor(scoreRef.current);
       setGameOver(true);
       setBestScore((prev) => Math.max(prev, finalScore));
       stopLoop();
@@ -285,6 +360,13 @@ export default function PlayEarnSection() {
     }
     runningRef.current = true;
     setRunning(true);
+    const bgm = bgmRef.current;
+    if (bgm) {
+      bgm.currentTime = 0;
+      bgm.loop = true;
+      bgm.volume = 0.35;
+      void bgm.play().catch(() => {});
+    }
     rafRef.current = requestAnimationFrame(loop);
   };
 
@@ -300,6 +382,8 @@ export default function PlayEarnSection() {
     return () => {
       window.removeEventListener('keydown', onKeyDown);
       stopLoop();
+      const bgm = bgmRef.current;
+      if (bgm) bgm.pause();
     };
   }, [gameOver]);
 
@@ -355,9 +439,45 @@ export default function PlayEarnSection() {
     });
   }, []);
 
+  useEffect(() => {
+    const load = (src: string, idx: number) =>
+      new Promise<void>((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          parallaxRefs.current[idx] = img;
+          resolve();
+        };
+        img.onerror = () => resolve();
+        img.src = src;
+      });
+    void Promise.all([
+      load('/games/dino/parallax/plx-1.png', 0),
+      load('/games/dino/parallax/plx-2.png', 1),
+      load('/games/dino/parallax/plx-3.png', 2),
+      load('/games/dino/parallax/plx-4.png', 3),
+      load('/games/dino/parallax/plx-5.png', 4),
+      load('/games/dino/parallax/plx-6.png', 5),
+    ]).then(() => {
+      const ctx = canvasRef.current?.getContext('2d');
+      if (ctx) draw(ctx);
+    });
+  }, []);
+
+  useEffect(() => {
+    bgmRef.current = new Audio('/games/dino/audio/8BitPlatformerLoop.wav');
+    jumpSfxRef.current = new Audio('/games/dino/audio/jump14.wav');
+    hurtSfxRef.current = new Audio('/games/dino/audio/hurt7.wav');
+    return () => {
+      bgmRef.current?.pause();
+      bgmRef.current = null;
+      jumpSfxRef.current = null;
+      hurtSfxRef.current = null;
+    };
+  }, []);
+
   return (
-    <div className="w-full p-4 sm:p-6 lg:p-8">
-      <section className="rounded-3xl border border-white/10 bg-[#0b0d12]/80 p-5 sm:p-6 shadow-2xl">
+    <div className="fixed inset-0 z-40 bg-[#05070d] p-0">
+      <section className="h-full w-full border border-white/10 bg-[#0b0d12]/95 p-3 sm:p-4 shadow-2xl">
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
             <h2 className="text-2xl font-bold text-white">{t('play_earn_title')}</h2>
@@ -366,16 +486,17 @@ export default function PlayEarnSection() {
           <div className="text-right text-xs text-white/55">
             <p>{t('play_earn_score')}: <span className="font-semibold text-white">{score}</span></p>
             <p>{t('play_earn_best')}: <span className="font-semibold text-white">{bestScore}</span></p>
+            <p>Lives: <span className="font-semibold text-white">{lives}</span></p>
             <p>{t('play_earn_theme')}: <span className="font-semibold text-white">{themeLabel}</span></p>
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-2xl border border-white/10 bg-black/30">
+        <div className="h-[calc(100vh-180px)] overflow-hidden rounded-2xl border border-white/10 bg-black/30">
           <canvas
             ref={canvasRef}
             width={CANVAS_WIDTH}
             height={CANVAS_HEIGHT}
-            className="h-auto w-full"
+            className="h-full w-full"
             aria-label="Dino Play Earn"
           />
         </div>
