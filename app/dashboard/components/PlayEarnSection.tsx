@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { MutableRefObject } from 'react';
-import { useT } from '@/contexts/LocaleContext';
 
 type Obstacle = {
   x: number;
@@ -34,7 +33,6 @@ const PARALLAX_BASE_SPEED = 10;
 const PARALLAX_MULTIPLIER = 1.4;
 
 export default function PlayEarnSection() {
-  const t = useT();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const backgroundImageRef = useRef<HTMLImageElement | null>(null);
   const parallaxRefs = useRef<Array<HTMLImageElement | null>>([null, null, null, null, null, null]);
@@ -65,6 +63,7 @@ export default function PlayEarnSection() {
   const [bestScore, setBestScore] = useState(0);
   const [award, setAward] = useState<number | null>(null);
   const [themeLabel, setThemeLabel] = useState<'supabase' | 'fallback'>('fallback');
+  const [paused, setPaused] = useState(false);
   const runRef = useRef<{ runId: string; startedAt: string } | null>(null);
   const runFinishRequestedRef = useRef(false);
   const hitInvulnUntilRef = useRef(0);
@@ -89,6 +88,14 @@ export default function PlayEarnSection() {
     }
   };
 
+  const pauseGame = () => {
+    if (!runningRef.current) return;
+    setPaused(true);
+    stopLoop();
+    const bgm = bgmRef.current;
+    if (bgm) bgm.pause();
+  };
+
   const resetGameState = () => {
     scoreRef.current = 0;
     velocityYRef.current = 0;
@@ -103,6 +110,7 @@ export default function PlayEarnSection() {
     livesRef.current = 5;
     setGameOver(false);
     setAward(null);
+    setPaused(false);
     runFinishRequestedRef.current = false;
   };
 
@@ -211,7 +219,7 @@ export default function PlayEarnSection() {
   };
 
   const loop = (now: number) => {
-    if (!runningRef.current) return;
+    if (!runningRef.current || paused) return;
     const ctx = canvasRef.current?.getContext('2d');
     if (!ctx) return;
 
@@ -345,6 +353,18 @@ export default function PlayEarnSection() {
     rafRef.current = requestAnimationFrame(loop);
   };
 
+  const resumeGame = () => {
+    setPaused(false);
+    const bgm = bgmRef.current;
+    if (bgm) {
+      bgm.currentTime = 0;
+      bgm.loop = true;
+      bgm.volume = 0.35;
+      void bgm.play().catch(() => {});
+    }
+    rafRef.current = requestAnimationFrame(loop);
+  };
+
   const startGame = async () => {
     resetGameState();
     const runResponse = await fetch('/api/member/game-run/start', { method: 'POST' });
@@ -374,8 +394,13 @@ export default function PlayEarnSection() {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.code === 'Space' || e.code === 'ArrowUp') {
         e.preventDefault();
-        if (!runningRef.current && !gameOver) void startGame();
-        jump();
+        if (paused) {
+          resumeGame();
+        } else if (!runningRef.current && !gameOver) {
+          void startGame();
+        } else {
+          jump();
+        }
       }
     };
     window.addEventListener('keydown', onKeyDown);
@@ -385,7 +410,7 @@ export default function PlayEarnSection() {
       const bgm = bgmRef.current;
       if (bgm) bgm.pause();
     };
-  }, [gameOver]);
+  }, [gameOver, paused]);
 
   useEffect(() => {
     const ctx = canvasRef.current?.getContext('2d');
@@ -478,52 +503,79 @@ export default function PlayEarnSection() {
   return (
     <div className="fixed inset-0 z-40 bg-[#05070d] p-0">
       <section className="h-full w-full border border-white/10 bg-[#0b0d12]/95 p-3 sm:p-4 shadow-2xl">
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <div>
-            <h2 className="text-2xl font-bold text-white">{t('play_earn_title')}</h2>
-            <p className="text-sm text-white/60">{t('play_earn_subtitle')}</p>
-          </div>
-          <div className="text-right text-xs text-white/55">
-            <p>{t('play_earn_score')}: <span className="font-semibold text-white">{score}</span></p>
-            <p>{t('play_earn_best')}: <span className="font-semibold text-white">{bestScore}</span></p>
-            <p>Lives: <span className="font-semibold text-white">{lives}</span></p>
-            <p>{t('play_earn_theme')}: <span className="font-semibold text-white">{themeLabel}</span></p>
-          </div>
-        </div>
-
-        <div className="h-[calc(100vh-180px)] overflow-hidden rounded-2xl border border-white/10 bg-black/30">
+        <div className="h-[calc(100vh-180px)] overflow-hidden rounded-2xl border border-white/10 bg-black/30 relative">
           <canvas
             ref={canvasRef}
             width={CANVAS_WIDTH}
             height={CANVAS_HEIGHT}
-            className="h-full w-full"
+            className="h-full w-full cursor-pointer"
             aria-label="Dino Play Earn"
+            onClick={() => {
+              if (gameOver) {
+                void startGame();
+              } else if (!runningRef.current) {
+                void startGame();
+              } else {
+                jump();
+              }
+            }}
           />
-        </div>
-
-        <div className="mt-4 flex flex-wrap items-center gap-3">
-          {!running && (
-            <button
-              type="button"
-              onClick={() => { void startGame(); }}
-              className="rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-400"
-            >
-              {gameOver ? t('play_earn_restart') : t('play_earn_start')}
-            </button>
+          {running && !gameOver && (
+            <div className="absolute inset-0 flex items-start justify-between px-4 py-2 pointer-events-none">
+              <div className="flex flex-col text-white">
+                <span className="text-lg font-semibold">Puan: {score}</span>
+                <span className="text-sm text-white/80">En Yüksek: {bestScore}</span>
+              </div>
+              <button
+                type="button"
+                onClick={pauseGame}
+                className="pointer-events-auto rounded-full bg-white/10 p-2 text-white hover:bg-white/20 transition"
+                aria-label="Pause game"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+                </svg>
+              </button>
+              <div className="flex gap-1">
+                {Array.from({ length: 5 }, (_, i) => (
+                  <span key={i} className="text-red-500">
+                    {i < lives ? '❤️' : '🤍'}
+                  </span>
+                ))}
+              </div>
+            </div>
           )}
-          <button
-            type="button"
-            onClick={jump}
-            disabled={!running}
-            className="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            {t('play_earn_jump')}
-          </button>
-          <p className="text-xs text-white/55">{t('play_earn_hint')}</p>
-          {gameOver && award !== null && (
-            <p className="text-xs font-semibold text-emerald-300">
-              {t('play_earn_award', { amount: award })}
-            </p>
+          {paused && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+              <div className="text-center">
+                <h3 className="text-2xl font-bold text-white mb-4">Paused</h3>
+                <button
+                  type="button"
+                  onClick={resumeGame}
+                  className="rounded-xl bg-emerald-500 px-6 py-3 text-lg font-semibold text-white transition hover:bg-emerald-400"
+                >
+                  Resume
+                </button>
+              </div>
+            </div>
+          )}
+          {gameOver && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+              <div className="text-center">
+                <h3 className="text-2xl font-bold text-white mb-4">Game Over</h3>
+                <p className="text-white mb-4">Final Score: {score}</p>
+                {award !== null && (
+                  <p className="text-emerald-300 mb-4">Award: {award} Papel</p>
+                )}
+                <button
+                  type="button"
+                  onClick={() => { void startGame(); }}
+                  className="rounded-xl bg-emerald-500 px-6 py-3 text-lg font-semibold text-white transition hover:bg-emerald-400"
+                >
+                  Play Again
+                </button>
+              </div>
+            </div>
           )}
         </div>
       </section>
