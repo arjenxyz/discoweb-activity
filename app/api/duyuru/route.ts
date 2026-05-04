@@ -123,16 +123,22 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    // Developer kontrolü
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Yetkilendirme gerekli' }, { status: 401 });
+    const auth = await requireSessionUser(request);
+    if (!auth.ok) {
+      return auth.response;
     }
 
-    const token = authHeader.substring(7);
-    const isDeveloperResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/activity/is-developer`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const authHeader = request.headers.get('authorization') ?? '';
+    const cookieHeader = request.headers.get('cookie') ?? '';
+    const isDeveloperResponse = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/activity/is-developer`,
+      {
+        headers: {
+          ...(authHeader ? { Authorization: authHeader } : {}),
+          ...(cookieHeader ? { cookie: cookieHeader } : {}),
+        },
+      },
+    );
 
     if (!isDeveloperResponse.ok) {
       return NextResponse.json({ error: 'Developer yetkisi gerekli' }, { status: 403 });
