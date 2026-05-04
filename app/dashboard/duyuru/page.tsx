@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { apiUrl } from '@/lib/api';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 
+// ---------- types ----------
 type AnnouncementMessage = {
   id: string;
   title: string;
@@ -38,6 +39,7 @@ type DuyuruPageProps = {
   variant?: 'page' | 'panel';
 };
 
+// ---------- helpers ----------
 function formatDate(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
@@ -69,11 +71,7 @@ function parseAnnouncementBody(body: string) {
     filtered.push(line);
   });
 
-  return {
-    body: filtered.join('\n').trim(),
-    mediaUrl,
-    linkUrl,
-  };
+  return { body: filtered.join('\n').trim(), mediaUrl, linkUrl };
 }
 
 function isVideoUrl(url: string) {
@@ -107,6 +105,7 @@ function getYouTubeEmbedUrl(url: string) {
   return null;
 }
 
+// ---------- component ----------
 export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
   const [messages, setMessages] = useState<AnnouncementMessage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -116,295 +115,235 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
 
   useEffect(() => {
     let isMounted = true;
-
-    const loadMessages = async () => {
+    const load = async () => {
       try {
-        const response = await fetchWithCreds(apiUrl('/api/duyuru?lang=tr'), { cache: 'no-store' });
-        const data = (await response.json()) as AnnouncementResponse;
-        if (!response.ok || data.error) {
-          throw new Error(data.error || 'Duyurular yuklenemedi.');
-        }
-        if (isMounted) {
-          setMessages(data.messages ?? []);
-        }
-      } catch (err) {
-        if (isMounted) {
-          setError(err instanceof Error ? err.message : 'Duyurular yuklenemedi.');
-        }
+        const res = await fetchWithCreds(apiUrl('/api/duyuru?lang=tr'), { cache: 'no-store' });
+        const data = (await res.json()) as AnnouncementResponse;
+        if (!res.ok || data.error) throw new Error(data.error || 'Yüklenemedi');
+        if (isMounted) setMessages(data.messages ?? []);
+      } catch (e: unknown) {
+        if (isMounted) setError(e instanceof Error ? e.message : String(e));
       } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+        if (isMounted) setLoading(false);
       }
     };
-
-    loadMessages();
-
-    return () => {
-      isMounted = false;
-    };
+    load();
+    return () => { isMounted = false; };
   }, []);
 
-  const totalMessages = useMemo(() => messages.length, [messages.length]);
+  const totalMessages = useMemo(() => messages.length, [messages]);
 
   const handleVote = async (pollId: string, optionId: string) => {
     setVoteLoadingId(optionId);
     try {
-      const token = (() => {
-        try {
-          return localStorage.getItem('discord_bearer_token');
-        } catch {
-          return null;
-        }
-      })();
-
-      const response = await fetchWithCreds(apiUrl('/api/duyuru/vote'), {
+      const token = (() => { try { return localStorage.getItem('discord_bearer_token'); } catch { return null; } })();
+      const res = await fetchWithCreds(apiUrl('/api/duyuru/vote'), {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({ pollId, optionId }),
       });
+      const data = await res.json();
+      if (!res.ok || data.error) throw new Error(data.error || 'Oy kaydedilemedi.');
 
-      const data = (await response.json()) as { error?: string };
-      if (!response.ok || data.error) {
-        throw new Error(data.error || 'Oy kaydedilemedi.');
-      }
+      setMessages(prev => prev.map(msg => {
+        if (!msg.poll || msg.poll.id !== pollId) return msg;
+        const prevVote = msg.poll.userVoteOptionId ?? null;
+        if (prevVote === optionId) return msg;
 
-      setMessages((prev) =>
-        prev.map((message) => {
-          if (!message.poll || message.poll.id !== pollId) return message;
-          const previousVote = message.poll.userVoteOptionId ?? null;
-          if (previousVote === optionId) return message;
+        const updated = msg.poll.options.map(opt => {
+          if (opt.id === optionId) return { ...opt, voteCount: opt.voteCount + 1 };
+          if (prevVote && opt.id === prevVote) return { ...opt, voteCount: Math.max(0, opt.voteCount - 1) };
+          return opt;
+        });
 
-          const updatedOptions = message.poll.options.map((option) => {
-            if (option.id === optionId) {
-              return { ...option, voteCount: option.voteCount + 1 };
-            }
-            if (previousVote && option.id === previousVote) {
-              return { ...option, voteCount: Math.max(0, option.voteCount - 1) };
-            }
-            return option;
-          });
-
-          return {
-            ...message,
-            poll: {
-              ...message.poll,
-              options: updatedOptions,
-              userVoteOptionId: optionId,
-            },
-          };
-        }),
-      );
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Oy kaydedilemedi.');
+        return { ...msg, poll: { ...msg.poll, options: updated, userVoteOptionId: optionId } };
+      }));
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : String(e));
     } finally {
       setVoteLoadingId(null);
     }
   };
 
+  // ----- render -----
   const content = (
-      <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-8 px-5 py-10 sm:px-8 sm:py-12">
-        <header className="rounded-3xl border border-[#4f545c] bg-[#2f3136] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div className="flex items-center gap-4">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#5865f2] text-2xl font-black text-white shadow-lg shadow-[#5865f2]/20">#</div>
-              <div className="min-w-0">
-                <p className="text-xs uppercase tracking-[0.28em] text-slate-400">Discord Duyuru Kanalı</p>
-                <h1 className="text-3xl font-black text-white sm:text-4xl">Duyuru Kanalı</h1>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
-                  Resmi duyurular, güncellemeler ve anketler bu kanalda paylaşılır. Kanal düzenli olarak güncellenir.
-                </p>
-                <p className="mt-3 text-sm text-slate-400">
-                  Toplam {totalMessages} duyuru
-                </p>
-              </div>
-            </div>
-            <div className="rounded-3xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300 shadow-inner shadow-black/20">
-              <span className="font-semibold text-slate-100">#duyuru</span>
-            </div>
-          </div>
-        </header>
+    <div className="mx-auto w-full max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
+      {/* header */}
+      <div className="mb-10">
+        <div className="flex items-center gap-3 mb-2">
+          {/* megaphone icon */}
+          <svg className="w-8 h-8 text-indigo-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M10.34 15.84c-.688-.06-1.386-.09-2.09-.09H5.25A2.25 2.25 0 013 13.5V9.75A2.25 2.25 0 015.25 7.5h2.5c.704 0 1.402-.03 2.09-.09m0 0c1.535-.148 2.947-.576 4.16-1.25M10.34 15.84l4.16-1.25m0 0A6.75 6.75 0 0021 7.5a6.75 6.75 0 00-6.5-7.09" />
+          </svg>
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+            Duyuru Panosu
+          </h1>
+        </div>
+        <p className="text-base text-gray-500 max-w-2xl">
+          Güncel duyurular, geliştirici notları ve topluluk anketleri burada yayınlanır.
+        </p>
+        {totalMessages > 0 && (
+          <p className="mt-1 text-sm text-gray-400">{totalMessages} duyuru listeleniyor</p>
+        )}
+      </div>
 
-        <section className="grid gap-4">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <h2 className="text-lg font-bold text-white">Son Duyurular</h2>
-            <p className="text-sm text-slate-400">Discord duyuru kanalı tarzı akıcı bir akış.</p>
-          </div>
+      {/* loading / error / empty */}
+      {loading && (
+        <div className="flex flex-col items-center justify-center py-20 text-gray-400">
+          <svg className="animate-spin h-8 w-8 mb-3 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          <span>Duyurular yükleniyor…</span>
+        </div>
+      )}
 
-          {loading ? (
-            <div className="rounded-3xl border border-[#4f545c] bg-[#202225] p-6 text-sm text-slate-300 shadow-[0_10px_30px_rgba(0,0,0,0.25)]">
-              Duyurular yükleniyor...
-            </div>
-          ) : error ? (
-            <div className="rounded-3xl border border-red-400/40 bg-red-500/10 p-6 text-sm text-red-200 shadow-[0_10px_30px_rgba(0,0,0,0.25)]">
-              {error}
-            </div>
-          ) : messages.length === 0 ? (
-            <div className="rounded-3xl border border-[#4f545c] bg-[#202225] p-6 text-sm text-slate-300 shadow-[0_10px_30px_rgba(0,0,0,0.25)]">
-              Henüz duyuru bulunmuyor.
-            </div>
-          ) : (
-            messages.map((message) => {
-              const parsed = parseAnnouncementBody(message.body);
-              const mediaCandidate = parsed.mediaUrl;
-              const linkCandidate = parsed.linkUrl;
-              const youtubeEmbed =
-                getYouTubeEmbedUrl(mediaCandidate) ?? getYouTubeEmbedUrl(linkCandidate);
-              const mediaKey = `${message.id}:${mediaCandidate || linkCandidate}`;
-              const mediaFailed = Boolean(mediaErrors[mediaKey]);
-              return (
-              <article key={message.id} className="flex gap-4 rounded-3xl bg-transparent">
-                <div className="flex-shrink-0">
-                  {message.author_avatar_url ? (
-                    <Image
-                      src={message.author_avatar_url}
-                      alt={message.author_name ?? 'Author'}
-                      width={48}
-                      height={48}
-                      className="rounded-2xl"
-                    />
-                  ) : (
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-700 text-sm font-black text-white">
-                      D
-                    </div>
-                  )}
-                </div>
-                <div className="flex-1 rounded-3xl bg-[#36393f] p-4 shadow-[0_10px_30px_rgba(0,0,0,0.25)]">
-                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-sm font-semibold text-white">
-                          {message.author_name ?? 'Discord Bot'}
-                        </span>
-                        <span className="rounded-full bg-[#5865f2]/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-200">
-                          Developer
-                        </span>
+      {!loading && error && (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">
+          <p className="font-semibold">Bir hata oluştu</p>
+          <p>{error}</p>
+        </div>
+      )}
+
+      {!loading && !error && messages.length === 0 && (
+        <div className="rounded-xl border border-gray-200 bg-gray-50 p-8 text-center text-gray-500">
+          Henüz hiç duyuru yayınlanmadı.
+        </div>
+      )}
+
+      {/* announcement list */}
+      {!loading && !error && messages.length > 0 && (
+        <div className="space-y-8">
+          {messages.map((msg) => {
+            const parsed = parseAnnouncementBody(msg.body);
+            const youtubeEmbed = getYouTubeEmbedUrl(parsed.mediaUrl) ?? getYouTubeEmbedUrl(parsed.linkUrl);
+            const mediaKey = `${msg.id}:${parsed.mediaUrl || parsed.linkUrl}`;
+            const mediaFailed = mediaErrors[mediaKey];
+            const pollTotal = msg.poll?.options.reduce((sum, o) => sum + o.voteCount, 0) ?? 0;
+
+            return (
+              <article key={msg.id} className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
+                {/* meta */}
+                <div className="flex items-start justify-between gap-4 flex-wrap">
+                  <div className="flex items-center gap-4 min-w-0">
+                    {msg.author_avatar_url ? (
+                      <Image src={msg.author_avatar_url} alt={msg.author_name ?? ''} width={44} height={44} className="rounded-full ring-2 ring-indigo-100" />
+                    ) : (
+                      <div className="flex h-11 w-11 items-center justify-center rounded-full bg-indigo-100 text-sm font-bold text-indigo-700">
+                        D
                       </div>
-                      <p className="mt-1 text-xs text-slate-400">
-                        {formatDate(message.created_at)}
+                    )}
+                    <div>
+                      <h2 className="text-lg font-semibold text-gray-900 leading-snug">{msg.title}</h2>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {msg.author_name ?? 'Sistem'} · {formatDate(msg.created_at)}
                       </p>
-                      <h3 className="mt-3 text-xl font-bold text-white">{message.title}</h3>
                     </div>
-                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold text-slate-300">
-                      #duyuru
-                    </span>
                   </div>
-                  <div className="mt-4 whitespace-pre-line text-sm leading-7 text-slate-200">
+                  <span className="inline-flex items-center rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-700/10">
+                    duyuru
+                  </span>
+                </div>
+
+                {/* body text */}
+                {parsed.body && (
+                  <div className="mt-4 whitespace-pre-line text-sm leading-relaxed text-gray-700">
                     {parsed.body}
                   </div>
-                </div>
+                )}
 
+                {/* media */}
                 {youtubeEmbed ? (
-                  <div className="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-black/40">
-                    <div className="aspect-video w-full">
-                      <iframe
-                        src={youtubeEmbed}
-                        title="YouTube"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                        className="h-full w-full"
-                      />
+                  <div className="mt-5 overflow-hidden rounded-xl border border-gray-200 bg-gray-50">
+                    <div className="aspect-video">
+                      <iframe src={youtubeEmbed} title="YouTube" allowFullScreen className="h-full w-full" />
                     </div>
                   </div>
-                ) : mediaCandidate ? (
-                  <div className="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-black/40">
-                    {isVideoUrl(mediaCandidate) ? (
-                      <video
-                        src={mediaCandidate}
-                        controls
-                        className="w-full max-h-[420px] object-contain"
-                        onError={() =>
-                          setMediaErrors((prev) => ({ ...prev, [mediaKey]: true }))
-                        }
-                      />
+                ) : parsed.mediaUrl ? (
+                  <div className="mt-5 overflow-hidden rounded-xl border border-gray-200 bg-gray-50">
+                    {isVideoUrl(parsed.mediaUrl) ? (
+                      <video src={parsed.mediaUrl} controls className="w-full max-h-96 object-contain" onError={() => setMediaErrors(prev => ({ ...prev, [mediaKey]: true }))} />
                     ) : (
-                      <div className="relative h-[420px] w-full">
+                      <div className="relative h-96 w-full">
                         <Image
-                          src={mediaCandidate}
-                          alt="Duyuru medyasi"
+                          src={parsed.mediaUrl}
+                          alt="medya"
                           fill
                           className="object-contain"
                           unoptimized
+                          onError={() => setMediaErrors(prev => ({ ...prev, [mediaKey]: true }))}
                         />
                       </div>
                     )}
-                    {mediaFailed ? (
-                      <div className="border-t border-white/10 bg-black/50 px-4 py-3 text-xs text-slate-300">
-                        Medya yuklenemedi. Discord linklerinin suresi dolmus olabilir.
-                      </div>
-                    ) : null}
+                    {mediaFailed && (
+                      <div className="bg-gray-100 px-4 py-3 text-xs text-gray-500">Medya yüklenemedi. Bağlantı süresi dolmuş olabilir.</div>
+                    )}
                   </div>
                 ) : null}
 
-                {parsed.linkUrl ? (
-                  <a
-                    href={parsed.linkUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-4 inline-flex items-center gap-2 rounded-full border border-sky-400/30 bg-sky-400/10 px-4 py-2 text-xs font-semibold text-sky-200 transition hover:border-sky-300 hover:text-white"
-                  >
+                {/* link */}
+                {parsed.linkUrl && (
+                  <a href={parsed.linkUrl} target="_blank" rel="noreferrer" className="mt-4 inline-flex items-center gap-2 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-2 text-sm font-medium text-indigo-700 transition hover:bg-indigo-100">
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.06 6.31l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m6.364-1.06a4.5 4.5 0 00-1.06-6.31l-4.5-4.5a4.5 4.5 0 00-6.364 6.364L3.19 9.69" /></svg>
                     {parsed.linkUrl}
                   </a>
-                ) : null}
+                )}
 
-                {message.poll ? (
-                  <div className="mt-5 rounded-2xl border border-[#4f545c] bg-[#202225] p-4">
-                    <div className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-300">
-                      {message.poll.question}
-                    </div>
-                    <div className="mt-3 grid gap-3">
-                      {message.poll.options
+                {/* poll */}
+                {msg.poll && (
+                  <div className="mt-6 rounded-xl border border-gray-200 bg-gray-50/70 p-5">
+                    <p className="text-sm font-semibold text-gray-800 mb-4">{msg.poll.question}</p>
+                    <div className="space-y-3">
+                      {msg.poll.options
                         .slice()
                         .sort((a, b) => a.position - b.position)
-                        .map((option) => {
-                          const isSelected = message.poll?.userVoteOptionId === option.id;
+                        .map(opt => {
+                          const selected = msg.poll!.userVoteOptionId === opt.id;
+                          const percentage = pollTotal > 0 ? Math.round((opt.voteCount / pollTotal) * 100) : 0;
                           return (
                             <button
-                              key={option.id}
+                              key={opt.id}
                               type="button"
-                              onClick={() => handleVote(message.poll!.id, option.id)}
-                              disabled={voteLoadingId === option.id}
-                              className={`flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left text-sm transition ${
-                                isSelected
-                                  ? 'border-emerald-400/50 bg-emerald-400/15 text-emerald-100'
-                                  : 'border-white/10 bg-[#2f3136] text-slate-200 hover:border-white/20'
-                              } disabled:cursor-not-allowed disabled:opacity-60`}
+                              onClick={() => handleVote(msg.poll!.id, opt.id)}
+                              disabled={voteLoadingId === opt.id}
+                              className={`group relative w-full rounded-lg border px-4 py-3 text-left text-sm transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                                selected
+                                  ? 'border-indigo-300 bg-indigo-50 text-indigo-900'
+                                  : 'border-gray-200 bg-white text-gray-700 hover:border-indigo-200'
+                              }`}
                             >
-                              <span>{option.label}</span>
-                              <span className="text-xs text-slate-400">{option.voteCount} oy</span>
+                              <div className="flex items-center justify-between relative z-10">
+                                <span className="font-medium">{opt.label}</span>
+                                <span className="text-xs text-gray-500">{opt.voteCount} oy {percentage > 0 && `(%${percentage})`}</span>
+                              </div>
+                              {/* progress bar */}
+                              <div className="absolute inset-0 rounded-lg overflow-hidden z-0">
+                                <div
+                                  className={`h-full transition-all duration-500 ${selected ? 'bg-indigo-100' : 'bg-gray-100 group-hover:bg-gray-200'}`}
+                                  style={{ width: `${percentage}%` }}
+                                />
+                              </div>
                             </button>
                           );
                         })}
                     </div>
                   </div>
-                ) : null}
+                )}
               </article>
-              );
-            })
-          )}
-        </section>
-      </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 
+  // variant handling (page: full background, panel: just content)
   if (variant === 'panel') {
     return <div className="min-h-0">{content}</div>;
   }
 
   return (
-    <div className="relative min-h-screen">
-      <div className="absolute inset-0 z-0">
-        <Image
-          src="/menu-background/varyant6.jpg"
-          alt="Duyuru arka plan"
-          fill
-          className="object-cover"
-          priority
-        />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.18),transparent_24%),radial-gradient(circle_at_top_right,rgba(244,63,94,0.16),transparent_24%),linear-gradient(180deg,rgba(7,11,19,0.92),rgba(7,11,19,1))]" />
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50/30">
       {content}
     </div>
   );
