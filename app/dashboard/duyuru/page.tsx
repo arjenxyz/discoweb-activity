@@ -3,15 +3,8 @@
 import Image from 'next/image';
 import { LuHeart } from 'react-icons/lu';
 import { useEffect, useState } from 'react';
-import { getSupabaseClient } from '../../../lib/supabaseClient';
-
-type StoreItem = {
-  id: string;
-  title: string;
-  price: string;
-  status: string;
-  description?: string | null;
-};
+import fetchWithCreds from '@/lib/fetchWithCreds';
+import type { StoreItem } from '../types';
 
 function ShopCard({ item }: { item: StoreItem }) {
   return (
@@ -50,7 +43,7 @@ function ShopCard({ item }: { item: StoreItem }) {
           </span>
         </div>
         <div className="flex items-center justify-between gap-2">
-          <p className="text-base font-black text-white">{item.price}</p>
+          <p className="text-base font-black text-white">TRY {item.price.toFixed(2)}</p>
           <button className="rounded-full bg-[#5865F2] px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.25em] text-white transition hover:bg-[#4752c4]">
             Shop
           </button>
@@ -65,41 +58,18 @@ function StoreGrid() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const supabase = getSupabaseClient();
-
     const loadItems = async () => {
-      if (!supabase) {
+      try {
+        const response = await fetchWithCreds('/api/member/store?page=1&limit=20');
+        if (response.ok) {
+          const data = (await response.json()) as { items: StoreItem[] };
+          setItems(data.items ?? []);
+        }
+      } catch (err) {
+        console.warn('Store items load failed:', err);
+      } finally {
         setLoading(false);
-        return;
       }
-
-      const { data, error } = await supabase
-        .from('store_items')
-        .select('id,title,price,status,description')
-        .eq('status', 'active')
-        .order('created_at', { ascending: false });
-
-      if (!error && data) {
-        const typedData = data as Array<{
-          id: string;
-          title: string;
-          price: number | string;
-          status: string;
-          description: string | null;
-        }>;
-
-        setItems(
-          typedData.map((item) => ({
-            id: item.id,
-            title: item.title,
-            status: item.status,
-            description: item.description,
-            price: typeof item.price === 'number' ? `TRY ${item.price.toFixed(2)}` : `TRY ${item.price}`,
-          })),
-        );
-      }
-
-      setLoading(false);
     };
 
     loadItems();
