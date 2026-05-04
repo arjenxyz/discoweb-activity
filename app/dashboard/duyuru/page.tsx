@@ -94,7 +94,7 @@ function ShopCard({ item }: { item: typeof shopItems[number] }) {
 
 export default function DuyuruPage() {
   return (
-    <div className="relative min-h-screen overflow-hidden bg-slate-950 text-white">
+    <div className="relative min-h-screen bg-slate-950 text-white">
       <div className="absolute inset-0">
         <Image src="/menu-background/varyant5.jpg" alt="Market background" fill className="object-cover" priority />
         <div className="absolute inset-0 bg-slate-950/80" />
