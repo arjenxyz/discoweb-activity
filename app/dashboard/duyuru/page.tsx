@@ -50,50 +50,6 @@ function formatDate(value: string) {
   });
 }
 
-function buildAnnouncementBody({
-  content,
-  mediaUrl,
-  linkUrl,
-  pollQuestion,
-  pollOptions,
-  extraContent,
-}: {
-  content: string;
-  mediaUrl: string;
-  linkUrl: string;
-  pollQuestion: string;
-  pollOptions: string;
-  extraContent: string;
-}) {
-  const sections: string[] = [content.trim()];
-
-  if (mediaUrl.trim()) {
-    sections.push(`Medya: ${mediaUrl.trim()}`);
-  }
-
-  if (linkUrl.trim()) {
-    sections.push(`Link: ${linkUrl.trim()}`);
-  }
-
-  if (pollQuestion.trim()) {
-    const options = pollOptions
-      .split('\n')
-      .map((option) => option.trim())
-      .filter(Boolean);
-    const pollLines = [
-      `Anket: ${pollQuestion.trim()}`,
-      ...options.map((option) => `- ${option}`),
-    ];
-    sections.push(pollLines.join('\n'));
-  }
-
-  if (extraContent.trim()) {
-    sections.push(extraContent.trim());
-  }
-
-  return sections.filter(Boolean).join('\n\n');
-}
-
 function parseAnnouncementBody(body: string) {
   const lines = body.split('\n');
   let mediaUrl = '';
@@ -261,6 +217,9 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
                   Resmi duyurular, güncellemeler ve anketler bu kanalda paylaşılır. Kanal düzenli olarak güncellenir.
                 </p>
+                <p className="mt-3 text-sm text-slate-400">
+                  Toplam {totalMessages} duyuru
+                </p>
               </div>
             </div>
             <div className="rounded-3xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300 shadow-inner shadow-black/20">
@@ -297,39 +256,45 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
               const mediaKey = `${message.id}:${mediaCandidate || linkCandidate}`;
               const mediaFailed = Boolean(mediaErrors[mediaKey]);
               return (
-              <article
-                key={message.id}
-                className="rounded-3xl border border-[#4f545c] bg-[#2f3136] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.35)]"
-              >
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="flex items-center gap-4">
-                    {message.author_avatar_url ? (
-                      <Image
-                        src={message.author_avatar_url}
-                        alt={message.author_name ?? 'Author'}
-                        width={48}
-                        height={48}
-                        className="rounded-2xl"
-                      />
-                    ) : (
-                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-700 text-sm font-black text-white">
-                        D
-                      </div>
-                    )}
-                    <div className="min-w-0">
-                      <p className="text-xs uppercase tracking-[0.24em] text-slate-400">Duyuru</p>
-                      <h3 className="text-xl font-bold text-white sm:text-2xl">{message.title}</h3>
-                      <div className="mt-1 text-xs text-slate-500">
-                        {message.author_name ?? 'Discord Bot'} · {formatDate(message.created_at)}
-                      </div>
+              <article key={message.id} className="flex gap-4 rounded-3xl bg-transparent">
+                <div className="flex-shrink-0">
+                  {message.author_avatar_url ? (
+                    <Image
+                      src={message.author_avatar_url}
+                      alt={message.author_name ?? 'Author'}
+                      width={48}
+                      height={48}
+                      className="rounded-2xl"
+                    />
+                  ) : (
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-700 text-sm font-black text-white">
+                      D
                     </div>
-                  </div>
-                  <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold text-slate-300">
-                    #duyuru
-                  </div>
+                  )}
                 </div>
-                <div className="mt-5 whitespace-pre-line text-sm leading-7 text-slate-200">
-                  {parsed.body}
+                <div className="flex-1 rounded-3xl bg-[#36393f] p-4 shadow-[0_10px_30px_rgba(0,0,0,0.25)]">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-sm font-semibold text-white">
+                          {message.author_name ?? 'Discord Bot'}
+                        </span>
+                        <span className="rounded-full bg-[#5865f2]/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-200">
+                          Developer
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs text-slate-400">
+                        {formatDate(message.created_at)}
+                      </p>
+                      <h3 className="mt-3 text-xl font-bold text-white">{message.title}</h3>
+                    </div>
+                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold text-slate-300">
+                      #duyuru
+                    </span>
+                  </div>
+                  <div className="mt-4 whitespace-pre-line text-sm leading-7 text-slate-200">
+                    {parsed.body}
+                  </div>
                 </div>
 
                 {youtubeEmbed ? (
@@ -356,14 +321,15 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
                         }
                       />
                     ) : (
-                      <img
-                        src={mediaCandidate}
-                        alt="Duyuru medyasi"
-                        className="w-full max-h-[420px] object-contain"
-                        onError={() =>
-                          setMediaErrors((prev) => ({ ...prev, [mediaKey]: true }))
-                        }
-                      />
+                      <div className="relative h-[420px] w-full">
+                        <Image
+                          src={mediaCandidate}
+                          alt="Duyuru medyasi"
+                          fill
+                          className="object-contain"
+                          unoptimized
+                        />
+                      </div>
                     )}
                     {mediaFailed ? (
                       <div className="border-t border-white/10 bg-black/50 px-4 py-3 text-xs text-slate-300">
