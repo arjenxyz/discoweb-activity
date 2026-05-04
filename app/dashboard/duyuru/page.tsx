@@ -42,29 +42,21 @@ function ShopCard({
   return (
     <article
       onClick={() => onOpenDetails(item)}
-      className="group relative cursor-pointer overflow-hidden rounded-[32px] border border-white/10 bg-[#080a12] shadow-2xl shadow-black/30 transition hover:-translate-y-1 hover:border-white/20"
+      className="group relative cursor-pointer overflow-hidden rounded-[32px] border border-white/10 bg-[#11151f] shadow-[0_20px_80px_rgba(0,0,0,0.24)] transition hover:-translate-y-1 hover:border-white/20"
     >
-      <div className="absolute inset-0 overflow-hidden rounded-[32px]">
-        <div className="absolute inset-0 bg-black/50" />
-        <div className="absolute inset-0 opacity-60 group-hover:opacity-90 transition-all duration-700 scale-105 group-hover:scale-110">
-          <Image src={gifUrl} alt="Product background" fill className="object-cover" unoptimized />
-        </div>
-      </div>
-
-      <div className="relative z-10 flex h-full flex-col p-4 sm:p-5">
-        <div className="flex items-start justify-between gap-3">
-          <div className="rounded-full border border-white/10 bg-black/40 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-white/80 backdrop-blur-sm">
-            Papel {formatPrice(item.price)}
-          </div>
+      <div className="relative h-56 overflow-hidden rounded-t-[32px] bg-slate-950">
+        <Image src={gifUrl} alt={item.title} fill className="object-cover transition duration-700 group-hover:scale-105" unoptimized />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-transparent to-transparent" />
+        <div className="absolute top-4 right-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition duration-300">
           <button
             type="button"
             onClick={(e) => {
               e.stopPropagation();
               onAddToCart(item);
             }}
-            className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/10 text-white transition hover:bg-white/15"
+            className="relative inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-black/50 text-white transition hover:bg-white/10"
           >
-            <LuStore className="h-4 w-4" />
+            <LuStore className="h-5 w-5" />
             {cartQty > 0 ? (
               <span className="absolute -top-1 -right-1 inline-flex h-5 min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
                 {cartQty}
@@ -72,33 +64,34 @@ function ShopCard({
             ) : null}
           </button>
         </div>
-
-        <div className="mt-4 flex-1">
-          <h3 className="text-base font-black tracking-tight text-white sm:text-lg">{item.title}</h3>
-        </div>
-
-        <div className="absolute inset-x-0 bottom-0 z-10 px-4 pb-4 opacity-0 transition duration-300 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto">
-          <div className="flex flex-col gap-2 rounded-3xl bg-black/70 p-3 backdrop-blur-xl border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.45)]">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onPurchase(item.id);
-              }}
-              disabled={purchaseLoading}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#5865F2] px-5 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white transition hover:bg-[#4752c4] disabled:cursor-not-allowed disabled:bg-white/10"
-            >
-              {purchaseLoading ? 'Satını Alınıyor...' : `Buy for ${formatPrice(item.price)}`}
-            </button>
-          </div>
-        </div>
-
-        {purchaseMessage ? (
-          <div className="mt-4 rounded-3xl border border-white/10 bg-black/60 px-4 py-3 text-sm text-slate-200">
-            {purchaseMessage}
-          </div>
-        ) : null}
       </div>
+
+      <div className="relative z-10 flex flex-col gap-3 p-4 sm:p-5">
+        <div>
+          <h3 className="text-lg font-black tracking-tight text-white">{item.title}</h3>
+          <p className="mt-2 text-sm text-slate-400 line-clamp-2">{item.description || 'No description available.'}</p>
+        </div>
+      </div>
+
+      <div className="absolute inset-x-4 bottom-4 z-10 opacity-0 transition duration-300 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto">
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onPurchase(item.id);
+          }}
+          disabled={purchaseLoading}
+          className="w-full rounded-full bg-[#5865F2] px-5 py-3 text-sm font-semibold uppercase tracking-[0.28em] text-white shadow-[0_15px_40px_rgba(88,101,242,0.25)] transition hover:bg-[#4752c4] disabled:cursor-not-allowed disabled:bg-white/10"
+        >
+          {purchaseLoading ? 'Satını Alınıyor...' : `Buy for ${formatPrice(item.price)}`}
+        </button>
+      </div>
+
+      {purchaseMessage ? (
+        <div className="absolute inset-x-4 bottom-20 rounded-3xl border border-white/10 bg-black/70 px-4 py-3 text-sm text-slate-200">
+          {purchaseMessage}
+        </div>
+      ) : null}
     </article>
   );
 }
