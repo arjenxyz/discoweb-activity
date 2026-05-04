@@ -251,24 +251,41 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
 
   const content = (
       <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-8 px-5 py-10 sm:px-8 sm:py-12">
-        <header className="flex flex-col gap-3">
-          <h1 className="text-2xl font-black text-white sm:text-3xl">Duyuru Kanali</h1>
+        <header className="rounded-3xl border border-[#4f545c] bg-[#2f3136] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div className="flex items-center gap-4">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#5865f2] text-2xl font-black text-white shadow-lg shadow-[#5865f2]/20">#</div>
+              <div className="min-w-0">
+                <p className="text-xs uppercase tracking-[0.28em] text-slate-400">Discord Duyuru Kanalı</p>
+                <h1 className="text-3xl font-black text-white sm:text-4xl">Duyuru Kanalı</h1>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
+                  Resmi duyurular, güncellemeler ve anketler bu kanalda paylaşılır. Kanal düzenli olarak güncellenir.
+                </p>
+              </div>
+            </div>
+            <div className="rounded-3xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300 shadow-inner shadow-black/20">
+              <span className="font-semibold text-slate-100">#duyuru</span>
+            </div>
+          </div>
         </header>
 
         <section className="grid gap-4">
-          <h2 className="text-lg font-bold text-white">Son Duyurular</h2>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <h2 className="text-lg font-bold text-white">Son Duyurular</h2>
+            <p className="text-sm text-slate-400">Discord duyuru kanalı tarzı akıcı bir akış.</p>
+          </div>
 
           {loading ? (
-            <div className="rounded-3xl border border-white/10 bg-white/5 p-6 text-sm text-slate-300">
-              Duyurular yukleniyor...
+            <div className="rounded-3xl border border-[#4f545c] bg-[#202225] p-6 text-sm text-slate-300 shadow-[0_10px_30px_rgba(0,0,0,0.25)]">
+              Duyurular yükleniyor...
             </div>
           ) : error ? (
-            <div className="rounded-3xl border border-red-400/40 bg-red-500/10 p-6 text-sm text-red-200">
+            <div className="rounded-3xl border border-red-400/40 bg-red-500/10 p-6 text-sm text-red-200 shadow-[0_10px_30px_rgba(0,0,0,0.25)]">
               {error}
             </div>
           ) : messages.length === 0 ? (
-            <div className="rounded-3xl border border-white/10 bg-white/5 p-6 text-sm text-slate-300">
-              Henuz duyuru bulunmuyor.
+            <div className="rounded-3xl border border-[#4f545c] bg-[#202225] p-6 text-sm text-slate-300 shadow-[0_10px_30px_rgba(0,0,0,0.25)]">
+              Henüz duyuru bulunmuyor.
             </div>
           ) : (
             messages.map((message) => {
@@ -282,28 +299,38 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
               return (
               <article
                 key={message.id}
-                className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_18px_45px_rgba(0,0,0,0.25)]"
+                className="rounded-3xl border border-[#4f545c] bg-[#2f3136] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.35)]"
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h3 className="text-lg font-bold text-white">{message.title}</h3>
-                    <div className="mt-2 text-xs text-slate-400">
-                      {formatDate(message.created_at)}
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="flex items-center gap-4">
+                    {message.author_avatar_url ? (
+                      <Image
+                        src={message.author_avatar_url}
+                        alt={message.author_name ?? 'Author'}
+                        width={48}
+                        height={48}
+                        className="rounded-2xl"
+                      />
+                    ) : (
+                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-700 text-sm font-black text-white">
+                        D
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-xs uppercase tracking-[0.24em] text-slate-400">Duyuru</p>
+                      <h3 className="text-xl font-bold text-white sm:text-2xl">{message.title}</h3>
+                      <div className="mt-1 text-xs text-slate-500">
+                        {message.author_name ?? 'Discord Bot'} · {formatDate(message.created_at)}
+                      </div>
                     </div>
                   </div>
-                  {message.author_avatar_url ? (
-                    <Image
-                      src={message.author_avatar_url}
-                      alt={message.author_name ?? 'Author'}
-                      width={40}
-                      height={40}
-                      className="rounded-full"
-                    />
-                  ) : null}
+                  <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold text-slate-300">
+                    #duyuru
+                  </div>
                 </div>
-                <p className="mt-4 whitespace-pre-line text-sm text-slate-200">
+                <div className="mt-5 whitespace-pre-line text-sm leading-7 text-slate-200">
                   {parsed.body}
-                </p>
+                </div>
 
                 {youtubeEmbed ? (
                   <div className="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-black/40">
@@ -358,11 +385,11 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
                 ) : null}
 
                 {message.poll ? (
-                  <div className="mt-5 rounded-2xl border border-white/10 bg-slate-950/40 p-4">
-                    <div className="text-sm font-semibold text-white">
+                  <div className="mt-5 rounded-2xl border border-[#4f545c] bg-[#202225] p-4">
+                    <div className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-300">
                       {message.poll.question}
                     </div>
-                    <div className="mt-3 flex flex-col gap-2">
+                    <div className="mt-3 grid gap-3">
                       {message.poll.options
                         .slice()
                         .sort((a, b) => a.position - b.position)
@@ -374,14 +401,14 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
                               type="button"
                               onClick={() => handleVote(message.poll!.id, option.id)}
                               disabled={voteLoadingId === option.id}
-                              className={`flex w-full items-center justify-between rounded-xl border px-4 py-2 text-left text-sm transition ${
+                              className={`flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left text-sm transition ${
                                 isSelected
-                                  ? 'border-emerald-400/60 bg-emerald-400/15 text-emerald-100'
-                                  : 'border-white/10 bg-white/5 text-slate-200 hover:border-white/20'
+                                  ? 'border-emerald-400/50 bg-emerald-400/15 text-emerald-100'
+                                  : 'border-white/10 bg-[#2f3136] text-slate-200 hover:border-white/20'
                               } disabled:cursor-not-allowed disabled:opacity-60`}
                             >
                               <span>{option.label}</span>
-                              <span className="text-xs text-slate-300">{option.voteCount} oy</span>
+                              <span className="text-xs text-slate-400">{option.voteCount} oy</span>
                             </button>
                           );
                         })}
