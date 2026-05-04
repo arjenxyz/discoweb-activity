@@ -130,15 +130,14 @@ export async function POST(request: NextRequest) {
 
     const authHeader = request.headers.get('authorization') ?? '';
     const cookieHeader = request.headers.get('cookie') ?? '';
-    const isDeveloperResponse = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/activity/is-developer`,
-      {
-        headers: {
-          ...(authHeader ? { Authorization: authHeader } : {}),
-          ...(cookieHeader ? { cookie: cookieHeader } : {}),
-        },
+    const requestOrigin = new URL(request.url).origin;
+    const developerUrl = `${process.env.NEXT_PUBLIC_API_URL || requestOrigin}/api/activity/is-developer`;
+    const isDeveloperResponse = await fetch(developerUrl, {
+      headers: {
+        ...(authHeader ? { Authorization: authHeader } : {}),
+        ...(cookieHeader ? { cookie: cookieHeader } : {}),
       },
-    );
+    });
 
     if (!isDeveloperResponse.ok) {
       return NextResponse.json({ error: 'Developer yetkisi gerekli' }, { status: 403 });
