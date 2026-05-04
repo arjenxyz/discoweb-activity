@@ -1,10 +1,11 @@
 ﻿'use client';
 
 import Image from 'next/image';
-import { LuShoppingCart, LuArrowRight } from 'react-icons/lu';
+import { LuShoppingCart, LuStore } from 'react-icons/lu';
 import { useEffect, useMemo, useState } from 'react';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { useCart } from '../../../lib/cart';
+import ProductDetailModal from '../components/ProductDetailModal';
 import type { StoreItem } from '../types';
 
 const STORE_BACKGROUNDS = [
@@ -22,6 +23,7 @@ function formatPrice(price: number) {
 function ShopCard({
   item,
   cartQty,
+  onOpenDetails,
   onAddToCart,
   onPurchase,
   purchaseLoading,
@@ -30,6 +32,7 @@ function ShopCard({
 }: {
   item: StoreItem;
   cartQty: number;
+  onOpenDetails: (item: StoreItem) => void;
   onAddToCart: (item: StoreItem) => void;
   onPurchase: (itemId: string) => Promise<void>;
   purchaseLoading: boolean;
@@ -37,7 +40,10 @@ function ShopCard({
   gifUrl: string;
 }) {
   return (
-    <article className="group relative overflow-hidden rounded-[32px] border border-white/10 bg-[#080a12] shadow-2xl shadow-black/30 transition hover:-translate-y-1 hover:border-white/20">
+    <article
+      onClick={() => onOpenDetails(item)}
+      className="group relative cursor-pointer overflow-hidden rounded-[32px] border border-white/10 bg-[#080a12] shadow-2xl shadow-black/30 transition hover:-translate-y-1 hover:border-white/20"
+    >
       <div className="absolute inset-0 overflow-hidden rounded-[32px]">
         <div className="absolute inset-0 bg-black/50" />
         <div className="absolute inset-0 opacity-60 group-hover:opacity-90 transition-all duration-700 scale-105 group-hover:scale-110">
@@ -52,10 +58,13 @@ function ShopCard({
           </div>
           <button
             type="button"
-            onClick={() => onAddToCart(item)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddToCart(item);
+            }}
             className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/10 text-white transition hover:bg-white/15"
           >
-            <LuShoppingCart className="h-4 w-4" />
+            <LuStore className="h-4 w-4" />
             {cartQty > 0 ? (
               <span className="absolute -top-1 -right-1 inline-flex h-5 min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
                 {cartQty}
@@ -66,19 +75,22 @@ function ShopCard({
 
         <div className="mt-4 flex-1">
           <h3 className="text-base font-black tracking-tight text-white sm:text-lg">{item.title}</h3>
-          <p className="mt-3 text-sm leading-6 text-slate-300 line-clamp-3">{item.description || 'No description available.'}</p>
         </div>
 
-        <div className="mt-5 flex justify-center">
-          <button
-            type="button"
-            onClick={() => onPurchase(item.id)}
-            disabled={purchaseLoading}
-            className="inline-flex w-full max-w-[220px] items-center justify-center gap-2 rounded-full bg-[#5865F2] px-6 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white transition hover:bg-[#4752c4] disabled:cursor-not-allowed disabled:bg-white/10"
-          >
-            {purchaseLoading ? 'Satını Alınıyor...' : 'Hemen Satın Al'}
-            <LuArrowRight className="h-4 w-4" />
-          </button>
+        <div className="absolute inset-x-0 bottom-0 z-10 px-4 pb-4 opacity-0 transition duration-300 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto">
+          <div className="flex flex-col gap-2 rounded-3xl bg-black/70 p-3 backdrop-blur-xl border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.45)]">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onPurchase(item.id);
+              }}
+              disabled={purchaseLoading}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#5865F2] px-5 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white transition hover:bg-[#4752c4] disabled:cursor-not-allowed disabled:bg-white/10"
+            >
+              {purchaseLoading ? 'Satını Alınıyor...' : `Buy for ${formatPrice(item.price)}`}
+            </button>
+          </div>
         </div>
 
         {purchaseMessage ? (
@@ -95,6 +107,7 @@ function StoreGrid() {
   const cart = useCart();
   const [items, setItems] = useState<StoreItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedItem, setSelectedItem] = useState<StoreItem | null>(null);
   const [purchaseLoadingId, setPurchaseLoadingId] = useState<string | null>(null);
   const [purchaseMessageMap, setPurchaseMessageMap] = useState<Record<string, string>>({});
   const [bgOffset] = useState(() => Math.floor(Math.random() * STORE_BACKGROUNDS.length));
@@ -153,6 +166,14 @@ function StoreGrid() {
     cart.addToCart(item);
   };
 
+  const handleOpenDetails = (item: StoreItem) => {
+    setSelectedItem(item);
+  };
+
+  const handleCloseDetails = () => {
+    setSelectedItem(null);
+  };
+
   return (
     <div className="mt-10 space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -184,6 +205,7 @@ function StoreGrid() {
                 key={item.id}
                 item={item}
                 cartQty={cart.items.find((it) => it.itemId === item.id)?.qty ?? 0}
+                onOpenDetails={handleOpenDetails}
                 onAddToCart={handleAddToCart}
                 onPurchase={handlePurchase}
                 purchaseLoading={purchaseLoadingId === item.id}
@@ -197,6 +219,16 @@ function StoreGrid() {
               </div>
             )}
       </div>
+      <ProductDetailModal
+        item={selectedItem}
+        onClose={handleCloseDetails}
+        onAddToCart={(item) => {
+          cart.addToCart(item);
+        }}
+        onPurchase={(itemId) => {
+          void handlePurchase(itemId);
+        }}
+      />
     </div>
   );
 }
