@@ -230,18 +230,35 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Duyuru bulunamadı' }, { status: 404 });
     }
 
-    const { error: translationError } = await supabaseServiceClient
+    const { data: updatedTranslations, error: translationUpdateError } = await supabaseServiceClient
       .from('announcement_translations')
-      .upsert({
-        announcement_id: id,
-        lang_code: lang,
+      .update({
         title: title.trim(),
         content: body.trim(),
-      }, { onConflict: ['announcement_id', 'lang_code'] });
+        updated_at: new Date().toISOString(),
+      })
+      .eq('announcement_id', id)
+      .eq('lang_code', lang);
 
-    if (translationError) {
-      console.error('Duyuru çevirisi güncelleme hatası:', translationError);
+    if (translationUpdateError) {
+      console.error('Duyuru çevirisi güncelleme hatası:', translationUpdateError);
       return NextResponse.json({ error: 'Duyuru çevirisi güncellenemedi' }, { status: 500 });
+    }
+
+    if (!updatedTranslations?.length) {
+      const { error: translationInsertError } = await supabaseServiceClient
+        .from('announcement_translations')
+        .insert({
+          announcement_id: id,
+          lang_code: lang,
+          title: title.trim(),
+          content: body.trim(),
+        });
+
+      if (translationInsertError) {
+        console.error('Duyuru çevirisi ekleme hatası:', translationInsertError);
+        return NextResponse.json({ error: 'Duyuru çevirisi güncellenemedi' }, { status: 500 });
+      }
     }
 
     const pollQuestion = poll?.question?.trim?.() ?? '';
