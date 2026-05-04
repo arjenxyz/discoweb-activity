@@ -238,14 +238,15 @@ export async function PATCH(request: NextRequest) {
         updated_at: new Date().toISOString(),
       })
       .eq('announcement_id', id)
-      .eq('lang_code', lang);
+      .eq('lang_code', lang)
+      .select<{ id: string }>();
 
     if (translationUpdateError) {
       console.error('Duyuru çevirisi güncelleme hatası:', translationUpdateError);
       return NextResponse.json({ error: 'Duyuru çevirisi güncellenemedi' }, { status: 500 });
     }
 
-    if (!updatedTranslations?.length) {
+    if (!updatedTranslations || updatedTranslations.length === 0) {
       const { error: translationInsertError } = await supabaseServiceClient
         .from('announcement_translations')
         .insert({
