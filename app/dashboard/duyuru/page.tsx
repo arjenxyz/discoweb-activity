@@ -120,6 +120,33 @@ function isVideoUrl(url: string) {
   return /\.(mp4|webm|mov|m4v|avi)(\?.*)?$/i.test(url);
 }
 
+function getYouTubeEmbedUrl(url: string) {
+  const trimmed = url.trim();
+  if (!trimmed) return null;
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.hostname === 'youtu.be') {
+      const id = parsed.pathname.replace('/', '').trim();
+      return id ? `https://www.youtube.com/embed/${id}` : null;
+    }
+    if (parsed.hostname.endsWith('youtube.com')) {
+      if (parsed.pathname.startsWith('/embed/')) {
+        const id = parsed.pathname.split('/embed/')[1]?.split('/')[0];
+        return id ? `https://www.youtube.com/embed/${id}` : null;
+      }
+      if (parsed.pathname.startsWith('/shorts/')) {
+        const id = parsed.pathname.split('/shorts/')[1]?.split('/')[0];
+        return id ? `https://www.youtube.com/embed/${id}` : null;
+      }
+      const id = parsed.searchParams.get('v');
+      return id ? `https://www.youtube.com/embed/${id}` : null;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
 export default function DuyuruPage() {
   const [messages, setMessages] = useState<AnnouncementMessage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -128,6 +155,7 @@ export default function DuyuruPage() {
   const [sending, setSending] = useState(false);
   const [sendStatus, setSendStatus] = useState<string | null>(null);
   const [voteLoadingId, setVoteLoadingId] = useState<string | null>(null);
+  const [mediaErrors, setMediaErrors] = useState<Record<string, boolean>>({});
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -474,6 +502,12 @@ export default function DuyuruPage() {
           ) : (
             messages.map((message) => {
               const parsed = parseAnnouncementBody(message.body);
+              const mediaCandidate = parsed.mediaUrl;
+              const linkCandidate = parsed.linkUrl;
+              const youtubeEmbed =
+                getYouTubeEmbedUrl(mediaCandidate) ?? getYouTubeEmbedUrl(linkCandidate);
+              const mediaKey = `${message.id}:${mediaCandidate || linkCandidate}`;
+              const mediaFailed = Boolean(mediaErrors[mediaKey]);
               return (
               <article
                 key={message.id}
@@ -500,21 +534,44 @@ export default function DuyuruPage() {
                   {parsed.body}
                 </p>
 
-                {parsed.mediaUrl ? (
+                {youtubeEmbed ? (
                   <div className="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-black/40">
-                    {isVideoUrl(parsed.mediaUrl) ? (
+                    <div className="aspect-video w-full">
+                      <iframe
+                        src={youtubeEmbed}
+                        title="YouTube"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        className="h-full w-full"
+                      />
+                    </div>
+                  </div>
+                ) : mediaCandidate ? (
+                  <div className="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-black/40">
+                    {isVideoUrl(mediaCandidate) ? (
                       <video
-                        src={parsed.mediaUrl}
+                        src={mediaCandidate}
                         controls
                         className="w-full max-h-[420px] object-contain"
+                        onError={() =>
+                          setMediaErrors((prev) => ({ ...prev, [mediaKey]: true }))
+                        }
                       />
                     ) : (
                       <img
-                        src={parsed.mediaUrl}
+                        src={mediaCandidate}
                         alt="Duyuru medyasi"
                         className="w-full max-h-[420px] object-contain"
+                        onError={() =>
+                          setMediaErrors((prev) => ({ ...prev, [mediaKey]: true }))
+                        }
                       />
                     )}
+                    {mediaFailed ? (
+                      <div className="border-t border-white/10 bg-black/50 px-4 py-3 text-xs text-slate-300">
+                        Medya yuklenemedi. Discord linklerinin suresi dolmus olabilir.
+                      </div>
+                    ) : null}
                   </div>
                 ) : null}
 
