@@ -48,15 +48,19 @@ function ShopCard({
       <div className="relative z-10 flex h-full flex-col p-4 sm:p-5">
         <div className="flex items-start justify-between gap-3">
           <div className="rounded-full border border-white/10 bg-black/40 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-white/80 backdrop-blur-sm">
-            {item.status === 'active' ? 'Active' : item.status}
+            Papel {formatPrice(item.price)}
           </div>
           <button
             type="button"
             onClick={() => onAddToCart(item)}
-            className="flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.25em] text-white transition hover:bg-white/15"
+            className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/10 text-white transition hover:bg-white/15"
           >
             <LuShoppingCart className="h-4 w-4" />
-            {cartQty > 0 ? `Sepet (${cartQty})` : 'Sepete Ekle'}
+            {cartQty > 0 ? (
+              <span className="absolute -top-1 -right-1 inline-flex h-5 min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
+                {cartQty}
+              </span>
+            ) : null}
           </button>
         </div>
 
@@ -65,29 +69,23 @@ function ShopCard({
           <p className="mt-3 text-sm leading-6 text-slate-300 line-clamp-3">{item.description || 'No description available.'}</p>
         </div>
 
-        <div className="mt-5 flex flex-col gap-3">
-          <div className="flex items-center justify-between gap-3 rounded-3xl bg-white/5 px-4 py-3 text-white/90 shadow-inner shadow-black/20 ring-1 ring-white/5">
-            <div>
-              <div className="text-[10px] uppercase tracking-[0.3em] text-slate-400">Price</div>
-              <div className="mt-1 text-lg font-black text-white">{formatPrice(item.price)}</div>
-            </div>
-            <button
-              type="button"
-              onClick={() => onPurchase(item.id)}
-              disabled={purchaseLoading}
-              className="inline-flex items-center gap-2 rounded-full bg-[#5865F2] px-4 py-2 text-xs font-semibold uppercase tracking-[0.25em] text-white transition hover:bg-[#4752c4] disabled:cursor-not-allowed disabled:bg-white/10"
-            >
-              {purchaseLoading ? 'Satını Alınıyor...' : 'Hemen Satın Al'}
-              <LuArrowRight className="h-4 w-4" />
-            </button>
-          </div>
-
-          {purchaseMessage ? (
-            <div className="rounded-3xl border border-white/10 bg-black/60 px-4 py-3 text-sm text-slate-200">
-              {purchaseMessage}
-            </div>
-          ) : null}
+        <div className="mt-5 flex justify-center">
+          <button
+            type="button"
+            onClick={() => onPurchase(item.id)}
+            disabled={purchaseLoading}
+            className="inline-flex w-full max-w-[220px] items-center justify-center gap-2 rounded-full bg-[#5865F2] px-6 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white transition hover:bg-[#4752c4] disabled:cursor-not-allowed disabled:bg-white/10"
+          >
+            {purchaseLoading ? 'Satını Alınıyor...' : 'Hemen Satın Al'}
+            <LuArrowRight className="h-4 w-4" />
+          </button>
         </div>
+
+        {purchaseMessage ? (
+          <div className="mt-4 rounded-3xl border border-white/10 bg-black/60 px-4 py-3 text-sm text-slate-200">
+            {purchaseMessage}
+          </div>
+        ) : null}
       </div>
     </article>
   );
@@ -153,7 +151,6 @@ function StoreGrid() {
 
   const handleAddToCart = (item: StoreItem) => {
     cart.addToCart(item);
-    cart.openCart();
   };
 
   return (
