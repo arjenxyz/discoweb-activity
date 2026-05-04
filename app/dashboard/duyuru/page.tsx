@@ -1,247 +1,388 @@
 ﻿'use client';
 
 import Image from 'next/image';
-import { LuShoppingCart, LuStore } from 'react-icons/lu';
-import { useEffect, useMemo, useState } from 'react';
-import fetchWithCreds from '@/lib/fetchWithCreds';
-import { useCart } from '../../../lib/cart';
-import ProductDetailModal from '../components/ProductDetailModal';
-import type { StoreItem } from '../types';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 
-const STORE_BACKGROUNDS = [
-  '/store-background/sunger-bob/sunger.gif',
-  '/store-background/sunger-bob/sunger2.gif',
-  '/store-background/sunger-bob/sunger3.gif',
-  '/store-background/invincible/invincible.jpg',
-  '/store-background/invincible/invincible2.jpg',
-];
+type AnnouncementMessage = {
+  id: string;
+  title: string;
+  body: string;
+  created_at: string;
+  author_name?: string | null;
+  author_avatar_url?: string | null;
+};
 
-function formatPrice(price: number) {
-  return `TRY ${price.toFixed(2)}`;
+type AnnouncementResponse = {
+  messages?: AnnouncementMessage[];
+  error?: string;
+};
+
+function formatDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString('tr-TR', {
+    year: 'numeric',
+    month: 'short',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 }
 
-function ShopCard({
-  item,
-  cartQty,
-  onOpenDetails,
-  onAddToCart,
-  onPurchase,
-  purchaseLoading,
-  purchaseMessage,
-  gifUrl,
+function buildAnnouncementBody({
+  content,
+  mediaUrl,
+  linkUrl,
+  pollQuestion,
+  pollOptions,
+  extraContent,
 }: {
-  item: StoreItem;
-  cartQty: number;
-  onOpenDetails: (item: StoreItem) => void;
-  onAddToCart: (item: StoreItem) => void;
-  onPurchase: (itemId: string) => Promise<void>;
-  purchaseLoading: boolean;
-  purchaseMessage?: string;
-  gifUrl: string;
+  content: string;
+  mediaUrl: string;
+  linkUrl: string;
+  pollQuestion: string;
+  pollOptions: string;
+  extraContent: string;
 }) {
-  return (
-    <article
-      onClick={() => onOpenDetails(item)}
-      className="group relative cursor-pointer overflow-hidden rounded-[32px] border border-white/10 bg-[#11151f] shadow-[0_20px_80px_rgba(0,0,0,0.24)] transition hover:-translate-y-1 hover:border-white/20"
-    >
-      <div className="relative h-56 overflow-hidden rounded-t-[32px] bg-slate-950">
-        <Image src={gifUrl} alt={item.title} fill className="object-cover transition duration-700 group-hover:scale-105" unoptimized />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-transparent to-transparent" />
-        <div className="absolute top-4 right-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition duration-300">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onAddToCart(item);
-            }}
-            className="relative inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-black/50 text-white transition hover:bg-white/10"
-          >
-            <LuStore className="h-5 w-5" />
-            {cartQty > 0 ? (
-              <span className="absolute -top-1 -right-1 inline-flex h-5 min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
-                {cartQty}
-              </span>
-            ) : null}
-          </button>
-        </div>
-      </div>
+  const sections: string[] = [content.trim()];
 
-      <div className="relative z-10 flex flex-col gap-3 p-4 sm:p-5">
-        <div>
-          <h3 className="text-lg font-black tracking-tight text-white">{item.title}</h3>
-          <p className="mt-2 text-sm text-slate-400 line-clamp-2">{item.description || 'No description available.'}</p>
-        </div>
-      </div>
+  if (mediaUrl.trim()) {
+    sections.push(`Medya: ${mediaUrl.trim()}`);
+  }
 
-      <div className="absolute inset-x-4 bottom-4 z-10 opacity-0 transition duration-300 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto">
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onPurchase(item.id);
-          }}
-          disabled={purchaseLoading}
-          className="w-full rounded-full bg-[#5865F2] px-5 py-3 text-sm font-semibold uppercase tracking-[0.28em] text-white shadow-[0_15px_40px_rgba(88,101,242,0.25)] transition hover:bg-[#4752c4] disabled:cursor-not-allowed disabled:bg-white/10"
-        >
-          {purchaseLoading ? 'Satını Alınıyor...' : `Buy for ${formatPrice(item.price)}`}
-        </button>
-      </div>
+  if (linkUrl.trim()) {
+    sections.push(`Link: ${linkUrl.trim()}`);
+  }
 
-      {purchaseMessage ? (
-        <div className="absolute inset-x-4 bottom-20 rounded-3xl border border-white/10 bg-black/70 px-4 py-3 text-sm text-slate-200">
-          {purchaseMessage}
-        </div>
-      ) : null}
-    </article>
-  );
-}
+  if (pollQuestion.trim()) {
+    const options = pollOptions
+      .split('\n')
+      .map((option) => option.trim())
+      .filter(Boolean);
+    const pollLines = [
+      `Anket: ${pollQuestion.trim()}`,
+      ...options.map((option) => `- ${option}`),
+    ];
+    sections.push(pollLines.join('\n'));
+  }
 
-function StoreGrid() {
-  const cart = useCart();
-  const [items, setItems] = useState<StoreItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedItem, setSelectedItem] = useState<StoreItem | null>(null);
-  const [purchaseLoadingId, setPurchaseLoadingId] = useState<string | null>(null);
-  const [purchaseMessageMap, setPurchaseMessageMap] = useState<Record<string, string>>({});
-  const [bgOffset] = useState(() => Math.floor(Math.random() * STORE_BACKGROUNDS.length));
+  if (extraContent.trim()) {
+    sections.push(extraContent.trim());
+  }
 
-  const gifMap = useMemo(
-    () => new Map(items.map((item, idx) => [item.id, STORE_BACKGROUNDS[(bgOffset + idx) % STORE_BACKGROUNDS.length]])),
-    [bgOffset, items],
-  );
-
-  useEffect(() => {
-    const loadItems = async () => {
-      try {
-        const response = await fetchWithCreds('/api/member/store?page=1&limit=20');
-        if (response.ok) {
-          const data = (await response.json()) as { items: StoreItem[] };
-          setItems(data.items ?? []);
-        }
-      } catch (err) {
-        console.warn('Store items load failed:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadItems();
-  }, []);
-
-  const handlePurchase = async (itemId: string) => {
-    setPurchaseLoadingId(itemId);
-    setPurchaseMessageMap((prev) => ({ ...prev, [itemId]: '' }));
-
-    try {
-      const response = await fetchWithCreds('/api/member/store', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: [{ itemId, qty: 1 }] }),
-      });
-      const data = await response.json().catch(() => ({}));
-
-      if (!response.ok || data?.error) {
-        const message = data?.error || 'Satın alma başarısız oldu.';
-        setPurchaseMessageMap((prev) => ({ ...prev, [itemId]: message }));
-      } else {
-        setPurchaseMessageMap((prev) => ({ ...prev, [itemId]: 'Satın alma işlemi başarılı.' }));
-        cart.openCart();
-      }
-    } catch (err) {
-      console.error('Purchase failed:', err);
-      setPurchaseMessageMap((prev) => ({ ...prev, [itemId]: 'Satın alma sırasında hata oluştu.' }));
-    } finally {
-      setPurchaseLoadingId(null);
-    }
-  };
-
-  const handleAddToCart = (item: StoreItem) => {
-    cart.addToCart(item);
-  };
-
-  const handleOpenDetails = (item: StoreItem) => {
-    setSelectedItem(item);
-  };
-
-  const handleCloseDetails = () => {
-    setSelectedItem(null);
-  };
-
-  return (
-    <div className="mt-10 space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="text-xl font-black text-white">Duyuru Ürünleri</h2>
-          <p className="mt-2 max-w-2xl text-sm text-slate-300">Mağazanızdaki ürünleri burada da görüntüleyin, sepete ekleyin ve satın alın.</p>
-        </div>
-        <button
-          type="button"
-          onClick={() => cart.openCart()}
-          className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/15"
-        >
-          <LuShoppingCart className="h-4 w-4" />
-          Sepeti Aç ({cart.items.reduce((sum, item) => sum + item.qty, 0)})
-        </button>
-      </div>
-
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
-        {loading
-          ? Array.from({ length: 4 }).map((_, index) => (
-              <div
-                key={index}
-                className="h-72 animate-pulse rounded-[32px] border border-white/10 bg-white/5"
-              />
-            ))
-          : items.length > 0
-          ? items.map((item) => (
-              <ShopCard
-                key={item.id}
-                item={item}
-                cartQty={cart.items.find((it) => it.itemId === item.id)?.qty ?? 0}
-                onOpenDetails={handleOpenDetails}
-                onAddToCart={handleAddToCart}
-                onPurchase={handlePurchase}
-                purchaseLoading={purchaseLoadingId === item.id}
-                purchaseMessage={purchaseMessageMap[item.id]}
-                gifUrl={gifMap.get(item.id) ?? STORE_BACKGROUNDS[0]}
-              />
-            ))
-          : (
-              <div className="md:col-span-4 rounded-[24px] border border-white/10 bg-white/5 p-8 text-center text-sm text-slate-300">
-                Mağazada aktif ürün bulunamadı.
-              </div>
-            )}
-      </div>
-      <ProductDetailModal
-        item={selectedItem}
-        onClose={handleCloseDetails}
-        onAddToCart={(item) => {
-          cart.addToCart(item);
-        }}
-        onPurchase={(itemId) => {
-          void handlePurchase(itemId);
-        }}
-      />
-    </div>
-  );
+  return sections.filter(Boolean).join('\n\n');
 }
 
 export default function DuyuruPage() {
+  const [messages, setMessages] = useState<AnnouncementMessage[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isDeveloper, setIsDeveloper] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [sendStatus, setSendStatus] = useState<string | null>(null);
+
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [mediaUrl, setMediaUrl] = useState('');
+  const [linkUrl, setLinkUrl] = useState('');
+  const [pollQuestion, setPollQuestion] = useState('');
+  const [pollOptions, setPollOptions] = useState('');
+  const [extraContent, setExtraContent] = useState('');
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadMessages = async () => {
+      try {
+        const response = await fetch('/api/duyuru?lang=tr', { cache: 'no-store' });
+        const data = (await response.json()) as AnnouncementResponse;
+        if (!response.ok || data.error) {
+          throw new Error(data.error || 'Duyurular yuklenemedi.');
+        }
+        if (isMounted) {
+          setMessages(data.messages ?? []);
+        }
+      } catch (err) {
+        if (isMounted) {
+          setError(err instanceof Error ? err.message : 'Duyurular yuklenemedi.');
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    const checkDeveloper = async () => {
+      try {
+        const token = (() => {
+          try {
+            return localStorage.getItem('discord_bearer_token');
+          } catch {
+            return null;
+          }
+        })();
+
+        const response = await fetch('/api/activity/is-developer', {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        const data = (await response.json()) as { isDeveloper?: boolean };
+        if (isMounted) {
+          setIsDeveloper(Boolean(data?.isDeveloper));
+        }
+      } catch {
+        if (isMounted) {
+          setIsDeveloper(false);
+        }
+      }
+    };
+
+    loadMessages();
+    checkDeveloper();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!title.trim() || !content.trim()) {
+      setSendStatus('Baslik ve mesaj icerigi zorunlu.');
+      return;
+    }
+
+    setSending(true);
+    setSendStatus(null);
+
+    try {
+      const token = (() => {
+        try {
+          return localStorage.getItem('discord_bearer_token');
+        } catch {
+          return null;
+        }
+      })();
+
+      const body = buildAnnouncementBody({
+        content,
+        mediaUrl,
+        linkUrl,
+        pollQuestion,
+        pollOptions,
+        extraContent,
+      });
+
+      const response = await fetch('/api/duyuru', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ title: title.trim(), body, lang: 'tr' }),
+      });
+      const data = (await response.json()) as { error?: string; message?: string };
+
+      if (!response.ok || data.error) {
+        throw new Error(data.error || 'Duyuru gonderilemedi.');
+      }
+
+      setSendStatus(data.message || 'Duyuru basariyla gonderildi.');
+      setTitle('');
+      setContent('');
+      setMediaUrl('');
+      setLinkUrl('');
+      setPollQuestion('');
+      setPollOptions('');
+      setExtraContent('');
+
+      const refreshed = await fetch('/api/duyuru?lang=tr', { cache: 'no-store' });
+      const refreshedData = (await refreshed.json()) as AnnouncementResponse;
+      if (refreshed.ok && !refreshedData.error) {
+        setMessages(refreshedData.messages ?? []);
+      }
+    } catch (err) {
+      setSendStatus(err instanceof Error ? err.message : 'Duyuru gonderilemedi.');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const totalMessages = useMemo(() => messages.length, [messages.length]);
+
   return (
-    <div className="relative">
+    <div className="relative min-h-screen">
       <div className="absolute inset-0 z-0">
         <Image
           src="/menu-background/varyant6.jpg"
-          alt="Market background"
+          alt="Duyuru arka plan"
           fill
           className="object-cover"
           priority
         />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(96,165,250,0.2),transparent_18%),radial-gradient(circle_at_top_right,rgba(236,72,153,0.18),transparent_18%),linear-gradient(180deg,rgba(7,11,19,0.88),rgba(7,11,19,1))]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.18),transparent_24%),radial-gradient(circle_at_top_right,rgba(244,63,94,0.16),transparent_24%),linear-gradient(180deg,rgba(7,11,19,0.92),rgba(7,11,19,1))]" />
       </div>
 
-      <div className="relative z-10 mx-auto max-w-[1380px] px-5 py-10 sm:px-8 sm:py-12">
-        <StoreGrid />
+      <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-8 px-5 py-10 sm:px-8 sm:py-12">
+        <header className="flex flex-col gap-3">
+          <h1 className="text-2xl font-black text-white sm:text-3xl">Duyuru Kanali</h1>
+          <p className="max-w-2xl text-sm text-slate-300">
+            Bu kanal herkes tarafindan gorulebilir. Yalnizca gelistirici duyuru
+            gonderebilir.
+          </p>
+          <div className="text-xs text-slate-400">Toplam duyuru: {totalMessages}</div>
+        </header>
+
+        {isDeveloper ? (
+          <section className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_30px_80px_rgba(0,0,0,0.35)]">
+            <div className="flex items-center justify-between gap-4">
+              <h2 className="text-lg font-bold text-white">Yeni Duyuru</h2>
+              <span className="rounded-full border border-emerald-400/40 bg-emerald-400/10 px-3 py-1 text-xs font-semibold text-emerald-300">
+                Gelistirici Modu
+              </span>
+            </div>
+
+            <form onSubmit={handleSubmit} className="mt-6 grid gap-4">
+              <div className="grid gap-2">
+                <label className="text-xs font-semibold text-slate-300">Baslik</label>
+                <input
+                  value={title}
+                  onChange={(event) => setTitle(event.target.value)}
+                  className="w-full rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-400/60"
+                  placeholder="Duyuru basligi"
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <label className="text-xs font-semibold text-slate-300">Mesaj</label>
+                <textarea
+                  value={content}
+                  onChange={(event) => setContent(event.target.value)}
+                  className="min-h-[140px] w-full rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-400/60"
+                  placeholder="Duyuru metni"
+                />
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-2">
+                  <label className="text-xs font-semibold text-slate-300">Medya URL</label>
+                  <input
+                    value={mediaUrl}
+                    onChange={(event) => setMediaUrl(event.target.value)}
+                    className="w-full rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-400/60"
+                    placeholder="https://..."
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <label className="text-xs font-semibold text-slate-300">Link</label>
+                  <input
+                    value={linkUrl}
+                    onChange={(event) => setLinkUrl(event.target.value)}
+                    className="w-full rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-400/60"
+                    placeholder="https://..."
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-2">
+                  <label className="text-xs font-semibold text-slate-300">Anket Sorusu</label>
+                  <input
+                    value={pollQuestion}
+                    onChange={(event) => setPollQuestion(event.target.value)}
+                    className="w-full rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-400/60"
+                    placeholder="Ornek: Yeni ozellik begenildi mi?"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <label className="text-xs font-semibold text-slate-300">Anket Secenekleri</label>
+                  <textarea
+                    value={pollOptions}
+                    onChange={(event) => setPollOptions(event.target.value)}
+                    className="min-h-[80px] w-full rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-400/60"
+                    placeholder="Her secenegi yeni satira yazin"
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-2">
+                <label className="text-xs font-semibold text-slate-300">Ek Icerik (Markdown)</label>
+                <textarea
+                  value={extraContent}
+                  onChange={(event) => setExtraContent(event.target.value)}
+                  className="min-h-[90px] w-full rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-400/60"
+                  placeholder="Form, duyuru sablonu veya ozel notlar ekleyin"
+                />
+              </div>
+
+              {sendStatus ? (
+                <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">
+                  {sendStatus}
+                </div>
+              ) : null}
+
+              <div className="flex justify-end">
+                <button
+                  type="submit"
+                  disabled={sending}
+                  className="rounded-full bg-[#5865F2] px-6 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white shadow-[0_12px_32px_rgba(88,101,242,0.4)] transition hover:bg-[#4752c4] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {sending ? 'Gonderiliyor...' : 'Duyuru Gonder'}
+                </button>
+              </div>
+            </form>
+          </section>
+        ) : (
+          <section className="rounded-3xl border border-white/10 bg-white/5 p-6 text-sm text-slate-300">
+            Duyuru gondermek icin gelistirici yetkisi gerekir.
+          </section>
+        )}
+
+        <section className="grid gap-4">
+          <h2 className="text-lg font-bold text-white">Son Duyurular</h2>
+
+          {loading ? (
+            <div className="rounded-3xl border border-white/10 bg-white/5 p-6 text-sm text-slate-300">
+              Duyurular yukleniyor...
+            </div>
+          ) : error ? (
+            <div className="rounded-3xl border border-red-400/40 bg-red-500/10 p-6 text-sm text-red-200">
+              {error}
+            </div>
+          ) : messages.length === 0 ? (
+            <div className="rounded-3xl border border-white/10 bg-white/5 p-6 text-sm text-slate-300">
+              Henuz duyuru bulunmuyor.
+            </div>
+          ) : (
+            messages.map((message) => (
+              <article
+                key={message.id}
+                className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_18px_45px_rgba(0,0,0,0.25)]"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h3 className="text-lg font-bold text-white">{message.title}</h3>
+                    <div className="mt-2 text-xs text-slate-400">
+                      {formatDate(message.created_at)}
+                    </div>
+                  </div>
+                  {message.author_avatar_url ? (
+                    <Image
+                      src={message.author_avatar_url}
+                      alt={message.author_name ?? 'Author'}
+                      width={40}
+                      height={40}
+                      className="rounded-full"
+                    />
+                  ) : null}
+                </div>
+                <p className="mt-4 whitespace-pre-line text-sm text-slate-200">
+                  {message.body}
+                </p>
+              </article>
+            ))
+          )}
+        </section>
       </div>
     </div>
   );
