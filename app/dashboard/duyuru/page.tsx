@@ -1,42 +1,25 @@
 ﻿'use client';
 
 import Image from 'next/image';
-import { LuGift, LuHeart } from 'react-icons/lu';
+import { LuHeart } from 'react-icons/lu';
+import { useEffect, useState } from 'react';
+import { getSupabaseClient } from '../../../lib/supabaseClient';
 
-const shopItems = [
-  {
-    title: 'Star Struck Bundle',
-    price: 'TRY 168.99',
-    badge: 'Featured',
-    isFeatured: true,
-  },
-  {
-    title: 'Story Time Bundle',
-    price: 'TRY 168.99',
-    badge: '-11%',
-    isFeatured: false,
-  },
-  {
-    title: 'Cloud Nine',
-    price: 'TRY 62.99',
-    badge: 'Popular',
-    isFeatured: false,
-  },
-  {
-    title: 'Slow Burn',
-    price: 'TRY 62.99',
-    badge: 'Cozy',
-    isFeatured: false,
-  },
-];
+type StoreItem = {
+  id: string;
+  title: string;
+  price: string;
+  status: string;
+  description?: string | null;
+};
 
-function ShopCard({ item }: { item: typeof shopItems[number] }) {
+function ShopCard({ item }: { item: StoreItem }) {
   return (
     <article className="group overflow-hidden rounded-[24px] border border-white/10 bg-white/5 shadow-2xl shadow-black/30 transition hover:-translate-y-1 hover:border-white/20">
       <div className="relative overflow-hidden rounded-[24px] bg-slate-950/80">
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900/80 via-slate-950/40 to-slate-900/80" />
-        <div className="absolute top-4 left-4 rounded-full bg-black/40 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-white/80 backdrop-blur-sm">
-          {item.badge}
+        <div className="absolute top-3 left-3 rounded-full bg-black/40 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-white/80 backdrop-blur-sm">
+          {item.status === 'active' ? 'Active' : item.status}
         </div>
         <button className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-2xl bg-black/40 text-white/80 transition hover:bg-white/10">
           <LuHeart className="h-4.5 w-4.5" />
@@ -44,15 +27,15 @@ function ShopCard({ item }: { item: typeof shopItems[number] }) {
         <div className="relative h-40 p-3.5">
           <div className="flex h-full flex-col justify-end">
             <div className="space-y-3">
-              <div className="h-16 w-full rounded-[20px] bg-gradient-to-br from-indigo-500/15 via-violet-500/10 to-black border border-white/5 shadow-inner shadow-black/20" />
-              {item.isFeatured && (
-                <div className="flex items-center gap-3 rounded-3xl border border-white/10 bg-black/50 px-3 py-2.5 text-white/90 backdrop-blur-xl">
-                  <div className="h-11 w-11 rounded-2xl bg-slate-500/40" />
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-300">Featured</p>
-                    <p className="mt-1 text-sm font-black text-white">Arjen 🐱‍👤</p>
-                  </div>
+              <div className="h-16 w-full rounded-[20px] bg-gradient-to-br from-indigo-500/15 via-violet-500/10 to-black border border-white/5 shadow-inner shadow-black/20">
+                <div className="flex h-full items-center justify-center px-3 text-center text-sm font-semibold text-white">
+                  {item.title}
                 </div>
+              </div>
+              {item.description && (
+                <p className="text-xs leading-5 text-slate-300 line-clamp-2">
+                  {item.description}
+                </p>
               )}
             </div>
           </div>
@@ -62,23 +45,83 @@ function ShopCard({ item }: { item: typeof shopItems[number] }) {
       <div className="space-y-3 px-4 pb-4 pt-3">
         <div className="flex items-center justify-between gap-2">
           <h3 className="text-sm font-black tracking-tight text-white">{item.title}</h3>
-          <span className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">{item.isFeatured ? 'Hot' : 'New'}</span>
+          <span className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
+            {item.status === 'active' ? 'Hot' : 'New'}
+          </span>
         </div>
         <div className="flex items-center justify-between gap-2">
           <p className="text-base font-black text-white">{item.price}</p>
-          <div className="flex items-center gap-2">
-            <button className="rounded-full bg-[#5865F2] px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.25em] text-white transition hover:bg-[#4752c4]">
-              Shop
-            </button>
-            {item.isFeatured && (
-              <button className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20">
-                <LuGift className="h-4 w-4" />
-              </button>
-            )}
-          </div>
+          <button className="rounded-full bg-[#5865F2] px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.25em] text-white transition hover:bg-[#4752c4]">
+            Shop
+          </button>
         </div>
       </div>
     </article>
+  );
+}
+
+function StoreGrid() {
+  const [items, setItems] = useState<StoreItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const supabase = getSupabaseClient();
+
+    const loadItems = async () => {
+      if (!supabase) {
+        setLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('store_items')
+        .select('id,title,price,status,description')
+        .eq('status', 'active')
+        .order('created_at', { ascending: false });
+
+      if (!error && data) {
+        const typedData = data as Array<{
+          id: string;
+          title: string;
+          price: number | string;
+          status: string;
+          description: string | null;
+        }>;
+
+        setItems(
+          typedData.map((item) => ({
+            id: item.id,
+            title: item.title,
+            status: item.status,
+            description: item.description,
+            price: typeof item.price === 'number' ? `TRY ${item.price.toFixed(2)}` : `TRY ${item.price}`,
+          })),
+        );
+      }
+
+      setLoading(false);
+    };
+
+    loadItems();
+  }, []);
+
+  return (
+    <div className="mt-10 grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
+      {loading
+        ? Array.from({ length: 4 }).map((_, index) => (
+            <div
+              key={index}
+              className="animate-pulse rounded-[24px] border border-white/10 bg-white/5 p-6"
+            />
+          ))
+        : items.length > 0
+        ? items.map((item) => <ShopCard key={item.id} item={item} />)
+        : (
+            <div className="md:col-span-4 rounded-[24px] border border-white/10 bg-white/5 p-8 text-center text-sm text-slate-300">
+              No products found in Supabase store_items.
+            </div>
+          )}
+    </div>
   );
 }
 
@@ -116,11 +159,7 @@ export default function DuyuruPage() {
           </div>
         </section>
 
-        <div className="mt-10 grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
-          {shopItems.map((item) => (
-            <ShopCard key={item.title} item={item} />
-          ))}
-        </div>
+        <StoreGrid />
       </div>
     </div>
   );
