@@ -10,6 +10,21 @@ type AnnouncementMessage = {
   created_at: string;
   author_name?: string | null;
   author_avatar_url?: string | null;
+  poll?: AnnouncementPoll | null;
+};
+
+type AnnouncementPollOption = {
+  id: string;
+  label: string;
+  position: number;
+  voteCount: number;
+};
+
+type AnnouncementPoll = {
+  id: string;
+  question: string;
+  options: AnnouncementPollOption[];
+  userVoteOptionId?: string | null;
 };
 
 type AnnouncementResponse = {
@@ -73,6 +88,36 @@ function buildAnnouncementBody({
   return sections.filter(Boolean).join('\n\n');
 }
 
+function parseAnnouncementBody(body: string) {
+  const lines = body.split('\n');
+  let mediaUrl = '';
+  let linkUrl = '';
+  const filtered: string[] = [];
+
+  lines.forEach((line) => {
+    const trimmed = line.trim();
+    if (trimmed.toLowerCase().startsWith('medya:')) {
+      mediaUrl = trimmed.slice(6).trim();
+      return;
+    }
+    if (trimmed.toLowerCase().startsWith('link:')) {
+      linkUrl = trimmed.slice(5).trim();
+      return;
+    }
+    filtered.push(line);
+  });
+
+  return {
+    body: filtered.join('\n').trim(),
+    mediaUrl,
+    linkUrl,
+  };
+}
+
+function isVideoUrl(url: string) {
+  return /\.(mp4|webm|mov|m4v|avi)(\?.*)?$/i.test(url);
+}
+
 export default function DuyuruPage() {
   const [messages, setMessages] = useState<AnnouncementMessage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -80,6 +125,7 @@ export default function DuyuruPage() {
   const [isDeveloper, setIsDeveloper] = useState(false);
   const [sending, setSending] = useState(false);
   const [sendStatus, setSendStatus] = useState<string | null>(null);
+  const [voteLoadingId, setVoteLoadingId] = useState<string | null>(null);
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -173,13 +219,25 @@ export default function DuyuruPage() {
         extraContent,
       });
 
+      const pollOptionsList = pollOptions
+        .split('\n')
+        .map((option) => option.trim())
+        .filter(Boolean);
+
       const response = await fetch('/api/duyuru', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify({ title: title.trim(), body, lang: 'tr' }),
+        body: JSON.stringify({
+          title: title.trim(),
+          body,
+          lang: 'tr',
+          poll: pollQuestion.trim()
+            ? { question: pollQuestion.trim(), options: pollOptionsList }
+            : undefined,
+        }),
       });
       const data = (await response.json()) as { error?: string; message?: string };
 
@@ -209,6 +267,64 @@ export default function DuyuruPage() {
   };
 
   const totalMessages = useMemo(() => messages.length, [messages.length]);
+
+  const handleVote = async (pollId: string, optionId: string) => {
+    setVoteLoadingId(optionId);
+    try {
+      const token = (() => {
+        try {
+          return localStorage.getItem('discord_bearer_token');
+        } catch {
+          return null;
+        }
+      })();
+
+      const response = await fetch('/api/duyuru/vote', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ pollId, optionId }),
+      });
+
+      const data = (await response.json()) as { error?: string };
+      if (!response.ok || data.error) {
+        throw new Error(data.error || 'Oy kaydedilemedi.');
+      }
+
+      setMessages((prev) =>
+        prev.map((message) => {
+          if (!message.poll || message.poll.id !== pollId) return message;
+          const previousVote = message.poll.userVoteOptionId ?? null;
+          if (previousVote === optionId) return message;
+
+          const updatedOptions = message.poll.options.map((option) => {
+            if (option.id === optionId) {
+              return { ...option, voteCount: option.voteCount + 1 };
+            }
+            if (previousVote && option.id === previousVote) {
+              return { ...option, voteCount: Math.max(0, option.voteCount - 1) };
+            }
+            return option;
+          });
+
+          return {
+            ...message,
+            poll: {
+              ...message.poll,
+              options: updatedOptions,
+              userVoteOptionId: optionId,
+            },
+          };
+        }),
+      );
+    } catch (err) {
+      setSendStatus(err instanceof Error ? err.message : 'Oy kaydedilemedi.');
+    } finally {
+      setVoteLoadingId(null);
+    }
+  };
 
   return (
     <div className="relative min-h-screen">
@@ -354,7 +470,9 @@ export default function DuyuruPage() {
               Henuz duyuru bulunmuyor.
             </div>
           ) : (
-            messages.map((message) => (
+            messages.map((message) => {
+              const parsed = parseAnnouncementBody(message.body);
+              return (
               <article
                 key={message.id}
                 className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-[0_18px_45px_rgba(0,0,0,0.25)]"
@@ -377,10 +495,72 @@ export default function DuyuruPage() {
                   ) : null}
                 </div>
                 <p className="mt-4 whitespace-pre-line text-sm text-slate-200">
-                  {message.body}
+                  {parsed.body}
                 </p>
+
+                {parsed.mediaUrl ? (
+                  <div className="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-black/40">
+                    {isVideoUrl(parsed.mediaUrl) ? (
+                      <video
+                        src={parsed.mediaUrl}
+                        controls
+                        className="w-full max-h-[420px] object-contain"
+                      />
+                    ) : (
+                      <img
+                        src={parsed.mediaUrl}
+                        alt="Duyuru medyasi"
+                        className="w-full max-h-[420px] object-contain"
+                      />
+                    )}
+                  </div>
+                ) : null}
+
+                {parsed.linkUrl ? (
+                  <a
+                    href={parsed.linkUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-4 inline-flex items-center gap-2 rounded-full border border-sky-400/30 bg-sky-400/10 px-4 py-2 text-xs font-semibold text-sky-200 transition hover:border-sky-300 hover:text-white"
+                  >
+                    {parsed.linkUrl}
+                  </a>
+                ) : null}
+
+                {message.poll ? (
+                  <div className="mt-5 rounded-2xl border border-white/10 bg-slate-950/40 p-4">
+                    <div className="text-sm font-semibold text-white">
+                      {message.poll.question}
+                    </div>
+                    <div className="mt-3 flex flex-col gap-2">
+                      {message.poll.options
+                        .slice()
+                        .sort((a, b) => a.position - b.position)
+                        .map((option) => {
+                          const isSelected = message.poll?.userVoteOptionId === option.id;
+                          return (
+                            <button
+                              key={option.id}
+                              type="button"
+                              onClick={() => handleVote(message.poll!.id, option.id)}
+                              disabled={voteLoadingId === option.id}
+                              className={`flex w-full items-center justify-between rounded-xl border px-4 py-2 text-left text-sm transition ${
+                                isSelected
+                                  ? 'border-emerald-400/60 bg-emerald-400/15 text-emerald-100'
+                                  : 'border-white/10 bg-white/5 text-slate-200 hover:border-white/20'
+                              } disabled:cursor-not-allowed disabled:opacity-60`}
+                            >
+                              <span>{option.label}</span>
+                              <span className="text-xs text-slate-300">{option.voteCount} oy</span>
+                            </button>
+                          );
+                        })}
+                    </div>
+                  </div>
+                ) : null}
               </article>
-            ))
+              );
+            })
           )}
         </section>
       </div>
