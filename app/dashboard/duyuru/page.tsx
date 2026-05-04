@@ -41,7 +41,7 @@ function ShopCard({ item }: { item: typeof shopItems[number] }) {
         <button className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-2xl bg-black/40 text-white/80 transition hover:bg-white/10">
           <LuHeart className="h-5 w-5" />
         </button>
-        <div className="relative h-72 p-6">
+        <div className="relative h-60 p-6">
           <div className="flex h-full flex-col justify-end">
             <div className="space-y-4">
               <div className="h-24 w-full rounded-[28px] bg-gradient-to-br from-indigo-500/15 via-violet-500/10 to-black border border-white/5 shadow-inner shadow-black/20" />
@@ -84,7 +84,7 @@ function ShopCard({ item }: { item: typeof shopItems[number] }) {
 
 export default function DuyuruPage() {
   return (
-    <div className="relative overflow-hidden">
+    <div className="relative">
       <div className="absolute inset-0 z-0">
         <Image
           src="/menu-background/varyant6.jpg"
