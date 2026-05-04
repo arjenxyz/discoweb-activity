@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import Image from 'next/image';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   LuLayoutDashboard, LuScrollText, LuTriangleAlert, LuClipboardList,
   LuServer, LuUsers, LuMegaphone, LuChevronLeft, LuRefreshCw,
@@ -8,8 +9,6 @@ import {
 } from 'react-icons/lu';
 import { apiUrl } from '@/lib/api';
 import { useT } from '@/contexts/LocaleContext';
-import DuyuruPage from '../duyuru/page';
-
 type Props = {
   maintenance: boolean;
   onMaintenanceChange: (value: boolean) => void;
@@ -171,6 +170,19 @@ type BugReport = {
   updated_at?: string | null;
 };
 
+type AnnouncementAdminItem = {
+  id: string;
+  title: string;
+  content: string;
+  created_at: string;
+  is_active: boolean;
+  poll?: {
+    id: string;
+    question: string;
+    options: Array<{ id: string; label: string; position: number; voteCount: number }>;
+  } | null;
+};
+
 type BanScope = 'member' | 'server';
 
 type MemberBan = {
@@ -251,6 +263,29 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
   const [adSuccess, setAdSuccess] = useState(false);
   const [inviteUrl, setInviteUrl] = useState('');
   const [preview, setPreview] = useState<Omit<Ad, 'id' | 'active'> | null>(null);
+  const [announcements, setAnnouncements] = useState<AnnouncementAdminItem[]>([]);
+  const [announcementsLoading, setAnnouncementsLoading] = useState(false);
+  const [announcementsError, setAnnouncementsError] = useState<string | null>(null);
+  const [announcementForm, setAnnouncementForm] = useState<{
+    title: string;
+    body: string;
+    mediaUrl: string;
+    linkUrl: string;
+    pollQuestion: string;
+    pollOptions: string;
+  }>({
+    title: '',
+    body: '',
+    mediaUrl: '',
+    linkUrl: '',
+    pollQuestion: '',
+    pollOptions: '',
+  });
+  const [editingAnnouncementId, setEditingAnnouncementId] = useState<string | null>(null);
+  const [announcementSaving, setAnnouncementSaving] = useState(false);
+  const [announcementError, setAnnouncementError] = useState<string | null>(null);
+  const [announcementSuccess, setAnnouncementSuccess] = useState<string | null>(null);
+  const [announcementDeleteLoadingId, setAnnouncementDeleteLoadingId] = useState<string | null>(null);
   const [banScope, setBanScope] = useState<BanScope>('member');
   const [memberBans, setMemberBans] = useState<MemberBan[]>([]);
   const [serverBans, setServerBans] = useState<ServerBan[]>([]);
@@ -288,12 +323,26 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
     'Diğer sunucuları etkilemek (negatif etki)',
   ];
 
-  useEffect(() => { fetchSection('overview'); }, []);
-  useEffect(() => { if (activeTab !== 'overview') fetchSection(activeTab); }, [activeTab]);
-  useEffect(() => { if (activeTab === 'ads') fetchAds(); }, [activeTab]);
+  async function fetchAnnouncements() {
+    setAnnouncementsLoading(true);
+    setAnnouncementsError(null);
+    try {
+      const res = await fetch(apiUrl('/api/admin/announcements?lang=tr'), { credentials: 'include' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? String(res.status));
+      setAnnouncements(data.announcements ?? []);
+    } catch (e) {
+      setAnnouncementsError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setAnnouncementsLoading(false);
+    }
+  }
 
-  const fetchSection = async (section: TabId) => {
-    if (section === 'announcements') return;
+  async function fetchSection(section: TabId) {
+    if (section === 'announcements') {
+      await fetchAnnouncements();
+      return;
+    }
     setLoadingTab(true);
     setError(null);
     try {
@@ -338,7 +387,7 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
     } finally {
       setLoadingTab(false);
     }
-  };
+  }
 
   const fetchInviteInfo = async (url: string) => {
     const match = url.match(/discord(?:\.gg|app\.com\/invite|\.com\/invite)\/([A-Za-z0-9-]+)/);
@@ -398,13 +447,179 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
     setAds(prev => prev.filter(a => a.id !== id));
   };
 
-  const fetchAds = async () => {
+  const fetchAds = useCallback(async () => {
     try {
       const res = await fetch(apiUrl('/api/admin/ads'), { credentials: 'include' });
       const data = await res.json();
       if (res.ok) setAds(data.ads ?? []);
     } catch {}
+  }, []);
+
+  const buildAnnouncementBody = ({
+    content,
+    mediaUrl,
+    linkUrl,
+    pollQuestion,
+    pollOptions,
+  }: {
+    content: string;
+    mediaUrl: string;
+    linkUrl: string;
+    pollQuestion: string;
+    pollOptions: string;
+  }) => {
+    const sections: string[] = [content.trim()];
+
+    if (mediaUrl.trim()) {
+      sections.push(`Medya: ${mediaUrl.trim()}`);
+    }
+    if (linkUrl.trim()) {
+      sections.push(`Link: ${linkUrl.trim()}`);
+    }
+    if (pollQuestion.trim()) {
+      const options = pollOptions
+        .split('\n')
+        .map((option) => option.trim())
+        .filter(Boolean);
+      const pollLines = [`Anket: ${pollQuestion.trim()}`, ...options.map((option) => `- ${option}`)];
+      sections.push(pollLines.join('\n'));
+    }
+
+    return sections.filter(Boolean).join('\n\n');
   };
+
+  const parseAnnouncementBody = (body: string) => {
+    const lines = body.split('\n');
+    let mediaUrl = '';
+    let linkUrl = '';
+    const filtered: string[] = [];
+
+    lines.forEach((line) => {
+      const trimmed = line.trim();
+      if (trimmed.toLowerCase().startsWith('medya:')) {
+        mediaUrl = trimmed.slice(6).trim();
+        return;
+      }
+      if (trimmed.toLowerCase().startsWith('link:')) {
+        linkUrl = trimmed.slice(5).trim();
+        return;
+      }
+      filtered.push(line);
+    });
+
+    return {
+      body: filtered.join('\n').trim(),
+      mediaUrl,
+      linkUrl,
+    };
+  };
+
+  const resetAnnouncementForm = () => {
+    setAnnouncementError(null);
+    setAnnouncementSuccess(null);
+    setEditingAnnouncementId(null);
+    setAnnouncementForm({ title: '', body: '', mediaUrl: '', linkUrl: '', pollQuestion: '', pollOptions: '' });
+  };
+
+  const startEditAnnouncement = (announcement: AnnouncementAdminItem) => {
+    const parsed = parseAnnouncementBody(announcement.content);
+    const pollQuestion = announcement.poll?.question ?? '';
+    const pollOptions = announcement.poll?.options
+      .slice()
+      .sort((a, b) => a.position - b.position)
+      .map((option) => option.label)
+      .join('\n') ?? '';
+    setEditingAnnouncementId(announcement.id);
+    setAnnouncementForm({
+      title: announcement.title,
+      body: parsed.body,
+      mediaUrl: parsed.mediaUrl,
+      linkUrl: parsed.linkUrl,
+      pollQuestion,
+      pollOptions,
+    });
+    setAnnouncementError(null);
+    setAnnouncementSuccess(null);
+  };
+
+  const saveAnnouncement = async () => {
+    if (!announcementForm.title.trim() || !announcementForm.body.trim()) {
+      setAnnouncementError('Başlık ve içerik zorunludur.');
+      return;
+    }
+    setAnnouncementSaving(true);
+    setAnnouncementError(null);
+    setAnnouncementSuccess(null);
+    try {
+      const payload = {
+        title: announcementForm.title.trim(),
+        body: buildAnnouncementBody({
+          content: announcementForm.body,
+          mediaUrl: announcementForm.mediaUrl,
+          linkUrl: announcementForm.linkUrl,
+          pollQuestion: announcementForm.pollQuestion,
+          pollOptions: announcementForm.pollOptions,
+        }),
+        lang: 'tr',
+        poll: announcementForm.pollQuestion.trim()
+          ? {
+              question: announcementForm.pollQuestion.trim(),
+              options: announcementForm.pollOptions
+                .split('\n')
+                .map((option) => option.trim())
+                .filter(Boolean),
+            }
+          : undefined,
+      };
+
+      const method = editingAnnouncementId ? 'PATCH' : 'POST';
+      const url = editingAnnouncementId
+        ? apiUrl('/api/admin/announcements')
+        : apiUrl('/api/admin/announcements');
+      const body = editingAnnouncementId ? { ...payload, id: editingAnnouncementId } : payload;
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? String(res.status));
+      await fetchAnnouncements();
+      setAnnouncementSuccess(editingAnnouncementId ? 'Duyuru güncellendi.' : 'Duyuru oluşturuldu.');
+      resetAnnouncementForm();
+    } catch (e) {
+      setAnnouncementError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setAnnouncementSaving(false);
+    }
+  };
+
+  const deleteAnnouncement = async (id: string) => {
+    if (!window.confirm('Bu duyuruyu kalıcı olarak silmek istiyor musunuz?')) return;
+    setAnnouncementDeleteLoadingId(id);
+    try {
+      const res = await fetch(apiUrl(`/api/admin/announcements?id=${encodeURIComponent(id)}`), {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? String(res.status));
+      setAnnouncements((prev) => prev.filter((announcement) => announcement.id !== id));
+      if (editingAnnouncementId === id) resetAnnouncementForm();
+    } catch (e) {
+      setAnnouncementError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setAnnouncementDeleteLoadingId(null);
+    }
+  };
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { fetchSection('overview'); }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (activeTab !== 'overview') fetchSection(activeTab); }, [activeTab]);
+  useEffect(() => { if (activeTab === 'ads') fetchAds(); }, [activeTab, fetchAds]);
 
   const clearSession = async () => {
     setClearLoading(true);
@@ -839,7 +1054,7 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
           ] as const).map(({ key, labelKey, stateKey }) => (
             <div key={key} className="flex items-center gap-3">
               <span className="flex-1 text-xs text-white/50">{t(labelKey)}</span>
-              <input type="number" min={1} value={thresholdInputs[stateKey]}
+              <input type="number" min={1} value={thresholdInputs[stateKey] ?? String(thresholds[stateKey])}
                 onChange={(e) => setThresholdInputs((p) => ({ ...p, [stateKey]: e.target.value }))}
                 className="w-24 rounded-lg border border-white/10 bg-black/30 px-2.5 py-1.5 text-xs text-white focus:border-[#5865F2]/50 focus:outline-none" />
               <button onClick={() => saveThreshold(key, thresholdInputs[stateKey])} disabled={thresholdSaving === key}
@@ -1254,7 +1469,7 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
         {preview && (
           <div className="mt-3 rounded-xl border border-[#5865F2]/20 bg-[#5865F2]/5 p-3 flex items-center gap-3">
             {preview.server_icon
-              ? <img src={preview.server_icon} alt="" className="h-10 w-10 rounded-xl object-cover shrink-0" />
+              ? <Image src={preview.server_icon} alt="" width={40} height={40} unoptimized className="h-10 w-10 rounded-xl object-cover shrink-0" />
               : <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#5865F2]/25 text-sm font-black text-white">{preview.server_name.charAt(0)}</div>
             }
             <div className="min-w-0 flex-1">
@@ -1299,8 +1514,183 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
   );
 
   const announcementsSection = (
-    <div className="rounded-2xl border border-white/10 bg-[#0b0d12] p-0 overflow-hidden">
-      <DuyuruPage variant="panel" />
+    <div className="grid gap-5 lg:grid-cols-[1fr_1.35fr]">
+      <div className="rounded-3xl border border-white/10 bg-[#0b0d12] p-5">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-bold text-white">Duyuru Yönetimi</h2>
+            <p className="mt-1 text-xs text-white/40">Başlık, içerik, medya, link ve anket düzenleyebilir.</p>
+          </div>
+          {editingAnnouncementId ? (
+            <button
+              type="button"
+              onClick={resetAnnouncementForm}
+              className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/60 transition hover:bg-white/10"
+            >
+              Yeni Duyuru
+            </button>
+          ) : null}
+        </div>
+
+        <div className="mt-6 grid gap-4">
+          <div className="grid gap-2">
+            <label className="text-xs font-semibold text-white/60">Başlık</label>
+            <input
+              value={announcementForm.title}
+              onChange={(event) => setAnnouncementForm((prev) => ({ ...prev, title: event.target.value }))}
+              className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-400/60"
+              placeholder="Duyuru başlığı"
+            />
+          </div>
+
+          <div className="grid gap-2">
+            <label className="text-xs font-semibold text-white/60">İçerik</label>
+            <textarea
+              value={announcementForm.body}
+              onChange={(event) => setAnnouncementForm((prev) => ({ ...prev, body: event.target.value }))}
+              className="min-h-[160px] w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-400/60"
+              placeholder="Duyuru metni"
+            />
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-2">
+              <label className="text-xs font-semibold text-white/60">Medya URL</label>
+              <input
+                value={announcementForm.mediaUrl}
+                onChange={(event) => setAnnouncementForm((prev) => ({ ...prev, mediaUrl: event.target.value }))}
+                className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-400/60"
+                placeholder="https://..."
+              />
+            </div>
+            <div className="grid gap-2">
+              <label className="text-xs font-semibold text-white/60">Link</label>
+              <input
+                value={announcementForm.linkUrl}
+                onChange={(event) => setAnnouncementForm((prev) => ({ ...prev, linkUrl: event.target.value }))}
+                className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-400/60"
+                placeholder="https://..."
+              />
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-2">
+              <label className="text-xs font-semibold text-white/60">Anket Sorusu</label>
+              <input
+                value={announcementForm.pollQuestion}
+                onChange={(event) => setAnnouncementForm((prev) => ({ ...prev, pollQuestion: event.target.value }))}
+                className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-400/60"
+                placeholder="Örnek: Yeni özellik beğenildi mi?"
+              />
+            </div>
+            <div className="grid gap-2">
+              <label className="text-xs font-semibold text-white/60">Anket Seçenekleri</label>
+              <textarea
+                value={announcementForm.pollOptions}
+                onChange={(event) => setAnnouncementForm((prev) => ({ ...prev, pollOptions: event.target.value }))}
+                className="min-h-[120px] w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-400/60"
+                placeholder="Her seçeneği yeni satıra yazın"
+              />
+            </div>
+          </div>
+
+          {announcementError ? (
+            <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-200">{announcementError}</div>
+          ) : null}
+          {announcementSuccess ? (
+            <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">{announcementSuccess}</div>
+          ) : null}
+
+          <div className="flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={saveAnnouncement}
+              disabled={announcementSaving}
+              className="rounded-full bg-[#5865F2] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#4752c4] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {announcementSaving ? 'Kaydediliyor...' : editingAnnouncementId ? 'Güncelle' : 'Duyuru Oluştur'}
+            </button>
+            {editingAnnouncementId ? (
+              <button
+                type="button"
+                onClick={resetAnnouncementForm}
+                className="rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+              >
+                Vazgeç
+              </button>
+            ) : null}
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-3xl border border-white/10 bg-[#0b0d12] p-5">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h3 className="text-lg font-bold text-white">Duyurular</h3>
+            <p className="mt-1 text-xs text-white/40">Mevcut duyuruları düzenleyebilir veya silebilirsiniz.</p>
+          </div>
+          <button
+            type="button"
+            onClick={fetchAnnouncements}
+            className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/60 transition hover:bg-white/10"
+          >
+            Yenile
+          </button>
+        </div>
+
+        {announcementsLoading ? (
+          <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-5 text-sm text-white/50">Yükleniyor...</div>
+        ) : announcementsError ? (
+          <div className="mt-5 rounded-2xl border border-red-500/20 bg-red-500/10 p-5 text-sm text-red-200">{announcementsError}</div>
+        ) : announcements.length === 0 ? (
+          <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-5 text-sm text-white/50">Henüz duyuru yok.</div>
+        ) : (
+          <div className="mt-5 space-y-4">
+            {announcements.map((announcement) => (
+              <div key={announcement.id} className="rounded-3xl border border-white/10 bg-black/20 p-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-white">{announcement.title}</p>
+                    <p className="text-xs text-white/40">{formatDate(announcement.created_at)}</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => startEditAnnouncement(announcement)}
+                      className="rounded-full border border-sky-400/20 bg-sky-500/10 px-3 py-1 text-[11px] font-semibold text-sky-200 transition hover:bg-sky-500/20"
+                    >
+                      Düzenle
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => deleteAnnouncement(announcement.id)}
+                      disabled={announcementDeleteLoadingId === announcement.id}
+                      className="rounded-full border border-red-500/20 bg-red-500/10 px-3 py-1 text-[11px] font-semibold text-red-200 transition hover:bg-red-500/20 disabled:opacity-50"
+                    >
+                      {announcementDeleteLoadingId === announcement.id ? 'Siliniyor...' : 'Sil'}
+                    </button>
+                  </div>
+                </div>
+                <p className="mt-3 text-sm text-white/70 whitespace-pre-line">{announcement.content}</p>
+                {announcement.poll ? (
+                  <div className="mt-3 rounded-2xl border border-white/10 bg-white/5 p-3 text-sm text-white/70">
+                    <p className="font-semibold text-white">Anket: {announcement.poll.question}</p>
+                    <ul className="mt-2 list-disc space-y-1 pl-5 text-white/60">
+                      {announcement.poll.options
+                        .slice()
+                        .sort((a, b) => a.position - b.position)
+                        .map((option) => (
+                          <li key={option.id}>{option.label}</li>
+                        ))}
+                    </ul>
+                  </div>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 
