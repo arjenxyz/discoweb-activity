@@ -170,7 +170,7 @@ function StoreGrid() {
         </button>
       </div>
 
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
         {loading
           ? Array.from({ length: 4 }).map((_, index) => (
               <div
@@ -216,25 +216,6 @@ export default function DuyuruPage() {
       </div>
 
       <div className="relative z-10 mx-auto max-w-[1380px] px-5 py-10 sm:px-8 sm:py-12">
-        <section className="rounded-[40px] border border-white/10 bg-slate-950/70 p-6 shadow-2xl shadow-black/30 backdrop-blur-xl">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-            <div className="max-w-2xl space-y-4">
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs uppercase tracking-[0.35em] text-slate-200">
-                Announcements
-              </div>
-              <div className="space-y-3">
-                <h1 className="text-4xl font-black tracking-tight text-white sm:text-5xl">Cozy Getaway</h1>
-                <p className="max-w-xl text-sm leading-7 text-slate-300">
-                  Open the market menu and discover featured bundles, limited drops, and seasonal offers in a polished shop layout.
-                </p>
-              </div>
-            </div>
-            <button className="flex-shrink-0 rounded-full bg-white px-6 py-3 text-sm font-semibold text-slate-950 shadow-xl shadow-black/20 transition hover:bg-slate-100">
-              Shop the Collection
-            </button>
-          </div>
-        </section>
-
         <StoreGrid />
       </div>
     </div>
