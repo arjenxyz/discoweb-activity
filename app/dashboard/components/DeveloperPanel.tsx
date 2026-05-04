@@ -8,6 +8,7 @@ import {
 } from 'react-icons/lu';
 import { apiUrl } from '@/lib/api';
 import { useT } from '@/contexts/LocaleContext';
+import DuyuruPage from '../duyuru/page';
 
 type Props = {
   maintenance: boolean;
@@ -155,7 +156,7 @@ const prettyJson = (value: unknown) => {
   try { return JSON.stringify(value, null, 2); } catch { return String(value); }
 };
 
-type TabId = 'overview' | 'logs' | 'apps' | 'servers' | 'profiles' | 'ads' | 'suspicious' | 'reports' | 'bans';
+type TabId = 'overview' | 'logs' | 'apps' | 'servers' | 'profiles' | 'ads' | 'suspicious' | 'reports' | 'bans' | 'announcements';
 
 type BugReport = {
   id: string;
@@ -207,6 +208,7 @@ const NAV_ITEMS: { id: TabId; labelKey: string; Icon: React.ElementType; accent:
   { id: 'servers',    labelKey: 'dev_nav_servers',    Icon: LuServer,          accent: 'text-violet-400' },
   { id: 'profiles',   labelKey: 'dev_nav_profiles',   Icon: LuUsers,           accent: 'text-sky-400' },
   { id: 'ads',        labelKey: 'dev_nav_ads',        Icon: LuMegaphone,       accent: 'text-pink-400' },
+  { id: 'announcements', labelKey: 'dev_nav_announcements', Icon: LuMessageSquare, accent: 'text-cyan-300' },
   { id: 'reports',    labelKey: 'dev_nav_reports',    Icon: LuBug,             accent: 'text-orange-400' },
   { id: 'bans',       labelKey: 'dev_nav_bans',       Icon: LuShield,          accent: 'text-rose-400' },
 ];
@@ -291,6 +293,7 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
   useEffect(() => { if (activeTab === 'ads') fetchAds(); }, [activeTab]);
 
   const fetchSection = async (section: TabId) => {
+    if (section === 'announcements') return;
     setLoadingTab(true);
     setError(null);
     try {
@@ -1295,6 +1298,12 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
     </div>
   );
 
+  const announcementsSection = (
+    <div className="rounded-2xl border border-white/10 bg-[#0b0d12] p-0 overflow-hidden">
+      <DuyuruPage variant="panel" />
+    </div>
+  );
+
   const bansSection = (
     <div className="flex flex-col gap-4">
       <div className="rounded-2xl border border-white/10 bg-[#0b0d12] p-4">
@@ -1567,6 +1576,7 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
     servers:    serversSection,
     profiles:   profilesSection,
     ads:        adsSection,
+    announcements: announcementsSection,
     suspicious: suspiciousSection,
     reports:    reportsSection,
     bans:       bansSection,

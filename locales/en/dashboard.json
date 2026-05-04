@@ -508,6 +508,7 @@
   "dev_nav_profiles": "Profiles",
   "dev_nav_ads": "Ads",
   "dev_nav_reports": "Reports",
+  "dev_nav_announcements": "Announcements",
   "dev_invalid_invite": "Invalid invite link",
   "dev_server_info_error": "Could not retrieve server info",
   "dev_invite_info_error": "Could not retrieve invite info",

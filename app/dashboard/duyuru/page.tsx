@@ -34,6 +34,10 @@ type AnnouncementResponse = {
   error?: string;
 };
 
+type DuyuruPageProps = {
+  variant?: 'page' | 'panel';
+};
+
 function formatDate(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
@@ -147,7 +151,7 @@ function getYouTubeEmbedUrl(url: string) {
   return null;
 }
 
-export default function DuyuruPage() {
+export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
   const [messages, setMessages] = useState<AnnouncementMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -158,7 +162,7 @@ export default function DuyuruPage() {
   const [mediaErrors, setMediaErrors] = useState<Record<string, boolean>>({});
 
   const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
+  const [messageBody, setMessageBody] = useState('');
   const [mediaUrl, setMediaUrl] = useState('');
   const [linkUrl, setLinkUrl] = useState('');
   const [pollQuestion, setPollQuestion] = useState('');
@@ -223,7 +227,7 @@ export default function DuyuruPage() {
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    if (!title.trim() || !content.trim()) {
+    if (!title.trim() || !messageBody.trim()) {
       setSendStatus('Baslik ve mesaj icerigi zorunlu.');
       return;
     }
@@ -241,7 +245,7 @@ export default function DuyuruPage() {
       })();
 
       const body = buildAnnouncementBody({
-        content,
+        content: messageBody,
         mediaUrl,
         linkUrl,
         pollQuestion,
@@ -277,7 +281,7 @@ export default function DuyuruPage() {
 
       setSendStatus(data.message || 'Duyuru basariyla gonderildi.');
       setTitle('');
-      setContent('');
+      setMessageBody('');
       setMediaUrl('');
       setLinkUrl('');
       setPollQuestion('');
@@ -356,19 +360,7 @@ export default function DuyuruPage() {
     }
   };
 
-  return (
-    <div className="relative min-h-screen">
-      <div className="absolute inset-0 z-0">
-        <Image
-          src="/menu-background/varyant6.jpg"
-          alt="Duyuru arka plan"
-          fill
-          className="object-cover"
-          priority
-        />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.18),transparent_24%),radial-gradient(circle_at_top_right,rgba(244,63,94,0.16),transparent_24%),linear-gradient(180deg,rgba(7,11,19,0.92),rgba(7,11,19,1))]" />
-      </div>
-
+  const content = (
       <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-8 px-5 py-10 sm:px-8 sm:py-12">
         <header className="flex flex-col gap-3">
           <h1 className="text-2xl font-black text-white sm:text-3xl">Duyuru Kanali</h1>
@@ -402,8 +394,8 @@ export default function DuyuruPage() {
               <div className="grid gap-2">
                 <label className="text-xs font-semibold text-slate-300">Mesaj</label>
                 <textarea
-                  value={content}
-                  onChange={(event) => setContent(event.target.value)}
+                  value={messageBody}
+                  onChange={(event) => setMessageBody(event.target.value)}
                   className="min-h-[140px] w-full rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-400/60"
                   placeholder="Duyuru metni"
                 />
@@ -623,6 +615,25 @@ export default function DuyuruPage() {
           )}
         </section>
       </div>
+  );
+
+  if (variant === 'panel') {
+    return <div className="min-h-0">{content}</div>;
+  }
+
+  return (
+    <div className="relative min-h-screen">
+      <div className="absolute inset-0 z-0">
+        <Image
+          src="/menu-background/varyant6.jpg"
+          alt="Duyuru arka plan"
+          fill
+          className="object-cover"
+          priority
+        />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.18),transparent_24%),radial-gradient(circle_at_top_right,rgba(244,63,94,0.16),transparent_24%),linear-gradient(180deg,rgba(7,11,19,0.92),rgba(7,11,19,1))]" />
+      </div>
+      {content}
     </div>
   );
 }
