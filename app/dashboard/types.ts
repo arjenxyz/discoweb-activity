@@ -47,6 +47,8 @@ export type StoreItem = {
   title: string;
   description: string | null;
   price: number;
+  original_price?: number | null;
+  image_url?: string | null;
   status: 'active' | 'inactive';
   role_id: string | null;
   duration_days: number;
