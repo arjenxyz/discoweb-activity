@@ -239,7 +239,7 @@ export async function PATCH(request: NextRequest) {
       })
       .eq('announcement_id', id)
       .eq('lang_code', lang)
-      .select<{ id: string }>();
+      .select('id');
 
     if (translationUpdateError) {
       console.error('Duyuru çevirisi güncelleme hatası:', translationUpdateError);
