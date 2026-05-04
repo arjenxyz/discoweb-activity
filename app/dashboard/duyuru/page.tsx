@@ -1,11 +1,7 @@
 ﻿'use client';
 
-import { useCallback } from 'react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import { LuHeart, LuGift } from 'react-icons/lu';
-import SidebarNav from '../components/SidebarNav';
-import type { Section } from '../types';
+import { LuGift, LuHeart } from 'react-icons/lu';
 
 const shopItems = [
   {
@@ -87,60 +83,43 @@ function ShopCard({ item }: { item: typeof shopItems[number] }) {
 }
 
 export default function DuyuruPage() {
-  const router = useRouter();
-  const effectiveSection: Section = 'duyuru';
-  const onNavigate = useCallback((section: Section) => {
-    const targetPath = section === 'overview' ? '/dashboard' : `/dashboard/${section}`;
-    router.push(targetPath);
-  }, [router]);
-
   return (
-    <div className="flex min-h-screen bg-[#05060b] text-white">
-      <SidebarNav
-        effectiveSection={effectiveSection}
-        unauthorized={false}
-        onNavigate={onNavigate}
-        profile={null}
-        isAdvancedEconomy={false}
-      />
+    <div className="relative overflow-hidden">
+      <div className="absolute inset-0 z-0">
+        <Image
+          src="/menu-background/varyant6.jpg"
+          alt="Market background"
+          fill
+          className="object-cover"
+          priority
+        />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(96,165,250,0.2),transparent_18%),radial-gradient(circle_at_top_right,rgba(236,72,153,0.18),transparent_18%),linear-gradient(180deg,rgba(7,11,19,0.88),rgba(7,11,19,1))]" />
+      </div>
 
-      <div className="relative flex-1 overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          <Image
-            src="/menu-background/varyant6.jpg"
-            alt="Market background"
-            fill
-            className="object-cover"
-            priority
-          />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(96,165,250,0.2),transparent_18%),radial-gradient(circle_at_top_right,rgba(236,72,153,0.18),transparent_18%),linear-gradient(180deg,rgba(7,11,19,0.88),rgba(7,11,19,1))]" />
-        </div>
-
-        <div className="relative z-10 mx-auto max-w-[1380px] px-5 py-10 sm:px-8 sm:py-12">
-          <section className="rounded-[40px] border border-white/10 bg-slate-950/70 p-6 shadow-2xl shadow-black/30 backdrop-blur-xl">
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-              <div className="max-w-2xl space-y-4">
-                <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs uppercase tracking-[0.35em] text-slate-200">
-                  Announcements
-                </div>
-                <div className="space-y-3">
-                  <h1 className="text-4xl font-black tracking-tight text-white sm:text-5xl">Cozy Getaway</h1>
-                  <p className="max-w-xl text-sm leading-7 text-slate-300">
-                    Open the market menu and discover featured bundles, limited drops, and seasonal offers in a polished shop layout.
-                  </p>
-                </div>
+      <div className="relative z-10 mx-auto max-w-[1380px] px-5 py-10 sm:px-8 sm:py-12">
+        <section className="rounded-[40px] border border-white/10 bg-slate-950/70 p-6 shadow-2xl shadow-black/30 backdrop-blur-xl">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div className="max-w-2xl space-y-4">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs uppercase tracking-[0.35em] text-slate-200">
+                Announcements
               </div>
-              <button className="flex-shrink-0 rounded-full bg-white px-6 py-3 text-sm font-semibold text-slate-950 shadow-xl shadow-black/20 transition hover:bg-slate-100">
-                Shop the Collection
-              </button>
+              <div className="space-y-3">
+                <h1 className="text-4xl font-black tracking-tight text-white sm:text-5xl">Cozy Getaway</h1>
+                <p className="max-w-xl text-sm leading-7 text-slate-300">
+                  Open the market menu and discover featured bundles, limited drops, and seasonal offers in a polished shop layout.
+                </p>
+              </div>
             </div>
-          </section>
-
-          <div className="mt-10 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-            {shopItems.map((item) => (
-              <ShopCard key={item.title} item={item} />
-            ))}
+            <button className="flex-shrink-0 rounded-full bg-white px-6 py-3 text-sm font-semibold text-slate-950 shadow-xl shadow-black/20 transition hover:bg-slate-100">
+              Shop the Collection
+            </button>
           </div>
+        </section>
+
+        <div className="mt-10 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+          {shopItems.map((item) => (
+            <ShopCard key={item.title} item={item} />
+          ))}
         </div>
       </div>
     </div>
