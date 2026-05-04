@@ -2,6 +2,8 @@
 
 import Image from 'next/image';
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { apiUrl } from '@/lib/api';
+import fetchWithCreds from '@/lib/fetchWithCreds';
 
 type AnnouncementMessage = {
   id: string;
@@ -140,7 +142,7 @@ export default function DuyuruPage() {
 
     const loadMessages = async () => {
       try {
-        const response = await fetch('/api/duyuru?lang=tr', { cache: 'no-store' });
+        const response = await fetchWithCreds(apiUrl('/api/duyuru?lang=tr'), { cache: 'no-store' });
         const data = (await response.json()) as AnnouncementResponse;
         if (!response.ok || data.error) {
           throw new Error(data.error || 'Duyurular yuklenemedi.');
@@ -169,7 +171,7 @@ export default function DuyuruPage() {
           }
         })();
 
-        const response = await fetch('/api/activity/is-developer', {
+        const response = await fetchWithCreds(apiUrl('/api/activity/is-developer'), {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
         const data = (await response.json()) as { isDeveloper?: boolean };
@@ -224,7 +226,7 @@ export default function DuyuruPage() {
         .map((option) => option.trim())
         .filter(Boolean);
 
-      const response = await fetch('/api/duyuru', {
+      const response = await fetchWithCreds(apiUrl('/api/duyuru'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -254,7 +256,7 @@ export default function DuyuruPage() {
       setPollOptions('');
       setExtraContent('');
 
-      const refreshed = await fetch('/api/duyuru?lang=tr', { cache: 'no-store' });
+      const refreshed = await fetchWithCreds(apiUrl('/api/duyuru?lang=tr'), { cache: 'no-store' });
       const refreshedData = (await refreshed.json()) as AnnouncementResponse;
       if (refreshed.ok && !refreshedData.error) {
         setMessages(refreshedData.messages ?? []);
@@ -279,7 +281,7 @@ export default function DuyuruPage() {
         }
       })();
 
-      const response = await fetch('/api/duyuru/vote', {
+      const response = await fetchWithCreds(apiUrl('/api/duyuru/vote'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
