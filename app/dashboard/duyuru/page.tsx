@@ -1,7 +1,7 @@
 ﻿'use client';
 
 import Image from 'next/image';
-import { LuHeart } from 'react-icons/lu';
+import { LuHeart, LuGift } from 'react-icons/lu';
 
 const shopItems = [
   {
@@ -66,9 +66,16 @@ function ShopCard({ item }: { item: typeof shopItems[number] }) {
         </div>
         <div className="flex items-center justify-between gap-3">
           <p className="text-xl font-black text-white">{item.price}</p>
-          <button className="rounded-full bg-[#5865F2] px-4 py-2 text-xs font-bold uppercase tracking-[0.25em] text-white transition hover:bg-[#4752c4]">
-            Shop
-          </button>
+          <div className="flex items-center gap-2">
+            <button className="rounded-full bg-[#5865F2] px-4 py-2 text-xs font-bold uppercase tracking-[0.25em] text-white transition hover:bg-[#4752c4]">
+              Shop
+            </button>
+            {item.isFeatured && (
+              <button className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20">
+                <LuGift className="h-4 w-4" />
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </article>
