@@ -253,15 +253,7 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
       <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-8 px-5 py-10 sm:px-8 sm:py-12">
         <header className="flex flex-col gap-3">
           <h1 className="text-2xl font-black text-white sm:text-3xl">Duyuru Kanali</h1>
-          <p className="max-w-2xl text-sm text-slate-300">
-            Bu kanal herkes tarafından görüntülenebilir. Duyurular herkese açıktır.
-          </p>
-          <div className="text-xs text-slate-400">Toplam duyuru: {totalMessages}</div>
         </header>
-
-        <section className="rounded-3xl border border-white/10 bg-white/5 p-6 text-sm text-slate-300">
-          Duyuru göndermek için geliştirici yetkisi gerekir. Tüm yönetim işlemleri geliştirici panelinden yapılmalıdır.
-        </section>
 
         <section className="grid gap-4">
           <h2 className="text-lg font-bold text-white">Son Duyurular</h2>
