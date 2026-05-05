@@ -328,7 +328,7 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
     setAnnouncementsLoading(true);
     setAnnouncementsError(null);
     try {
-      const res = await fetch(apiUrl('/api/admin/announcements?lang=tr'), { credentials: 'include' });
+      const res = await fetch(apiUrl('/api/admin/announcements?lang=tr'), { credentials: 'include', cache: 'no-store' });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? String(res.status));
       setAnnouncements(data.announcements ?? []);
@@ -591,6 +591,7 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
       await fetchAnnouncements();
       setAnnouncementSuccess(editingAnnouncementId ? 'Duyuru güncellendi.' : 'Duyuru oluşturuldu.');
       resetAnnouncementForm();
+      setAnnouncementView('list');
     } catch (e) {
       setAnnouncementError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -614,6 +615,7 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
       setAnnouncementSuccess('Duyuru silindi.');
       if (editingAnnouncementId === id) {
         resetAnnouncementForm();
+        setAnnouncementView('list');
       }
     } catch (e) {
       setAnnouncementError(e instanceof Error ? e.message : String(e));
