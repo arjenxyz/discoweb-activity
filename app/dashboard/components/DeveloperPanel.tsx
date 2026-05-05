@@ -605,8 +605,10 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
     setAnnouncementSuccess(null);
     setAnnouncementDeleteLoadingId(id);
     try {
+      const token = (() => { try { return localStorage.getItem('discord_bearer_token'); } catch { return null; } })();
       const res = await fetch(apiUrl(`/api/admin/announcements?id=${encodeURIComponent(id)}`), {
         method: 'DELETE',
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         credentials: 'include',
       });
       const data = await res.json();
