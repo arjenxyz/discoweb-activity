@@ -168,23 +168,25 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
   // ----- render -----
   const content = (
     <div className="mx-auto w-full max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
-      {/* header */}
-      <div className="mb-10">
-        <div className="flex items-center gap-3 mb-2">
-          {/* megaphone icon */}
-          <svg className="w-8 h-8 text-indigo-600" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M10.34 15.84c-.688-.06-1.386-.09-2.09-.09H5.25A2.25 2.25 0 013 13.5V9.75A2.25 2.25 0 015.25 7.5h2.5c.704 0 1.402-.03 2.09-.09m0 0c1.535-.148 2.947-.576 4.16-1.25M10.34 15.84l4.16-1.25m0 0A6.75 6.75 0 0021 7.5a6.75 6.75 0 00-6.5-7.09" />
-          </svg>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-            Duyuru Panosu
-          </h1>
+      <div className="mb-8 rounded-[32px] border border-slate-200 bg-slate-50 p-6 shadow-sm">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="min-w-0">
+            <p className="text-xs uppercase tracking-[0.28em] text-slate-500">#duyuru</p>
+            <h1 className="mt-2 text-3xl font-semibold text-slate-900 sm:text-4xl">Developer Sohbet Kanalı</h1>
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-500">
+              Bu kanalda tüm duyurular sadece developer tarafından paylaşılıyor. Kullanıcılar için sohbet uygulaması hissi sunuyoruz.
+            </p>
+            {totalMessages > 0 ? (
+              <p className="mt-3 text-sm text-slate-500">{totalMessages} duyuru listeleniyor</p>
+            ) : (
+              <p className="mt-3 text-sm text-slate-500">Henüz duyuru yok.</p>
+            )}
+          </div>
+          <div className="inline-flex items-center gap-2 rounded-full bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm">
+            <span className="h-2.5 w-2.5 rounded-full bg-white" />
+            Sadece Admin
+          </div>
         </div>
-        <p className="text-base text-gray-500 max-w-2xl">
-          Güncel duyurular, geliştirici notları ve topluluk anketleri burada yayınlanır.
-        </p>
-        {totalMessages > 0 && (
-          <p className="mt-1 text-sm text-gray-400">{totalMessages} duyuru listeleniyor</p>
-        )}
       </div>
 
       {/* loading / error / empty */}
@@ -211,9 +213,8 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
         </div>
       )}
 
-      {/* announcement list */}
       {!loading && !error && messages.length > 0 && (
-        <div className="space-y-8">
+        <div className="space-y-6">
           {messages.map((msg) => {
             const parsed = parseAnnouncementBody(msg.body);
             const youtubeEmbed = getYouTubeEmbedUrl(parsed.mediaUrl) ?? getYouTubeEmbedUrl(parsed.linkUrl);
@@ -222,114 +223,106 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
             const pollTotal = msg.poll?.options.reduce((sum, o) => sum + o.voteCount, 0) ?? 0;
 
             return (
-              <article key={msg.id} className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
-                {/* meta */}
-                <div className="flex items-start justify-between gap-4 flex-wrap">
-                  <div className="flex items-center gap-4 min-w-0">
-                    {msg.author_avatar_url ? (
-                      <Image src={msg.author_avatar_url} alt={msg.author_name ?? ''} width={44} height={44} className="rounded-full ring-2 ring-indigo-100" />
-                    ) : (
-                      <div className="flex h-11 w-11 items-center justify-center rounded-full bg-indigo-100 text-sm font-bold text-indigo-700">
-                        D
-                      </div>
-                    )}
-                    <div>
-                      <h2 className="text-lg font-semibold text-gray-900 leading-snug">{msg.title}</h2>
-                      <p className="text-xs text-gray-500 mt-0.5">
-                        {msg.author_name ?? 'Sistem'} · {formatDate(msg.created_at)}
-                      </p>
+              <div key={msg.id} className="flex gap-4">
+                <div className="flex-shrink-0">
+                  {msg.author_avatar_url ? (
+                    <Image src={msg.author_avatar_url} alt={msg.author_name ?? 'Developer'} width={48} height={48} className="rounded-full" />
+                  ) : (
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-indigo-500 text-sm font-semibold text-white">
+                      DV
                     </div>
-                  </div>
-                  <span className="inline-flex items-center rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-700/10">
-                    duyuru
-                  </span>
+                  )}
                 </div>
-
-                {/* body text */}
-                {parsed.body && (
-                  <div className="mt-4 whitespace-pre-line text-sm leading-relaxed text-gray-700">
-                    {parsed.body}
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="text-sm font-semibold text-slate-900">{msg.author_name ?? 'Developer'}</span>
+                    <span className="text-xs text-slate-500">{formatDate(msg.created_at)}</span>
+                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-700">Admin</span>
                   </div>
-                )}
-
-                {/* media */}
-                {youtubeEmbed ? (
-                  <div className="mt-5 overflow-hidden rounded-xl border border-gray-200 bg-gray-50">
-                    <div className="aspect-video">
-                      <iframe src={youtubeEmbed} title="YouTube" allowFullScreen className="h-full w-full" />
-                    </div>
-                  </div>
-                ) : parsed.mediaUrl ? (
-                  <div className="mt-5 overflow-hidden rounded-xl border border-gray-200 bg-gray-50">
-                    {isVideoUrl(parsed.mediaUrl) ? (
-                      <video src={parsed.mediaUrl} controls className="w-full max-h-96 object-contain" onError={() => setMediaErrors(prev => ({ ...prev, [mediaKey]: true }))} />
-                    ) : (
-                      <div className="relative h-96 w-full">
-                        <Image
-                          src={parsed.mediaUrl}
-                          alt="medya"
-                          fill
-                          className="object-contain"
-                          unoptimized
-                          onError={() => setMediaErrors(prev => ({ ...prev, [mediaKey]: true }))}
-                        />
+                  <div className="mt-4 rounded-[32px] border border-slate-200 bg-slate-50 p-5 shadow-sm">
+                    <div className="text-base font-semibold text-slate-900">{msg.title}</div>
+                    {parsed.body && (
+                      <div className="mt-3 whitespace-pre-line text-sm leading-7 text-slate-700">
+                        {parsed.body}
                       </div>
                     )}
-                    {mediaFailed && (
-                      <div className="bg-gray-100 px-4 py-3 text-xs text-gray-500">Medya yüklenemedi. Bağlantı süresi dolmuş olabilir.</div>
+
+                    {youtubeEmbed ? (
+                      <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                        <div className="aspect-video">
+                          <iframe src={youtubeEmbed} title="YouTube" allowFullScreen className="h-full w-full" />
+                        </div>
+                      </div>
+                    ) : parsed.mediaUrl ? (
+                      <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                        {isVideoUrl(parsed.mediaUrl) ? (
+                          <video src={parsed.mediaUrl} controls className="w-full max-h-96 object-contain" onError={() => setMediaErrors(prev => ({ ...prev, [mediaKey]: true }))} />
+                        ) : (
+                          <div className="relative h-96 w-full">
+                            <Image
+                              src={parsed.mediaUrl}
+                              alt="medya"
+                              fill
+                              className="object-contain"
+                              unoptimized
+                              onError={() => setMediaErrors(prev => ({ ...prev, [mediaKey]: true }))}
+                            />
+                          </div>
+                        )}
+                        {mediaFailed && (
+                          <div className="bg-slate-100 px-4 py-3 text-xs text-slate-500">Medya yüklenemedi. Bağlantı süresi dolmuş olabilir.</div>
+                        )}
+                      </div>
+                    ) : null}
+
+                    {parsed.linkUrl && (
+                      <a href={parsed.linkUrl} target="_blank" rel="noreferrer" className="mt-4 inline-flex items-center gap-2 rounded-2xl border border-indigo-200 bg-indigo-50 px-4 py-2 text-sm font-medium text-indigo-700 transition hover:bg-indigo-100">
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.06 6.31l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m6.364-1.06a4.5 4.5 0 00-1.06-6.31l-4.5-4.5a4.5 4.5 0 00-6.364 6.364L3.19 9.69" /></svg>
+                        {parsed.linkUrl}
+                      </a>
+                    )}
+
+                    {msg.poll && (
+                      <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-4">
+                        <p className="text-sm font-semibold text-slate-900 mb-4">{msg.poll.question}</p>
+                        <div className="space-y-3">
+                          {msg.poll.options
+                            .slice()
+                            .sort((a, b) => a.position - b.position)
+                            .map(opt => {
+                              const selected = msg.poll!.userVoteOptionId === opt.id;
+                              const percentage = pollTotal > 0 ? Math.round((opt.voteCount / pollTotal) * 100) : 0;
+                              return (
+                                <button
+                                  key={opt.id}
+                                  type="button"
+                                  onClick={() => handleVote(msg.poll!.id, opt.id)}
+                                  disabled={voteLoadingId === opt.id}
+                                  className={`group relative w-full rounded-2xl border px-4 py-3 text-left text-sm transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                                    selected
+                                      ? 'border-indigo-300 bg-indigo-50 text-indigo-900'
+                                      : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-indigo-200'
+                                  }`}
+                                >
+                                  <div className="flex items-center justify-between relative z-10">
+                                    <span className="font-medium">{opt.label}</span>
+                                    <span className="text-xs text-slate-500">{opt.voteCount} oy {percentage > 0 && `(%${percentage})`}</span>
+                                  </div>
+                                  <div className="absolute inset-0 rounded-2xl overflow-hidden z-0">
+                                    <div
+                                      className={`h-full transition-all duration-500 ${selected ? 'bg-indigo-100' : 'bg-slate-100 group-hover:bg-slate-200'}`}
+                                      style={{ width: `${percentage}%` }}
+                                    />
+                                  </div>
+                                </button>
+                              );
+                            })}
+                        </div>
+                      </div>
                     )}
                   </div>
-                ) : null}
-
-                {/* link */}
-                {parsed.linkUrl && (
-                  <a href={parsed.linkUrl} target="_blank" rel="noreferrer" className="mt-4 inline-flex items-center gap-2 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-2 text-sm font-medium text-indigo-700 transition hover:bg-indigo-100">
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.06 6.31l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m6.364-1.06a4.5 4.5 0 00-1.06-6.31l-4.5-4.5a4.5 4.5 0 00-6.364 6.364L3.19 9.69" /></svg>
-                    {parsed.linkUrl}
-                  </a>
-                )}
-
-                {/* poll */}
-                {msg.poll && (
-                  <div className="mt-6 rounded-xl border border-gray-200 bg-gray-50/70 p-5">
-                    <p className="text-sm font-semibold text-gray-800 mb-4">{msg.poll.question}</p>
-                    <div className="space-y-3">
-                      {msg.poll.options
-                        .slice()
-                        .sort((a, b) => a.position - b.position)
-                        .map(opt => {
-                          const selected = msg.poll!.userVoteOptionId === opt.id;
-                          const percentage = pollTotal > 0 ? Math.round((opt.voteCount / pollTotal) * 100) : 0;
-                          return (
-                            <button
-                              key={opt.id}
-                              type="button"
-                              onClick={() => handleVote(msg.poll!.id, opt.id)}
-                              disabled={voteLoadingId === opt.id}
-                              className={`group relative w-full rounded-lg border px-4 py-3 text-left text-sm transition disabled:cursor-not-allowed disabled:opacity-60 ${
-                                selected
-                                  ? 'border-indigo-300 bg-indigo-50 text-indigo-900'
-                                  : 'border-gray-200 bg-white text-gray-700 hover:border-indigo-200'
-                              }`}
-                            >
-                              <div className="flex items-center justify-between relative z-10">
-                                <span className="font-medium">{opt.label}</span>
-                                <span className="text-xs text-gray-500">{opt.voteCount} oy {percentage > 0 && `(%${percentage})`}</span>
-                              </div>
-                              {/* progress bar */}
-                              <div className="absolute inset-0 rounded-lg overflow-hidden z-0">
-                                <div
-                                  className={`h-full transition-all duration-500 ${selected ? 'bg-indigo-100' : 'bg-gray-100 group-hover:bg-gray-200'}`}
-                                  style={{ width: `${percentage}%` }}
-                                />
-                              </div>
-                            </button>
-                          );
-                        })}
-                    </div>
-                  </div>
-                )}
-              </article>
+                </div>
+              </div>
             );
           })}
         </div>
