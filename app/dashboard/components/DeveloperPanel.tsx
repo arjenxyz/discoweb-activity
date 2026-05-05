@@ -600,6 +600,8 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
 
   const deleteAnnouncement = async (id: string) => {
     if (!window.confirm('Bu duyuruyu kalıcı olarak silmek istiyor musunuz?')) return;
+    setAnnouncementError(null);
+    setAnnouncementSuccess(null);
     setAnnouncementDeleteLoadingId(id);
     try {
       const res = await fetch(apiUrl(`/api/admin/announcements?id=${encodeURIComponent(id)}`), {
@@ -1660,6 +1662,13 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
               Yenile
             </button>
           </div>
+
+          {announcementError ? (
+            <div className="mt-4 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-200">{announcementError}</div>
+          ) : null}
+          {announcementSuccess ? (
+            <div className="mt-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">{announcementSuccess}</div>
+          ) : null}
 
           {announcementsLoading ? (
             <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-5 text-sm text-white/50">Yükleniyor...</div>
