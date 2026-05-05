@@ -234,14 +234,16 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
             const mediaFailed = mediaErrors[mediaKey];
             const pollTotal = msg.poll?.options.reduce((sum, o) => sum + o.voteCount, 0) ?? 0;
 
+            const authorName = msg.author_name && msg.author_name.toLowerCase() !== 'system' ? msg.author_name : 'Developer';
+            const authorAvatar = msg.author_avatar_url;
             return (
               <div key={msg.id} className="flex gap-4">
                 {/* Avatar */}
                 <div className="flex-shrink-0 mt-0.5">
-                  {msg.author_avatar_url ? (
+                  {authorAvatar ? (
                     <Image
-                      src={msg.author_avatar_url}
-                      alt={msg.author_name ?? 'Developer'}
+                      src={authorAvatar}
+                      alt={authorName}
                       width={40}
                       height={40}
                       className="rounded-full"
@@ -258,7 +260,7 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
                   {/* Author & timestamp */}
                   <div className="flex items-baseline gap-2">
                     <span className="text-sm font-semibold text-[#f0b236]">
-                      {msg.author_name ?? 'Developer'}
+                      {authorName}
                     </span>
                     <span className="text-xs text-[#949ba4]">
                       {formatRelativeDate(msg.created_at)}
@@ -326,11 +328,12 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
                     <a
                       href={parsed.linkUrl}
                       target="_blank"
-                      rel="noreferrer"
-                      className="mt-3 inline-flex items-center gap-2 rounded bg-[#2b2d31] px-3 py-1.5 text-sm text-[#00a8fc] underline-offset-2 hover:underline"
+                      rel="noopener noreferrer"
+                      className="mt-3 inline-flex w-full items-center justify-between rounded-2xl border border-[#5865f2]/20 bg-[#111419] px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:border-[#5865f2] hover:bg-[#1e2747]"
                     >
+                      <span>Linke Git</span>
                       <svg
-                        className="h-4 w-4"
+                        className="h-4 w-4 text-[#00a8fc]"
                         fill="none"
                         viewBox="0 0 24 24"
                         strokeWidth={1.5}
@@ -339,10 +342,9 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
-                          d="M13.19 8.688a4.5 4.5 0 011.06 6.31l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m6.364-1.06a4.5 4.5 0 00-1.06-6.31l-4.5-4.5a4.5 4.5 0 00-6.364 6.364L3.19 9.69"
+                          d="M10.5 6h5.25a2.25 2.25 0 012.25 2.25v5.25m-.75-5.25L13.5 12m0 0l-3.75-3.75M13.5 12H3"
                         />
                       </svg>
-                      {parsed.linkUrl}
                     </a>
                   )}
 
