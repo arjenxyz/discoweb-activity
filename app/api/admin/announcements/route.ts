@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServiceClient } from '@/lib/supabaseServiceClient';
 import { requireSessionUser } from '@/lib/auth';
-
-async function requireDeveloper(request: NextRequest) {
   const auth = await requireSessionUser(request);
   if (!auth.ok) {
     return auth;
@@ -403,6 +401,53 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Veritabanı bağlantısı başarısız' }, { status: 500 });
     }
 
+    // Önce duyuruyu ve discord_message_id'yi al
+    const { data: announcement, error: fetchError } = await supabaseServiceClient
+      .from('announcements')
+      .select('id, discord_message_id')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !announcement) {
+      console.error('Duyuru bulunamadı:', fetchError);
+      return NextResponse.json({ error: 'Duyuru bulunamadı' }, { status: 404 });
+    }
+
+    // Discord mesajı varsa sil
+    if (announcement.discord_message_id) {
+      try {
+        const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN ?? process.env.DISCORD_TOKEN ?? '';
+        if (BOT_TOKEN) {
+          // Duyuru kanal ID'sini al (app_config'den)
+          const { data: configData } = await supabaseServiceClient
+            .from('app_config')
+            .select('value')
+            .eq('key', 'duyuru_channel_id')
+            .single();
+
+          if (configData?.value) {
+            const channelId = configData.value;
+            const deleteResponse = await fetch(
+              `https://discord.com/api/v10/channels/${channelId}/messages/${announcement.discord_message_id}`,
+              {
+                method: 'DELETE',
+                headers: { Authorization: `Bot ${BOT_TOKEN}` },
+              }
+            );
+
+            if (!deleteResponse.ok && deleteResponse.status !== 404) {
+              console.error('Discord mesaj silme hatası:', deleteResponse.status, await deleteResponse.text());
+              // Mesaj silinemese bile duyuruyu silmeye devam et
+            }
+          }
+        }
+      } catch (discordError) {
+        console.error('Discord mesaj silme hatası:', discordError);
+        // Mesaj silinemese bile duyuruyu silmeye devam et
+      }
+    }
+
+    // Duyuruyu veritabanından sil
     const { error } = await supabaseServiceClient
       .from('announcements')
       .delete()
