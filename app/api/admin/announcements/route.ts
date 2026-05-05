@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServiceClient } from '@/lib/supabaseServiceClient';
 import { requireSessionUser } from '@/lib/auth';
+
+async function requireDeveloper(request: NextRequest): Promise<{ ok: boolean; response?: NextResponse; userId?: string }> {
   const auth = await requireSessionUser(request);
   if (!auth.ok) {
     return auth;
