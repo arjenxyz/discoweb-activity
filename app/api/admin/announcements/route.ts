@@ -123,6 +123,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const auth = await requireDeveloper(request);
   if (!auth.ok) return auth.response;
+  const userId = (auth as { ok: true; userId: string }).userId;
 
   try {
     const { title, body, lang = 'tr', poll } = await request.json();
@@ -144,7 +145,7 @@ export async function POST(request: NextRequest) {
     const { data: userInfo, error: userInfoError } = await supabaseServiceClient
       .from('users')
       .select('username, avatar, discord_id')
-      .eq('discord_id', auth.userId)
+      .eq('discord_id', userId)
       .maybeSingle();
 
     if (userInfoError) {
@@ -155,8 +156,8 @@ export async function POST(request: NextRequest) {
     const authorAvatarUrl = userInfo?.avatar
       ? (userInfo.avatar.startsWith('http')
           ? userInfo.avatar
-          : `https://cdn.discordapp.com/avatars/${auth.userId}/${userInfo.avatar}.png?size=128`)
-      : `https://cdn.discordapp.com/embed/avatars/${Number(auth.userId) % 5}.png`;
+          : `https://cdn.discordapp.com/avatars/${userId}/${userInfo.avatar}.png?size=128`)
+      : `https://cdn.discordapp.com/embed/avatars/${Number(userId) % 5}.png`;
 
     const { data: announcement, error: announcementError } = await supabaseServiceClient
       .from('announcements')
@@ -173,7 +174,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Duyuru oluşturulamadı' }, { status: 500 });
     }
 
-    const { data: translation, error: translationError } = await supabaseServiceClient
+    const { error: translationError } = await supabaseServiceClient
       .from('announcement_translations')
       .insert({
         announcement_id: announcement.id,
@@ -181,8 +182,7 @@ export async function POST(request: NextRequest) {
         title: title.trim(),
         content: body.trim(),
       })
-      .select()
-      .single();
+      .select();
 
     if (translationError) {
       console.error('Duyuru çevirisi hatası:', translationError);
