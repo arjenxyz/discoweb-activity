@@ -261,11 +261,71 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Discord'a mesaj gönder ve message ID'yi kaydet
+    let discordMessageId: string | null = null;
+    try {
+      const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN ?? process.env.DISCORD_TOKEN ?? '';
+      if (BOT_TOKEN) {
+        // Duyuru kanal ID'sini al
+        const { data: configData } = await supabaseServiceClient
+          .from('app_config')
+          .select('value')
+          .eq('key', 'duyuru_channel_id')
+          .single();
+
+        if (configData?.value) {
+          const channelId = configData.value;
+
+          // Discord embed oluştur
+          const embed = {
+            title: title.trim(),
+            description: body.trim(),
+            color: 0x5865F2, // Discord blurple
+            author: {
+              name: authorName,
+              icon_url: authorAvatarUrl,
+            },
+            timestamp: new Date().toISOString(),
+          };
+
+          // Discord API'ye mesaj gönder
+          const discordResponse = await fetch(
+            `https://discord.com/api/v10/channels/${channelId}/messages`,
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Bot ${BOT_TOKEN}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ embeds: [embed] }),
+            }
+          );
+
+          if (discordResponse.ok) {
+            const discordMessage = await discordResponse.json();
+            discordMessageId = discordMessage.id;
+
+            // Discord message ID'yi veritabanına kaydet
+            await supabaseServiceClient
+              .from('announcements')
+              .update({ discord_message_id: discordMessageId })
+              .eq('id', announcement.id);
+          } else {
+            console.error('Discord mesaj gönderme hatası:', discordResponse.status, await discordResponse.text());
+          }
+        }
+      }
+    } catch (discordError) {
+      console.error('Discord mesaj gönderme hatası:', discordError);
+      // Discord hatası duyuru oluşturmayı engellemesin
+    }
+
     return NextResponse.json({
       message: 'Duyuru başarıyla gönderildi',
       data: {
         announcement_id: announcement.id,
-        translation_id: translation.id
+        translation_id: translation.id,
+        discord_message_id: discordMessageId
       }
     });
   } catch (err) {
