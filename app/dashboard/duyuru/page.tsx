@@ -1,7 +1,7 @@
 ﻿'use client';
 
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { apiUrl } from '@/lib/api';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 
@@ -126,11 +126,19 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
   const [error, setError] = useState<string | null>(null);
   const [voteLoadingId, setVoteLoadingId] = useState<string | null>(null);
   const [mediaErrors, setMediaErrors] = useState<Record<string, boolean>>({});
+  const [lastSeenAt, setLastSeenAt] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
     const load = async () => {
       try {
+        if (isMounted) {
+          try {
+            setLastSeenAt(localStorage.getItem('duyuru_last_seen_at'));
+          } catch {
+            setLastSeenAt(null);
+          }
+        }
         const res = await fetchWithCreds(apiUrl('/api/duyuru?lang=tr'), { cache: 'no-store' });
         const data = (await res.json()) as AnnouncementResponse;
         if (!res.ok || data.error) throw new Error(data.error || 'Yüklenemedi');
@@ -146,6 +154,32 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
       isMounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (!messages.length) return;
+    const newest = messages
+      .slice()
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+    if (!newest?.created_at) return;
+    try {
+      localStorage.setItem('duyuru_last_seen_at', newest.created_at);
+    } catch {
+      // Ignore localStorage errors
+    }
+  }, [messages]);
+
+  const sortedMessages = useMemo(() => {
+    return messages
+      .slice()
+      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+  }, [messages]);
+
+  const newDividerIndex = useMemo(() => {
+    if (!lastSeenAt) return -1;
+    const lastSeenTime = new Date(lastSeenAt).getTime();
+    if (Number.isNaN(lastSeenTime)) return -1;
+    return sortedMessages.findIndex((msg) => new Date(msg.created_at).getTime() > lastSeenTime);
+  }, [lastSeenAt, sortedMessages]);
 
   const handleVote = async (pollId: string, optionId: string) => {
     setVoteLoadingId(optionId);
@@ -229,9 +263,9 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
         </div>
       )}
 
-      {!loading && !error && messages.length > 0 && (
+      {!loading && !error && sortedMessages.length > 0 && (
         <div className="space-y-6">
-          {messages.map((msg) => {
+          {sortedMessages.map((msg, index) => {
             const parsed = parseAnnouncementBody(msg.body);
             const embeddableVideoUrl =
               getEmbeddableVideoUrl(parsed.mediaUrl) ?? getEmbeddableVideoUrl(parsed.linkUrl);
@@ -244,7 +278,17 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
             const authorName = msg.author_name && msg.author_name.toLowerCase() !== 'system' ? msg.author_name : 'Developer';
             const authorAvatar = msg.author_avatar_url;
             return (
-              <div key={msg.id} className="flex gap-4">
+              <div key={msg.id} className="flex flex-col gap-4">
+                {newDividerIndex === index && (
+                  <div className="flex items-center gap-3">
+                    <div className="h-px flex-1 bg-[#2b2d31]" />
+                    <span className="rounded-full border border-[#5865f2]/40 bg-[#5865f2]/10 px-3 py-1 text-[11px] font-semibold text-[#c9cdfb]">
+                      Yeni
+                    </span>
+                    <div className="h-px flex-1 bg-[#2b2d31]" />
+                  </div>
+                )}
+                <div className="flex gap-4">
                 {/* Avatar */}
                 <div className="flex-shrink-0 mt-0.5">
                   {authorAvatar ? (
