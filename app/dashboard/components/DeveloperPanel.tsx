@@ -608,8 +608,11 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? String(res.status));
-      setAnnouncements((prev) => prev.filter((announcement) => announcement.id !== id));
-      if (editingAnnouncementId === id) resetAnnouncementForm();
+      await fetchAnnouncements();
+      setAnnouncementSuccess('Duyuru silindi.');
+      if (editingAnnouncementId === id) {
+        resetAnnouncementForm();
+      }
     } catch (e) {
       setAnnouncementError(e instanceof Error ? e.message : String(e));
     } finally {
