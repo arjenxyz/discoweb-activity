@@ -416,7 +416,7 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
 
   // full page
   return (
-    <div className="min-h-screen bg-[#313338]">
+    <div className="min-h-screen">
       {content}
     </div>
   );

@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useT } from '@/contexts/LocaleContext';
 
 type Props = {
@@ -38,10 +39,12 @@ export default function DeveloperAboutModal({ onClose }: Props) {
           {/* Developer info */}
           <div className="flex items-center gap-4">
             <div className="relative flex-shrink-0">
-              <img
+              <Image
                 src="https://cdn.discordapp.com/avatars/1163500308270436442/8c2eeba5e9c137e4f9375bccb0f0bf40.png?size=128"
-                alt="thearjen"
-                className="h-16 w-16 rounded-full ring-1 ring-white/10"
+                alt="Arjen"
+                width={64}
+                height={64}
+                className="rounded-full ring-1 ring-white/10"
               />
               <div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-[#5865F2] flex items-center justify-center ring-2 ring-[#0b0d12]">
                 <svg viewBox="0 0 16 16" fill="white" className="h-2.5 w-2.5">
@@ -50,12 +53,31 @@ export default function DeveloperAboutModal({ onClose }: Props) {
               </div>
             </div>
             <div className="flex flex-col gap-1">
-              <span className="text-base font-bold text-white">thearjen</span>
+              <span className="text-base font-bold text-white">Arjen</span>
               <span className="text-xs text-white/40 uppercase tracking-widest font-semibold">{t('developer_title')}</span>
               <span className="text-xs text-white/50 leading-relaxed mt-0.5">
                 {t('developer_description')}
               </span>
             </div>
+          </div>
+
+          <div className="grid gap-3">
+            <a
+              href="https://discord.com/users/1163500308270436442"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center rounded-full border border-white/10 bg-[#2f3136] px-4 py-2 text-sm font-semibold text-white transition hover:border-[#5865F2] hover:bg-[#5865F2]"
+            >
+              Linke Git
+            </a>
+            <a
+              href="https://github.com/arjenxyz"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center rounded-full border border-white/10 bg-[#2f3136] px-4 py-2 text-sm font-semibold text-white transition hover:border-[#5865F2] hover:bg-[#5865F2]"
+            >
+              Linke Git
+            </a>
           </div>
 
           {/* Divider */}
