@@ -282,6 +282,7 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
     pollOptions: '',
   });
   const [editingAnnouncementId, setEditingAnnouncementId] = useState<string | null>(null);
+  const [announcementView, setAnnouncementView] = useState<'list' | 'editor'>('list');
   const [announcementSaving, setAnnouncementSaving] = useState(false);
   const [announcementError, setAnnouncementError] = useState<string | null>(null);
   const [announcementSuccess, setAnnouncementSuccess] = useState<string | null>(null);
@@ -540,6 +541,7 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
     });
     setAnnouncementError(null);
     setAnnouncementSuccess(null);
+    setAnnouncementView('editor');
   };
 
   const saveAnnouncement = async () => {
@@ -1514,183 +1516,203 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
   );
 
   const announcementsSection = (
-    <div className="grid gap-5 lg:grid-cols-[1fr_1.35fr]">
-      <div className="rounded-3xl border border-white/10 bg-[#0b0d12] p-5">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-bold text-white">Duyuru Yönetimi</h2>
-            <p className="mt-1 text-xs text-white/40">Başlık, içerik, medya, link ve anket düzenleyebilir.</p>
-          </div>
-          {editingAnnouncementId ? (
-            <button
-              type="button"
-              onClick={resetAnnouncementForm}
-              className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/60 transition hover:bg-white/10"
-            >
-              Yeni Duyuru
-            </button>
-          ) : null}
+    <div className="grid gap-5">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-white/10 bg-[#0b0d12] p-5">
+        <div>
+          <h2 className="text-lg font-bold text-white">Duyuru Yönetimi</h2>
+          <p className="mt-1 text-xs text-white/40">Duyuru listesi ve duyuru düzenleme formunu ayrı görün.</p>
         </div>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setAnnouncementView('list');
+              fetchAnnouncements();
+            }}
+            className={`rounded-full px-3 py-2 text-xs font-semibold transition ${announcementView === 'list' ? 'bg-white/10 text-white border border-white/15' : 'bg-white/5 text-white/60 border border-white/10 hover:bg-white/10'}`}
+          >
+            Liste
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              resetAnnouncementForm();
+              setAnnouncementView('editor');
+            }}
+            className={`rounded-full px-3 py-2 text-xs font-semibold transition ${announcementView === 'editor' ? 'bg-sky-500/15 text-sky-200 border border-sky-400/20' : 'bg-white/5 text-white/60 border border-white/10 hover:bg-white/10'}`}
+          >
+            {editingAnnouncementId ? 'Düzenle' : 'Yeni Duyuru'}
+          </button>
+        </div>
+      </div>
 
-        <div className="mt-6 grid gap-4">
-          <div className="grid gap-2">
-            <label className="text-xs font-semibold text-white/60">Başlık</label>
-            <input
-              value={announcementForm.title}
-              onChange={(event) => setAnnouncementForm((prev) => ({ ...prev, title: event.target.value }))}
-              className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-400/60"
-              placeholder="Duyuru başlığı"
-            />
-          </div>
-
-          <div className="grid gap-2">
-            <label className="text-xs font-semibold text-white/60">İçerik</label>
-            <textarea
-              value={announcementForm.body}
-              onChange={(event) => setAnnouncementForm((prev) => ({ ...prev, body: event.target.value }))}
-              className="min-h-[160px] w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-400/60"
-              placeholder="Duyuru metni"
-            />
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
+      {announcementView === 'editor' ? (
+        <div className="rounded-3xl border border-white/10 bg-[#0b0d12] p-5">
+          <div className="grid gap-4">
             <div className="grid gap-2">
-              <label className="text-xs font-semibold text-white/60">Medya URL</label>
+              <label className="text-xs font-semibold text-white/60">Başlık</label>
               <input
-                value={announcementForm.mediaUrl}
-                onChange={(event) => setAnnouncementForm((prev) => ({ ...prev, mediaUrl: event.target.value }))}
+                value={announcementForm.title}
+                onChange={(event) => setAnnouncementForm((prev) => ({ ...prev, title: event.target.value }))}
                 className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-400/60"
-                placeholder="https://..."
+                placeholder="Duyuru başlığı"
               />
             </div>
-            <div className="grid gap-2">
-              <label className="text-xs font-semibold text-white/60">Link</label>
-              <input
-                value={announcementForm.linkUrl}
-                onChange={(event) => setAnnouncementForm((prev) => ({ ...prev, linkUrl: event.target.value }))}
-                className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-400/60"
-                placeholder="https://..."
-              />
-            </div>
-          </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
             <div className="grid gap-2">
-              <label className="text-xs font-semibold text-white/60">Anket Sorusu</label>
-              <input
-                value={announcementForm.pollQuestion}
-                onChange={(event) => setAnnouncementForm((prev) => ({ ...prev, pollQuestion: event.target.value }))}
-                className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-400/60"
-                placeholder="Örnek: Yeni özellik beğenildi mi?"
-              />
-            </div>
-            <div className="grid gap-2">
-              <label className="text-xs font-semibold text-white/60">Anket Seçenekleri</label>
+              <label className="text-xs font-semibold text-white/60">İçerik</label>
               <textarea
-                value={announcementForm.pollOptions}
-                onChange={(event) => setAnnouncementForm((prev) => ({ ...prev, pollOptions: event.target.value }))}
-                className="min-h-[120px] w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-400/60"
-                placeholder="Her seçeneği yeni satıra yazın"
+                value={announcementForm.body}
+                onChange={(event) => setAnnouncementForm((prev) => ({ ...prev, body: event.target.value }))}
+                className="min-h-[140px] w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-400/60"
+                placeholder="Duyuru metni"
               />
             </div>
-          </div>
 
-          {announcementError ? (
-            <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-200">{announcementError}</div>
-          ) : null}
-          {announcementSuccess ? (
-            <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">{announcementSuccess}</div>
-          ) : null}
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-2">
+                <label className="text-xs font-semibold text-white/60">Medya URL</label>
+                <input
+                  value={announcementForm.mediaUrl}
+                  onChange={(event) => setAnnouncementForm((prev) => ({ ...prev, mediaUrl: event.target.value }))}
+                  className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-400/60"
+                  placeholder="https://..."
+                />
+              </div>
+              <div className="grid gap-2">
+                <label className="text-xs font-semibold text-white/60">Link</label>
+                <input
+                  value={announcementForm.linkUrl}
+                  onChange={(event) => setAnnouncementForm((prev) => ({ ...prev, linkUrl: event.target.value }))}
+                  className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-400/60"
+                  placeholder="https://..."
+                />
+              </div>
+            </div>
 
-          <div className="flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={saveAnnouncement}
-              disabled={announcementSaving}
-              className="rounded-full bg-[#5865F2] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#4752c4] disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {announcementSaving ? 'Kaydediliyor...' : editingAnnouncementId ? 'Güncelle' : 'Duyuru Oluştur'}
-            </button>
-            {editingAnnouncementId ? (
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-2">
+                <label className="text-xs font-semibold text-white/60">Anket Sorusu</label>
+                <input
+                  value={announcementForm.pollQuestion}
+                  onChange={(event) => setAnnouncementForm((prev) => ({ ...prev, pollQuestion: event.target.value }))}
+                  className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-400/60"
+                  placeholder="Örnek: Yeni özellik beğenildi mi?"
+                />
+              </div>
+              <div className="grid gap-2">
+                <label className="text-xs font-semibold text-white/60">Anket Seçenekleri</label>
+                <textarea
+                  value={announcementForm.pollOptions}
+                  onChange={(event) => setAnnouncementForm((prev) => ({ ...prev, pollOptions: event.target.value }))}
+                  className="min-h-[100px] w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-400/60"
+                  placeholder="Her seçeneği yeni satıra yazın"
+                />
+              </div>
+            </div>
+
+            {announcementError ? (
+              <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-200">{announcementError}</div>
+            ) : null}
+            {announcementSuccess ? (
+              <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">{announcementSuccess}</div>
+            ) : null}
+
+            <div className="flex flex-wrap gap-3">
               <button
                 type="button"
-                onClick={resetAnnouncementForm}
+                onClick={saveAnnouncement}
+                disabled={announcementSaving}
+                className="rounded-full bg-[#5865F2] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#4752c4] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {announcementSaving ? 'Kaydediliyor...' : editingAnnouncementId ? 'Güncelle' : 'Duyuru Oluştur'}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  resetAnnouncementForm();
+                  setAnnouncementView('list');
+                }}
                 className="rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
               >
                 Vazgeç
               </button>
-            ) : null}
+            </div>
           </div>
         </div>
-      </div>
+      ) : null}
 
-      <div className="rounded-3xl border border-white/10 bg-[#0b0d12] p-5">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <h3 className="text-lg font-bold text-white">Duyurular</h3>
-            <p className="mt-1 text-xs text-white/40">Mevcut duyuruları düzenleyebilir veya silebilirsiniz.</p>
+      {announcementView === 'list' ? (
+        <div className="rounded-3xl border border-white/10 bg-[#0b0d12] p-5">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h3 className="text-lg font-bold text-white">Duyurular</h3>
+              <p className="mt-1 text-xs text-white/40">Mevcut duyuruları düzenleyebilir veya silebilirsiniz.</p>
+            </div>
+            <button
+              type="button"
+              onClick={fetchAnnouncements}
+              className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/60 transition hover:bg-white/10"
+            >
+              Yenile
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={fetchAnnouncements}
-            className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/60 transition hover:bg-white/10"
-          >
-            Yenile
-          </button>
-        </div>
 
-        {announcementsLoading ? (
-          <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-5 text-sm text-white/50">Yükleniyor...</div>
-        ) : announcementsError ? (
-          <div className="mt-5 rounded-2xl border border-red-500/20 bg-red-500/10 p-5 text-sm text-red-200">{announcementsError}</div>
-        ) : announcements.length === 0 ? (
-          <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-5 text-sm text-white/50">Henüz duyuru yok.</div>
-        ) : (
-          <div className="mt-5 space-y-4">
-            {announcements.map((announcement) => (
-              <div key={announcement.id} className="rounded-3xl border border-white/10 bg-black/20 p-4">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <p className="text-sm font-semibold text-white">{announcement.title}</p>
-                    <p className="text-xs text-white/40">{formatDate(announcement.created_at)}</p>
+          {announcementsLoading ? (
+            <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-5 text-sm text-white/50">Yükleniyor...</div>
+          ) : announcementsError ? (
+            <div className="mt-5 rounded-2xl border border-red-500/20 bg-red-500/10 p-5 text-sm text-red-200">{announcementsError}</div>
+          ) : announcements.length === 0 ? (
+            <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-5 text-sm text-white/50">Henüz duyuru yok.</div>
+          ) : (
+            <div className="mt-5 overflow-hidden rounded-3xl border border-white/10 bg-black/20 max-h-[55vh] overflow-y-auto pr-1">
+              <div className="space-y-4 p-4">
+                {announcements.map((announcement) => (
+                  <div key={announcement.id} className="rounded-3xl border border-white/10 bg-black/20 p-4">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <p className="text-sm font-semibold text-white">{announcement.title}</p>
+                        <p className="text-xs text-white/40">{formatDate(announcement.created_at)}</p>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => startEditAnnouncement(announcement)}
+                          className="rounded-full border border-sky-400/20 bg-sky-500/10 px-3 py-1 text-[11px] font-semibold text-sky-200 transition hover:bg-sky-500/20"
+                        >
+                          Düzenle
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => deleteAnnouncement(announcement.id)}
+                          disabled={announcementDeleteLoadingId === announcement.id}
+                          className="rounded-full border border-red-500/20 bg-red-500/10 px-3 py-1 text-[11px] font-semibold text-red-200 transition hover:bg-red-500/20 disabled:opacity-50"
+                        >
+                          {announcementDeleteLoadingId === announcement.id ? 'Siliniyor...' : 'Sil'}
+                        </button>
+                      </div>
+                    </div>
+                    <p className="mt-3 text-sm text-white/70 whitespace-pre-line">{announcement.content}</p>
+                    {announcement.poll ? (
+                      <div className="mt-3 rounded-2xl border border-white/10 bg-white/5 p-3 text-sm text-white/70">
+                        <p className="font-semibold text-white">Anket: {announcement.poll.question}</p>
+                        <ul className="mt-2 list-disc space-y-1 pl-5 text-white/60">
+                          {announcement.poll.options
+                            .slice()
+                            .sort((a, b) => a.position - b.position)
+                            .map((option) => (
+                              <li key={option.id}>{option.label}</li>
+                            ))}
+                        </ul>
+                      </div>
+                    ) : null}
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      onClick={() => startEditAnnouncement(announcement)}
-                      className="rounded-full border border-sky-400/20 bg-sky-500/10 px-3 py-1 text-[11px] font-semibold text-sky-200 transition hover:bg-sky-500/20"
-                    >
-                      Düzenle
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => deleteAnnouncement(announcement.id)}
-                      disabled={announcementDeleteLoadingId === announcement.id}
-                      className="rounded-full border border-red-500/20 bg-red-500/10 px-3 py-1 text-[11px] font-semibold text-red-200 transition hover:bg-red-500/20 disabled:opacity-50"
-                    >
-                      {announcementDeleteLoadingId === announcement.id ? 'Siliniyor...' : 'Sil'}
-                    </button>
-                  </div>
-                </div>
-                <p className="mt-3 text-sm text-white/70 whitespace-pre-line">{announcement.content}</p>
-                {announcement.poll ? (
-                  <div className="mt-3 rounded-2xl border border-white/10 bg-white/5 p-3 text-sm text-white/70">
-                    <p className="font-semibold text-white">Anket: {announcement.poll.question}</p>
-                    <ul className="mt-2 list-disc space-y-1 pl-5 text-white/60">
-                      {announcement.poll.options
-                        .slice()
-                        .sort((a, b) => a.position - b.position)
-                        .map((option) => (
-                          <li key={option.id}>{option.label}</li>
-                        ))}
-                    </ul>
-                  </div>
-                ) : null}
+                ))}
               </div>
-            ))}
-          </div>
-        )}
-      </div>
+            </div>
+          )}
+        </div>
+      ) : null}
     </div>
   );
 
