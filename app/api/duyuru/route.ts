@@ -18,6 +18,8 @@ export async function GET(request: NextRequest) {
       .select(`
         id,
         created_at,
+        author_name,
+        author_avatar_url,
         announcement_translations!inner (
           title,
           content,
@@ -96,8 +98,8 @@ export async function GET(request: NextRequest) {
         title: item.announcement_translations[0]?.title || '',
         body: item.announcement_translations[0]?.content || '',
         created_at: item.created_at,
-        author_name: 'System', // System announcements
-        author_avatar_url: null,
+        author_name: item.author_name ?? 'System',
+        author_avatar_url: item.author_avatar_url ?? null,
         poll: poll
           ? {
               id: poll.id,
@@ -166,10 +168,29 @@ export async function POST(request: NextRequest) {
     }
 
     // Create announcement
+    const { data: userInfo, error: userInfoError } = await supabaseServiceClient
+      .from('users')
+      .select('username, avatar, discord_id')
+      .eq('discord_id', auth.userId)
+      .maybeSingle();
+
+    if (userInfoError) {
+      console.error('Duyuru gönderiminde kullanıcı bilgisi alınamadı:', userInfoError);
+    }
+
+    const authorName = userInfo?.username ?? 'Developer';
+    const authorAvatarUrl = userInfo?.avatar
+      ? (userInfo.avatar.startsWith('http')
+          ? userInfo.avatar
+          : `https://cdn.discordapp.com/avatars/${auth.userId}/${userInfo.avatar}.png?size=128`)
+      : `https://cdn.discordapp.com/embed/avatars/${Number(auth.userId) % 5}.png`;
+
     const { data: announcement, error: announcementError } = await supabaseServiceClient
       .from('announcements')
       .insert({
         is_active: true,
+        author_name: authorName,
+        author_avatar_url: authorAvatarUrl,
       })
       .select()
       .single();
