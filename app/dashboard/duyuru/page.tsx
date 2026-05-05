@@ -1,7 +1,7 @@
 ﻿'use client';
 
 import Image from 'next/image';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { apiUrl } from '@/lib/api';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 
@@ -131,8 +131,6 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
     return () => { isMounted = false; };
   }, []);
 
-  const totalMessages = useMemo(() => messages.length, [messages]);
-
   const handleVote = async (pollId: string, optionId: string) => {
     setVoteLoadingId(optionId);
     try {
@@ -168,26 +166,6 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
   // ----- render -----
   const content = (
     <div className="mx-auto w-full max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
-      <div className="mb-8 rounded-[32px] border border-slate-200 bg-slate-50 p-6 shadow-sm">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="min-w-0">
-            <p className="text-xs uppercase tracking-[0.28em] text-slate-500">#duyuru</p>
-            <h1 className="mt-2 text-3xl font-semibold text-slate-900 sm:text-4xl">Developer Sohbet Kanalı</h1>
-            <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-500">
-              Bu kanalda tüm duyurular sadece developer tarafından paylaşılıyor. Kullanıcılar için sohbet uygulaması hissi sunuyoruz.
-            </p>
-            {totalMessages > 0 ? (
-              <p className="mt-3 text-sm text-slate-500">{totalMessages} duyuru listeleniyor</p>
-            ) : (
-              <p className="mt-3 text-sm text-slate-500">Henüz duyuru yok.</p>
-            )}
-          </div>
-          <div className="inline-flex items-center gap-2 rounded-full bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm">
-            <span className="h-2.5 w-2.5 rounded-full bg-white" />
-            Sadece Admin
-          </div>
-        </div>
-      </div>
 
       {/* loading / error / empty */}
       {loading && (
