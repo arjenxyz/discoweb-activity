@@ -457,6 +457,7 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
                   )}
                 </div>
               </div>
+            </div>
             );
           })}
         </div>
