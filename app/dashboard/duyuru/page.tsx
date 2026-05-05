@@ -84,7 +84,12 @@ function parseAnnouncementBody(body: string) {
 }
 
 function isVideoUrl(url: string) {
-  return /\.(mp4|webm|mov|m4v|avi)(\?.*)?$/i.test(url);
+  return /\.(mp4|webm|mov|m4v|avi|ogg|ogv)(\?.*)?$/i.test(url);
+}
+
+function getEmbeddableVideoUrl(url: string) {
+  if (!url) return null;
+  return isVideoUrl(url) ? url : null;
 }
 
 function getYouTubeEmbedUrl(url: string) {
@@ -228,6 +233,8 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
         <div className="space-y-6">
           {messages.map((msg) => {
             const parsed = parseAnnouncementBody(msg.body);
+            const embeddableVideoUrl =
+              getEmbeddableVideoUrl(parsed.mediaUrl) ?? getEmbeddableVideoUrl(parsed.linkUrl);
             const youtubeEmbed =
               getYouTubeEmbedUrl(parsed.mediaUrl) ?? getYouTubeEmbedUrl(parsed.linkUrl);
             const mediaKey = `${msg.id}:${parsed.mediaUrl || parsed.linkUrl}`;
@@ -289,32 +296,38 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
                         />
                       </div>
                     </div>
-                  ) : parsed.mediaUrl ? (
-                    /* Media embed (image/video) */
+                  ) : embeddableVideoUrl ? (
                     <div className="mt-3 rounded-r-lg border-l-4 border-[#5865f2] bg-[#2b2d31] p-3">
-                      {isVideoUrl(parsed.mediaUrl) ? (
-                        <video
+                      <video
+                        src={embeddableVideoUrl}
+                        controls
+                        playsInline
+                        className="max-h-80 w-full rounded object-contain"
+                        onError={() =>
+                          setMediaErrors((prev) => ({ ...prev, [mediaKey]: true }))
+                        }
+                      />
+                      {mediaFailed && (
+                        <div className="mt-2 rounded bg-[#1e1f22] px-3 py-2 text-xs text-[#949ba4]">
+                          Medya yüklenemedi. Bağlantıyı yeni sekmede açmayı deneyin.
+                        </div>
+                      )}
+                    </div>
+                  ) : parsed.mediaUrl ? (
+                    /* Media embed (image) */
+                    <div className="mt-3 rounded-r-lg border-l-4 border-[#5865f2] bg-[#2b2d31] p-3">
+                      <div className="relative h-80 w-full">
+                        <Image
                           src={parsed.mediaUrl}
-                          controls
-                          className="max-h-80 w-full rounded object-contain"
+                          alt="medya"
+                          fill
+                          className="rounded object-contain"
+                          unoptimized
                           onError={() =>
                             setMediaErrors((prev) => ({ ...prev, [mediaKey]: true }))
                           }
                         />
-                      ) : (
-                        <div className="relative h-80 w-full">
-                          <Image
-                            src={parsed.mediaUrl}
-                            alt="medya"
-                            fill
-                            className="rounded object-contain"
-                            unoptimized
-                            onError={() =>
-                              setMediaErrors((prev) => ({ ...prev, [mediaKey]: true }))
-                            }
-                          />
-                        </div>
-                      )}
+                      </div>
                       {mediaFailed && (
                         <div className="mt-2 rounded bg-[#1e1f22] px-3 py-2 text-xs text-[#949ba4]">
                           Medya yüklenemedi. Bağlantı süresi dolmuş olabilir.
@@ -331,7 +344,7 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
                       rel="noopener noreferrer"
                       className="mt-3 inline-flex w-full items-center justify-between rounded-2xl border border-[#5865f2]/20 bg-[#111419] px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:border-[#5865f2] hover:bg-[#1e2747]"
                     >
-                      <span>Linke Git</span>
+                      <span>{youtubeEmbed ? 'YouTube’da aç' : isVideoUrl(parsed.linkUrl) ? 'Videoyu aç' : 'Linke Git'}</span>
                       <svg
                         className="h-4 w-4 text-[#00a8fc]"
                         fill="none"
@@ -418,7 +431,7 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
 
   // full page
   return (
-    <div className="min-h-screen">
+    <div className="min-h-0">
       {content}
     </div>
   );
