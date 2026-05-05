@@ -49,6 +49,8 @@ export async function GET(request: NextRequest) {
         id,
         created_at,
         is_active,
+        author_name,
+        author_avatar_url,
         announcement_translations!inner (
           title,
           content,
@@ -106,6 +108,8 @@ export async function GET(request: NextRequest) {
       content: item.announcement_translations[0]?.content || '',
       created_at: item.created_at,
       is_active: item.is_active,
+      author_name: item.author_name || 'Developer',
+      author_avatar_url: item.author_avatar_url || null,
       poll: pollsByAnnouncementId.get(item.id) ?? null,
     }));
 
@@ -137,9 +141,30 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Veritabanı bağlantısı başarısız' }, { status: 500 });
     }
 
+    const { data: userInfo, error: userInfoError } = await supabaseServiceClient
+      .from('users')
+      .select('username, avatar, discord_id')
+      .eq('discord_id', auth.userId)
+      .maybeSingle();
+
+    if (userInfoError) {
+      console.error('Duyuru gönderiminde kullanıcı bilgisi alınamadı:', userInfoError);
+    }
+
+    const authorName = userInfo?.username ?? 'Developer';
+    const authorAvatarUrl = userInfo?.avatar
+      ? (userInfo.avatar.startsWith('http')
+          ? userInfo.avatar
+          : `https://cdn.discordapp.com/avatars/${auth.userId}/${userInfo.avatar}.png?size=128`)
+      : `https://cdn.discordapp.com/embed/avatars/${Number(auth.userId) % 5}.png`;
+
     const { data: announcement, error: announcementError } = await supabaseServiceClient
       .from('announcements')
-      .insert({ is_active: true })
+      .insert({
+        is_active: true,
+        author_name: authorName,
+        author_avatar_url: authorAvatarUrl,
+      })
       .select()
       .single();
 
