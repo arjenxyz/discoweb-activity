@@ -148,22 +148,27 @@ export default function OverviewSection({
                 </div>
 
                 {/* Roller */}
-                <div className="flex flex-wrap gap-1.5 sm:max-w-[50%] sm:justify-end">
+                <div className="flex flex-wrap gap-2 sm:max-w-[50%] sm:justify-end">
                   {profile?.roles?.length ? (
-                    profile.roles.map((role: { id: string; name: string; color: number }) => (
-                      <span
-                        key={role.id}
-                        className={`rounded-full border border-white/10 px-2 py-0.5 font-medium ${
-                          (profile?.roles?.length ?? 0) > 10 ? 'text-[9px]' : (profile?.roles?.length ?? 0) > 6 ? 'text-[10px]' : 'text-[11px]'
-                        }`}
-                        style={{
-                          borderColor: `${formatRoleColor(role.color)}44`,
-                          color: formatRoleColor(role.color),
-                        }}
-                      >
-                        {role.name}
-                      </span>
-                    ))
+                    profile.roles.map((role: { id: string; name: string; color: number }) => {
+                      const roleColor = formatRoleColor(role.color);
+                      return (
+                        <div
+                          key={role.id}
+                          className="inline-flex items-center gap-2 rounded-full border px-3 py-2 text-[11px] font-semibold text-white/90 shadow-sm transition hover:bg-white/10"
+                          style={{
+                            borderColor: `${roleColor}33`,
+                            backgroundColor: `${roleColor}14`,
+                          }}
+                        >
+                          <span
+                            className="h-2.5 w-2.5 rounded-full shadow-[0_0_0_1px_rgba(255,255,255,0.08)]"
+                            style={{ backgroundColor: roleColor }}
+                          />
+                          <span className="whitespace-nowrap">{role.name}</span>
+                        </div>
+                      );
+                    })
                   ) : (
                     <span className="text-xs text-white/25">{t('overview_no_roles')}</span>
                   )}
