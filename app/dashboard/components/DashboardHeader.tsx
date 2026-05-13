@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 
-import { LuHouse, LuMail, LuStore, LuSettings, LuChevronRight, LuSend, LuTag, LuTrendingUp, LuChartBar, LuCompass, LuLayoutGrid, LuShieldCheck, LuWallet, LuCoins, LuRocket, LuBadgePlus, LuNewspaper, LuGamepad2 } from 'react-icons/lu';
+import { LuHouse, LuMail, LuStore, LuSettings, LuChevronRight, LuSend, LuTag, LuCompass, LuLayoutGrid, LuShieldCheck, LuNewspaper, LuGamepad2, LuTrendingUp, LuChartBar } from 'react-icons/lu';
 import Image from 'next/image';
 import DiscordAgreementButton from '@/components/DiscordAgreementButton';
 import type { Notification, Section } from '../types';
@@ -15,7 +15,6 @@ type DashboardHeaderProps = {
   unauthorized: boolean;
   walletLoading: boolean;
   walletBalance: number;
-  mariBalance?: number;
   loginUrl: string;
   navigation: {
     activeSection: Section;
@@ -53,7 +52,6 @@ type DashboardHeaderProps = {
     onOpenDiscounts: () => void;
     onOpenReferral?: () => void;
     onOpenEarnings?: () => void;
-    onOpenMariConvert?: () => void;
     menuRef: RefObject<HTMLDivElement | null>;
   };
   maintenance?: {
@@ -63,7 +61,6 @@ type DashboardHeaderProps = {
   mailUnreadCount?: number;
   onOpenLeaderboard?: () => void;
   openLink?: (url: string) => Promise<void>;
-  isAdvancedEconomy?: boolean;
 };
 
 const RANDOM_GIFS = [
@@ -79,7 +76,6 @@ export default function DashboardHeader({
   unauthorized,
   walletLoading,
   walletBalance,
-  mariBalance,
   loginUrl,
   navigation,
   onOpenLeaderboard,
@@ -88,7 +84,6 @@ export default function DashboardHeader({
   mailUnreadCount = 0,
   settings,
   openLink,
-  isAdvancedEconomy = false,
 }: DashboardHeaderProps) {
   const t = useT();
   const getRandomGif = () => RANDOM_GIFS[Math.floor(Math.random() * RANDOM_GIFS.length)];
@@ -139,21 +134,6 @@ export default function DashboardHeader({
         { key: 'tag-badge', label: t('nav_tag_badge'), icon: <LuShieldCheck className="h-4 w-4" /> },
         { key: 'discover', label: t('nav_community'), icon: <LuCompass className="h-4 w-4" /> },
         { key: 'play-earn', label: t('nav_play_earn'), icon: <LuGamepad2 className="h-4 w-4" /> },
-        ...(isAdvancedEconomy ? [
-          { key: 'market' as Section, label: t('nav_exchange'), icon: <LuTrendingUp className="h-4 w-4" /> },
-        ] : []),
-      ],
-    },
-    {
-      label: t('nav_group_borsa'),
-      items: isAdvancedEconomy ? [
-        { key: 'borsa', label: t('nav_borsa'), icon: <LuChartBar className="h-4 w-4" /> },
-        { key: 'portfolio', label: t('nav_portfolio'), icon: <LuWallet className="h-4 w-4" /> },
-        { key: 'dividend', label: t('nav_dividend'), icon: <LuCoins className="h-4 w-4" /> },
-        { key: 'ipo-apply', label: t('nav_ipo_apply'), icon: <LuRocket className="h-4 w-4" /> },
-        { key: 'market-news', label: t('nav_market_news'), icon: <LuNewspaper className="h-4 w-4" /> },
-      ] : [
-        { key: 'economy-apply', label: t('nav_economy_apply'), icon: <LuBadgePlus className="h-4 w-4" /> },
       ],
     },
     {
@@ -238,19 +218,6 @@ export default function DashboardHeader({
         <div className="flex items-center gap-2">
           {!unauthorized && (
             <div className="hidden lg:flex items-center gap-1.5">
-              {/* Mari bakiye */}
-              {mariBalance !== undefined && (
-                <button
-                  type="button"
-                  onClick={() => settings.onOpenMariConvert?.()}
-                  className="flex items-center gap-1.5 rounded-full border border-violet-500/30 bg-violet-500/10 px-3 py-1.5 text-sm transition hover:bg-violet-500/20"
-                >
-                  <Image src="/Mari.gif" alt="Mari" width={16} height={16} className="h-4 w-4" unoptimized />
-                  <span className="font-bold text-violet-200 tabular-nums">
-                    {walletLoading ? '—' : mariBalance.toFixed(3)}
-                  </span>
-                </button>
-              )}
               {/* Papel bakiye */}
               <div className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm">
                 <Image src="/papel.gif" alt="Papel" width={16} height={16} className="h-4 w-4" />
@@ -351,7 +318,7 @@ export default function DashboardHeader({
                       <LuChevronRight className="h-3.5 w-3.5 text-white/30" />
                     </button>
 
-                    <div className={`grid gap-1.5 pt-1 ${settings.onOpenMariConvert ? 'grid-cols-5' : 'grid-cols-4'}`}>
+                    <div className="grid gap-1.5 pt-1 grid-cols-4">
                       <button
                         type="button"
                         onClick={settings.onOpenTransfer}
@@ -384,16 +351,6 @@ export default function DashboardHeader({
                         <LuChartBar className="h-3.5 w-3.5" />
                         {t('dashboard_nav_leaderboard')}
                       </button>
-                      {settings.onOpenMariConvert && (
-                        <button
-                          type="button"
-                          onClick={() => { setIsProfileOpen(false); settings.onOpenMariConvert?.(); }}
-                          className="flex flex-col items-center gap-1 rounded-xl border border-violet-500/20 bg-violet-500/[0.08] py-2.5 text-xs text-violet-400 transition hover:bg-violet-500/15"
-                        >
-                          <Image src="/Mari.gif" alt="Mari" width={14} height={14} className="h-3.5 w-3.5" unoptimized />
-                          {t('header_convert_to_mari')}
-                        </button>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -482,17 +439,6 @@ export default function DashboardHeader({
             {/* Bakiye satırı */}
             {!unauthorized && (
               <div className="flex items-center gap-2 px-3 pt-3 pb-2">
-                {mariBalance !== undefined && (
-                  <button
-                    type="button"
-                    onClick={() => { setMobileMenuOpen(false); settings.onOpenMariConvert?.(); }}
-                    className="flex flex-1 items-center gap-1.5 rounded-xl border border-violet-500/25 bg-violet-500/10 px-3 py-2 text-sm transition hover:bg-violet-500/20"
-                  >
-                    <Image src="/Mari.gif" alt="Mari" width={16} height={16} className="h-4 w-4" unoptimized />
-                    <span className="font-bold text-violet-200 tabular-nums">{walletLoading ? '—' : mariBalance.toFixed(3)}</span>
-                    <span className="text-[10px] text-violet-300/60 ml-auto">Mari</span>
-                  </button>
-                )}
                 <div className="flex flex-1 items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm">
                   <Image src="/papel.gif" alt="Papel" width={16} height={16} className="h-4 w-4" />
                   <span className="font-bold text-white tabular-nums">{walletLoading ? '—' : walletBalance.toFixed(2)}</span>
@@ -592,7 +538,7 @@ export default function DashboardHeader({
                 <LuChevronRight className="h-3.5 w-3.5 text-white/30" />
               </button>
 
-              <div className={`grid gap-1.5 pt-1 ${settings.onOpenMariConvert ? 'grid-cols-5' : 'grid-cols-4'}`}>
+              <div className="grid gap-1.5 pt-1 grid-cols-4">
                 <button type="button" onClick={() => { setIsProfileOpen(false); settings.onOpenTransfer(); }} className="flex flex-col items-center gap-1 rounded-xl border border-white/[0.06] bg-white/[0.03] py-2.5 text-xs text-white/60 transition hover:bg-white/[0.07] hover:text-white">
                   <LuSend className="h-3.5 w-3.5" />{t('dashboard_papel_transfer')}
                 </button>
@@ -605,11 +551,6 @@ export default function DashboardHeader({
                 <button type="button" onClick={() => { setIsProfileOpen(false); onOpenLeaderboard?.(); }} className="flex flex-col items-center gap-1 rounded-xl border border-white/[0.06] bg-white/[0.03] py-2.5 text-xs text-white/60 transition hover:bg-white/[0.07] hover:text-white">
                   <LuChartBar className="h-3.5 w-3.5" />{t('dashboard_nav_leaderboard')}
                 </button>
-                {settings.onOpenMariConvert && (
-                  <button type="button" onClick={() => { setIsProfileOpen(false); settings.onOpenMariConvert?.(); }} className="flex flex-col items-center gap-1 rounded-xl border border-violet-500/20 bg-violet-500/[0.08] py-2.5 text-xs text-violet-400 transition hover:bg-violet-500/15">
-                    <Image src="/Mari.gif" alt="Mari" width={14} height={14} className="h-3.5 w-3.5" unoptimized />{t('header_convert_to_mari')}
-                  </button>
-                )}
               </div>
             </div>
           </div>

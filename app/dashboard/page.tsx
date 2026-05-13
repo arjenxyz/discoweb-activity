@@ -17,16 +17,7 @@ import SettingsSection from './components/SettingsSection';
 import MailSection from './components/MailSection';
 import SessionExpiredModal from './components/SessionExpiredModal';
 import DiscoverSection from './components/DiscoverSection';
-import MarketSection from './components/MarketSection';
-import BorsaSection from './components/BorsaSection';
-import BorsaDetailSection from './components/BorsaDetailSection';
-import PortfolioSection from './components/PortfolioSection';
-import DividendSection from './components/DividendSection';
-import IpoSection from './components/IpoSection';
-import EconomyApplySection from './components/EconomyApplySection';
 import TagBadgeSection from './components/TagBadgeSection';
-import IpoApplySection from './components/IpoApplySection';
-import MarketNewsSection from './components/MarketNewsSection';
 import NotificationDetailModal from './components/NotificationDetailModal';
 import NotificationsModal from './components/NotificationsModal';
 import TransferModal from './components/TransferModal';
@@ -117,14 +108,6 @@ export default function DashboardPage() {
   const unauthorizedRef = useRef(unauthorized);
   const tickRef = useRef(0);
   const [walletBalance, setWalletBalance] = useState(0);
-  const [mariBalance, setMariBalance] = useState(0);
-  const [economyApproved, setEconomyApproved] = useState(false);
-  const [mariConvertOpen, setMariConvertOpen] = useState(false);
-  const [mariConvertInfo, setMariConvertInfo] = useState<{ mari_rate: number; server_used_today: number; global_used_today: number; papel_balance: number; mari_balance: number; server_limit: number; global_limit: number } | null>(null);
-  const [mariConvertInput, setMariConvertInput] = useState('');
-  const [mariConvertLoading, setMariConvertLoading] = useState(false);
-  const [mariConvertError, setMariConvertError] = useState<string | null>(null);
-  const [mariConvertSuccess, setMariConvertSuccess] = useState<string | null>(null);
   const [walletLoading, setWalletLoading] = useState(true);
   const [overviewStats, setOverviewStats] = useState<OverviewStats | OverviewStatsExpanded | null>(null);
   const [overviewLoading, setOverviewLoading] = useState(true);
@@ -141,20 +124,6 @@ export default function DashboardPage() {
   const setActiveSection = useCallback((s: Section) => {
     setActiveSectionState(s);
     setCurrentSection(s);
-  }, []);
-  const [borsaDetailGuildId, setBorsaDetailGuildId] = useState<string | null>(null);
-  const [dividendGuildId, setDividendGuildId] = useState<string | null>(null);
-
-  const handleBorsaNavigate = useCallback((section: Section, extra?: unknown) => {
-    if (section === 'borsa-detail' && typeof extra === 'string') {
-      setBorsaDetailGuildId(extra);
-      setActiveSection('borsa-detail');
-    } else if (section === 'dividend' && typeof extra === 'string') {
-      setDividendGuildId(extra);
-      setActiveSection('dividend');
-    } else {
-      setActiveSection(section);
-    }
   }, []);
   const [leaderboardOpen, setLeaderboardOpen] = useState(false);
   const [isActivityEmbed, setIsActivityEmbed] = useState(false);
@@ -326,14 +295,9 @@ export default function DashboardPage() {
 
   const isBlockedByReadiness = Boolean(activityReadiness?.blocking);
 
-  const ADVANCED_ONLY_SECTIONS: Section[] = ['borsa', 'borsa-detail', 'portfolio', 'dividend', 'ipo-apply', 'ipo', 'market-news', 'market', 'treasury'];
   const effectiveSection = unauthorized && activeSection !== 'store'
     ? 'overview'
-    : activeSection === 'treasury'
-      ? 'overview'
-    : (!economyApproved && ADVANCED_ONLY_SECTIONS.includes(activeSection as Section))
-      ? 'economy-apply'
-      : activeSection;
+    : activeSection;
 
   const getCurrentGuildId = () => {
     if (typeof window === 'undefined') return null;
@@ -659,10 +623,8 @@ export default function DashboardPage() {
     try {
       const response = await fetchWithCreds('/api/member/wallet');
       if (response.ok) {
-        const data = (await response.json()) as { balance: number; mari_balance?: number; economy_approved?: boolean };
+        const data = (await response.json()) as { balance: number };
         setWalletBalance(Number(data.balance ?? 0));
-        setEconomyApproved(data.economy_approved ?? false);
-        setMariBalance(data.economy_approved ? Number(data.mari_balance ?? 0) : 0);
       } else if (response.status === 401) {
         setUnauthorized(true);
       }
@@ -1166,7 +1128,7 @@ export default function DashboardPage() {
     await refreshStoreItems(storePage + 1, true);
   };
 
-  const FULL_WIDTH_SECTIONS = ['mail', 'market', 'store', 'economy-apply', 'settings', 'duyuru'];
+  const FULL_WIDTH_SECTIONS = ['mail', 'store', 'settings', 'duyuru'];
   const mainWrapperClass = FULL_WIDTH_SECTIONS.includes(effectiveSection)
     ? (effectiveSection === 'store' && !isActivityEmbed)
       ? 'w-full max-w-4xl px-0 sm:px-6'
@@ -1177,15 +1139,11 @@ export default function DashboardPage() {
     ? 'py-0 gap-0 pb-20 lg:pb-0'
     : effectiveSection === 'duyuru'
       ? 'md:pt-20 pb-20 lg:pb-0 gap-0'
-      : effectiveSection === 'market'
-        ? 'md:pt-16 pb-20 lg:pb-0 gap-0'
-        : effectiveSection === 'store'
-          ? isActivityEmbed
-            ? 'md:pt-20 pb-28 gap-0 md:pb-0'
-            : 'md:pt-20 pb-28 sm:pb-10 gap-0 sm:gap-6 md:pb-0'
-          : effectiveSection === 'economy-apply'
-              ? 'pt-6 md:pt-16 pb-0 gap-0'
-              : 'md:pt-24 pb-20 lg:pb-6 gap-6';
+      : effectiveSection === 'store'
+        ? isActivityEmbed
+          ? 'md:pt-20 pb-28 gap-0 md:pb-0'
+          : 'md:pt-20 pb-28 sm:pb-10 gap-0 sm:gap-6 md:pb-0'
+        : 'md:pt-24 pb-20 lg:pb-6 gap-6';
 
   // Splash — readiness sorgulanmadan önce gösterilir
   if (!splashDone) {
@@ -1246,7 +1204,6 @@ export default function DashboardPage() {
             unauthorized={unauthorized}
             onNavigate={setActiveSection}
             profile={profile}
-            isAdvancedEconomy={economyApproved}
           />
         )}
 
@@ -1258,7 +1215,6 @@ export default function DashboardPage() {
           unauthorized={unauthorized}
           walletLoading={walletLoading}
           walletBalance={walletBalance}
-          mariBalance={economyApproved ? mariBalance : undefined}
           loginUrl={loginUrl}
           server={{ ...headerServer, onSelectServer: isActivityEmbed ? undefined : handleSelectServer }}
           navigation={{
@@ -1288,7 +1244,6 @@ export default function DashboardPage() {
           mailUnreadCount={mailUnreadCount}
           onOpenLeaderboard={() => setLeaderboardOpen(true)}
           openLink={openLink}
-          isAdvancedEconomy={economyApproved}
           renderNotificationBody={renderNotificationBody}
           settings={{
             open: settingsOpen,
@@ -1301,20 +1256,6 @@ export default function DashboardPage() {
             onOpenPromotions: openPromotionsModal,
             onOpenDiscounts: openDiscountsModal,
             onOpenEarnings: () => setEarningsModalOpen(true),
-            onOpenMariConvert: economyApproved ? async () => {
-              setMariConvertOpen(true);
-              setMariConvertError(null);
-              setMariConvertSuccess(null);
-              setMariConvertInput('');
-              setMariConvertInfo(null);
-              try {
-                const res = await fetchWithCreds('/api/member/mari-convert');
-                if (res.ok) {
-                  const d = await res.json() as NonNullable<typeof mariConvertInfo>;
-                  setMariConvertInfo(d);
-                }
-              } catch { /* ignore */ }
-            } : undefined,
             menuRef: settingsMenuRef,
           }}
         />
@@ -1480,65 +1421,6 @@ export default function DashboardPage() {
             {effectiveSection === 'play-earn' && (
               <PlayEarnSection />
             )}
-            {effectiveSection === 'market' && (
-              <MarketSection userId={profile?.userId} economyApproved={economyApproved} />
-            )}
-
-            {effectiveSection === 'borsa' && (
-              <div className="p-4 sm:p-6 lg:p-8">
-                <BorsaSection onNavigate={handleBorsaNavigate} />
-              </div>
-            )}
-
-            {effectiveSection === 'borsa-detail' && borsaDetailGuildId && (
-              <div className="p-4 sm:p-6 lg:p-8">
-                <BorsaDetailSection
-                  guildId={borsaDetailGuildId}
-                  onBack={() => setActiveSection('borsa')}
-                  onNavigate={handleBorsaNavigate}
-                />
-              </div>
-            )}
-
-            {effectiveSection === 'portfolio' && (
-              <div className="p-4 sm:p-6 lg:p-8">
-                <PortfolioSection onNavigate={handleBorsaNavigate} />
-              </div>
-            )}
-
-            {effectiveSection === 'dividend' && (
-              <div className="p-4 sm:p-6 lg:p-8">
-                <DividendSection guildId={dividendGuildId ?? undefined} />
-              </div>
-            )}
-
-            {effectiveSection === 'ipo' && borsaDetailGuildId && (
-              <div className="p-4 sm:p-6 lg:p-8">
-                <IpoSection
-                  guildId={borsaDetailGuildId}
-                  onBack={() => setActiveSection('borsa')}
-                  onNavigate={handleBorsaNavigate}
-                />
-              </div>
-            )}
-
-            {effectiveSection === 'ipo-apply' && (
-              <div className="p-4 sm:p-6 lg:p-8">
-                <IpoApplySection />
-              </div>
-            )}
-
-            {effectiveSection === 'economy-apply' && (
-              <div className="flex flex-1 min-h-0 w-full">
-                <EconomyApplySection />
-              </div>
-            )}
-
-            {effectiveSection === 'market-news' && (
-              <div className="p-4 sm:p-6 lg:p-8">
-                <MarketNewsSection />
-              </div>
-            )}
           </main>
         </div>
       <NotificationsModal
@@ -1611,133 +1493,6 @@ export default function DashboardPage() {
         open={earningsModalOpen}
         onClose={() => setEarningsModalOpen(false)}
       />
-
-      {/* MRI Dönüştürme Modal */}
-      {mariConvertOpen && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setMariConvertOpen(false)}>
-          <div className="w-full max-w-sm overflow-hidden rounded-2xl border border-white/10 bg-[#0f1116] shadow-2xl" onClick={e => e.stopPropagation()}>
-            <div className="border-b border-white/[0.06] px-5 py-4 flex items-center justify-between">
-              <div>
-                <div className="flex items-center gap-2">
-                  <Image src="/Mari.gif" alt="Mari" width={20} height={20} className="h-5 w-5" unoptimized />
-                  <p className="text-sm font-bold text-white">{t('mari_convert_title')}</p>
-                </div>
-                <p className="text-[11px] text-white/40 mt-0.5">{t('mari_convert_subtitle')}</p>
-              </div>
-              <button type="button" onClick={() => setMariConvertOpen(false)} className="text-white/30 hover:text-white/70 text-lg leading-none">✕</button>
-            </div>
-            <div className="p-5 space-y-4">
-              {mariConvertInfo ? (
-                <>
-                  {/* Kur ve limit bilgisi */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] px-3 py-2.5">
-                      <p className="text-[10px] text-white/35 uppercase tracking-wider">{t('mari_convert_rate_label')}</p>
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        <Image src="/Mari.gif" alt="Mari" width={14} height={14} className="h-3.5 w-3.5" unoptimized />
-                        <p className="text-sm font-bold text-white">= {mariConvertInfo.mari_rate.toLocaleString()} P</p>
-                      </div>
-                    </div>
-                    <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] px-3 py-2.5">
-                      <p className="text-[10px] text-white/35 uppercase tracking-wider">{t('mari_convert_balance_label')}</p>
-                      <p className="text-sm font-bold text-white mt-0.5">{mariConvertInfo.papel_balance.toLocaleString()} P</p>
-                    </div>
-                  </div>
-                  {/* Limitler */}
-                  <div className="space-y-2">
-                    <div>
-                      <div className="flex justify-between text-[10px] text-white/40 mb-1">
-                        <span>{t('mari_convert_server_limit')}</span>
-                        <span className="flex items-center gap-1">{mariConvertInfo.server_used_today.toFixed(3)} / {mariConvertInfo.server_limit} <Image src="/Mari.gif" alt="" width={10} height={10} className="h-2.5 w-2.5 inline" unoptimized /></span>
-                      </div>
-                      <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
-                        <div className="h-full rounded-full bg-violet-500" style={{ width: `${Math.min(100, (mariConvertInfo.server_used_today / mariConvertInfo.server_limit) * 100)}%` }} />
-                      </div>
-                    </div>
-                    <div>
-                      <div className="flex justify-between text-[10px] text-white/40 mb-1">
-                        <span>{t('mari_convert_global_limit')}</span>
-                        <span className="flex items-center gap-1">{mariConvertInfo.global_used_today.toFixed(3)} / {mariConvertInfo.global_limit} <Image src="/Mari.gif" alt="" width={10} height={10} className="h-2.5 w-2.5 inline" unoptimized /></span>
-                      </div>
-                      <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
-                        <div className="h-full rounded-full bg-violet-400" style={{ width: `${Math.min(100, (mariConvertInfo.global_used_today / mariConvertInfo.global_limit) * 100)}%` }} />
-                      </div>
-                    </div>
-                  </div>
-                  {/* Input */}
-                  <div>
-                    <label className="block text-[11px] text-white/40 mb-1.5">{t('mari_convert_input_label')}</label>
-                    <div className="flex gap-2">
-                      <input
-                        type="number"
-                        min={1}
-                        value={mariConvertInput}
-                        onChange={e => setMariConvertInput(e.target.value)}
-                        placeholder="0"
-                        className="flex-1 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/20 focus:outline-none focus:border-violet-500/50"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setMariConvertInput(String(Math.floor(Math.min(mariConvertInfo.papel_balance, (mariConvertInfo.server_limit - mariConvertInfo.server_used_today) * mariConvertInfo.mari_rate))))}
-                        className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/60 hover:text-white hover:bg-white/10 transition"
-                      >MAX</button>
-                    </div>
-                    {mariConvertInput && Number(mariConvertInput) > 0 && (
-                      <p className="text-[11px] text-violet-400 mt-1.5">
-                        {t('mari_convert_will_receive', { amount: (Number(mariConvertInput) / mariConvertInfo.mari_rate).toFixed(6) })} <Image src="/Mari.gif" alt="Mari" width={12} height={12} className="h-3 w-3 inline" unoptimized />
-                      </p>
-                    )}
-                  </div>
-                  {mariConvertError && <p className="text-xs text-rose-400">{mariConvertError}</p>}
-                  {mariConvertSuccess && <p className="text-xs text-emerald-400">{mariConvertSuccess}</p>}
-                  <button
-                    type="button"
-                    disabled={mariConvertLoading || !mariConvertInput || Number(mariConvertInput) <= 0}
-                    onClick={async () => {
-                      setMariConvertLoading(true);
-                      setMariConvertError(null);
-                      setMariConvertSuccess(null);
-                      try {
-                        const res = await fetchWithCreds('/api/member/mari-convert', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ papel_amount: Number(mariConvertInput) }),
-                        });
-                        const d = await res.json() as { error?: string; mari_received?: number; new_mari_balance?: number };
-                        if (!res.ok) {
-                          const errorMap: Record<string, string> = {
-                            economy_not_approved: t('mari_convert_error_economy_not_approved'),
-                            insufficient_papel: t('mari_convert_error_insufficient_papel'),
-                            server_daily_limit: t('mari_convert_error_server_daily_limit'),
-                            global_daily_limit: t('mari_convert_error_global_daily_limit'),
-                            amount_too_small: t('mari_convert_error_amount_too_small'),
-                            no_selected_guild: t('mari_convert_error_no_guild'),
-                          };
-                          setMariConvertError(errorMap[d.error ?? ''] ?? t('mari_convert_error_generic'));
-                        } else {
-                          setMariConvertSuccess(t('mari_convert_success', { amount: (d.mari_received ?? 0).toFixed(6) }));
-                          setMariBalance(d.new_mari_balance ?? mariBalance);
-                          setMariConvertInput('');
-                          const infoRes = await fetchWithCreds('/api/member/mari-convert');
-                          if (infoRes.ok) setMariConvertInfo(await infoRes.json() as NonNullable<typeof mariConvertInfo>);
-                        }
-                      } catch {
-                        setMariConvertError(t('mari_convert_error_connection'));
-                      }
-                      setMariConvertLoading(false);
-                    }}
-                    className="w-full rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-40 disabled:cursor-not-allowed py-2.5 text-sm font-bold text-white transition"
-                  >
-                    {mariConvertLoading ? t('mari_convert_loading') : t('mari_convert_button')}
-                  </button>
-                </>
-              ) : (
-                <div className="py-8 text-center text-sm text-white/30">{t('mari_convert_loading_info')}</div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
 
       <DiscountsModal
         isOpen={discountsModalOpen}

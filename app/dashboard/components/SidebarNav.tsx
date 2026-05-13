@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { LuChevronRight, LuHouse, LuMail, LuStore, LuMegaphone, LuCompass, LuTrendingUp, LuChartBar, LuWallet, LuCoins, LuRocket, LuBadgePlus, LuNewspaper, LuShieldCheck, LuGamepad2 } from 'react-icons/lu';
+import { LuChevronRight, LuHouse, LuMail, LuStore, LuMegaphone, LuCompass, LuShieldCheck, LuGamepad2 } from 'react-icons/lu';
 import type { MemberProfile, Section } from '../types';
 import { useT } from '@/contexts/LocaleContext';
 
@@ -11,7 +11,6 @@ type SidebarNavProps = {
   unauthorized: boolean;
   onNavigate: (section: Section) => void;
   profile: MemberProfile | null;
-  isAdvancedEconomy?: boolean;
 };
 
 export default function SidebarNav({
@@ -19,7 +18,6 @@ export default function SidebarNav({
   unauthorized,
   onNavigate,
   profile,
-  isAdvancedEconomy = false,
 }: SidebarNavProps) {
   const t = useT();
   const [collapsed, setCollapsed] = useState(false);
@@ -52,21 +50,6 @@ export default function SidebarNav({
         { key: 'tag-badge' as Section, label: t('nav_tag_badge'), icon: LuShieldCheck },
         { key: 'discover' as Section, label: t('nav_community'), icon: LuCompass },
         { key: 'play-earn' as Section, label: t('nav_play_earn'), icon: LuGamepad2 },
-        ...(isAdvancedEconomy ? [
-          { key: 'market' as Section, label: t('nav_exchange'), icon: LuTrendingUp },
-        ] : []),
-      ],
-    },
-    {
-      label: t('nav_group_borsa'),
-      items: isAdvancedEconomy ? [
-        { key: 'borsa' as Section, label: t('nav_borsa'), icon: LuChartBar },
-        { key: 'portfolio' as Section, label: t('nav_portfolio'), icon: LuWallet },
-        { key: 'dividend' as Section, label: t('nav_dividend'), icon: LuCoins },
-        { key: 'ipo-apply' as Section, label: t('nav_ipo_apply'), icon: LuRocket },
-        { key: 'market-news' as Section, label: t('nav_market_news'), icon: LuNewspaper },
-      ] : [
-        { key: 'economy-apply' as Section, label: t('nav_economy_apply'), icon: LuBadgePlus },
       ],
     },
     {
