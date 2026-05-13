@@ -37,16 +37,12 @@ export async function GET(request: Request) {
   // Sunucu Yüksek Ekonomi'de mi?
   const { data: server } = await supabase
     .from('servers')
-    .select('economy_tier')
+    .select('discord_id')
     .eq('discord_id', guildId)
     .eq('is_setup', true)
     .maybeSingle();
 
   if (!server) return NextResponse.json({ error: 'server_not_found' }, { status: 404 });
-  if (server.economy_tier !== 'advanced') {
-    return NextResponse.json({ error: 'not_advanced', code: null, economy_tier: server.economy_tier });
-  }
-
   // Mevcut kodu çek
   const { data: existing } = await supabase
     .from('referral_codes')
@@ -61,7 +57,7 @@ export async function GET(request: Request) {
       .select('*', { count: 'exact', head: true })
       .eq('code_id', existing.id);
 
-    return NextResponse.json({ code: existing.code, usage_count: count ?? 0, economy_tier: 'advanced' });
+    return NextResponse.json({ code: existing.code, usage_count: count ?? 0 });
   }
 
   // Yeni kod oluştur (çakışma olursa tekrar dene)
@@ -84,7 +80,7 @@ export async function GET(request: Request) {
 
   if (error || !created) return NextResponse.json({ error: 'create_failed' }, { status: 500 });
 
-  return NextResponse.json({ code: created.code, usage_count: 0, economy_tier: 'advanced' });
+  return NextResponse.json({ code: created.code, usage_count: 0 });
 }
 
 /** POST — referral kodunu kullan (davet edilen kişi kullanır) */

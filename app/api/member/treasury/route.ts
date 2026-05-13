@@ -40,7 +40,6 @@ export async function GET(request: Request) {
     .maybeSingle();
 
   return NextResponse.json({
-    economy_tier: 'advanced',
     treasury: treasury ?? {
       balance: 0,
       total_collected: 0,

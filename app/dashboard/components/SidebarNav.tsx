@@ -28,7 +28,6 @@ export default function SidebarNav({
     store:           '/menu-background/varyant2.jpg',
     discover:        '/menu-background/varyant3.jpg',
     'tag-badge':     '/menu-background/varyant4.jpg',
-    'economy-apply': '/menu-background/varyant5.jpg',
     mail:            '/menu-background/varyant6.jpg',
   };
 
