@@ -219,14 +219,14 @@ export default function DashboardHeader({
         {/* Sağ — bakiye + profil */}
         <div className="flex items-center gap-2">
           {!unauthorized && (
-            <div className="hidden lg:flex items-center gap-1.5">
+            <div className="hidden lg:flex items-end gap-1.5">
               {mariBalance !== undefined && (
                 <div className="flex items-center gap-1.5 rounded-full border border-violet-500/30 bg-violet-500/10 px-3 py-1.5 text-sm">
                   <Image src="/Mari.gif" alt="Mari" width={16} height={16} className="h-4 w-4" unoptimized />
                   <span className="font-bold text-violet-200 tabular-nums">
                     {walletLoading ? '—' : mariBalance.toFixed(3)}
                   </span>
-                  <span className="text-[11px] font-semibold text-violet-300">Mari</span>
+                  <span className="mb-[1px] text-[11px] font-semibold text-violet-300">Mari</span>
                 </div>
               )}
               {/* Papel bakiye */}
@@ -235,7 +235,7 @@ export default function DashboardHeader({
                 <span className="font-bold text-white tabular-nums">
                   {walletLoading ? '—' : walletBalance.toFixed(2)}
                 </span>
-                <span className="text-[11px] font-semibold text-white">Papel</span>
+                <span className="mb-[1px] text-[11px] font-semibold text-white/85">Papel</span>
               </div>
             </div>
           )}
