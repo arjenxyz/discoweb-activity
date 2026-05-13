@@ -101,6 +101,7 @@ export default function BugReportModal({ onClose, section }: Props) {
   const [description, setDescription] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [captureStatus, setCaptureStatus] = useState<'idle' | 'capturing' | 'error' | 'unsupported'>('idle');
   const [sendStatus, setSendStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
   const [activeReportId, setActiveReportId] = useState<string | null>(null);
   const [activeReportStatus, setActiveReportStatus] = useState<ReportStatus>('pending');
@@ -153,10 +154,57 @@ export default function BugReportModal({ onClose, section }: Props) {
 
   const handleImage = (file: File) => {
     if (!file.type.startsWith('image/')) return;
+    setCaptureStatus('idle');
     setImageFile(file);
     const reader = new FileReader();
     reader.onload = e => setImagePreview(e.target?.result as string);
     reader.readAsDataURL(file);
+  };
+
+  const handleCapture = async () => {
+    if (captureStatus === 'capturing') return;
+    if (!navigator?.mediaDevices?.getDisplayMedia) {
+      setCaptureStatus('unsupported');
+      return;
+    }
+
+    setCaptureStatus('capturing');
+    let stream: MediaStream | null = null;
+    try {
+      stream = await navigator.mediaDevices.getDisplayMedia({
+        video: { displaySurface: 'window' } as MediaTrackConstraints,
+        audio: false,
+      });
+
+      const video = document.createElement('video');
+      video.srcObject = stream;
+      await new Promise<void>((resolve) => {
+        video.onloadedmetadata = () => resolve();
+      });
+      await video.play();
+
+      const width = video.videoWidth || window.innerWidth;
+      const height = video.videoHeight || window.innerHeight;
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('canvas');
+      ctx.drawImage(video, 0, 0, width, height);
+
+      const blob = await new Promise<Blob | null>((resolve) => {
+        canvas.toBlob((result) => resolve(result), 'image/png');
+      });
+      if (!blob) throw new Error('blob');
+
+      const file = new File([blob], 'screenshot.png', { type: 'image/png' });
+      handleImage(file);
+      setCaptureStatus('idle');
+    } catch {
+      setCaptureStatus('error');
+    } finally {
+      stream?.getTracks().forEach((track) => track.stop());
+    }
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -378,6 +426,22 @@ export default function BugReportModal({ onClose, section }: Props) {
                           </svg>
                           <span className="text-xs text-white/30">{t('support_screenshot_drop')}</span>
                         </div>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <button
+                        type="button"
+                        onClick={handleCapture}
+                        disabled={captureStatus === 'capturing' || captureStatus === 'unsupported'}
+                        className="text-xs font-semibold text-white/70 hover:text-white transition disabled:cursor-not-allowed disabled:text-white/30"
+                      >
+                        {captureStatus === 'capturing' ? t('support_screenshot_capturing') : t('support_screenshot_capture')}
+                      </button>
+                      {captureStatus === 'unsupported' && (
+                        <span className="text-xs text-white/30">{t('support_screenshot_capture_unavailable')}</span>
+                      )}
+                      {captureStatus === 'error' && (
+                        <span className="text-xs text-red-400">{t('support_screenshot_capture_error')}</span>
                       )}
                     </div>
                     <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleImage(f); }} />
