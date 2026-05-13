@@ -1435,6 +1435,7 @@ export default function DashboardPage() {
               <SettingsSection
                 onOpenPromotionsModal={openPromotionsModal}
                 onOpenDiscountsModal={openDiscountsModal}
+                onBack={() => setActiveSection('overview')}
                 profile={profile}
               />
             )}

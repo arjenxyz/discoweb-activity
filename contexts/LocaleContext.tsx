@@ -18,11 +18,27 @@ const LocaleContext = createContext<LocaleContextValue>({
 export function LocaleProvider({ children }: { children: React.ReactNode }) {
   const [locale, setLocale] = useState<SupportedLocale>(() => {
     const browserLocale = typeof navigator !== 'undefined' ? navigator.language : '';
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = window.localStorage.getItem('dashboard_locale');
+        if (stored) return resolveLocale(stored);
+      } catch {
+        // ignore storage errors
+      }
+    }
     return resolveLocale(browserLocale);
   });
 
   const setDiscordLocale = useCallback((discordLocale: string) => {
-    setLocale(resolveLocale(discordLocale));
+    const next = resolveLocale(discordLocale);
+    setLocale(next);
+    if (typeof window !== 'undefined') {
+      try {
+        window.localStorage.setItem('dashboard_locale', next);
+      } catch {
+        // ignore storage errors
+      }
+    }
   }, []);
 
   const t = useCallback(

@@ -9,10 +9,12 @@ type SettingsSectionProps = {
   onOpenPromotionsModal: () => void;
   onOpenDiscountsModal: () => void;
   profile?: MemberProfile | null;
+  onBack?: () => void;
 };
 
 export default function SettingsSection({
   profile,
+  onBack,
 }: SettingsSectionProps) {
   const { locale, setDiscordLocale } = useLocale();
   const [serverTime, setServerTime] = useState('');
@@ -224,8 +226,18 @@ export default function SettingsSection({
     <section className="flex flex-col gap-4 p-4 sm:p-6">
 
       {/* SAYFA BAŞLIĞI */}
-      <div className="flex items-end justify-between">
+      <div className="flex items-end justify-between gap-4">
         <div>
+          {onBack && (
+            <button
+              type="button"
+              onClick={onBack}
+              className="mb-2 inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white/70 transition hover:bg-white/10 hover:text-white"
+            >
+              <span aria-hidden>←</span>
+              Geri
+            </button>
+          )}
           <p className="text-xs font-medium text-white/30 mb-0.5">
             {greeting}{profile?.nickname ? `, ${profile.nickname}` : ''} 👋
           </p>
