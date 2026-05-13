@@ -226,6 +226,7 @@ export default function DashboardHeader({
                   <span className="font-bold text-violet-200 tabular-nums">
                     {walletLoading ? '—' : mariBalance.toFixed(3)}
                   </span>
+                  <span className="text-[11px] font-semibold text-violet-300">Mari</span>
                 </div>
               )}
               {/* Papel bakiye */}
@@ -234,6 +235,7 @@ export default function DashboardHeader({
                 <span className="font-bold text-white tabular-nums">
                   {walletLoading ? '—' : walletBalance.toFixed(2)}
                 </span>
+                <span className="text-[11px] font-semibold text-white">Papel</span>
               </div>
             </div>
           )}
@@ -453,13 +455,13 @@ export default function DashboardHeader({
                   <div className="flex flex-1 items-center gap-1.5 rounded-xl border border-violet-500/25 bg-violet-500/10 px-3 py-2 text-sm">
                     <Image src="/Mari.gif" alt="Mari" width={16} height={16} className="h-4 w-4" unoptimized />
                     <span className="font-bold text-violet-200 tabular-nums">{walletLoading ? '—' : mariBalance.toFixed(3)}</span>
-                    <span className="text-[10px] text-violet-300/60 ml-auto">Mari</span>
+                    <span className="text-[10px] font-semibold text-violet-300 ml-auto">Mari</span>
                   </div>
                 )}
                 <div className="flex flex-1 items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm">
                   <Image src="/papel.gif" alt="Papel" width={16} height={16} className="h-4 w-4" />
                   <span className="font-bold text-white tabular-nums">{walletLoading ? '—' : walletBalance.toFixed(2)}</span>
-                  <span className="text-[10px] text-white/40 ml-auto">Papel</span>
+                  <span className="text-[10px] font-semibold text-white ml-auto">Papel</span>
                 </div>
               </div>
             )}
