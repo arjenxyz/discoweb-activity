@@ -90,7 +90,7 @@ export default function PortfolioSection({ onNavigate }: Props) {
           <p className="text-white/30">{t('portfolio_empty_title')}</p>
           <button
             type="button"
-            onClick={() => onNavigate('borsa')}
+            onClick={() => onNavigate('discover')}
             className="mt-4 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/60 hover:bg-white/10 hover:text-white"
           >
             {t('portfolio_empty_button')}
@@ -111,7 +111,7 @@ export default function PortfolioSection({ onNavigate }: Props) {
               <button
                 key={h.guild_id}
                 type="button"
-                onClick={() => onNavigate('borsa-detail', h.guild_id)}
+                onClick={() => onNavigate('discover', h.guild_id)}
                 className="group w-full rounded-2xl border border-white/[0.06] bg-white/[0.03] p-4 text-left transition hover:border-white/15 hover:bg-white/[0.06]"
               >
                 <div className="flex items-center justify-between">

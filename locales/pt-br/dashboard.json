@@ -201,6 +201,7 @@
   "transfer_error_daily_limit": "Limite diário excedido",
   "transfer_error_maintenance": "Transferência está em manutenção no momento",
   "transfer_error_unauthorized": "Operação não autorizada",
+  "transfer_error_insufficient_mari": "Saldo de Mari insuficiente",
 
   "leaderboard_fetch_error": "Não foi possível carregar a tabela de líderes",
   "leaderboard_fetch_error_retry": "Tentar novamente",

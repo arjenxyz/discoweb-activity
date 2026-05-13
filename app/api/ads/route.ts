@@ -16,7 +16,7 @@ export async function GET() {
 
   const { data } = await supabase
     .from('ads')
-    .select('id, invite_url, server_name, server_description, server_icon, member_count, online_count')
+    .select('id, invite_url, server_name, server_description, server_icon, member_count, online_count, target_guild_id, mari_reward, task_enabled')
     .eq('active', true)
     .maybeSingle();
 

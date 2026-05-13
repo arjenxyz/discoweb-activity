@@ -74,7 +74,7 @@ export default function BorsaSection({ onNavigate }: BorsaSectionProps) {
         </div>
         <button
           type="button"
-          onClick={() => onNavigate('ipo-apply')}
+          onClick={() => onNavigate('settings')}
           className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white/70 transition hover:bg-white/10 hover:text-white"
         >
           {t('borsa_list_my_server')}
@@ -127,7 +127,7 @@ function ListingCard({ listing: l, onNavigate, t }: { listing: Listing; onNaviga
   return (
     <button
       type="button"
-      onClick={() => onNavigate('borsa-detail', l.guild_id)}
+      onClick={() => onNavigate('discover', l.guild_id)}
       className="group flex flex-col gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.03] p-4 text-left transition hover:border-white/15 hover:bg-white/[0.06]"
     >
       {/* Top row */}

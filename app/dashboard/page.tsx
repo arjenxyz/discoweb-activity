@@ -108,6 +108,7 @@ export default function DashboardPage() {
   const unauthorizedRef = useRef(unauthorized);
   const tickRef = useRef(0);
   const [walletBalance, setWalletBalance] = useState(0);
+  const [mariBalance, setMariBalance] = useState(0);
   const [walletLoading, setWalletLoading] = useState(true);
   const [overviewStats, setOverviewStats] = useState<OverviewStats | OverviewStatsExpanded | null>(null);
   const [overviewLoading, setOverviewLoading] = useState(true);
@@ -185,6 +186,16 @@ export default function DashboardPage() {
   const [transferLoading, setTransferLoading] = useState(false);
   const [transferError, setTransferError] = useState<string | null>(null);
   const [transferSuccess, setTransferSuccess] = useState<string | null>(null);
+  const [transferConfirmOpen, setTransferConfirmOpen] = useState(false);
+  const [transferTaxRate, setTransferTaxRate] = useState(0);
+  const [transferRecipientProfile, setTransferRecipientProfile] = useState<null | {
+    userId: string;
+    username: string;
+    displayName?: string | null;
+    nickname?: string | null;
+    avatarUrl?: string | null;
+  }>(null);
+  const [transferRecipientStatus, setTransferRecipientStatus] = useState<'idle' | 'loading' | 'ready' | 'not_found' | 'error'>('idle');
   const [maintenanceFlags, setMaintenanceFlags] = useState<Record<string, { is_active: boolean; reason: string | null; updated_by?: string | null }> | null>(null);
   const [maintenanceLoading, setMaintenanceLoading] = useState(true);
   const [maintenanceUpdaters, setMaintenanceUpdaters] = useState<Record<string, { id: string; name: string; avatarUrl: string }>>({});
@@ -623,8 +634,10 @@ export default function DashboardPage() {
     try {
       const response = await fetchWithCreds('/api/member/wallet');
       if (response.ok) {
-        const data = (await response.json()) as { balance: number };
+        const data = (await response.json()) as { balance: number; mari_balance?: number; taxRate?: number };
         setWalletBalance(Number(data.balance ?? 0));
+        setMariBalance(Number(data.mari_balance ?? 0));
+        setTransferTaxRate(Number(data.taxRate ?? 0));
       } else if (response.status === 401) {
         setUnauthorized(true);
       }
@@ -847,6 +860,55 @@ export default function DashboardPage() {
     () => new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }),
     [],
   );
+  const transferMariFee = 1;
+
+  useEffect(() => {
+    if (!transferRecipientId.trim()) {
+      setTransferRecipientProfile(null);
+      setTransferRecipientStatus('idle');
+      return;
+    }
+
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      setTransferRecipientStatus('loading');
+      try {
+        const response = await fetchWithCreds(
+          `/api/member/recipient?user_id=${encodeURIComponent(transferRecipientId.trim())}`,
+          { signal: controller.signal },
+        );
+        if (response.ok) {
+          const data = await response.json() as {
+            userId: string;
+            username: string;
+            displayName?: string | null;
+            nickname?: string | null;
+            avatarUrl?: string | null;
+          };
+          setTransferRecipientProfile(data);
+          setTransferRecipientStatus('ready');
+          return;
+        }
+        if (response.status === 404) {
+          setTransferRecipientProfile(null);
+          setTransferRecipientStatus('not_found');
+          return;
+        }
+        setTransferRecipientProfile(null);
+        setTransferRecipientStatus('error');
+      } catch {
+        if (!controller.signal.aborted) {
+          setTransferRecipientProfile(null);
+          setTransferRecipientStatus('error');
+        }
+      }
+    }, 350);
+
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [transferRecipientId]);
 
   const handleTransfer = async () => {
     if (isSiteMaintenance || isTransfersMaintenance) {
@@ -862,6 +924,29 @@ export default function DashboardPage() {
       setTransferError(t('transfer_error_no_recipient'));
       return;
     }
+    if (transferRecipientStatus !== 'ready' || !transferRecipientProfile) {
+      setTransferError(t('transfer_error_no_recipient'));
+      return;
+    }
+    if (Number.isNaN(amountValue) || amountValue <= 0) {
+      setTransferError(t('transfer_error_invalid_amount'));
+      return;
+    }
+
+    setTransferConfirmOpen(true);
+  };
+
+  const handleConfirmTransfer = async () => {
+    if (transferLoading) return;
+    setTransferError(null);
+    setTransferSuccess(null);
+
+    const amountValue = Number(transferAmount);
+    const trimmedRecipient = transferRecipientId.trim();
+    if (!trimmedRecipient) {
+      setTransferError(t('transfer_error_no_recipient'));
+      return;
+    }
     if (Number.isNaN(amountValue) || amountValue <= 0) {
       setTransferError(t('transfer_error_invalid_amount'));
       return;
@@ -871,11 +956,13 @@ export default function DashboardPage() {
     const response = await fetchWithCreds('/api/member/transfer', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ recipientId: transferRecipientId.trim(), amount: amountValue }),
+      body: JSON.stringify({ recipientId: trimmedRecipient, amount: amountValue }),
     });
     const data = (await response.json().catch(() => ({}))) as {
       error?: string;
       senderBalance?: number;
+      senderMariBalance?: number;
+      mariFee?: number;
       taxAmount?: number;
     };
 
@@ -884,10 +971,14 @@ export default function DashboardPage() {
         setTransferError(t('transfer_error_invalid_amount_api'));
       } else if (data.error === 'self_transfer') {
         setTransferError(t('transfer_error_self'));
+      } else if (data.error === 'recipient_not_found') {
+        setTransferError(t('transfer_error_no_recipient'));
       } else if (data.error === 'insufficient_funds') {
         setTransferError(t('transfer_error_insufficient'));
       } else if (data.error === 'daily_limit_exceeded') {
         setTransferError(t('transfer_error_daily_limit'));
+      } else if (data.error === 'insufficient_mari') {
+        setTransferError(t('transfer_error_insufficient_mari'));
       } else if (data.error === 'invalid_payload') {
         setTransferError(t('transfer_error_invalid_payload'));
       } else if (data.error === 'unauthorized') {
@@ -902,10 +993,14 @@ export default function DashboardPage() {
     if (typeof data.senderBalance === 'number') {
       setWalletBalance(data.senderBalance);
     }
+    if (typeof data.senderMariBalance === 'number') {
+      setMariBalance(data.senderMariBalance);
+    }
     setTransferSuccess(t('transfer_success', { amount: Number(data.taxAmount ?? 0).toFixed(2) }));
     setTransferRecipientId('');
     setTransferAmount('');
     setTransferLoading(false);
+    setTransferConfirmOpen(false);
     // Bakiye güncellemesi için yeniden yükle
     await refreshWalletBalance();
   };
@@ -962,6 +1057,9 @@ export default function DashboardPage() {
     setTransferModalOpen(false);
     setTransferError(null);
     setTransferSuccess(null);
+    setTransferConfirmOpen(false);
+    setTransferRecipientProfile(null);
+    setTransferRecipientStatus('idle');
   }, []);
 
   const handleCloseNotificationsModal = useCallback(() => {
@@ -997,6 +1095,8 @@ export default function DashboardPage() {
       setTransferError(transfersReason ?? t('transfer_error_maintenance'));
       setTransferSuccess(null);
       setTransferModalOpen(true);
+      setTransferRecipientProfile(null);
+      setTransferRecipientStatus('idle');
       setSettingsOpen(false);
       return;
     }
@@ -1004,6 +1104,8 @@ export default function DashboardPage() {
     setSettingsOpen(false);
     setTransferError(null);
     setTransferSuccess(null);
+    setTransferRecipientProfile(null);
+    setTransferRecipientStatus('idle');
   }, [isSiteMaintenance, isTransfersMaintenance, transfersReason]);
 
   const handleAddToCart = (_item: StoreItem) => {
@@ -1215,6 +1317,7 @@ export default function DashboardPage() {
           unauthorized={unauthorized}
           walletLoading={walletLoading}
           walletBalance={walletBalance}
+          mariBalance={mariBalance}
           loginUrl={loginUrl}
           server={{ ...headerServer, onSelectServer: isActivityEmbed ? undefined : handleSelectServer }}
           navigation={{
@@ -1444,11 +1547,80 @@ export default function DashboardPage() {
         loading={transferLoading}
         error={transferError}
         success={transferSuccess}
+        mariBalance={mariBalance}
+        mariFee={transferMariFee}
+        recipientProfile={transferRecipientProfile}
+        recipientStatus={transferRecipientStatus}
         onRecipientChange={setTransferRecipientId}
         onAmountChange={setTransferAmount}
         onClose={handleCloseTransferModal}
         onSubmit={handleTransfer}
       />
+      {transferConfirmOpen && transferRecipientProfile && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-6">
+          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#0b0d12] p-6 shadow-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-lg font-semibold text-white">{t('transfer_confirm_title')}</p>
+                <p className="text-xs text-white/50">{t('transfer_confirm_subtitle')}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setTransferConfirmOpen(false)}
+                className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/60 transition hover:border-white/30 hover:text-white"
+              >
+                {t('transfer_close_button')}
+              </button>
+            </div>
+
+            <div className="mt-5 space-y-4">
+              <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5">
+                <div className="h-10 w-10 overflow-hidden rounded-full border border-white/10 bg-white/5">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={transferRecipientProfile.avatarUrl || '/gif/cat.gif'}
+                    alt="avatar"
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-white truncate">
+                    {transferRecipientProfile.displayName || transferRecipientProfile.nickname || transferRecipientProfile.username}
+                  </p>
+                  <p className="text-xs text-white/40 truncate">{transferRecipientProfile.username}</p>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/80 space-y-1">
+                <p>{t('transfer_confirm_amount', { amount: moneyFormatter.format(Number(transferAmount || 0)) })}</p>
+                <p>{t('transfer_confirm_tax', { amount: moneyFormatter.format(Number((Number(transferAmount || 0) * transferTaxRate).toFixed(2))) })}</p>
+                <p>{t('transfer_confirm_total_debit', { amount: moneyFormatter.format(Number((Number(transferAmount || 0) * (1 + transferTaxRate)).toFixed(2))) })}</p>
+                <p>{t('transfer_confirm_mari_fee', { amount: String(transferMariFee) })}</p>
+              </div>
+
+              {transferError && <p className="text-sm text-rose-300">{transferError}</p>}
+            </div>
+
+            <div className="mt-6 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setTransferConfirmOpen(false)}
+                className="rounded-full border border-white/10 px-4 py-2 text-xs text-white/60 transition hover:border-white/30 hover:text-white"
+              >
+                {t('transfer_confirm_cancel')}
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmTransfer}
+                disabled={transferLoading}
+                className="rounded-full bg-indigo-500 px-4 py-2 text-xs font-semibold text-white transition hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {transferLoading ? t('transfer_submitting') : t('transfer_confirm_submit')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <PromotionsModal
         isOpen={promotionsModalOpen}
         onClose={() => { setPromotionsModalOpen(false); setPromoError(null); setPromoSuccess(null); }}

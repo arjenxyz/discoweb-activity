@@ -213,6 +213,7 @@
   "transfer_error_daily_limit": "Günlük limit aşıldı",
   "transfer_error_maintenance": "Transfer şu an bakımda",
   "transfer_error_unauthorized": "Yetkisiz işlem",
+  "transfer_error_insufficient_mari": "Yetersiz Mari bakiyesi",
   "leaderboard_fetch_error": "Liderlik tablosu yüklenemedi",
   "leaderboard_fetch_error_retry": "Tekrar dene",
   "header_convert_to_mari": "Mari'ye Çevir",

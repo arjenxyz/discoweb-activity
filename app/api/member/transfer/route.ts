@@ -40,6 +40,15 @@ const getSenderLabel = async (userId: string, guildId: string) => {
   return member.nick ?? member.user?.username ?? userId;
 };
 
+const ensureRecipientInGuild = async (guildId: string | null, userId: string) => {
+  const botToken = process.env.DISCORD_BOT_TOKEN;
+  if (!botToken || !guildId) return true;
+  const response = await fetch(`https://discord.com/api/guilds/${guildId}/members/${userId}`, {
+    headers: { Authorization: `Bot ${botToken}` },
+  });
+  return response.ok;
+};
+
 const getTodayStartIso = () => {
   const now = new Date();
   const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0));
@@ -49,21 +58,25 @@ const getTodayStartIso = () => {
 const getBalance = async (supabase: SupabaseClient, userId: string, guildId: string) => {
   const { data } = (await supabase
     .from('member_wallets')
-    .select('balance')
+    .select('balance,mari_balance')
     .eq('guild_id', guildId)
     .eq('user_id', userId)
-    .maybeSingle()) as unknown as { data: { balance?: number } | null };
+    .maybeSingle()) as unknown as { data: { balance?: number; mari_balance?: number } | null };
 
-  return Number(data?.balance ?? 0);
+  return {
+    balance: Number(data?.balance ?? 0),
+    mariBalance: Number(data?.mari_balance ?? 0),
+  };
 };
 
-const setBalance = async (supabase: SupabaseClient, userId: string, guildId: string, balance: number) => {
+const setBalance = async (supabase: SupabaseClient, userId: string, guildId: string, balance: number, mariBalance?: number) => {
   await (supabase.from('member_wallets') as unknown as {
     upsert: (values: Record<string, unknown>, options?: { onConflict?: string }) => Promise<unknown>;
   }).upsert({
     guild_id: guildId,
     user_id: userId,
     balance,
+    ...(typeof mariBalance === 'number' ? { mari_balance: mariBalance } : {}),
     updated_at: new Date().toISOString(),
   }, { onConflict: 'guild_id,user_id' });
 };
@@ -137,6 +150,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'self_transfer' }, { status: 400 });
   }
 
+  if (!(await ensureRecipientInGuild(selectedGuildId, payload.recipientId))) {
+    return NextResponse.json({ error: 'recipient_not_found' }, { status: 404 });
+  }
+
   const { data: server } = await supabase
     .from('servers')
     .select('id,transfer_daily_limit,transfer_tax_rate')
@@ -166,19 +183,25 @@ export async function POST(request: Request) {
   const totalDebit = Number((payload.amount + taxAmount).toFixed(2));
 
   const senderBalance = await getBalance(supabase, userId, server.id);
-  if (senderBalance < totalDebit) {
+  const mariFee = 1;
+  if (senderBalance.balance < totalDebit) {
     return NextResponse.json({ error: 'insufficient_funds' }, { status: 400 });
+  }
+  if (senderBalance.mariBalance < mariFee) {
+    return NextResponse.json({ error: 'insufficient_mari' }, { status: 400 });
   }
 
   const receiverBalance = await getBalance(supabase, payload.recipientId, server.id);
 
-  const newSenderBalance = Number((senderBalance - totalDebit).toFixed(2));
-  const newReceiverBalance = Number((receiverBalance + payload.amount).toFixed(2));
+  const newSenderBalance = Number((senderBalance.balance - totalDebit).toFixed(2));
+  const newReceiverBalance = Number((receiverBalance.balance + payload.amount).toFixed(2));
+  const newSenderMariBalance = Number((senderBalance.mariBalance - mariFee).toFixed(3));
 
-  await setBalance(supabase, userId, server.id, newSenderBalance);
+  await setBalance(supabase, userId, server.id, newSenderBalance, newSenderMariBalance);
   await addLedger(supabase, userId, server.id, payload.amount, 'transfer_out', newSenderBalance, {
     recipientId: payload.recipientId,
     tax: taxAmount,
+    mari_fee: mariFee,
   });
   if (taxAmount > 0) {
     await addLedger(supabase, userId, server.id, taxAmount, 'transfer_tax', newSenderBalance, {
@@ -186,7 +209,7 @@ export async function POST(request: Request) {
     });
   }
 
-  await setBalance(supabase, payload.recipientId, server.id, newReceiverBalance);
+  await setBalance(supabase, payload.recipientId, server.id, newReceiverBalance, receiverBalance.mariBalance);
   await addLedger(supabase, payload.recipientId, server.id, payload.amount, 'transfer_in', newReceiverBalance, {
     senderId: userId,
   });
@@ -202,6 +225,8 @@ export async function POST(request: Request) {
   return NextResponse.json({
     status: 'ok',
     senderBalance: newSenderBalance,
+    senderMariBalance: newSenderMariBalance,
+    mariFee,
     receiverBalance: newReceiverBalance,
     taxAmount,
   });

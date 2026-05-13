@@ -28,6 +28,7 @@ export async function GET(request: Request) {
   if (process.env.NODE_ENV === 'development') {
     return NextResponse.json({
       balance: 1000,
+      mari_balance: 10,
       total_earned: 1000,
       total_spent: 0,
       daily_reward: 100,
@@ -71,21 +72,15 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'server_not_found' }, { status: 404 });
   }
 
-  const [walletRes, econRes] = await Promise.all([
+  const [walletRes] = await Promise.all([
     supabase
       .from('member_wallets')
       .select('balance,mari_balance')
       .eq('guild_id', selectedGuildId)
       .eq('user_id', userId)
       .maybeSingle(),
-    supabase
-      .from('economy_applications')
-      .select('status')
-      .eq('guild_id', selectedGuildId)
-      .maybeSingle(),
   ]);
   const wallet = walletRes.data;
-  const economyApproved = econRes.data?.status === 'approved';
 
   // Eğer kullanıcıya ait cüzdan satırı yoksa otomatik oluştur
   if (!walletRes.data) {
@@ -94,6 +89,7 @@ export async function GET(request: Request) {
         guild_id: selectedGuildId,
         user_id: userId,
         balance: 0,
+        mari_balance: 0,
         updated_at: new Date().toISOString(),
       },
       { onConflict: 'guild_id,user_id' },
@@ -116,8 +112,7 @@ export async function GET(request: Request) {
 
   return NextResponse.json({
     balance: wallet?.balance ?? 0,
-    mari_balance: economyApproved ? (wallet?.mari_balance ?? 0) : undefined,
-    economy_approved: economyApproved,
+    mari_balance: wallet?.mari_balance ?? 0,
     dailyLimit: server.transfer_daily_limit,
     taxRate: server.transfer_tax_rate,
     sentToday: totalSent,

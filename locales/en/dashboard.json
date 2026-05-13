@@ -213,6 +213,7 @@
   "transfer_error_daily_limit": "Daily limit exceeded",
   "transfer_error_maintenance": "Transfer is under maintenance",
   "transfer_error_unauthorized": "Unauthorized transaction",
+  "transfer_error_insufficient_mari": "Insufficient Mari balance",
   "leaderboard_fetch_error": "Could not load leaderboard",
   "leaderboard_fetch_error_retry": "Try again",
   "header_convert_to_mari": "Convert to Mari",

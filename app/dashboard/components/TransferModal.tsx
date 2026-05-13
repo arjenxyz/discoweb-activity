@@ -9,6 +9,16 @@ type TransferModalProps = {
   loading: boolean;
   error: string | null;
   success: string | null;
+  mariBalance?: number;
+  mariFee?: number;
+  recipientProfile?: {
+    userId: string;
+    username: string;
+    displayName?: string | null;
+    nickname?: string | null;
+    avatarUrl?: string | null;
+  } | null;
+  recipientStatus?: 'idle' | 'loading' | 'ready' | 'not_found' | 'error';
   onRecipientChange: (value: string) => void;
   onAmountChange: (value: string) => void;
   onClose: () => void;
@@ -22,6 +32,10 @@ export default function TransferModal({
   loading,
   error,
   success,
+  mariBalance,
+  mariFee,
+  recipientProfile,
+  recipientStatus = 'idle',
   onRecipientChange,
   onAmountChange,
   onClose,
@@ -58,6 +72,33 @@ export default function TransferModal({
               placeholder={t('transfer_recipient_placeholder')}
               className="mt-2 w-full rounded-xl border border-white/10 bg-[#0b0d12]/70 px-4 py-3 text-sm text-white/80 focus:border-indigo-400 focus:outline-none"
             />
+            {recipientStatus === 'loading' && (
+              <p className="mt-2 text-xs text-white/40">{t('transfer_recipient_loading')}</p>
+            )}
+            {recipientStatus === 'not_found' && (
+              <p className="mt-2 text-xs text-rose-300">{t('transfer_recipient_not_found')}</p>
+            )}
+            {recipientStatus === 'error' && (
+              <p className="mt-2 text-xs text-rose-300">{t('transfer_recipient_error')}</p>
+            )}
+            {recipientProfile && recipientStatus === 'ready' && (
+              <div className="mt-3 flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5">
+                <div className="h-9 w-9 overflow-hidden rounded-full border border-white/10 bg-white/5">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={recipientProfile.avatarUrl || '/gif/cat.gif'}
+                    alt="avatar"
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-white truncate">
+                    {recipientProfile.displayName || recipientProfile.nickname || recipientProfile.username}
+                  </p>
+                  <p className="text-xs text-white/40 truncate">{recipientProfile.username}</p>
+                </div>
+              </div>
+            )}
           </div>
           <div>
             <label className="text-xs text-white/50">{t('transfer_amount_label')}</label>
@@ -71,6 +112,14 @@ export default function TransferModal({
           </div>
           {error && <p className="text-sm text-rose-300">{error}</p>}
           {success && <p className="text-sm text-emerald-300">{success}</p>}
+          {typeof mariFee === 'number' && (
+            <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/60">
+              {t('transfer_mari_fee', { amount: mariFee })}
+              {typeof mariBalance === 'number' && (
+                <span className="ml-2 text-white/40">{t('transfer_mari_balance', { amount: mariBalance.toFixed(3) })}</span>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="mt-6 flex items-center justify-end gap-3">
