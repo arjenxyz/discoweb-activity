@@ -29,7 +29,7 @@ export default function DiscoverSection() {
       .finally(() => setLoading(false));
   }, []);
 
-  const card = 'rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4 sm:p-5';
+  const card = 'rounded-[26px] border border-white/10 bg-gradient-to-br from-[#4a3f45]/80 via-[#3a3540]/85 to-[#2a2f3a]/90 p-4 sm:p-5 shadow-[0_20px_60px_rgba(0,0,0,0.45)]';
 
   return (
     <section className="flex flex-col gap-4 p-3 sm:p-6">
@@ -48,7 +48,7 @@ export default function DiscoverSection() {
         </div>
       ) : ad ? (
         <div className={card}>
-          <p className="mb-4 text-[9px] font-semibold uppercase tracking-[0.3em] text-white/25">{t('discover_featured_badge')}</p>
+          <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/50">{t('discover_featured_badge')}</p>
 
           <div className="flex items-start gap-4">
             {ad.server_icon ? (
@@ -58,24 +58,24 @@ export default function DiscoverSection() {
                 width={64}
                 height={64}
                 unoptimized
-                className="h-16 w-16 rounded-2xl object-cover shrink-0"
+                className="h-16 w-16 rounded-2xl object-cover shrink-0 border border-white/10"
               />
             ) : (
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-[#5865F2]/20 text-2xl font-black text-white">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-2xl font-black text-white">
                 {ad.server_name.charAt(0)}
               </div>
             )}
 
             <div className="min-w-0 flex-1">
-              <p className="text-xl font-black text-white">{ad.server_name}</p>
+              <p className="text-lg font-semibold text-white">{ad.server_name}</p>
               {ad.server_description && (
-                <p className="mt-1 text-sm text-white/50 line-clamp-2">{ad.server_description}</p>
+                <p className="mt-1 text-xs text-white/60 line-clamp-2">{ad.server_description}</p>
               )}
               {(ad.member_count != null || ad.online_count != null) && (
-                <div className="mt-2 flex items-center gap-4 text-xs text-white/35">
+                <div className="mt-2 flex items-center gap-4 text-xs text-white/45">
                   {ad.online_count != null && (
                     <span className="flex items-center gap-1.5">
-                      <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                      <span className="h-2 w-2 rounded-full bg-emerald-300" />
                       {t('discover_online_count', { count: ad.online_count.toLocaleString() })}
                     </span>
                   )}
@@ -90,12 +90,12 @@ export default function DiscoverSection() {
             </div>
           </div>
 
-          <div className="mt-4 pt-4 border-t border-white/[0.06]">
+          <div className="mt-4">
             <a
               href={ad.invite_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-xl bg-[#5865F2] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-[#4752C4]"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/20 px-5 py-3 text-sm font-semibold text-white/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition hover:bg-white/25"
             >
               {t('discover_join_button')}
             </a>
