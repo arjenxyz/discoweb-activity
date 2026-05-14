@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
-import { LuCheckCircle2, LuClock, LuListChecks, LuLock, LuSparkles } from 'react-icons/lu';
+import { LuCircleCheck, LuClock, LuListChecks, LuLock, LuSparkles } from 'react-icons/lu';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { useT } from '@/contexts/LocaleContext';
 
@@ -45,7 +45,7 @@ const statusBadge = (status: WeeklyTaskItem['status'], t: (key: string, vars?: R
     case 'claimable':
       return { label: t('tasks_status_claimable'), icon: LuSparkles, className: 'bg-emerald-500/15 text-emerald-100 border-emerald-500/30' };
     case 'claimed':
-      return { label: t('tasks_status_claimed'), icon: LuCheckCircle2, className: 'bg-sky-500/15 text-sky-100 border-sky-500/30' };
+      return { label: t('tasks_status_claimed'), icon: LuCircleCheck, className: 'bg-sky-500/15 text-sky-100 border-sky-500/30' };
     case 'locked':
       return { label: t('tasks_status_locked'), icon: LuLock, className: 'bg-white/5 text-white/45 border-white/10' };
     default:
