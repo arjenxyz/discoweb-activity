@@ -14,6 +14,7 @@ type WeeklyTaskRow = {
   requirement_type: 'join_guild' | 'message_count' | 'voice_minutes' | 'role' | 'event_participation';
   requirement_value: number | null;
   requirement_role_id: string | null;
+  requirement_target_guild_id: string | null;
   reward_mari: number;
 };
 
@@ -26,6 +27,7 @@ type TaskResponse = {
   requirementType: WeeklyTaskRow['requirement_type'];
   requirementValue: number | null;
   requirementRoleId: string | null;
+  requirementTargetGuildId: string | null;
   rewardMari: number;
   status: TaskStatus;
   progress: number | null;
@@ -72,6 +74,7 @@ const getMemberRoles = async (guildId: string, userId: string): Promise<string[]
 
 const evaluateTask = (task: WeeklyTaskRow, options: {
   hasJoined: boolean;
+  joinAllowed: boolean;
   userMessages: number;
   userVoiceMinutes: number;
   memberRoles: string[] | null;
@@ -84,7 +87,7 @@ const evaluateTask = (task: WeeklyTaskRow, options: {
   let isComplete = false;
 
   if (task.requirement_type === 'join_guild') {
-    isComplete = options.hasJoined;
+    isComplete = options.joinAllowed && options.hasJoined;
   } else if (task.requirement_type === 'role') {
     const roles = options.memberRoles ?? [];
     isComplete = Boolean(task.requirement_role_id && roles.includes(task.requirement_role_id));
@@ -119,6 +122,7 @@ const evaluateTask = (task: WeeklyTaskRow, options: {
     requirementType: task.requirement_type,
     requirementValue: task.requirement_value,
     requirementRoleId: task.requirement_role_id,
+    requirementTargetGuildId: task.requirement_target_guild_id,
     rewardMari: Number(task.reward_mari ?? 0),
     status,
     progress,
@@ -151,7 +155,7 @@ export async function GET(request: Request) {
 
   const { data: tasks } = await supabase
     .from('weekly_tasks')
-    .select('id,title,description,requirement_type,requirement_value,requirement_role_id,reward_mari')
+    .select('id,title,description,requirement_type,requirement_value,requirement_role_id,requirement_target_guild_id,reward_mari')
     .eq('guild_id', guildId)
     .eq('week_start', weekStart)
     .eq('active', true)
@@ -161,7 +165,14 @@ export async function GET(request: Request) {
     return NextResponse.json({ weekStart, weekEnd, tasks: [] });
   }
 
-  const [claims, memberStats, eventRows, memberRoles] = await Promise.all([
+  const joinTargets = Array.from(new Set(
+    tasks
+      .filter((task) => task.requirement_type === 'join_guild')
+      .map((task) => task.requirement_target_guild_id)
+      .filter((id): id is string => Boolean(id)),
+  ));
+
+  const [claims, memberStats, eventRows, memberRoles, joinClaimRows, joinEligibleAds] = await Promise.all([
     supabase
       .from('weekly_task_claims')
       .select('task_id')
@@ -183,22 +194,50 @@ export async function GET(request: Request) {
       .gte('join_at', `${weekStart}T00:00:00.000Z`)
       .lte('join_at', `${weekEnd}T23:59:59.999Z`),
     getMemberRoles(guildId, userId),
+    joinTargets.length
+      ? supabase
+        .from('weekly_task_join_claims')
+        .select('target_guild_id')
+        .eq('user_id', userId)
+        .in('target_guild_id', joinTargets)
+      : Promise.resolve({ data: [] as Array<{ target_guild_id: string }> }),
+    joinTargets.length
+      ? supabase
+        .from('ads')
+        .select('target_guild_id')
+        .eq('active', true)
+        .eq('task_enabled', true)
+        .in('target_guild_id', joinTargets)
+      : Promise.resolve({ data: [] as Array<{ target_guild_id: string | null }> }),
   ]);
 
   const claimIds = new Set((claims.data ?? []).map((row: { task_id: string }) => row.task_id));
   const messages = (memberStats.data ?? []).reduce((sum: number, row: { message_count: number | null }) => sum + Number(row.message_count ?? 0), 0);
   const voiceMinutes = (memberStats.data ?? []).reduce((sum: number, row: { voice_minutes: number | null }) => sum + Number(row.voice_minutes ?? 0), 0);
   const eventCount = (eventRows.data ?? []).length ?? 0;
+  const joinClaimedSet = new Set((joinClaimRows.data ?? []).map((row: { target_guild_id: string }) => row.target_guild_id));
+  const joinAllowedSet = new Set((joinEligibleAds.data ?? []).map((row: { target_guild_id: string | null }) => row.target_guild_id).filter(Boolean) as string[]);
+  const joinStatusMap = new Map<string, boolean>();
 
-  const hasJoined = await isUserInGuild(guildId, userId);
+  for (const targetId of joinTargets) {
+    if (!joinAllowedSet.has(targetId)) {
+      joinStatusMap.set(targetId, false);
+      continue;
+    }
+    // One-by-one to avoid Discord API rate spikes
+    // eslint-disable-next-line no-await-in-loop
+    const isMember = await isUserInGuild(targetId, userId);
+    joinStatusMap.set(targetId, isMember);
+  }
 
   const responseTasks = tasks.map((task) => evaluateTask(task, {
-    hasJoined,
+    hasJoined: task.requirement_target_guild_id ? (joinStatusMap.get(task.requirement_target_guild_id) ?? false) : false,
+    joinAllowed: task.requirement_target_guild_id ? joinAllowedSet.has(task.requirement_target_guild_id) : false,
     userMessages: messages,
     userVoiceMinutes: voiceMinutes,
     memberRoles,
     eventCount,
-    isClaimed: claimIds.has(task.id),
+    isClaimed: claimIds.has(task.id) || (task.requirement_target_guild_id ? joinClaimedSet.has(task.requirement_target_guild_id) : false),
   }));
 
   return NextResponse.json({ weekStart, weekEnd, tasks: responseTasks });
@@ -232,7 +271,7 @@ export async function POST(request: Request) {
 
   const { data: task } = await supabase
     .from('weekly_tasks')
-    .select('id,title,description,requirement_type,requirement_value,requirement_role_id,reward_mari,active')
+    .select('id,title,description,requirement_type,requirement_value,requirement_role_id,requirement_target_guild_id,reward_mari,active')
     .eq('id', payload.taskId)
     .eq('guild_id', guildId)
     .eq('week_start', weekStart)
@@ -251,6 +290,34 @@ export async function POST(request: Request) {
 
   if (existingClaim) return NextResponse.json({ error: 'already_claimed' }, { status: 409 });
 
+  if (task.requirement_type === 'join_guild') {
+    if (!task.requirement_target_guild_id) {
+      return NextResponse.json({ error: 'task_not_configured' }, { status: 400 });
+    }
+    const { data: joinEligible } = await supabase
+      .from('ads')
+      .select('target_guild_id')
+      .eq('active', true)
+      .eq('task_enabled', true)
+      .eq('target_guild_id', task.requirement_target_guild_id)
+      .maybeSingle();
+
+    if (!joinEligible?.target_guild_id) {
+      return NextResponse.json({ error: 'task_not_available' }, { status: 400 });
+    }
+
+    const { data: joinClaim } = await supabase
+      .from('weekly_task_join_claims')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('target_guild_id', task.requirement_target_guild_id)
+      .maybeSingle();
+
+    if (joinClaim) {
+      return NextResponse.json({ error: 'already_claimed' }, { status: 409 });
+    }
+  }
+
   const [memberStats, eventRows, memberRoles, hasJoined] = await Promise.all([
     supabase
       .from('member_daily_stats')
@@ -267,7 +334,9 @@ export async function POST(request: Request) {
       .gte('join_at', `${weekStart}T00:00:00.000Z`)
       .lte('join_at', `${weekEnd}T23:59:59.999Z`),
     getMemberRoles(guildId, userId),
-    isUserInGuild(guildId, userId),
+    task.requirement_target_guild_id
+      ? isUserInGuild(task.requirement_target_guild_id, userId)
+      : Promise.resolve(false),
   ]);
 
   const messages = (memberStats.data ?? []).reduce((sum: number, row: { message_count: number | null }) => sum + Number(row.message_count ?? 0), 0);
@@ -276,6 +345,7 @@ export async function POST(request: Request) {
 
   const evaluated = evaluateTask(task, {
     hasJoined,
+    joinAllowed: task.requirement_type !== 'join_guild' || Boolean(task.requirement_target_guild_id),
     userMessages: messages,
     userVoiceMinutes: voiceMinutes,
     memberRoles,
@@ -308,6 +378,14 @@ export async function POST(request: Request) {
     week_start: weekStart,
     reward_mari: reward,
   });
+  if (task.requirement_type === 'join_guild' && task.requirement_target_guild_id) {
+    await supabase.from('weekly_task_join_claims').insert({
+      user_id: userId,
+      target_guild_id: task.requirement_target_guild_id,
+      task_id: task.id,
+      claimed_at: new Date().toISOString(),
+    });
+  }
 
   if (claimError) {
     if (claimError.code === '23505') {

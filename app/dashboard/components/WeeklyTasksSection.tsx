@@ -12,6 +12,7 @@ export type WeeklyTaskItem = {
   requirementType: 'join_guild' | 'message_count' | 'voice_minutes' | 'role' | 'event_participation';
   requirementValue: number | null;
   requirementRoleId?: string | null;
+  requirementTargetGuildId?: string | null;
   rewardMari: number;
   status: 'locked' | 'in_progress' | 'claimable' | 'claimed';
   progress?: number | null;
