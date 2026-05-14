@@ -19,6 +19,8 @@
   "transfer_confirm_subtitle": "Revise os detalhes antes de enviar.",
   "transfer_confirm_amount": "Valor: {amount} Papel",
   "transfer_confirm_mari_fee": "Taxa Mari: {amount}",
+  "transfer_confirm_tax": "Taxa: {amount} Papel",
+  "transfer_confirm_total_debit": "Total debitado: {amount} Papel",
   "transfer_confirm_cancel": "Cancelar",
   "transfer_confirm_submit": "Confirmar",
   "transfer_cancel_button": "Cancelar",

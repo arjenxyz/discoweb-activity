@@ -19,6 +19,8 @@
   "transfer_confirm_subtitle": "Göndermeden önce detayları kontrol edin.",
   "transfer_confirm_amount": "Miktar: {amount} Papel",
   "transfer_confirm_mari_fee": "Mari ücreti: {amount}",
+  "transfer_confirm_tax": "Vergi: {amount} Papel",
+  "transfer_confirm_total_debit": "Toplam kesinti: {amount} Papel",
   "transfer_confirm_cancel": "Vazgeç",
   "transfer_confirm_submit": "Onayla",
   "transfer_cancel_button": "Vazgeç",
