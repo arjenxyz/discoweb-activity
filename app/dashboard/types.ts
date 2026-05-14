@@ -1,5 +1,5 @@
 // Ortak Section tipi
-export type Section = 'overview' | 'store' | 'notifications' | 'profile' | 'settings' | 'mail' | 'transactions' | 'tracking' | 'leaderboard' | 'discover' | 'tag-badge' | 'duyuru' | 'play-earn';
+export type Section = 'overview' | 'store' | 'notifications' | 'profile' | 'settings' | 'mail' | 'transactions' | 'tracking' | 'leaderboard' | 'discover' | 'tag-badge' | 'duyuru' | 'play-earn' | 'tasks';
 export type Notification = {
   id: string;
   title: string;
