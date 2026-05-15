@@ -121,6 +121,16 @@ export default function DiscoverSection() {
 
     const guildId = ad.target_guild_id;
     if (!guildId) {
+      try {
+        const sdk = getDiscordSdk();
+        if (sdk) {
+          await sdk.commands.openExternalLink({ url: ad.invite_url });
+          setJoinLoading(false);
+          return;
+        }
+      } catch {
+        // fallback to window.open if SDK is unavailable
+      }
       window.open(ad.invite_url, '_blank', 'noopener,noreferrer');
       setJoinLoading(false);
       return;
@@ -167,7 +177,7 @@ export default function DiscoverSection() {
 
   useEffect(() => {
     if (!ad?.target_guild_id) {
-      setMemberStatus('unknown');
+      setMemberStatus('not_member');
       return;
     }
 
