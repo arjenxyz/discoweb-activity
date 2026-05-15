@@ -175,20 +175,20 @@ export default function DiscoverSection() {
     const checkMembership = async () => {
       setMemberStatus('loading');
       try {
-const guildId = ad.target_guild_id;
-      if (!guildId) {
-        setMemberStatus('unknown');
-        return;
-      }
+        const guildId = ad.target_guild_id;
+        if (!guildId) {
+          setMemberStatus('unknown');
+          return;
+        }
 
-      const response = await fetch(apiUrl(`/api/member/discord-join?guild_id=${encodeURIComponent(guildId)}`), {
+        const response = await fetch(apiUrl(`/api/member/discord-join?guild_id=${encodeURIComponent(guildId)}`), {
           credentials: 'include',
           cache: 'no-store',
           signal: controller.signal,
         });
 
         if (!response.ok) {
-          setMemberStatus('unknown');
+          setMemberStatus('not_member');
           return;
         }
 
@@ -197,7 +197,7 @@ const guildId = ad.target_guild_id;
         if (data.member) setJoined(true);
       } catch {
         if (!controller.signal.aborted) {
-          setMemberStatus('unknown');
+          setMemberStatus('not_member');
         }
       }
     };
