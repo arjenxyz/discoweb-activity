@@ -153,6 +153,7 @@ export default function DiscoverSection() {
 
       if (data?.needs_reauth || data?.error === 'missing_scope' || data?.error === 'missing_token' || data?.error === 'unauthorized') {
         setShowPermissionModal(true);
+        setJoinLoading(false);
         return;
       }
 
