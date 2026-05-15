@@ -144,6 +144,12 @@ export default function DiscoverSection() {
         credentials: 'include',
       });
 
+      if (response.status === 401 || response.status === 403) {
+        setShowPermissionModal(true);
+        setJoinLoading(false);
+        return;
+      }
+
       const data = await response.json().catch(() => null);
       if (response.ok) {
         setJoined(true);
