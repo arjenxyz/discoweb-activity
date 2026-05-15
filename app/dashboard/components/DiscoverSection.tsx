@@ -68,6 +68,7 @@ export default function DiscoverSection() {
     const sdk = getDiscordSdk();
     const clientId = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
     if (!sdk || !clientId) {
+      setShowPermissionModal(false);
       if (joinAuthUrl) {
         window.location.href = joinAuthUrl;
         return;
@@ -105,6 +106,7 @@ export default function DiscoverSection() {
         throw new Error(text || 'auth_failed');
       }
 
+      setShowPermissionModal(false);
       await handleJoinClick();
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
