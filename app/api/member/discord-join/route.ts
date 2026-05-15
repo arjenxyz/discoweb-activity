@@ -6,7 +6,9 @@ import { discordFetch } from '@/lib/discordRest';
 const DISCORD_API = 'https://discord.com/api/v10';
 export const dynamic = 'force-dynamic';
 
-const getSupabase = () => {
+type SupabaseAnyClient = ReturnType<typeof createClient<any>>;
+
+const getSupabase = (): SupabaseAnyClient | null => {
   const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!supabaseUrl || !serviceRoleKey) {
@@ -16,7 +18,7 @@ const getSupabase = () => {
 };
 
 async function refreshAccessToken(
-  supabase: ReturnType<typeof createClient>,
+  supabase: SupabaseAnyClient,
   discordId: string,
   refreshToken: string,
 ) {
@@ -72,7 +74,7 @@ async function refreshAccessToken(
 
 async function fetchDiscordWithRefresh(
   request: Request,
-  supabase: ReturnType<typeof createClient>,
+  supabase: SupabaseAnyClient,
   discordId: string,
   accessToken: string,
   refreshToken: string | null,
