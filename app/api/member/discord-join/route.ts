@@ -57,14 +57,14 @@ async function refreshAccessToken(
     ? new Date(Date.now() + tokenData.expires_in * 1000).toISOString()
     : null;
 
-  await supabase
+  await (supabase as any)
     .from('users')
     .update({
       oauth_access_token: tokenData.access_token,
       oauth_refresh_token: tokenData.refresh_token ?? refreshToken,
       oauth_expires_at: expiresAt,
       updated_at: new Date().toISOString(),
-    } as any)
+    })
     .eq('discord_id', discordId);
 
   return tokenData.access_token;
