@@ -12,7 +12,7 @@ const getSupabase = () => {
   if (!supabaseUrl || !serviceRoleKey) {
     return null;
   }
-  return createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
+  return createClient<any>(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
 };
 
 async function refreshAccessToken(
