@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { LuUsers } from 'react-icons/lu';
 import { apiUrl } from '@/lib/api';
 import { useT } from '@/contexts/LocaleContext';
+import { getDiscordSdk } from '@/lib/discordSdk';
 
 type Ad = {
   id: string;
@@ -23,6 +24,7 @@ export default function DiscoverSection() {
   const [loading, setLoading] = useState(true);
   const [memberStatus, setMemberStatus] = useState<'loading' | 'member' | 'not_member' | 'unknown'>('loading');
   const [joinLoading, setJoinLoading] = useState(false);
+  const [reauthLoading, setReauthLoading] = useState(false);
   const [joined, setJoined] = useState(false);
   const [showPermissionModal, setShowPermissionModal] = useState(false);
   const [joinError, setJoinError] = useState<string | null>(null);
@@ -53,12 +55,63 @@ export default function DiscoverSection() {
     return `https://discord.com/oauth2/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(authRedirect)}&response_type=code&scope=identify%20guilds%20guilds.members.read%20guilds.join&prompt=consent&state=${state}`;
   }, [authRedirect, ad?.target_guild_id]);
 
-  const handlePermissionUpdate = () => {
-    if (joinAuthUrl) {
-      window.location.href = joinAuthUrl;
+  const handlePermissionUpdate = async () => {
+    if (!ad?.target_guild_id) {
+      if (joinAuthUrl) {
+        window.location.href = joinAuthUrl;
+        return;
+      }
+      window.location.reload();
       return;
     }
-    window.location.reload();
+
+    const sdk = getDiscordSdk();
+    const clientId = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
+    if (!sdk || !clientId) {
+      if (joinAuthUrl) {
+        window.location.href = joinAuthUrl;
+        return;
+      }
+      setJoinError(t('discover_activity_sdk_missing'));
+      return;
+    }
+
+    setJoinError(null);
+    setReauthLoading(true);
+    try {
+      const authorizeCommand = (sdk.commands as unknown as {
+        authorize: (args: { client_id: string; scope: string[]; prompt: string }) => Promise<{ code: string }>;
+      }).authorize;
+      const authResult = await authorizeCommand({
+        client_id: clientId,
+        scope: ['identify', 'guilds', 'guilds.members.read', 'guilds.join', 'rpc.activities.write'],
+        prompt: 'consent',
+      });
+
+      const code = authResult?.code;
+      if (!code) {
+        throw new Error('missing_discord_code');
+      }
+
+      const locale = ((sdk as unknown as { locale?: string }).locale ?? navigator.language) || 'en';
+      const authResponse = await fetch(apiUrl(`/api/activity/auth?guild_id=${encodeURIComponent(ad.target_guild_id)}`), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, locale }),
+      });
+
+      if (!authResponse.ok) {
+        const text = await authResponse.text().catch(() => '');
+        throw new Error(text || 'auth_failed');
+      }
+
+      await handleJoinClick();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      setJoinError(message || t('discover_join_error'));
+    } finally {
+      setReauthLoading(false);
+    }
   };
 
   const handleJoinClick = async () => {
@@ -225,7 +278,7 @@ const guildId = ad.target_guild_id;
                   type="button"
                   onClick={() => void handleJoinClick()}
                   className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/20 px-5 py-3 text-sm font-semibold text-white/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition hover:bg-white/25 disabled:cursor-not-allowed disabled:opacity-60"
-                  disabled={joinLoading}
+                  disabled={joinLoading || reauthLoading}
                 >
                   {joinLoading ? t('discover_joining') : t('discover_join_button')}
                 </button>
@@ -267,9 +320,10 @@ const guildId = ad.target_guild_id;
                     <button
                       type="button"
                       onClick={handlePermissionUpdate}
-                      className="w-full rounded-2xl bg-gradient-to-r from-fuchsia-500 to-violet-500 px-4 py-3 text-sm font-semibold text-white transition hover:opacity-95 sm:w-auto"
+                      disabled={reauthLoading}
+                      className="w-full rounded-2xl bg-gradient-to-r from-fuchsia-500 to-violet-500 px-4 py-3 text-sm font-semibold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                     >
-                      {t('discover_permission_modal_button')}
+                      {reauthLoading ? t('discover_permission_modal_button_loading') : t('discover_permission_modal_button')}
                     </button>
                   </div>
                 </div>
