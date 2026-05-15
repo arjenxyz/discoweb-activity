@@ -64,7 +64,7 @@ async function refreshAccessToken(
       oauth_refresh_token: tokenData.refresh_token ?? refreshToken,
       oauth_expires_at: expiresAt,
       updated_at: new Date().toISOString(),
-    })
+    } as any)
     .eq('discord_id', discordId);
 
   return tokenData.access_token;
