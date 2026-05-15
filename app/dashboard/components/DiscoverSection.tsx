@@ -14,14 +14,17 @@ type Ad = {
   server_icon?: string | null;
   member_count?: number | null;
   online_count?: number | null;
+  target_guild_id?: string | null;
 };
 
 export default function DiscoverSection() {
   const t = useT();
   const [ad, setAd] = useState<Ad | null>(null);
   const [loading, setLoading] = useState(true);
+  const [memberStatus, setMemberStatus] = useState<'loading' | 'member' | 'not_member' | 'unknown'>('loading');
+  const [joinLoading, setJoinLoading] = useState(false);
+  const [joined, setJoined] = useState(false);
   const [showPermissionModal, setShowPermissionModal] = useState(false);
-  const [isCheckingSession, setIsCheckingSession] = useState(false);
   const [joinError, setJoinError] = useState<string | null>(null);
 
   const getAuthRedirect = () => {
@@ -44,11 +47,11 @@ export default function DiscoverSection() {
 
   const joinAuthUrl = useMemo(() => {
     const clientId = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
-    if (!clientId || !authRedirect || !ad?.invite_url) return '';
-    const statePayload = JSON.stringify({ redirect: ad.invite_url, source: 'discover' });
+    if (!clientId || !authRedirect || !ad?.target_guild_id) return '';
+    const statePayload = JSON.stringify({ guild_id: ad.target_guild_id, source: 'discover' });
     const state = encodeURIComponent(statePayload);
-    return `https://discord.com/oauth2/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(authRedirect)}&response_type=code&scope=identify%20guilds%20guilds.members.read&prompt=consent&state=${state}`;
-  }, [authRedirect, ad?.invite_url]);
+    return `https://discord.com/oauth2/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(authRedirect)}&response_type=code&scope=identify%20guilds%20guilds.members.read%20guilds.join&prompt=consent&state=${state}`;
+  }, [authRedirect, ad?.target_guild_id]);
 
   const handlePermissionUpdate = () => {
     if (joinAuthUrl) {
@@ -59,34 +62,45 @@ export default function DiscoverSection() {
   };
 
   const handleJoinClick = async () => {
-    if (!ad?.invite_url) return;
+    if (!ad) return;
     setJoinError(null);
-    setIsCheckingSession(true);
+    setJoinLoading(true);
 
-    let popup: Window | null = null;
+    const guildId = ad.target_guild_id;
+    if (!guildId) {
+      window.open(ad.invite_url, '_blank', 'noopener,noreferrer');
+      setJoinLoading(false);
+      return;
+    }
+
     try {
-      popup = window.open('', '_blank', 'noopener,noreferrer');
-      if (!popup) throw new Error('popup_blocked');
-
-      const response = await fetch(apiUrl('/api/auth/me'), {
+      const response = await fetch(apiUrl(`/api/member/discord-join?guild_id=${encodeURIComponent(guildId)}`), {
+        method: 'POST',
         credentials: 'include',
-        cache: 'no-store',
       });
 
+      const data = await response.json().catch(() => null);
       if (response.ok) {
-        popup.location.href = ad.invite_url;
+        setJoined(true);
+        setMemberStatus('member');
         return;
       }
 
-      setShowPermissionModal(true);
-      popup.close();
-    } catch (error) {
-      if (popup && !popup.closed) {
-        popup.close();
+      if (data?.needs_reauth || data?.error === 'missing_scope' || data?.error === 'missing_token' || data?.error === 'unauthorized') {
+        setShowPermissionModal(true);
+        return;
       }
-      setShowPermissionModal(true);
+
+      if (data?.error) {
+        setJoinError(t('discover_join_error_detail', { reason: String(data.error) }));
+        return;
+      }
+
+      setJoinError(t('discover_join_error'));
+    } catch {
+      setJoinError(t('discover_join_error'));
     } finally {
-      setIsCheckingSession(false);
+      setJoinLoading(false);
     }
   };
 
@@ -98,12 +112,53 @@ export default function DiscoverSection() {
       .finally(() => setLoading(false));
   }, []);
 
+  useEffect(() => {
+    if (!ad?.target_guild_id) {
+      setMemberStatus('unknown');
+      return;
+    }
+
+    const controller = new AbortController();
+    const checkMembership = async () => {
+      setMemberStatus('loading');
+      try {
+const guildId = ad.target_guild_id;
+      if (!guildId) {
+        setMemberStatus('unknown');
+        return;
+      }
+
+      const response = await fetch(apiUrl(`/api/member/discord-join?guild_id=${encodeURIComponent(guildId)}`), {
+          credentials: 'include',
+          cache: 'no-store',
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          setMemberStatus('unknown');
+          return;
+        }
+
+        const data = (await response.json()) as { member: boolean };
+        setMemberStatus(data.member ? 'member' : 'not_member');
+        if (data.member) setJoined(true);
+      } catch {
+        if (!controller.signal.aborted) {
+          setMemberStatus('unknown');
+        }
+      }
+    };
+
+    void checkMembership();
+    return () => controller.abort();
+  }, [ad]);
+
   const card = 'rounded-[26px] border border-white/10 bg-gradient-to-br from-[#4a3f45]/80 via-[#3a3540]/85 to-[#2a2f3a]/90 p-4 sm:p-5 shadow-[0_20px_60px_rgba(0,0,0,0.45)]';
 
   return (
     <section className="flex flex-col gap-4 p-3 sm:p-6">
       <div className="flex items-center gap-2.5 sm:gap-3">
-        <img src="/icon/discover.png" alt="" className="w-6 h-6 sm:w-7 sm:h-7 object-contain" />
+        <Image src="/icon/discover.png" alt="" width={28} height={28} className="w-6 h-6 sm:w-7 sm:h-7 object-contain" />
         <div>
           <h2 className="text-base sm:text-lg font-bold text-white tracking-tight">{t('discover_title')}</h2>
           <p className="text-[10px] sm:text-[11px] text-white/50 font-medium hidden sm:block">{t('discover_subtitle')}</p>
@@ -160,16 +215,30 @@ export default function DiscoverSection() {
           </div>
 
           <div className="mt-4">
-            <button
-              type="button"
-              onClick={() => void handleJoinClick()}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/20 px-5 py-3 text-sm font-semibold text-white/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition hover:bg-white/25 disabled:cursor-not-allowed disabled:opacity-60"
-              disabled={isCheckingSession}
-            >
-              {isCheckingSession ? t('loading') : t('discover_join_button')}
-            </button>
-            {joinError && (
-              <p className="mt-2 text-xs text-rose-300">{joinError}</p>
+            {memberStatus === 'member' || joined ? (
+              <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-200">
+                {t('discover_member_status_joined')}
+              </div>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => void handleJoinClick()}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/20 px-5 py-3 text-sm font-semibold text-white/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] transition hover:bg-white/25 disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={joinLoading}
+                >
+                  {joinLoading ? t('discover_joining') : t('discover_join_button')}
+                </button>
+                {memberStatus === 'unknown' && (
+                  <p className="mt-2 text-xs text-white/50">{t('discover_member_status_check_failed')}</p>
+                )}
+                {joined && (
+                  <p className="mt-2 text-xs text-emerald-200">{t('discover_join_success')}</p>
+                )}
+                {joinError && (
+                  <p className="mt-2 text-xs text-rose-300">{joinError}</p>
+                )}
+              </>
             )}
           </div>
           {showPermissionModal && (
