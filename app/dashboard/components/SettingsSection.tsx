@@ -16,6 +16,7 @@ type SettingsSectionProps = {
 
 export default function SettingsSection({
   profile,
+  serverCount,
   onBack,
 }: SettingsSectionProps) {
   const { locale, setDiscordLocale } = useLocale();
