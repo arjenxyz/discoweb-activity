@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { LuVolume2, LuGlobe, LuUser, LuFileCheck, LuCheck } from 'react-icons/lu';
 import { useLocale } from '@/contexts/LocaleContext';
+import fetchWithCreds from '@/lib/fetchWithCreds';
 import type { MemberProfile } from '../types';
 
 type SettingsSectionProps = {
@@ -51,6 +52,11 @@ export default function SettingsSection({
     const stored = window.localStorage.getItem('dashboard_music_enabled');
     return stored !== null ? stored === 'true' : true;
   });
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteScope, setDeleteScope] = useState<'all' | 'current' | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteMessage, setDeleteMessage] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [soundVolume, setSoundVolume] = useState(() => {
     if (typeof window === 'undefined') return 70;
     const stored = window.localStorage.getItem('dashboard_music_volume');
@@ -102,6 +108,137 @@ export default function SettingsSection({
   const handleLocaleChange = (value: 'en' | 'tr') => {
     setDiscordLocale(value);
   };
+
+  const playConfirmSound = () => {
+    try {
+      const sound = new Audio('/music/to.mp3');
+      sound.volume = 0.75;
+      void sound.play();
+    } catch {
+      // ignore audio playback failures
+    }
+  };
+
+  const openDeleteModal = (scope: 'all' | 'current') => {
+    setDeleteScope(scope);
+    setDeleteError(null);
+    setDeleteModalOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteScope) return;
+    setDeleteLoading(true);
+    setDeleteError(null);
+    playConfirmSound();
+
+    try {
+      const response = await fetchWithCreds('/api/member/delete-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scope: deleteScope === 'all' ? 'all' : 'current' }),
+      });
+
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || result.error) {
+        setDeleteError('Veri silme işlemi sırasında bir hata oluştu. Lütfen tekrar deneyin.');
+        return;
+      }
+
+      setDeleteMessage(deleteScope === 'all'
+        ? 'Tüm verileriniz silindi. Güvenli çıkış için yönlendiriliyorsunuz...'
+        : 'Sunucu verileriniz silindi. Sayfa yenileniyor...');
+      setDeleteModalOpen(false);
+
+      if (deleteScope === 'all') {
+        await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+        window.location.href = '/';
+        return;
+      }
+
+      window.location.reload();
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  const deleteOptionConfig = {
+    all: {
+      title: 'Tüm verileri sil',
+      description: 'DiscoWeb içindeki tüm kişisel verilerinizi kalıcı olarak siler. Bu işlem geri alınamaz.',
+      button: 'Tüm Verileri Sil',
+      tone: 'bg-red-600 hover:bg-red-500',
+    },
+    current: {
+      title: 'Sunucu verilerini sil',
+      description: 'Mevcut sunucuya ait DiscoWeb verilerini siler. Hesabınız ve diğer sunucular etkilenmez.',
+      button: 'Sunucu Verilerini Sil',
+      tone: 'bg-amber-600 hover:bg-amber-500',
+    },
+  };
+
+  const confirmModal = deleteModalOpen && deleteScope ? (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 px-4 py-6">
+      <div className="w-full max-w-2xl overflow-hidden rounded-[24px] border border-white/10 bg-[#05070d]/95 shadow-2xl shadow-black/70">
+        <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 px-6 py-5">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-amber-300">Invincible Onay</p>
+              <h2 className="mt-2 text-2xl font-black text-white">Are you sure?</h2>
+            </div>
+            <button
+              type="button"
+              onClick={() => setDeleteModalOpen(false)}
+              className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/80 transition hover:bg-white/10"
+            >
+              Kapat
+            </button>
+          </div>
+        </div>
+
+        <div className="space-y-5 px-6 py-5 sm:px-7">
+          <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+            <div className="space-y-3 rounded-3xl border border-white/10 bg-white/5 p-4">
+              <p className="text-lg font-semibold text-white">{deleteOptionConfig[deleteScope].title}</p>
+              <p className="text-sm text-white/70">{deleteOptionConfig[deleteScope].description}</p>
+              <p className="text-sm text-white/70">Bu işlem geri alınamaz. Emin değilseniz önce verilerinizi kontrol edin.</p>
+            </div>
+            <div className="overflow-hidden rounded-3xl border border-white/10 bg-slate-950 p-3">
+              <img
+                src="/store-background/invincible/invincible.png"
+                alt="Invincible meme"
+                className="h-48 w-full object-cover"
+              />
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-white/10 bg-[#111827]/80 p-4">
+            <p className="text-sm font-semibold text-white">Omni-Man Modu</p>
+            <p className="mt-2 text-sm text-white/70">DiscoWeb teması invincible olduğu için bu seçeneklerde ekstra görsel ve sesli onay ekledik. Eminsen onayla, yoksa geri dön.</p>
+          </div>
+
+          {deleteError && <p className="text-sm font-medium text-red-300">{deleteError}</p>}
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+            <button
+              type="button"
+              onClick={() => setDeleteModalOpen(false)}
+              className="inline-flex w-full items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/10 sm:w-auto"
+            >
+              Vazgeç
+            </button>
+            <button
+              type="button"
+              onClick={handleDeleteConfirm}
+              disabled={deleteLoading}
+              className={`inline-flex w-full items-center justify-center rounded-2xl px-4 py-3 text-sm font-semibold text-white transition sm:w-auto ${deleteOptionConfig[deleteScope].tone}`}
+            >
+              {deleteLoading ? 'Siliniyor...' : deleteOptionConfig[deleteScope].button}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  ) : null;
 
   const soundSettingsContent = (
     <div className="space-y-4">
@@ -193,6 +330,36 @@ export default function SettingsSection({
         <p className="text-sm font-semibold text-white">Hesap Detayı</p>
         <p className="mt-2 text-sm text-white/60">Bu alandan hesap verilerinizi görüntüleyebilir ve gerektiğinde güncelleme işlemi için destek talebi başlatabilirsiniz.</p>
       </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        {(['current', 'all'] as const).map((scope) => {
+          const option = deleteOptionConfig[scope];
+          return (
+            <div key={scope} className="rounded-3xl border border-white/10 bg-white/5 p-5 shadow-sm shadow-black/10">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-white">{option.title}</p>
+                  <p className="mt-2 text-sm text-white/70">{option.description}</p>
+                </div>
+                <div className="rounded-full bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/50">Önemli</div>
+              </div>
+              <button
+                type="button"
+                onClick={() => openDeleteModal(scope)}
+                className={`mt-6 inline-flex w-full items-center justify-center rounded-2xl px-4 py-3 text-sm font-semibold text-white transition ${option.tone}`}
+              >
+                {option.button}
+              </button>
+            </div>
+          );
+        })}
+      </div>
+
+      {deleteMessage && (
+        <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+          {deleteMessage}
+        </div>
+      )}
     </div>
   );
 
@@ -283,6 +450,7 @@ export default function SettingsSection({
         {activeTab === 'account' && accountSettingsContent}
         {activeTab === 'contracts' && contractsSettingsContent}
       </div>
+      {confirmModal}
     </section>
   );
 }
