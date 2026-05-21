@@ -1482,6 +1482,7 @@ export default function DashboardPage() {
                 onOpenDiscountsModal={openDiscountsModal}
                 onBack={() => setActiveSection('overview')}
                 profile={profile}
+                serverCount={headerServer.guilds.length}
               />
             )}
 

@@ -10,6 +10,7 @@ type SettingsSectionProps = {
   onOpenPromotionsModal: () => void;
   onOpenDiscountsModal: () => void;
   profile?: MemberProfile | null;
+  serverCount?: number;
   onBack?: () => void;
 };
 
@@ -328,7 +329,26 @@ export default function SettingsSection({
       </div>
       <div className="rounded-2xl border border-white/10 bg-[#121827]/70 p-4">
         <p className="text-sm font-semibold text-white">Hesap Detayı</p>
-        <p className="mt-2 text-sm text-white/60">Bu alandan hesap verilerinizi görüntüleyebilir ve gerektiğinde güncelleme işlemi için destek talebi başlatabilirsiniz.</p>
+        <p className="mt-2 text-sm text-white/60">Bu alan artık hesabınızdaki DiscoWeb verilerini yöneteceğiniz merkez olacak. Burada kaç sunucuda verilerinizin saklandığını görebilir ve gerektiğinde silme seçeneklerini kullanabilirsiniz.</p>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div className="rounded-3xl border border-white/10 bg-white/5 p-5 shadow-sm shadow-black/10">
+          <p className="text-sm font-semibold text-white">Sunucu Verisi Yönetimi</p>
+          <p className="mt-3 text-4xl font-black text-white">{serverCount ?? 0}</p>
+          <p className="mt-2 text-sm text-white/70">Sunucuda verileriniz bulunuyor.</p>
+          <p className="mt-4 text-sm text-white/60">Kendi hesabına ait verilerin yönetim merkezi. Hangi sunucularda verileriniz varsa buradan görebilir ve işlemlerini başlatabilirsin.</p>
+        </div>
+
+        <div className="rounded-3xl border border-white/10 bg-white/5 p-5 shadow-sm shadow-black/10">
+          <p className="text-sm font-semibold text-white">Veri Yönetimi Merkezi</p>
+          <p className="mt-3 text-sm text-white/70">Bu bölüm, hesabına bağlı tüm sunucu verilerini izlemen ve gerektiğinde silme seçeneklerine erişmen için tasarlandı.</p>
+          <ul className="mt-4 space-y-3 text-sm text-white/70">
+            <li>• Sunucuya bağlı veriler burada gösterilecek</li>
+            <li>• Tüm verileri sil seçeneği hesabının tüm verilerini kaldırır</li>
+            <li>• Sunucu verilerini sil seçeneği yalnızca mevcut sunucuya ait kayıtları kaldırır</li>
+          </ul>
+        </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
