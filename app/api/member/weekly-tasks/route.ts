@@ -135,7 +135,7 @@ const evaluateTask = (task: WeeklyTaskRow, options: {
     requirementType: task.requirement_type,
     requirementValue: task.requirement_value,
     requirementRoleId: task.requirement_role_id,
-    requirementTargetGuildId: task.requirement_target_guild_id,
+    requirementTargetGuildId: task.requirement_target_guild_id ?? null,
     rewardMari: Number(task.reward_mari ?? 0),
     status,
     progress,
