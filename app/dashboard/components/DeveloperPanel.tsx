@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   LuLayoutDashboard, LuScrollText, LuTriangleAlert, LuClipboardList,
   LuServer, LuUsers, LuMegaphone, LuChevronLeft, LuRefreshCw,
-  LuShield, LuSearch, LuTrash2, LuCheck, LuX, LuCopy, LuLink, LuBug, LuMessageSquare,
+  LuShield, LuSearch, LuTrash2, LuCheck, LuX, LuCopy, LuLink, LuBug, LuMessageSquare, LuListChecks,
 } from 'react-icons/lu';
 import { apiUrl } from '@/lib/api';
 import { useT } from '@/contexts/LocaleContext';
@@ -155,7 +155,7 @@ const prettyJson = (value: unknown) => {
   try { return JSON.stringify(value, null, 2); } catch { return String(value); }
 };
 
-type TabId = 'overview' | 'logs' | 'apps' | 'servers' | 'profiles' | 'ads' | 'suspicious' | 'reports' | 'bans' | 'announcements';
+type TabId = 'overview' | 'logs' | 'apps' | 'servers' | 'profiles' | 'ads' | 'suspicious' | 'reports' | 'bans' | 'announcements' | 'weeklyTasks';
 
 type BugReport = {
   id: string;
@@ -184,6 +184,24 @@ type AnnouncementAdminItem = {
 };
 
 type BanScope = 'member' | 'server';
+
+type WeeklyTaskType = 'join_guild' | 'message_count' | 'voice_minutes' | 'role' | 'event_participation';
+
+type WeeklyTaskAdmin = {
+  id: string;
+  guild_id: string;
+  guild_name?: string | null;
+  week_start: string;
+  title: string;
+  description: string | null;
+  requirement_type: WeeklyTaskType;
+  requirement_value: number | null;
+  requirement_role_id: string | null;
+  requirement_target_guild_id: string | null;
+  reward_mari: number;
+  sort_order: number;
+  active: boolean;
+};
 
 type MemberBan = {
   id: string;
@@ -220,6 +238,7 @@ const NAV_ITEMS: { id: TabId; labelKey: string; Icon: React.ElementType; accent:
   { id: 'servers',    labelKey: 'dev_nav_servers',    Icon: LuServer,          accent: 'text-violet-400' },
   { id: 'profiles',   labelKey: 'dev_nav_profiles',   Icon: LuUsers,           accent: 'text-sky-400' },
   { id: 'ads',        labelKey: 'dev_nav_ads',        Icon: LuMegaphone,       accent: 'text-pink-400' },
+  { id: 'weeklyTasks', labelKey: 'dev_nav_weekly_tasks', Icon: LuListChecks,     accent: 'text-emerald-400' },
   { id: 'announcements', labelKey: 'dev_nav_announcements', Icon: LuMessageSquare, accent: 'text-cyan-300' },
   { id: 'reports',    labelKey: 'dev_nav_reports',    Icon: LuBug,             accent: 'text-orange-400' },
   { id: 'bans',       labelKey: 'dev_nav_bans',       Icon: LuShield,          accent: 'text-rose-400' },
@@ -291,6 +310,23 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
   const [memberBans, setMemberBans] = useState<MemberBan[]>([]);
   const [serverBans, setServerBans] = useState<ServerBan[]>([]);
   const [banActiveOnly, setBanActiveOnly] = useState(true);
+  const [weeklyTasks, setWeeklyTasks] = useState<WeeklyTaskAdmin[]>([]);
+  const [weeklyTasksLoading, setWeeklyTasksLoading] = useState(false);
+  const [weeklyTasksError, setWeeklyTasksError] = useState<string | null>(null);
+  const [weeklyTaskCreating, setWeeklyTaskCreating] = useState(false);
+  const [weeklyTaskSuccess, setWeeklyTaskSuccess] = useState<string | null>(null);
+  const [weeklyTaskForm, setWeeklyTaskForm] = useState({
+    guildId: '',
+    title: '',
+    description: '',
+    requirementType: 'message_count' as WeeklyTaskType,
+    requirementValue: '10',
+    requirementRoleId: '',
+    requirementTargetGuildId: '',
+    rewardMari: '10',
+    sortOrder: '0',
+    active: true,
+  });
   const [banSortBy, setBanSortBy] = useState<'created_at' | 'expires_at'>('created_at');
   const [banSortDir, setBanSortDir] = useState<'desc' | 'asc'>('desc');
   const [banSearch, setBanSearch] = useState('');
@@ -373,6 +409,9 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
       } else if (section === 'profiles') {
         setProfiles(data.profiles ?? []);
         setSelectedProfile(null);
+      } else if (section === 'weeklyTasks') {
+        await fetchWeeklyTasks();
+        return;
       } else if (section === 'suspicious') {
         await fetchSuspicious(suspiciousFilter);
         return;
@@ -389,6 +428,21 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
       setLoadingTab(false);
     }
   }
+
+  const fetchWeeklyTasks = async () => {
+    setWeeklyTasksLoading(true);
+    setWeeklyTasksError(null);
+    try {
+      const res = await fetch(apiUrl('/api/admin/weekly-tasks'), { credentials: 'include', cache: 'no-store' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? String(res.status));
+      setWeeklyTasks(data.tasks ?? []);
+    } catch (e) {
+      setWeeklyTasksError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setWeeklyTasksLoading(false);
+    }
+  };
 
   const fetchInviteInfo = async (url: string) => {
     const match = url.match(/discord(?:\.gg|app\.com\/invite|\.com\/invite)\/([A-Za-z0-9-]+)/);
@@ -446,6 +500,52 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
   const deleteAd = async (id: string) => {
     await fetch(apiUrl(`/api/admin/ads?id=${id}`), { method: 'DELETE', credentials: 'include' });
     setAds(prev => prev.filter(a => a.id !== id));
+  };
+
+  const createWeeklyTask = async () => {
+    setWeeklyTaskCreating(true);
+    setWeeklyTaskSuccess(null);
+    setWeeklyTasksError(null);
+    try {
+      const payload = {
+        guild_id: weeklyTaskForm.guildId.trim(),
+        title: weeklyTaskForm.title.trim(),
+        description: weeklyTaskForm.description.trim(),
+        requirement_type: weeklyTaskForm.requirementType,
+        requirement_value: weeklyTaskForm.requirementValue ? Number(weeklyTaskForm.requirementValue) : null,
+        requirement_role_id: weeklyTaskForm.requirementRoleId.trim() || null,
+        requirement_target_guild_id: weeklyTaskForm.requirementTargetGuildId.trim() || null,
+        reward_mari: Number(weeklyTaskForm.rewardMari),
+        sort_order: Number(weeklyTaskForm.sortOrder),
+        active: weeklyTaskForm.active,
+      };
+      const res = await fetch(apiUrl('/api/admin/weekly-tasks'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? String(res.status));
+      setWeeklyTaskSuccess('Weekly task created successfully.');
+      setWeeklyTaskForm({
+        guildId: '',
+        title: '',
+        description: '',
+        requirementType: 'message_count',
+        requirementValue: '10',
+        requirementRoleId: '',
+        requirementTargetGuildId: '',
+        rewardMari: '10',
+        sortOrder: '0',
+        active: true,
+      });
+      await fetchWeeklyTasks();
+    } catch (e) {
+      setWeeklyTasksError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setWeeklyTaskCreating(false);
+    }
   };
 
   const fetchAds = useCallback(async () => {
@@ -1732,6 +1832,198 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
     </div>
   );
 
+  const weeklyTasksSection = (
+    <div className="grid gap-5">
+      <div className="rounded-3xl border border-white/10 bg-[#0b0d12] p-5">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-lg font-bold text-white">Weekly Task Yönetimi</h2>
+            <p className="mt-1 text-xs text-white/40">Yeni haftalık görevler oluşturun ve mevcut görevleri görüntüleyin.</p>
+          </div>
+          <button
+            type="button"
+            onClick={fetchWeeklyTasks}
+            className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/60 transition hover:bg-white/10"
+          >
+            Yenile
+          </button>
+        </div>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-[1.2fr_1fr]">
+        <div className="rounded-3xl border border-white/10 bg-[#0b0d12] p-5">
+          <div className="grid gap-4">
+            <div className="grid gap-2">
+              <label className="text-xs font-semibold text-white/60">Guild ID</label>
+              <input
+                value={weeklyTaskForm.guildId}
+                onChange={(event) => setWeeklyTaskForm((prev) => ({ ...prev, guildId: event.target.value }))}
+                className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-400/60"
+                placeholder="123456789012345678"
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <label className="text-xs font-semibold text-white/60">Başlık</label>
+              <input
+                value={weeklyTaskForm.title}
+                onChange={(event) => setWeeklyTaskForm((prev) => ({ ...prev, title: event.target.value }))}
+                className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-400/60"
+                placeholder="Örnek: Haftalık mesaj hedefi"
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <label className="text-xs font-semibold text-white/60">Açıklama</label>
+              <textarea
+                value={weeklyTaskForm.description}
+                onChange={(event) => setWeeklyTaskForm((prev) => ({ ...prev, description: event.target.value }))}
+                className="min-h-[100px] w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-400/60"
+                placeholder="Görev detayları"
+              />
+            </div>
+
+            <div className="grid gap-2 md:grid-cols-2">
+              <div className="grid gap-2">
+                <label className="text-xs font-semibold text-white/60">Görev Türü</label>
+                <select
+                  value={weeklyTaskForm.requirementType}
+                  onChange={(event) => setWeeklyTaskForm((prev) => ({ ...prev, requirementType: event.target.value as WeeklyTaskType }))}
+                  className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-400/60"
+                >
+                  <option value="message_count">Mesaj sayısı</option>
+                  <option value="voice_minutes">Ses dakikası</option>
+                  <option value="join_guild">Sunucuya katılma</option>
+                  <option value="role">Rol sahibi olma</option>
+                  <option value="event_participation">Etkinlik katılımı</option>
+                </select>
+              </div>
+              <div className="grid gap-2">
+                <label className="text-xs font-semibold text-white/60">Değer</label>
+                <input
+                  value={weeklyTaskForm.requirementValue}
+                  onChange={(event) => setWeeklyTaskForm((prev) => ({ ...prev, requirementValue: event.target.value }))}
+                  className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-400/60"
+                  placeholder="10"
+                />
+              </div>
+            </div>
+
+            {weeklyTaskForm.requirementType === 'role' ? (
+              <div className="grid gap-2">
+                <label className="text-xs font-semibold text-white/60">Rol ID</label>
+                <input
+                  value={weeklyTaskForm.requirementRoleId}
+                  onChange={(event) => setWeeklyTaskForm((prev) => ({ ...prev, requirementRoleId: event.target.value }))}
+                  className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-400/60"
+                  placeholder="Role ID girin"
+                />
+              </div>
+            ) : null}
+
+            {weeklyTaskForm.requirementType === 'join_guild' ? (
+              <div className="grid gap-2">
+                <label className="text-xs font-semibold text-white/60">Hedef Sunucu ID</label>
+                <input
+                  value={weeklyTaskForm.requirementTargetGuildId}
+                  onChange={(event) => setWeeklyTaskForm((prev) => ({ ...prev, requirementTargetGuildId: event.target.value }))}
+                  className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-400/60"
+                  placeholder="Katılım için hedef sunucu ID"
+                />
+              </div>
+            ) : null}
+
+            <div className="grid gap-2 md:grid-cols-2">
+              <div className="grid gap-2">
+                <label className="text-xs font-semibold text-white/60">Ödül (Mari)</label>
+                <input
+                  value={weeklyTaskForm.rewardMari}
+                  onChange={(event) => setWeeklyTaskForm((prev) => ({ ...prev, rewardMari: event.target.value }))}
+                  className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-400/60"
+                  placeholder="10"
+                />
+              </div>
+              <div className="grid gap-2">
+                <label className="text-xs font-semibold text-white/60">Sıra</label>
+                <input
+                  value={weeklyTaskForm.sortOrder}
+                  onChange={(event) => setWeeklyTaskForm((prev) => ({ ...prev, sortOrder: event.target.value }))}
+                  className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition focus:border-sky-400/60"
+                  placeholder="0"
+                />
+              </div>
+            </div>
+
+            <label className="inline-flex items-center gap-2 text-sm text-white/70">
+              <input
+                type="checkbox"
+                checked={weeklyTaskForm.active}
+                onChange={(event) => setWeeklyTaskForm((prev) => ({ ...prev, active: event.target.checked }))}
+                className="h-4 w-4 rounded border-white/10 bg-black/30 text-sky-400"
+              />
+              Aktif
+            </label>
+
+            {weeklyTasksError ? (
+              <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-200">{weeklyTasksError}</div>
+            ) : null}
+            {weeklyTaskSuccess ? (
+              <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">{weeklyTaskSuccess}</div>
+            ) : null}
+
+            <button
+              type="button"
+              onClick={createWeeklyTask}
+              disabled={weeklyTaskCreating}
+              className="rounded-full bg-[#26a69a] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#1f8e84] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {weeklyTaskCreating ? 'Oluşturuluyor...' : 'Görev Oluştur'}
+            </button>
+          </div>
+        </div>
+
+        <div className="rounded-3xl border border-white/10 bg-[#0b0d12] p-5">
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <div>
+              <h3 className="text-base font-semibold text-white">Mevcut Görevler</h3>
+              <p className="mt-1 text-xs text-white/40">Haftalık görev listesi</p>
+            </div>
+          </div>
+
+          {weeklyTasksLoading ? (
+            <div className="rounded-2xl border border-white/10 bg-black/20 p-5 text-sm text-white/50">Yükleniyor...</div>
+          ) : weeklyTasks.length === 0 ? (
+            <div className="rounded-2xl border border-white/10 bg-black/20 p-5 text-sm text-white/50">Henüz görev yok.</div>
+          ) : (
+            <div className="space-y-3">
+              {weeklyTasks.map((task) => (
+                <div key={task.id} className="rounded-3xl border border-white/10 bg-black/20 p-4">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-white">{task.title}</p>
+                      <p className="text-xs text-white/40">{task.guild_name ?? task.guild_id} • {task.active ? 'Aktif' : 'Pasif'}</p>
+                    </div>
+                    <div className="text-right text-[11px] text-white/50">
+                      <div>Ödül: {task.reward_mari} Mari</div>
+                      <div>Sıra: {task.sort_order}</div>
+                    </div>
+                  </div>
+                  <p className="mt-3 text-sm text-white/70">{task.description ?? 'Açıklama yok.'}</p>
+                  <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-white/50">
+                    <span>Tip: {task.requirement_type}</span>
+                    {task.requirement_value != null && <span>Değer: {task.requirement_value}</span>}
+                    {task.requirement_role_id && <span>Rol ID: {task.requirement_role_id}</span>}
+                    {task.requirement_target_guild_id && <span>Hedef Sunucu: {task.requirement_target_guild_id}</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
   const bansSection = (
     <div className="flex flex-col gap-4">
       <div className="rounded-2xl border border-white/10 bg-[#0b0d12] p-4">
@@ -2004,6 +2296,7 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
     servers:    serversSection,
     profiles:   profilesSection,
     ads:        adsSection,
+    weeklyTasks: weeklyTasksSection,
     announcements: announcementsSection,
     suspicious: suspiciousSection,
     reports:    reportsSection,
