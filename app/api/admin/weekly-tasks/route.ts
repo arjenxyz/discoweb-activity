@@ -76,10 +76,12 @@ export async function GET(request: NextRequest) {
 
   if (guildId) query.eq('guild_id', guildId);
 
-  const { data, error } = await query;
+  const result = await query;
+  const data = result.data as Array<Record<string, unknown>> | null;
+  const error = result.error;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  const tasks = data ?? [];
+  const tasks = (data ?? []) as Array<{ guild_id: string; [key: string]: unknown }>;
   const guildIds = Array.from(new Set(tasks.map((task) => task.guild_id).filter(Boolean)));
   const serverMap = new Map<string, string>();
 
