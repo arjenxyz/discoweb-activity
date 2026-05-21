@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { LuCircleCheck, LuClock, LuListChecks, LuLock, LuSparkles } from 'react-icons/lu';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { useT } from '@/contexts/LocaleContext';
@@ -107,6 +107,12 @@ export default function WeeklyTasksSection({ initialTasks }: WeeklyTasksSectionP
       setClaimingId(null);
     }
   }, [loadTasks, t]);
+
+  useEffect(() => {
+    if (!tasksData) {
+      void loadTasks();
+    }
+  }, [tasksData, loadTasks]);
 
   const weekLabel = useMemo(() => {
     if (!tasksData) return t('tasks_week_label');
