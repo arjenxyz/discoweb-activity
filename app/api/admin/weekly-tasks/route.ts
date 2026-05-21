@@ -40,6 +40,17 @@ const getCurrentWeekStart = () => {
   return utc.toISOString().slice(0, 10);
 };
 
+const hasWeeklyTasksTargetGuildId = async (supabase: ReturnType<typeof getSupabase>) => {
+  const { data, error } = await supabase
+    .from('information_schema.columns')
+    .select('column_name')
+    .eq('table_schema', 'public')
+    .eq('table_name', 'weekly_tasks')
+    .eq('column_name', 'requirement_target_guild_id')
+    .limit(1);
+  return !error && Array.isArray(data) && data.length > 0;
+};
+
 export async function GET(request: NextRequest) {
   const session = await requireSessionUser(request);
   if (!session.ok) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
@@ -51,10 +62,14 @@ export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const guildId = url.searchParams.get('guild_id');
   const weekStart = getCurrentWeekStart();
+  const supportsTargetGuildId = await hasWeeklyTasksTargetGuildId(supabase);
+  const selectCols = ['id', 'guild_id', 'week_start', 'title', 'description', 'requirement_type', 'requirement_value', 'requirement_role_id', 'reward_mari', 'sort_order', 'active']
+    .concat(supportsTargetGuildId ? ['requirement_target_guild_id'] : [])
+    .join(',');
 
   const query = supabase
     .from('weekly_tasks')
-    .select('id,guild_id,week_start,title,description,requirement_type,requirement_value,requirement_role_id,requirement_target_guild_id,reward_mari,sort_order,active')
+    .select(selectCols)
     .eq('week_start', weekStart)
     .order('sort_order', { ascending: true });
 
@@ -119,8 +134,16 @@ export async function POST(request: NextRequest) {
   const supabase = getSupabase();
   if (!supabase) return NextResponse.json({ error: 'server_error' }, { status: 500 });
 
+  const supportsTargetGuildId = await hasWeeklyTasksTargetGuildId(supabase);
+  if (body.requirement_type === 'join_guild' && !supportsTargetGuildId) {
+    return NextResponse.json({
+      error: 'missing_column',
+      message: 'Database missing weekly_tasks.requirement_target_guild_id. Apply migration supabase/migrations/20260514000002_weekly_tasks_join_rewards.sql',
+    }, { status: 500 });
+  }
+
   const weekStart = getCurrentWeekStart();
-  const { data, error } = await supabase.from('weekly_tasks').insert({
+  const insertPayload: Record<string, unknown> = {
     guild_id: body.guild_id,
     week_start: weekStart,
     title: body.title,
@@ -128,11 +151,16 @@ export async function POST(request: NextRequest) {
     requirement_type: body.requirement_type,
     requirement_value: body.requirement_value ?? null,
     requirement_role_id: body.requirement_role_id ?? null,
-    requirement_target_guild_id: body.requirement_target_guild_id ?? null,
     reward_mari: body.reward_mari,
     sort_order: body.sort_order ?? 0,
     active: body.active ?? true,
-  }).select().single();
+  };
+
+  if (supportsTargetGuildId) {
+    insertPayload.requirement_target_guild_id = body.requirement_target_guild_id ?? null;
+  }
+
+  const { data, error } = await supabase.from('weekly_tasks').insert(insertPayload).select().single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ task: data });

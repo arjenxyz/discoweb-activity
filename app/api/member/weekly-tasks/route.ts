@@ -14,7 +14,7 @@ type WeeklyTaskRow = {
   requirement_type: 'join_guild' | 'message_count' | 'voice_minutes' | 'role' | 'event_participation';
   requirement_value: number | null;
   requirement_role_id: string | null;
-  requirement_target_guild_id: string | null;
+  requirement_target_guild_id?: string | null;
   reward_mari: number;
 };
 
@@ -50,6 +50,18 @@ const getWeekRange = () => {
   const end = new Date(start);
   end.setUTCDate(end.getUTCDate() + 6);
   return { start, end };
+};
+
+const hasWeeklyTasksTargetGuildId = async (supabase: ReturnType<typeof getSupabaseServiceClient>) => {
+  const { data, error } = await supabase
+    .from('information_schema.columns')
+    .select('column_name')
+    .eq('table_schema', 'public')
+    .eq('table_name', 'weekly_tasks')
+    .eq('column_name', 'requirement_target_guild_id')
+    .limit(1);
+
+  return !error && Array.isArray(data) && data.length > 0;
 };
 
 const isUserInGuild = async (guildId: string, userId: string): Promise<boolean> => {
@@ -152,10 +164,14 @@ export async function GET(request: Request) {
   const { start, end } = getWeekRange();
   const weekStart = toDateString(start);
   const weekEnd = toDateString(end);
+  const supportsTargetGuildId = await hasWeeklyTasksTargetGuildId(supabase);
+
+  const selectCols = ['id', 'title', 'description', 'requirement_type', 'requirement_value', 'requirement_role_id', 'reward_mari'].join(',')
+    + (supportsTargetGuildId ? ',requirement_target_guild_id' : '');
 
   const { data: tasks } = await supabase
     .from('weekly_tasks')
-    .select('id,title,description,requirement_type,requirement_value,requirement_role_id,requirement_target_guild_id,reward_mari')
+    .select(selectCols)
     .eq('guild_id', guildId)
     .eq('week_start', weekStart)
     .eq('active', true)
@@ -269,9 +285,13 @@ export async function POST(request: Request) {
   const weekStart = toDateString(start);
   const weekEnd = toDateString(end);
 
+  const supportsTargetGuildId = await hasWeeklyTasksTargetGuildId(supabase);
+  const selectCols = ['id', 'title', 'description', 'requirement_type', 'requirement_value', 'requirement_role_id', 'reward_mari', 'active'].join(',')
+    + (supportsTargetGuildId ? ',requirement_target_guild_id' : '');
+
   const { data: task } = await supabase
     .from('weekly_tasks')
-    .select('id,title,description,requirement_type,requirement_value,requirement_role_id,requirement_target_guild_id,reward_mari,active')
+    .select(selectCols)
     .eq('id', payload.taskId)
     .eq('guild_id', guildId)
     .eq('week_start', weekStart)
