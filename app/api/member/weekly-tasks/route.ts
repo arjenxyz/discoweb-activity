@@ -53,6 +53,7 @@ const getWeekRange = () => {
 };
 
 const hasWeeklyTasksTargetGuildId = async (supabase: ReturnType<typeof getSupabaseServiceClient>) => {
+  if (!supabase) return false;
   const { data, error } = await supabase
     .from('information_schema.columns')
     .select('column_name')
