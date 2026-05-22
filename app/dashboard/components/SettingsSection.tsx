@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { LuVolume2, LuGlobe, LuUser, LuFileCheck, LuCheck, LuTriangleAlert, LuArrowLeft, LuShieldAlert, LuInfo } from 'react-icons/lu';
+import { LuVolume2, LuGlobe, LuUser, LuFileCheck, LuCheck, LuTriangleAlert, LuArrowLeft, LuShieldAlert, LuInfo, LuDownload, LuMessageSquare } from 'react-icons/lu';
 import { useLocale } from '@/contexts/LocaleContext';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import type { MemberProfile } from '../types';
@@ -47,6 +47,11 @@ export default function SettingsSection({
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteMessage, setDeleteMessage] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  
+  const [requestModalOpen, setRequestModalOpen] = useState(false);
+  const [requestLoading, setRequestLoading] = useState(false);
+  const [requestMessage, setRequestMessage] = useState<string | null>(null);
+  const [requestError, setRequestError] = useState<string | null>(null);
   const [soundVolume, setSoundVolume] = useState(() => {
     if (typeof window === 'undefined') return 70;
     const stored = window.localStorage.getItem('dashboard_music_volume');
@@ -139,6 +144,79 @@ export default function SettingsSection({
       setDeleteLoading(false);
     }
   };
+
+  const handleRequestConfirm = async () => {
+    setRequestLoading(true);
+    setRequestError(null);
+    try {
+      const response = await fetchWithCreds('/api/member/request-data', { method: 'POST' });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || result.error) {
+        if (result.error === 'dm_closed') {
+          setRequestError('Veriler gönderilemedi. Lütfen Discord hesabınızda "Sunucu üyelerinden doğrudan mesaja izin ver" ayarınızın açık olduğundan emin olun.');
+        } else {
+          setRequestError('Veri talep işlemi sırasında bir hata oluştu. Lütfen tekrar deneyin.');
+        }
+        return;
+      }
+      setRequestMessage('Kişisel verileriniz başarıyla derlendi ve size Özel Mesaj (DM) olarak gönderildi!');
+      setRequestModalOpen(false);
+    } finally {
+      setRequestLoading(false);
+    }
+  };
+
+  const requestConfirmModal = requestModalOpen ? (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 px-4 py-6 backdrop-blur-sm transition-all duration-300">
+      <div className="w-full max-w-lg overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl shadow-black/70 animate-in fade-in zoom-in-95 duration-200">
+        
+        <div className="flex flex-col items-center border-b border-slate-800 p-8 text-center">
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-indigo-500/30 bg-indigo-500/5">
+             <LuMessageSquare className="h-8 w-8 text-indigo-400" />
+          </div>
+          <h2 className="text-xl font-bold text-white">Veri Talep Onayı</h2>
+          <p className="mt-2 text-sm text-slate-400">
+            Kişisel verileriniz (profil, cüzdan, vb.) bir .json dosyası olarak size DM'den (Özel Mesaj) gönderilecektir.
+          </p>
+        </div>
+
+        <div className="bg-slate-900/50 p-6">
+          <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-4">
+            <div className="flex gap-3">
+              <LuTriangleAlert className="h-5 w-5 shrink-0 text-amber-500" />
+              <p className="text-sm text-amber-200/90 leading-relaxed">
+                <strong>Sorumluluk Reddi:</strong> Bu verileri DM kutunuza veya cihazınıza indirdiğiniz andan itibaren verilerin güvenliği tamamen size aittir. Dosyayı üçüncü şahıslarla paylaşırsanız oluşabilecek sorunlardan DiscoWeb sorumlu değildir.
+              </p>
+            </div>
+          </div>
+
+          {requestError && (
+            <div className="mt-4 rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-400">
+              {requestError}
+            </div>
+          )}
+
+          <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+            <button
+              type="button"
+              onClick={() => setRequestModalOpen(false)}
+              className="inline-flex items-center justify-center rounded-lg border border-slate-700 bg-transparent px-5 py-2.5 text-sm font-medium text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
+            >
+              Vazgeç
+            </button>
+            <button
+              type="button"
+              onClick={handleRequestConfirm}
+              disabled={requestLoading}
+              className="inline-flex items-center justify-center rounded-lg bg-indigo-500 px-5 py-2.5 text-sm font-medium text-white transition-all hover:bg-indigo-600 focus:outline-none focus:ring-4 focus:ring-indigo-500/50"
+            >
+              {requestLoading ? 'Gönderiliyor...' : 'Sorumluluğu Kabul Edip Gönder'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  ) : null;
 
   const deleteOptionConfig = {
     all: {
@@ -346,6 +424,39 @@ export default function SettingsSection({
         </div>
       )}
 
+      {requestMessage && (
+        <div className="flex items-center gap-3 rounded-xl border border-indigo-500/20 bg-indigo-500/10 p-4 text-indigo-300">
+          <LuCheck className="h-5 w-5" />
+          <p className="text-sm font-medium">{requestMessage}</p>
+        </div>
+      )}
+
+      {/* Veri Talebi Alanı */}
+      <div className="rounded-2xl border border-slate-800 bg-slate-900/40 backdrop-blur-sm">
+        <div className="border-b border-slate-800 bg-slate-900/50 px-6 py-4">
+          <div className="flex items-center gap-2">
+            <LuDownload className="h-5 w-5 text-indigo-400" />
+            <h4 className="font-semibold text-slate-200">Kişisel Veri Talebi (GDPR)</h4>
+          </div>
+        </div>
+        <div className="flex flex-col items-start justify-between gap-4 p-6 sm:flex-row sm:items-center">
+          <div className="max-w-md">
+            <p className="font-medium text-slate-200">Verilerinizi İndirin</p>
+            <p className="mt-1 text-sm text-slate-400">Tüm uygulama ve sunucu aktivitelerinizi kapsayan veri dosyanızı (JSON) botumuz aracılığıyla özel mesaj olarak talep edebilirsiniz.</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setRequestError(null);
+              setRequestModalOpen(true);
+            }}
+            className="shrink-0 rounded-lg border border-indigo-500/30 bg-indigo-500/10 px-4 py-2 text-sm font-medium text-indigo-400 transition-colors hover:bg-indigo-500 hover:text-white"
+          >
+            Verilerimi Özel Mesaj (DM) Gönder
+          </button>
+        </div>
+      </div>
+
       {/* Danger Zone */}
       <div className="rounded-2xl border border-red-500/20 bg-red-950/10 backdrop-blur-sm">
         <div className="border-b border-red-500/20 px-6 py-4">
@@ -427,7 +538,7 @@ export default function SettingsSection({
   return (
     <section className="mx-auto flex w-full max-w-6xl flex-col px-4 py-8 sm:px-6 lg:px-8">
       {/* BAŞLIK & HEADER */}
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div className="mb-6">
         <div>
           {onBack && (
             <button
@@ -450,7 +561,8 @@ export default function SettingsSection({
       <div className="grid gap-8 lg:grid-cols-[240px_1fr]">
         
         {/* SOL MENÜ (Master) */}
-        <nav className="flex flex-col gap-1">
+        <aside>
+          <nav className="sticky top-8 flex flex-col gap-1">
           {navItems.map((item) => {
             const isActive = activeTab === item.id;
             const Icon = item.icon;
@@ -466,7 +578,8 @@ export default function SettingsSection({
               </button>
             );
           })}
-        </nav>
+          </nav>
+        </aside>
 
         {/* SAĞ İÇERİK (Detail) */}
         <main className="min-h-[500px]">
@@ -479,6 +592,7 @@ export default function SettingsSection({
       </div>
       
       {confirmModal}
+      {requestConfirmModal}
     </section>
   );
 }
