@@ -22,30 +22,7 @@ export async function GET(request: NextRequest) {
   if (!supabase) {
     return NextResponse.json({ error: 'missing_service_role' }, { status: 500 });
   }
-import { NextRequest, NextResponse } from 'next/server';
-import { getSessionUserId } from '@/lib/auth';
-import { getSupabaseServiceClient } from '@/lib/supabaseServiceClient';
-import { getSelectedGuildId } from '@/lib/guild';
-import { checkMaintenance } from '@/lib/maintenance';
 
-export async function GET(request: NextRequest) {
-  const selectedGuildId = await getSelectedGuildId(request);
-  if (!selectedGuildId) {
-    return NextResponse.json({ error: 'no_guild_selected' }, { status: 400 });
-  }
-
-  const maintenance = await checkMaintenance(['site']);
-  if (maintenance.blocked) {
-    return NextResponse.json(
-      { error: 'maintenance', key: maintenance.key, reason: maintenance.reason },
-      { status: 503 },
-    );
-  }
-
-  const supabase = getSupabaseServiceClient();
-  if (!supabase) {
-    return NextResponse.json({ error: 'missing_service_role' }, { status: 500 });
-  }
 
   const userId = await getSessionUserId();
   if (!userId) {
