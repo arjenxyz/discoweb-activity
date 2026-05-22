@@ -11,7 +11,7 @@ export function apiUrl(path: string): string {
   // next.config rewrite ile '/activity/api/:path*' -> '/api/:path*' olarak yönlendirilecek.
   // Böylece discord host (ör: 146xxxxx.discordsays.com) üzerinde /activity/api
   // olarak çalışan endpoint'ler uygulamanın backend'ine ulaşır.
-  if (typeof window !== 'undefined' && window.location.hostname.includes('discordsays.com')) {
+  if (typeof window !== 'undefined' && (window.location.hostname.includes('discordsays.com') || window.location.hostname.includes('discordapp.com'))) {
     if (normalizedPath.startsWith('/api/')) {
       return `/activity${normalizedPath}`;
     }

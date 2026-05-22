@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { MutableRefObject } from 'react';
+import fetchWithCreds from '@/lib/fetchWithCreds';
 
 type Obstacle = {
   x: number;
@@ -331,7 +332,7 @@ export default function PlayEarnSection() {
       draw(ctx);
       if (!runFinishRequestedRef.current && runRef.current?.runId) {
         runFinishRequestedRef.current = true;
-        void fetch('/api/member/game-run/finish', {
+        void fetchWithCreds('/api/member/game-run/finish', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -367,7 +368,7 @@ export default function PlayEarnSection() {
 
   const startGame = async () => {
     resetGameState();
-    const runResponse = await fetch('/api/member/game-run/start', { method: 'POST' });
+    const runResponse = await fetchWithCreds('/api/member/game-run/start', { method: 'POST' });
     if (runResponse.ok) {
       const runData = await runResponse.json().catch(() => ({})) as { runId?: string; startedAt?: string };
       if (runData.runId && runData.startedAt) {
@@ -419,7 +420,7 @@ export default function PlayEarnSection() {
 
   useEffect(() => {
     let mounted = true;
-    void fetch('/api/member/game-theme', { cache: 'no-store' })
+    void fetchWithCreds('/api/member/game-theme', { cache: 'no-store' })
       .then(async (res) => {
         const data = await res.json().catch(() => ({})) as { imageUrl?: string; source?: 'supabase' | 'fallback' };
         if (!mounted) return;

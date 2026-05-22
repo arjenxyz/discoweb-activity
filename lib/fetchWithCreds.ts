@@ -48,8 +48,8 @@ export default async function fetchWithCreds(input: RequestInfo, init: RequestIn
 
   // Extra fallback rewrite for Activity iframe environment: must use /activity/api/
   if (typeof window !== 'undefined' && typeof finalInput === 'string') {
-    const isDiscordsays = window.location.hostname.includes('discordsays.com');
-    if (isDiscordsays && finalInput.startsWith('/api/')) {
+    const isActivityEmbed = window.location.hostname.includes('discordsays.com') || window.location.hostname.includes('discordapp.com');
+    if (isActivityEmbed && finalInput.startsWith('/api/')) {
       finalInput = `/activity${finalInput}`;
     }
   }

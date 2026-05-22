@@ -153,7 +153,7 @@ export default function DashboardPage() {
 
     const loadPlaylist = async () => {
       try {
-        const response = await fetch('/api/dashboard-music', { cache: 'no-store' });
+        const response = await fetchWithCreds('/api/dashboard-music', { cache: 'no-store' });
         if (!response.ok) throw new Error('playlist fetch failed');
         const data = await response.json() as { tracks?: unknown };
         const tracks = Array.isArray(data.tracks)

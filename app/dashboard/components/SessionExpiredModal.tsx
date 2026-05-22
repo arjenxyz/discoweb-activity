@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { LuShieldOff, LuLoader, LuLogIn } from 'react-icons/lu';
 import { useT } from '@/contexts/LocaleContext';
+import fetchWithCreds from '@/lib/fetchWithCreds';
 
 type Props = {
   loginUrl: string;
@@ -16,9 +17,8 @@ export default function SessionExpiredModal({ loginUrl }: Props) {
     setClearing(true);
     try {
       // Logout endpoint'i çerezleri temizler ve Discord yetkilerini sıfırlar
-      await fetch('/api/auth/logout', {
+      await fetchWithCreds('/api/auth/logout', {
         method: 'POST',
-        headers: { Accept: 'application/json' },
       });
     } catch {
       // Hata olsa bile devam et — çerezler zaten sunucu tarafında sıfırlandı

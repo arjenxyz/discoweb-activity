@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import fetchWithCreds from '@/lib/fetchWithCreds';
 
 import { LuHouse, LuMail, LuStore, LuSettings, LuChevronRight, LuSend, LuTag, LuCompass, LuLayoutGrid, LuShieldCheck, LuNewspaper, LuGamepad2, LuTrendingUp, LuChartBar } from 'react-icons/lu';
 import Image from 'next/image';
@@ -110,7 +111,7 @@ export default function DashboardHeader({
       fetchedIconsSeenRef.current.add(g.id);
       void (async () => {
         try {
-          const res = await fetch(`/api/discord/guild/${g.id}`);
+          const res = await fetchWithCreds(`/api/discord/guild/${g.id}`);
           if (!res.ok) { setFetchedIcons(prev => ({ ...prev, [g.id]: null })); return; }
           const data = await res.json();
           setFetchedIcons(prev => ({ ...prev, [g.id]: data.icon ?? null }));

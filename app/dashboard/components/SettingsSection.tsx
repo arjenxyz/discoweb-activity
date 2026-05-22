@@ -152,7 +152,7 @@ export default function SettingsSection({
       setDeleteModalOpen(false);
 
       if (deleteScope === 'all') {
-        await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+        await fetchWithCreds('/api/auth/logout', { method: 'POST' });
         window.location.href = '/';
         return;
       }

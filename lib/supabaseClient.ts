@@ -17,7 +17,17 @@ export const getSupabaseClient = () => {
     return null;
   }
 
-  supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+  const normalizedSupabaseUrl = (() => {
+    if (typeof window !== 'undefined') {
+      const host = window.location.hostname;
+      if ((host.includes('discordsays.com') || host.includes('discordapp.com')) && supabaseUrl.startsWith('/supabase-storage')) {
+        return `https://dotmvirtfyepdpcvgucc.supabase.co${supabaseUrl}`;
+      }
+    }
+    return supabaseUrl;
+  })();
+
+  supabaseClient = createClient(normalizedSupabaseUrl, supabaseAnonKey, {
     auth: {
       detectSessionInUrl: false,
       persistSession: false,

@@ -9,8 +9,8 @@ import { useEffect } from 'react';
 export default function DiscordUrlPatch() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    // Sadece discordsays.com içinde çalıştır
-    if (!window.location.hostname.includes('discordsays.com')) return;
+    // Sadece Discord Activity ortamında çalıştır
+    if (!window.location.hostname.includes('discordsays.com') && !window.location.hostname.includes('discordapp.com')) return;
 
     import('@discord/embedded-app-sdk').then(({ patchUrlMappings }) => {
       patchUrlMappings([
