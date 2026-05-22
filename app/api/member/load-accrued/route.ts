@@ -252,7 +252,7 @@ export async function POST(request: Request) {
       guild_id: walletGuildId,
       user_id: userId,
       amount: total,
-      type: 'daily_settlement',
+      type: 'earn',
       balance_after: finalBalance,
       metadata: {
         source: 'manual_claim',
