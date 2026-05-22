@@ -114,6 +114,7 @@ export default function DashboardPage() {
   const [overviewStats, setOverviewStats] = useState<OverviewStats | OverviewStatsExpanded | null>(null);
   const [overviewLoading, setOverviewLoading] = useState(true);
   const [pendingEarnings, setPendingEarnings] = useState<{ pending: number; messageTotal: number; voiceTotal: number; count: number } | null>(null);
+  const [claimResult, setClaimResult] = useState<{ kind: 'idle' | 'success' | 'error'; message?: string }>({ kind: 'idle' });
   const [claimLoading, setClaimLoading] = useState(false);
   const [badgeInfo, setBadgeInfo] = useState<BadgeInfo | null>(null);
   const [storeItems, setStoreItems] = useState<StoreItem[]>([]);
@@ -696,6 +697,7 @@ export default function DashboardPage() {
         if (res.ok) {
           const data = await res.json();
           setPendingEarnings(data);
+          setClaimResult({ kind: 'idle' });
         }
       } catch (err) {
         console.error('[pending-earnings] fetch failed:', err);
@@ -726,23 +728,32 @@ export default function DashboardPage() {
 
   const claimEarnings = useCallback(async () => {
     setClaimLoading(true);
+    setClaimResult({ kind: 'idle' });
     try {
       const res = await fetchWithCreds('/api/member/load-accrued', { method: 'POST' });
       if (res.ok) {
         const data = await res.json();
         if (data.totalTransferred > 0) {
           setWalletBalance(prev => Number((prev + data.totalTransferred).toFixed(2)));
+          setClaimResult({ kind: 'success', message: `${data.totalTransferred.toFixed(2)} papel hesabınıza yüklendi.` });
+        } else {
+          setClaimResult({ kind: 'success', message: 'Alınacak yeni kazanç bulunamadı.' });
         }
         setPendingEarnings({ pending: 0, messageTotal: 0, voiceTotal: 0, count: 0 });
         await refreshWalletBalance();
       } else {
         const errorData = await res.json().catch(() => ({ error: 'unknown' }));
+        const message = typeof errorData?.message === 'string'
+          ? errorData.message
+          : typeof errorData?.error === 'string'
+            ? errorData.error
+            : 'Kazanç hesabınıza yüklenemedi.';
         console.error('[claim-earnings] API error:', errorData);
-        // Optionally show user error
+        setClaimResult({ kind: 'error', message });
       }
     } catch (err) {
       console.error('[claim-earnings] failed:', err);
-      // Optionally show user error
+      setClaimResult({ kind: 'error', message: 'Kazanç talebi sırasında bir hata oluştu. Lütfen tekrar deneyin.' });
     }
     setClaimLoading(false);
   }, [refreshWalletBalance]);
@@ -1401,6 +1412,7 @@ export default function DashboardPage() {
                   formatRoleColor={formatRoleColor}
                   pendingEarnings={pendingEarnings}
                   claimLoading={claimLoading}
+                  claimResult={claimResult}
                   onClaim={claimEarnings}
                 />
                 

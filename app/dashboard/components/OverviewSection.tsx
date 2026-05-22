@@ -26,6 +26,7 @@ type OverviewSectionProps = {
   formatRoleColor: (color: number) => string;
   pendingEarnings?: { pending: number; messageTotal: number; voiceTotal: number; count: number } | null;
   claimLoading?: boolean;
+  claimResult?: { kind: 'idle' | 'success' | 'error'; message?: string };
   onClaim?: () => void;
 };
 
@@ -39,6 +40,7 @@ export default function OverviewSection({
   formatRoleColor,
   pendingEarnings,
   claimLoading,
+  claimResult,
   onClaim,
 }: OverviewSectionProps) {
   const t = useT();
@@ -58,6 +60,7 @@ export default function OverviewSection({
 
   const hasTag = (overviewStats as OverviewStatsExpanded)?.hasTag ?? false;
   const isBooster = (overviewStats as OverviewStatsExpanded)?.isBooster ?? false;
+  const claimStatus = claimResult?.kind ?? 'idle';
   const totalsSince = (overviewStats as OverviewStatsExpanded)?.totalsSinceVerified;
   const verifiedSince = (overviewStats as OverviewStatsExpanded)?.verifiedSince;
 
@@ -225,7 +228,7 @@ export default function OverviewSection({
           </div>
 
           {/* BİRİKEN KAZANÇ */}
-          {pendingEarnings && pendingEarnings.pending > 0 && (
+          {pendingEarnings && (
             <div className={`${card} relative overflow-hidden`}>
               <div className="absolute top-0 left-0 h-32 w-32 rounded-full bg-amber-500/10 blur-[50px] pointer-events-none" />
               <div className="relative z-10">
@@ -255,17 +258,29 @@ export default function OverviewSection({
                   <button
                     onClick={onClaim}
                     disabled={claimLoading}
-                    className="flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-50 disabled:cursor-not-allowed px-5 py-2.5 text-sm font-bold text-black transition-colors"
+                    className={`flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-black transition-colors ${claimStatus === 'success' ? 'bg-emerald-400 hover:bg-emerald-300' : 'bg-amber-500 hover:bg-amber-400'} disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
                     {claimLoading ? (
                       <div className="h-4 w-4 animate-spin rounded-full border-2 border-black/20 border-t-black/60" />
                     ) : (
                       <LuCoins className="h-4 w-4" />
                     )}
-                    {t('pending_earnings_claim')}
+                    {claimLoading
+                      ? t('pending_earnings_claim')
+                      : claimStatus === 'success'
+                        ? 'Başarılı'
+                        : claimStatus === 'error'
+                          ? 'Tekrar Dene'
+                          : t('pending_earnings_claim')}
                   </button>
                 </div>
                 <p className="mt-2 text-[10px] text-white/25">{t('pending_earnings_auto_note')}</p>
+                {claimResult?.kind === 'error' && claimResult.message && (
+                  <p className="mt-2 text-sm text-rose-300">{claimResult.message}</p>
+                )}
+                {claimResult?.kind === 'success' && claimResult.message && (
+                  <p className="mt-2 text-sm text-emerald-300">{claimResult.message}</p>
+                )}
               </div>
             </div>
           )}
