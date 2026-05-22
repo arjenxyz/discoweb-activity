@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { checkMaintenance } from '@/lib/maintenance';
-import { getSessionUserId } from '@/lib/auth';
+import { requireSessionUser } from '@/lib/auth';
 import { getSelectedGuildId } from '@/lib/guild';
 
 const getSupabase = (): SupabaseClient | null => {
@@ -27,12 +27,6 @@ const isDebugRequest = (request: Request): boolean => {
   }
 };
 
-const normalizeGuildId = (value: string | null | undefined): string | null => {
-  if (!value) return null;
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : null;
-};
-
 /** GET — return pending (unsettled) earnings summary without claiming */
 export async function GET(request: Request) {
   const maintenance = await checkMaintenance(['site']);
@@ -43,13 +37,14 @@ export async function GET(request: Request) {
   const supabase = getSupabase();
   if (!supabase) return NextResponse.json({ error: 'missing_service_role' }, { status: 500 });
 
-  const userId = await getSessionUserId();
-  if (!userId) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+  const session = await requireSessionUser(request);
+  if (!session.ok) return session.response;
+  const userId = session.userId;
 
-  const selectedGuildId = normalizeGuildId(await getSelectedGuildId(request));
+  const selectedGuildId = await getSelectedGuildId(request);
   const debugEnabled = isDebugRequest(request);
   if (!selectedGuildId) {
-    return NextResponse.json({ pending: 0, messageTotal: 0, voiceTotal: 0, count: 0 });
+    return NextResponse.json({ error: 'guild_not_selected' }, { status: 400 });
   }
 
   const { data: server } = await supabase
@@ -59,20 +54,9 @@ export async function GET(request: Request) {
     .eq('is_setup', true)
     .maybeSingle();
 
-  if (!server) {
-    return NextResponse.json({
-      pending: 0,
-      messageTotal: 0,
-      voiceTotal: 0,
-      count: 0,
-      ...(debugEnabled
-        ? { debug: { selectedGuildId, serverFound: false, serverId: null, matchedRows: 0 } }
-        : {}),
-    });
-  }
-
-  // Bot writes daily_earnings with Discord guild ID, so query with both server.id and selectedGuildId
-  const guildCandidates = Array.from(new Set([server.id, selectedGuildId].filter(Boolean)));
+  const guildCandidates = server
+    ? Array.from(new Set([server.id, selectedGuildId]))
+    : [selectedGuildId];
   const { data: rows } = await supabase
     .from('daily_earnings')
     .select('amount,source')
@@ -88,7 +72,7 @@ export async function GET(request: Request) {
       voiceTotal: 0,
       count: 0,
       ...(debugEnabled
-        ? { debug: { selectedGuildId, serverFound: true, serverId: server.id, matchedRows: 0 } }
+        ? { debug: { selectedGuildId, serverFound: Boolean(server), serverId: server?.id ?? null, matchedRows: 0, guildCandidates } }
         : {}),
     });
   }
@@ -112,7 +96,7 @@ export async function GET(request: Request) {
           debug: {
             selectedGuildId,
             serverFound: true,
-            serverId: server.id,
+            serverId: server?.id ?? null,
             matchedRows: rows.length,
           },
         }
@@ -132,15 +116,16 @@ export async function POST(request: Request) {
     const supabase = getSupabase();
     if (!supabase) return NextResponse.json({ error: 'missing_service_role' }, { status: 500 });
 
-    const userId = await getSessionUserId();
-    if (!userId) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+    const session = await requireSessionUser(request);
+    if (!session.ok) return session.response;
+    const userId = session.userId;
 
-    const selectedGuildId = normalizeGuildId(await getSelectedGuildId(request));
+    const selectedGuildId = await getSelectedGuildId(request);
     if (!selectedGuildId) {
       return NextResponse.json({ error: 'guild_not_selected' }, { status: 400 });
     }
 
-    // Find server internal id
+    // Find server internal id if available, but keep selectedGuildId as the source of truth.
     const { data: server } = await supabase
       .from('servers')
       .select('id')
@@ -148,20 +133,9 @@ export async function POST(request: Request) {
       .eq('is_setup', true)
       .maybeSingle();
 
-    if (!server) {
-      return NextResponse.json(
-        {
-          error: 'server_not_found',
-          ...(debugEnabled
-            ? { debug: { selectedGuildId, serverFound: false, serverId: null, matchedRows: 0 } }
-            : {}),
-        },
-        { status: 404 },
-      );
-    }
-
-    // Fetch unsettled daily_earnings for this user + guild (bot may use Discord ID or internal ID)
-    const guildCandidates = Array.from(new Set([server.id, selectedGuildId].filter(Boolean)));
+    const guildCandidates = server
+      ? Array.from(new Set([server.id, selectedGuildId]))
+      : [selectedGuildId];
     const { data: rowsData } = await supabase
       .from('daily_earnings')
       .select('id,amount,source,metadata,created_at')
@@ -187,9 +161,10 @@ export async function POST(request: Request) {
           ? {
               debug: {
                 selectedGuildId,
-                serverFound: true,
-                serverId: server.id,
+                serverFound: Boolean(server),
+                serverId: server?.id ?? null,
                 matchedRows: 0,
+                guildCandidates,
               },
             }
           : {}),
@@ -208,30 +183,65 @@ export async function POST(request: Request) {
     };
     const total = Number(rows.reduce((s: number, r) => s + safeAmount(r.amount), 0).toFixed(2));
 
-    type WalletRow = { balance?: number; guild_id?: string };
+    type WalletRow = {
+      balance?: number;
+      mari_balance?: number;
+      reserved_balance?: number;
+      mari_reserved?: number;
+      guild_id?: string;
+    };
 
     // Get current balance, preferring the selected guild wallet row but falling back to the server row if needed.
-    const { data: walletRows } = await supabase
+    const { data: walletRowsData } = await supabase
       .from('member_wallets')
-      .select('balance,guild_id')
+      .select('balance,mari_balance,reserved_balance,mari_reserved,guild_id')
       .in('guild_id', guildCandidates)
       .eq('user_id', userId);
-    const walletRow = ((walletRows as Array<WalletRow> | null) ?? [])
-      .find(row => row.guild_id === selectedGuildId) ?? ((walletRows as Array<WalletRow> | null) ?? [])[0];
-    const walletGuildId = walletRow?.guild_id ?? selectedGuildId;
+      
+    const walletRowsList = (walletRowsData ?? []) as Array<WalletRow>;
+    const walletRowSelected = walletRowsList.find(row => row.guild_id === selectedGuildId);
+    const walletRowServer = walletRowsList.find(row => row.guild_id === server?.id);
 
-    const current = Number(walletRow?.balance ?? 0);
+    let currentBalance = 0;
+    let currentMariBalance = 0;
+    let currentReserved = 0;
+    let currentMariReserved = 0;
+
+    if (walletRowSelected) {
+      currentBalance += Number(walletRowSelected.balance ?? 0);
+      currentMariBalance += Number(walletRowSelected.mari_balance ?? 0);
+      currentReserved += Number(walletRowSelected.reserved_balance ?? 0);
+      currentMariReserved += Number(walletRowSelected.mari_reserved ?? 0);
+    }
+    if (walletRowServer && walletRowServer.guild_id !== selectedGuildId) {
+      currentBalance += Number(walletRowServer.balance ?? 0);
+      currentMariBalance += Number(walletRowServer.mari_balance ?? 0);
+      currentReserved += Number(walletRowServer.reserved_balance ?? 0);
+      currentMariReserved += Number(walletRowServer.mari_reserved ?? 0);
+    }
+
+    const walletGuildId = selectedGuildId;
 
     // Upsert new balance (final)
-    const finalBalance = Number((current + total).toFixed(2));
+    const finalBalance = Number((currentBalance + total).toFixed(2));
     const walletUpsertRes = await (supabase.from('member_wallets') as unknown as {
       upsert: (values: Record<string, unknown>, options?: { onConflict?: string }) => Promise<unknown>;
     }).upsert({
       guild_id: walletGuildId,
       user_id: userId,
       balance: finalBalance,
+      mari_balance: currentMariBalance,
+      reserved_balance: currentReserved,
+      mari_reserved: currentMariReserved,
       updated_at: new Date().toISOString(),
     }, { onConflict: 'guild_id,user_id' });
+    
+    // Eski split-brain satırı varsa tamamen sil ki migration tamamlansın
+    if (walletRowServer && walletRowServer.guild_id !== selectedGuildId) {
+      await supabase.from('member_wallets').delete()
+        .eq('guild_id', walletRowServer.guild_id)
+        .eq('user_id', userId);
+    }
     assertNoError('wallet_upsert', (walletUpsertRes as { error?: { message?: string; code?: string } }).error ?? null);
 
     // Insert single ledger entry with a stable/known type.
@@ -312,7 +322,7 @@ export async function POST(request: Request) {
             debug: {
               selectedGuildId,
               serverFound: true,
-              serverId: server.id,
+              serverId: server?.id ?? null,
               matchedRows: rows.length,
               walletGuildId,
             },

@@ -1,5 +1,11 @@
 import { cookies } from 'next/headers';
 
+const normalizeGuildId = (value?: string | null): string | null => {
+  if (!value) return null;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+};
+
 /**
  * Determine the "selected" guild ID for the current request.
  *
@@ -14,7 +20,7 @@ export const getSelectedGuildId = async (request?: Request): Promise<string | nu
   if (request) {
     try {
       const url = new URL(request.url);
-      const guildId = url.searchParams.get('guild_id');
+      const guildId = normalizeGuildId(url.searchParams.get('guild_id'));
       if (guildId) return guildId;
     } catch {
       // ignore invalid URLs
@@ -22,13 +28,12 @@ export const getSelectedGuildId = async (request?: Request): Promise<string | nu
   }
 
   const cookieStore = await cookies();
-  const selectedGuildId = cookieStore.get('selected_guild_id')?.value;
+  const selectedGuildId = normalizeGuildId(cookieStore.get('selected_guild_id')?.value);
   if (selectedGuildId) return selectedGuildId;
 
-  const envGuildId = process.env.DISCORD_GUILD_ID || process.env.NEXT_PUBLIC_DISCORD_GUILD_ID;
+  const envGuildId = normalizeGuildId(process.env.DISCORD_GUILD_ID ?? process.env.NEXT_PUBLIC_DISCORD_GUILD_ID);
   if (envGuildId) return envGuildId;
 
   // As a last fallback, return a default ID if set. This should be set by deployment env.
-  const fallbackGuildId = process.env.DEFAULT_DISCORD_GUILD_ID;
-  return fallbackGuildId ?? null;
+  return normalizeGuildId(process.env.DEFAULT_DISCORD_GUILD_ID);
 };

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { checkMaintenance } from '@/lib/maintenance';
-import { getSessionUserId } from '@/lib/auth';
+import { requireSessionUser } from '@/lib/auth';
 import { getSelectedGuildId } from '@/lib/guild';
 
 const getSupabase = () => {
@@ -20,20 +20,6 @@ const getTodayStartIso = (): string => {
 };
 
 export async function GET(request: Request) {
-  // Development mode bypass for Activity
-  if (process.env.NODE_ENV === 'development') {
-    return NextResponse.json({
-      balance: 1000,
-      mari_balance: 10,
-      total_earned: 1000,
-      total_spent: 0,
-      daily_reward: 100,
-      last_daily: null,
-      streak: 0,
-      transactions_count: 0
-    });
-  }
-
   const maintenance = await checkMaintenance(['site']);
   if (maintenance.blocked) {
     return NextResponse.json(
@@ -47,10 +33,11 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'missing_service_role' }, { status: 500 });
   }
 
-  const userId = await getSessionUserId();
-  if (!userId) {
-    return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+  const session = await requireSessionUser(request);
+  if (!session.ok) {
+    return session.response;
   }
+  const userId = session.userId;
 
   const selectedGuildId = await getSelectedGuildId(request);
   if (!selectedGuildId) {
@@ -70,15 +57,56 @@ export async function GET(request: Request) {
 
   const walletRowsResponse = await supabase
     .from('member_wallets')
-    .select('balance,mari_balance,guild_id')
+    .select('balance,mari_balance,reserved_balance,mari_reserved,guild_id')
     .or(`guild_id.eq.${selectedGuildId},guild_id.eq.${server.id}`)
     .eq('user_id', userId);
-  const walletRows = walletRowsResponse.data ?? [];
-  const wallet = (walletRows as Array<{ balance?: number; mari_balance?: number; guild_id?: string }>)
-    .find(row => row.guild_id === selectedGuildId) ?? walletRows[0];
+  const walletRows = (walletRowsResponse.data ?? []) as Array<{
+    balance?: number;
+    mari_balance?: number;
+    reserved_balance?: number;
+    mari_reserved?: number;
+    guild_id?: string;
+  }>;
 
-  // Eğer kullanıcıya ait cüzdan satırı yoksa otomatik oluştur
-  if (!wallet) {
+  const walletSelected = walletRows.find(row => row.guild_id === selectedGuildId);
+  const walletServer = walletRows.find(row => row.guild_id === server.id);
+
+  let balance = 0;
+  let mari_balance = 0;
+  let reserved_balance = 0;
+  let mari_reserved = 0;
+
+  if (walletSelected) {
+    balance += Number(walletSelected.balance ?? 0);
+    mari_balance += Number(walletSelected.mari_balance ?? 0);
+    reserved_balance += Number(walletSelected.reserved_balance ?? 0);
+    mari_reserved += Number(walletSelected.mari_reserved ?? 0);
+  }
+  if (walletServer && walletServer.guild_id !== selectedGuildId) {
+    balance += Number(walletServer.balance ?? 0);
+    mari_balance += Number(walletServer.mari_balance ?? 0);
+    reserved_balance += Number(walletServer.reserved_balance ?? 0);
+    mari_reserved += Number(walletServer.mari_reserved ?? 0);
+  }
+
+  // Eğer eski sunucu UUID tabanlı satır varsa ve yeni discord sunucu ID satırıyla birleştirildiyse:
+  if (walletServer && walletServer.guild_id !== selectedGuildId) {
+    await supabase.from('member_wallets').upsert({
+      guild_id: selectedGuildId,
+      user_id: userId,
+      balance,
+      mari_balance,
+      reserved_balance,
+      mari_reserved,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'guild_id,user_id' });
+
+    // Eski satırı tamamen temizle, split-brain kalmasın
+    await supabase.from('member_wallets').delete()
+      .eq('guild_id', walletServer.guild_id)
+      .eq('user_id', userId);
+  } else if (!walletSelected && walletRows.length === 0) {
+    // Eğer kullanıcıya ait cüzdan satırı yoksa (ne UUID ne Discord ID) otomatik oluştur
     const { error: walletCreateError } = await supabase.from('member_wallets').upsert(
       {
         guild_id: selectedGuildId,
@@ -106,8 +134,8 @@ export async function GET(request: Request) {
   const totalSent = sentToday?.reduce((sum, row) => sum + Number(row.amount ?? 0), 0) ?? 0;
 
   return NextResponse.json({
-    balance: wallet?.balance ?? 0,
-    mari_balance: wallet?.mari_balance ?? 0,
+    balance,
+    mari_balance,
     dailyLimit: server.transfer_daily_limit,
     taxRate: server.transfer_tax_rate,
     sentToday: totalSent,
