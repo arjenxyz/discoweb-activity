@@ -134,7 +134,7 @@ export async function POST(request: Request) {
             {
               title: '🗑️ Yasal Veri Silme İşlemi (GDPR/KVKK)',
               color: 15548997,
-              description: `Bir kullanıcı **${scopeText}** sistemden kalıcı olarak sildi.`,
+              description: `<@${userId}> adlı kullanıcı, **${scopeText}** sistemden kalıcı olarak sildi.`,
               fields: [
                 { name: 'Kullanıcı ID', value: `\`${userId}\``, inline: true },
                 { name: 'Sunucu ID', value: `\`${selectedGuildId || 'Bilinmiyor'}\``, inline: true },

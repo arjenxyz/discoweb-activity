@@ -107,7 +107,7 @@ export async function POST(request: Request) {
             {
               title: '⚖️ Yasal Veri Talebi (GDPR/KVKK)',
               color: 16753920,
-              description: 'Bir kullanıcı **Kişisel Veri İndirme** işlemini başarıyla gerçekleştirdi ve veri paketi kendisine DM yoluyla teslim edildi.',
+              description: `<@${userId}> adlı kullanıcı, **Kişisel Veri İndirme** işlemini başarıyla gerçekleştirdi ve veri paketi kendisine DM yoluyla teslim edildi.`,
               fields: [
                 { name: 'Kullanıcı ID', value: `\`${userId}\``, inline: true },
                 { name: 'Sunucu ID', value: `\`${selectedGuildId || 'Bilinmiyor'}\``, inline: true },
