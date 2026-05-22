@@ -95,7 +95,7 @@ async function getLogs(supabase: ReturnType<typeof getSupabase>, limit: number) 
       .limit(limit),
     supabase
       .from('error_logs')
-      .select('id, code, title, severity, category, context, created_at')
+      .select('id, code, title, severity, category, context, status, file_path, created_at')
       .order('created_at', { ascending: false })
       .limit(limit),
     supabase
@@ -162,7 +162,13 @@ async function getLogs(supabase: ReturnType<typeof getSupabase>, limit: number) 
       title: row.title,
       created_at: row.created_at,
       severity: row.severity,
-      data: { code: row.code, category: row.category, context: row.context },
+      data: { 
+        code: row.code, 
+        category: row.category, 
+        context: row.context,
+        status: row.status,
+        file_path: row.file_path 
+      },
     });
   }
 
