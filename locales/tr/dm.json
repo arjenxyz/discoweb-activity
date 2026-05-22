@@ -1,7 +1,7 @@
 {
   "dm_badge": "DM veya Grup Sohbeti",
-  "dm_title": "Bir Sunucuya İhtiyacımız Var! 🛑",
-  "dm_subtitle": "DiscoWeb şu anda DM veya grup sohbetlerinde çalışmıyor. Uygulamayı kullanabilmek için bir Discord sunucusunda olman gerekiyor.",
+  "dm_title": "Bir Sunucuya İhtiyacımız Var!",
+  "dm_subtitle": "",
   "dm_steps_title": "Nasıl Başlatabilirsin?",
   "dm_step_1": "Herhangi bir Discord sunucusuna katıl veya kendi sunucunu oluştur.",
   "dm_step_2": "Aktiviteler bölümünü aç.",

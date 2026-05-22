@@ -1,7 +1,7 @@
 {
   "dm_badge": "DM or Group Chat",
-  "dm_title": "We Need a Server! 🛑",
-  "dm_subtitle": "DiscoWeb doesn't work in DMs or group chats right now. To use the app, you need to be in a Discord server.",
+  "dm_title": "We Need a Server!",
+  "dm_subtitle": "",
   "dm_steps_title": "How to Start",
   "dm_step_1": "Join any Discord server or create your own.",
   "dm_step_2": "Open the activities section.",

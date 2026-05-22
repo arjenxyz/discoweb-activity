@@ -44,9 +44,11 @@ export default function DmScreen() {
             >
               {t('dm_title')}
             </h1>
-            <p className="text-sm text-white/70 leading-relaxed max-w-sm" style={{ textShadow: '0 1px 8px rgba(0,0,0,1)' }}>
-              {t('dm_subtitle')}
-            </p>
+            {t('dm_subtitle') && (
+              <p className="text-sm text-white/70 leading-relaxed max-w-sm" style={{ textShadow: '0 1px 8px rgba(0,0,0,1)' }}>
+                {t('dm_subtitle')}
+              </p>
+            )}
           </div>
 
           {/* Steps */}
