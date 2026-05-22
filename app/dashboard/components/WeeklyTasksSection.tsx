@@ -62,6 +62,35 @@ const getRequirementLabel = (task: WeeklyTaskItem, t: (key: string, vars?: Recor
   return t('tasks_requirement_unknown');
 };
 
+const getWeeklyTaskError = (code: string | undefined, detail: string | undefined, t: (key: string, vars?: Record<string, string>) => string) => {
+  switch (code) {
+    case 'no_guild_selected':
+      return t('tasks_error_no_guild_selected');
+    case 'missing_service_role':
+      return t('tasks_error_missing_service_role');
+    case 'maintenance':
+      return t('tasks_error_maintenance', { reason: detail ?? '' });
+    case 'task_not_found':
+      return t('tasks_error_task_not_found');
+    case 'already_claimed':
+      return t('tasks_error_already_claimed');
+    case 'task_not_configured':
+      return t('tasks_error_task_not_configured');
+    case 'task_not_available':
+      return t('tasks_error_task_not_available');
+    case 'task_not_complete':
+      return t('tasks_error_task_not_complete');
+    case 'invalid_reward':
+      return t('tasks_error_invalid_reward');
+    case 'invalid_payload':
+      return t('tasks_error_invalid_payload');
+    case 'claim_failed':
+      return t('tasks_error_claim');
+    default:
+      return detail ? `${t('tasks_error_load')} (${detail})` : t('tasks_error_load');
+  }
+};
+
 export default function WeeklyTasksSection({ initialTasks }: WeeklyTasksSectionProps) {
   const t = useT();
   const [tasksData, setTasksData] = useState<WeeklyTasksResponse | null>(initialTasks ?? null);
@@ -74,14 +103,16 @@ export default function WeeklyTasksSection({ initialTasks }: WeeklyTasksSectionP
     setError(null);
     try {
       const response = await fetchWithCreds('/api/member/weekly-tasks');
+      const data = (await response.json().catch(() => ({}))) as { error?: string; message?: string };
       if (!response.ok) {
-        const data = (await response.json().catch(() => ({}))) as { error?: string };
-        throw new Error(data.error ?? 'load_failed');
+        setError(getWeeklyTaskError(data.error, data.message, t));
+        setTasksData(null);
+        return;
       }
-      const data = (await response.json()) as WeeklyTasksResponse;
-      setTasksData(data);
-    } catch {
-      setError(t('tasks_error_load'));
+      setTasksData(data as WeeklyTasksResponse);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : t('tasks_error_load'));
+      setTasksData(null);
     } finally {
       setLoading(false);
     }
@@ -96,13 +127,14 @@ export default function WeeklyTasksSection({ initialTasks }: WeeklyTasksSectionP
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ taskId }),
       });
-      const data = (await response.json().catch(() => ({}))) as { error?: string };
+      const data = (await response.json().catch(() => ({}))) as { error?: string; message?: string };
       if (!response.ok) {
-        throw new Error(data.error ?? 'claim_failed');
+        setError(getWeeklyTaskError(data.error, data.message, t));
+        return;
       }
       await loadTasks();
-    } catch {
-      setError(t('tasks_error_claim'));
+    } catch (error) {
+      setError(error instanceof Error ? error.message : t('tasks_error_claim'));
     } finally {
       setClaimingId(null);
     }

@@ -298,7 +298,7 @@ export async function POST(request: Request) {
     .eq('week_start', weekStart)
     .maybeSingle() as { data: (WeeklyTaskRow & { active: boolean }) | null };
 
-  if (!task || !task.active) return NextResponse.json({ error: 'task_not_found' }, { status: 404 });
+  if (!task || !task.active) return NextResponse.json({ error: 'task_not_found', message: 'Task not found or inactive.' }, { status: 404 });
 
   const { data: existingClaim } = await supabase
     .from('weekly_task_claims')
@@ -309,11 +309,11 @@ export async function POST(request: Request) {
     .eq('week_start', weekStart)
     .maybeSingle();
 
-  if (existingClaim) return NextResponse.json({ error: 'already_claimed' }, { status: 409 });
+  if (existingClaim) return NextResponse.json({ error: 'already_claimed', message: 'This task has already been claimed by the user.' }, { status: 409 });
 
   if (task.requirement_type === 'join_guild') {
     if (!task.requirement_target_guild_id) {
-      return NextResponse.json({ error: 'task_not_configured' }, { status: 400 });
+      return NextResponse.json({ error: 'task_not_configured', message: 'Join task target guild id is missing.' }, { status: 400 });
     }
     const { data: joinEligible } = await supabase
       .from('ads')
@@ -324,7 +324,7 @@ export async function POST(request: Request) {
       .maybeSingle();
 
     if (!joinEligible?.target_guild_id) {
-      return NextResponse.json({ error: 'task_not_available' }, { status: 400 });
+      return NextResponse.json({ error: 'task_not_available', message: 'The join task is not enabled for the target guild.' }, { status: 400 });
     }
 
     const { data: joinClaim } = await supabase
@@ -335,7 +335,7 @@ export async function POST(request: Request) {
       .maybeSingle();
 
     if (joinClaim) {
-      return NextResponse.json({ error: 'already_claimed' }, { status: 409 });
+      return NextResponse.json({ error: 'already_claimed', message: 'Join task was already claimed for this target guild.' }, { status: 409 });
     }
   }
 
@@ -375,12 +375,12 @@ export async function POST(request: Request) {
   });
 
   if (evaluated.status !== 'claimable') {
-    return NextResponse.json({ error: 'task_not_complete' }, { status: 400 });
+    return NextResponse.json({ error: 'task_not_complete', message: 'Task requirements are not yet satisfied.' }, { status: 400 });
   }
 
   const reward = Number(task.reward_mari ?? 0);
   if (!Number.isFinite(reward) || reward <= 0) {
-    return NextResponse.json({ error: 'invalid_reward' }, { status: 400 });
+    return NextResponse.json({ error: 'invalid_reward', message: 'Task reward must be a positive number.' }, { status: 400 });
   }
 
   const { data: wallet } = await supabase
@@ -410,9 +410,9 @@ export async function POST(request: Request) {
 
   if (claimError) {
     if (claimError.code === '23505') {
-      return NextResponse.json({ error: 'already_claimed' }, { status: 409 });
+      return NextResponse.json({ error: 'already_claimed', message: 'This task was already claimed by the user.' }, { status: 409 });
     }
-    return NextResponse.json({ error: 'claim_failed' }, { status: 500 });
+    return NextResponse.json({ error: 'claim_failed', message: claimError.message ?? 'Failed to record task claim.' }, { status: 500 });
   }
 
   await supabase.from('member_wallets').upsert(
