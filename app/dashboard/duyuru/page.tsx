@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { useEffect, useMemo, useState } from 'react';
 import { apiUrl } from '@/lib/api';
 import fetchWithCreds from '@/lib/fetchWithCreds';
-import { LuCheckCircle2 } from 'react-icons/lu';
+import { LuCircleCheck } from 'react-icons/lu';
 
 // ---------- types (unchanged) ----------
 type AnnouncementMessage = {
@@ -406,7 +406,7 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
                       </span>
                       {isSystem && (
                         <span className="inline-flex items-center gap-1 rounded bg-[#5865f2] px-1.5 py-[2px] text-[10px] font-bold text-white shadow-sm">
-                          <LuCheckCircle2 className="h-3 w-3" />
+                          <LuCircleCheck className="h-3 w-3" />
                           DEVELOPER
                         </span>
                       )}
