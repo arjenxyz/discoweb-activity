@@ -135,7 +135,6 @@ export async function POST(request: Request) {
     const walletGuildId = walletRow?.guild_id ?? selectedGuildId;
 
     const current = Number(walletRow?.balance ?? 0);
-    let running = current;
 
     // Upsert new balance (final)
     const finalBalance = Number((current + total).toFixed(2));
@@ -149,23 +148,25 @@ export async function POST(request: Request) {
     }, { onConflict: 'guild_id,user_id' });
     assertNoError('wallet_upsert', (walletUpsertRes as { error?: { message?: string; code?: string } }).error ?? null);
 
-    // Insert ledger entries per row (incrementing balance_after)
-    for (const r of rows) {
-      const amt = Number(r.amount ?? 0);
-      running = Number((running + amt).toFixed(2));
-      const type = r.source === 'voice' ? 'earn_voice' : 'earn_message';
-      const ledgerInsertRes = await (supabase.from('wallet_ledger') as unknown as {
-        insert: (values: Record<string, unknown>) => Promise<unknown>;
-      }).insert({
-        guild_id: walletGuildId,
-        user_id: userId,
-        amount: amt,
-        type,
-        balance_after: running,
-        metadata: r.metadata ?? {},
-      });
-      assertNoError('wallet_ledger_insert', (ledgerInsertRes as { error?: { message?: string; code?: string } }).error ?? null);
-    }
+    // Insert single ledger entry with a stable/known type.
+    const msgTotal = Number(rows.filter(r => r.source === 'message').reduce((s: number, r) => s + Number(r.amount ?? 0), 0).toFixed(2));
+    const voiceTotal = Number(rows.filter(r => r.source === 'voice').reduce((s: number, r) => s + Number(r.amount ?? 0), 0).toFixed(2));
+    const ledgerInsertRes = await (supabase.from('wallet_ledger') as unknown as {
+      insert: (values: Record<string, unknown>) => Promise<unknown>;
+    }).insert({
+      guild_id: walletGuildId,
+      user_id: userId,
+      amount: total,
+      type: 'daily_settlement',
+      balance_after: finalBalance,
+      metadata: {
+        source: 'manual_claim',
+        row_count: rows.length,
+        message_total: msgTotal,
+        voice_total: voiceTotal,
+      },
+    });
+    assertNoError('wallet_ledger_insert', (ledgerInsertRes as { error?: { message?: string; code?: string } }).error ?? null);
 
     // Mark daily_earnings as settled to avoid re-loading
     const ids = rows.map(r => r.id);

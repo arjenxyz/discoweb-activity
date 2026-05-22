@@ -18,7 +18,7 @@ export type MailItem = {
   title: string;
   body: string;
   metadata?: any;
-  category: 'announcement' | 'maintenance' | 'sponsor' | 'update' | 'lottery' | 'reward' | string;
+  category: 'announcement' | 'system' | 'update' | 'lottery' | 'reward' | 'order' | string;
   status?: 'published' | 'draft';
   created_at: string;
   user_id?: string | null;

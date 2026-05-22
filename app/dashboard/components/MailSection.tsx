@@ -66,7 +66,7 @@ const CATEGORY_CONFIG: Record<string, { labelKey: string; icon: React.ReactNode;
   },
 };
 
-const FIXED_CATEGORIES = ['announcement', 'system', 'update', 'maintenance', 'reward', 'sponsor', 'order'] as const;
+const FIXED_CATEGORIES = ['announcement', 'system', 'update', 'reward', 'order'] as const;
 
 type MailSectionProps = {
   loading: boolean;
