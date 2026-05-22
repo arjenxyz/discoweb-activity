@@ -639,7 +639,7 @@ export async function POST(request: Request) {
       user_id: userId,
       title: `Sipariş Onayı`,
       body: receiptBody,
-      category: 'reward',
+      category: 'order',
       status: 'published',
       created_at: new Date().toISOString(),
       author_name: userInfo?.username ?? null,
