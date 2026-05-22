@@ -138,7 +138,7 @@ export async function POST(request: Request) {
       : [selectedGuildId];
     const { data: rowsData } = await supabase
       .from('daily_earnings')
-      .select('id,amount,source,metadata,created_at')
+      .select('id,amount,source,created_at')
       .in('guild_id', guildCandidates)
       .eq('user_id', userId)
       .is('settled_at', null)
@@ -149,7 +149,6 @@ export async function POST(request: Request) {
       id: string;
       amount?: number | null;
       source?: string | null;
-      metadata?: Record<string, unknown> | null;
     };
 
     const rows = (rowsData ?? []) as DailyEarningRow[];
