@@ -662,10 +662,17 @@ export default function MailSection({
               type="button"
               onClick={async () => {
                 const ids = filtered.filter(m => m.category === 'reward' && !m.is_read).map(m => m.id);
-                if (ids.length === 0) return showToast(t('mail_rewards_no_target'), 'error');
+                console.log('[MailSection] claim reward clicked', { ids, filteredCount: filtered.length, url: typeof window !== 'undefined' ? window.location.href : null });
+                if (ids.length === 0) {
+                  console.log('[MailSection] claim reward no ids available');
+                  return showToast(t('mail_rewards_no_target'), 'error');
+                }
                 try {
-                  const res = await fetchWithCreds(apiUrl('/api/mail/claim-rewards'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ids }) });
+                  const payload = { ids };
+                  console.log('[MailSection] claim reward request', payload);
+                  const res = await fetchWithCreds(apiUrl('/api/mail/claim-rewards'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                   const data = await res.json().catch(() => ({}));
+                  console.log('[MailSection] claim reward response', { status: res.status, ok: res.ok, data });
                   if (!res.ok) {
                     showToast(data.error === 'already_claimed' ? t('mail_rewards_already_claimed') : t('mail_claim_failed'), 'error');
                     return;
@@ -675,7 +682,8 @@ export default function MailSection({
                   window.dispatchEvent(new CustomEvent('mail:refresh'));
                   // Bakiye güncelleme eventi
                   window.dispatchEvent(new CustomEvent('wallet:refresh'));
-                } catch {
+                } catch (err) {
+                  console.error('[MailSection] claim reward error', err);
                   showToast(t('mail_claim_failed'), 'error');
                 }
               }}
