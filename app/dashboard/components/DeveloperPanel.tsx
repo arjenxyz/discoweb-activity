@@ -11,6 +11,7 @@ import { apiUrl } from '@/lib/api';
 import { useT } from '@/contexts/LocaleContext';
 import DeveloperSidebarNav from '@/app/developer/components/DeveloperSidebarNav';
 import DeveloperHeader from '@/app/developer/components/DeveloperHeader';
+import AIFixPanel from '@/app/developer/components/AIFixPanel';
 type Props = {
   maintenance: boolean;
   onMaintenanceChange: (value: boolean) => void;
@@ -1135,6 +1136,16 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
             <div className="mt-3 rounded-xl bg-black/40 border border-white/[0.06] p-3 text-[11px] text-white/60 max-h-[400px] overflow-y-auto">
               <pre className="whitespace-pre-wrap font-mono">{prettyJson(selectedLog.data)}</pre>
             </div>
+            
+            {/* AI Fix Panel Integration for error_log types */}
+            {(selectedLog.type === 'error_log' || selectedLog.type === 'api_error') && (
+              <AIFixPanel 
+                logId={selectedLog.id}
+                errorTitle={selectedLog.title}
+                filePath={selectedLog.data?.file_path}
+                stackTrace={selectedLog.data?.context?.stack}
+              />
+            )}
           </>
         ) : (
           <div className="flex h-full items-center justify-center">
