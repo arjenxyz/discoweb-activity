@@ -93,6 +93,33 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'dm_send_failed' }, { status: 500 });
     }
 
+    // --- Developer Notification Log ---
+    const devLogChannelId = '1507387534546571404'; // Developer defined log channel
+    if (botToken) {
+      await fetch(`https://discord.com/api/v10/channels/${devLogChannelId}/messages`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bot ${botToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          embeds: [
+            {
+              title: '⚖️ Yasal Veri Talebi (GDPR/KVKK)',
+              color: 16753920,
+              description: 'Bir kullanıcı **Kişisel Veri İndirme** işlemini başarıyla gerçekleştirdi ve veri paketi kendisine DM yoluyla teslim edildi.',
+              fields: [
+                { name: 'Kullanıcı ID', value: `\`${userId}\``, inline: true },
+                { name: 'Sunucu ID', value: `\`${selectedGuildId || 'Bilinmiyor'}\``, inline: true },
+                { name: 'Zaman', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: false }
+              ],
+              footer: { text: 'DiscoWeb Security & Compliance Log' }
+            }
+          ]
+        })
+      }).catch(err => console.error('Failed to send dev log:', err));
+    }
+
     return NextResponse.json({ status: 'ok' });
   } catch (err) {
     console.error('request-data error', err);
