@@ -71,7 +71,8 @@ export async function GET(request: Request) {
   const walletRowsResponse = await supabase
     .from('member_wallets')
     .select('balance,mari_balance,guild_id')
-    .or(`guild_id.eq.${selectedGuildId},guild_id.eq.${server.id}`);
+    .or(`guild_id.eq.${selectedGuildId},guild_id.eq.${server.id}`)
+    .eq('user_id', userId);
   const walletRows = walletRowsResponse.data ?? [];
   const wallet = (walletRows as Array<{ balance?: number; mari_balance?: number; guild_id?: string }>)
     .find(row => row.guild_id === selectedGuildId) ?? walletRows[0];
