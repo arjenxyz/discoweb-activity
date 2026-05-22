@@ -120,90 +120,13 @@ export async function POST(request: Request) {
       }
     }
 
-    // Hazineyi yatırımcılara oransal dağıt
-    const { data: treasury } = await supabase
-      .from('server_treasury')
-      .select('balance')
-      .eq('guild_id', body.guild_id)
-      .maybeSingle();
 
-    const treasuryBalance = treasury?.balance ?? 0;
-    if (treasuryBalance > 0) {
-      const { data: holdings } = await supabase
-        .from('investor_holdings')
-        .select('user_id, lot_count')
-        .eq('guild_id', body.guild_id)
-        .gt('lot_count', 0);
-
-      const totalLots = (holdings ?? []).reduce((s, h) => s + h.lot_count, 0);
-
-      if (totalLots > 0) {
-        for (const h of holdings ?? []) {
-          const share = Math.floor((h.lot_count / totalLots) * treasuryBalance);
-          if (share <= 0) continue;
-
-          const { data: w } = await supabase
-            .from('member_wallets')
-            .select('balance')
-            .eq('guild_id', body.guild_id)
-            .eq('user_id', h.user_id)
-            .maybeSingle();
-
-          await supabase.from('member_wallets').update({
-            balance: (w?.balance ?? 0) + share,
-            updated_at: new Date().toISOString(),
-          }).eq('guild_id', body.guild_id).eq('user_id', h.user_id);
-
-          await supabase.from('wallet_ledger').insert({
-            guild_id: body.guild_id,
-            user_id: h.user_id,
-            amount: share,
-            type: 'dividend',
-            note: `Delist tasfiyesi: ${h.lot_count} lot`,
-          });
-        }
-
-        // Temettü kayıt
-        const weekId = new Date().toISOString().slice(0, 10);
-        await supabase.from('dividend_payouts').insert({
-          guild_id: body.guild_id,
-          week_id: `delist-${weekId}`,
-          total_amount: treasuryBalance,
-          per_lot_amount: treasuryBalance / totalLots,
-          holdings_snapshot: holdings,
-          triggered_by: 'liquidation',
-          triggered_by_user_id: session.userId,
-        });
-
-        // Hazineyi sıfırla
-        await supabase.from('server_treasury').update({
-          balance: 0,
-          updated_at: new Date().toISOString(),
-        }).eq('guild_id', body.guild_id);
-      }
-    }
 
     // Holdings sil
     await supabase.from('investor_holdings').delete().eq('guild_id', body.guild_id);
   }
 
-  // Fine: hazineden ceza miktarı yakar
-  if (body.type === 'fine' && (body.fine_amount ?? 0) > 0) {
-    const { data: treasury } = await supabase
-      .from('server_treasury')
-      .select('balance, total_burned')
-      .eq('guild_id', body.guild_id)
-      .maybeSingle();
 
-    if (treasury) {
-      const burn = Math.min(body.fine_amount!, treasury.balance);
-      await supabase.from('server_treasury').update({
-        balance: treasury.balance - burn,
-        total_burned: (treasury.total_burned ?? 0) + burn,
-        updated_at: new Date().toISOString(),
-      }).eq('guild_id', body.guild_id);
-    }
-  }
 
   // Sunucuya bildirim
   if (BOT_TOKEN) {

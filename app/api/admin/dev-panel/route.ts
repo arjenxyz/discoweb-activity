@@ -48,22 +48,10 @@ async function getOverview(supabase: ReturnType<typeof getSupabase>) {
     supabase.from('member_profiles').select('id', { count: 'exact', head: true }),
   ]);
 
-  const { data: advancedServers } = await supabase
-    .from('servers')
-    .select('id')
-    .eq('economy_tier', 'advanced');
-
-  const { data: autoConfig } = await supabase
-    .from('app_config')
-    .select('value')
-    .eq('key', 'economy_auto_approve')
-    .maybeSingle();
-
   return {
     userCount: userCount ?? 0,
     serverCount: serverCount ?? 0,
     profileCount: profileCount ?? 0,
-    advancedServerCount: advancedServers?.length ?? 0,
     economyAutoApprove: (autoConfig?.value ?? 'false') === 'true',
   };
 }
@@ -188,17 +176,12 @@ async function getLogs(supabase: ReturnType<typeof getSupabase>, limit: number) 
 }
 
 async function getApplications(supabase: ReturnType<typeof getSupabase>, limit: number) {
-  if (!supabase) return { economy: [], tier: [], autoApprove: false };
+  if (!supabase) return { economy: [], autoApprove: false };
 
-  const [{ data: economy }, { data: tier }, { data: configs }] = await Promise.all([
+  const [{ data: economy }, { data: configs }] = await Promise.all([
     supabase
       .from('economy_applications')
       .select('id, guild_id, status, application_type, vote_count, vote_threshold, submitted_at, reviewed_at, rejection_reason, scheduled_open_at, created_at')
-      .order('created_at', { ascending: false })
-      .limit(limit),
-    supabase
-      .from('economy_tier_applications')
-      .select('id, guild_id, applicant_user_id, status, starter_package, reviewed_by, reviewed_at, created_at')
       .order('created_at', { ascending: false })
       .limit(limit),
     supabase
@@ -211,15 +194,14 @@ async function getApplications(supabase: ReturnType<typeof getSupabase>, limit: 
 
   const guildIds = Array.from(new Set([
     ...(economy ?? []).map((i) => i.guild_id),
-    ...(tier ?? []).map((i) => i.guild_id),
   ])).filter(Boolean);
 
   const { data: servers } = guildIds.length
     ? await supabase
       .from('servers')
-      .select('discord_id, name, member_count, is_setup, economy_tier')
+      .select('discord_id, name, member_count, is_setup')
       .in('discord_id', guildIds)
-    : { data: [] as Array<{ discord_id: string; name: string; member_count: number | null; is_setup: boolean; economy_tier: string }> };
+    : { data: [] as Array<{ discord_id: string; name: string; member_count: number | null; is_setup: boolean }> };
 
   const serverMap = new Map((servers ?? []).map((s) => [s.discord_id, s]));
   const autoApprove = (configMap.get('economy_auto_approve') ?? 'false') === 'true';
@@ -251,14 +233,8 @@ async function getApplications(supabase: ReturnType<typeof getSupabase>, limit: 
     };
   });
 
-  const enrichedTier = (tier ?? []).map((app) => {
-    const server = serverMap.get(app.guild_id);
-    return { ...app, server, autoApprove };
-  });
-
   return {
     economy: enrichedEconomy,
-    tier: enrichedTier,
     autoApprove,
     thresholds: {
       voteThreshold: voteThresholdGlobal,
@@ -273,7 +249,7 @@ async function getServers(supabase: ReturnType<typeof getSupabase>, limit: numbe
 
   const { data } = await supabase
     .from('servers')
-    .select('discord_id, name, is_setup, economy_tier, member_count, created_at, admin_role_id, verify_role_id, market_hours_enabled, market_open_time, market_close_time, market_timezone')
+    .select('discord_id, name, is_setup, member_count, created_at, admin_role_id, verify_role_id, market_hours_enabled, market_open_time, market_close_time, market_timezone')
     .order('created_at', { ascending: false })
     .limit(limit);
   return data ?? [];
@@ -352,7 +328,7 @@ export async function PATCH(request: NextRequest) {
     value?: boolean;
     configKey?: string;
     configValue?: string | number;
-    table?: 'economy_applications' | 'economy_tier_applications';
+    table?: 'economy_applications';
     id?: string;
     reason?: string;
   };
@@ -388,13 +364,6 @@ export async function PATCH(request: NextRequest) {
       .eq('id', body.id)
       .select('guild_id')
       .single();
-
-    if (body.action === 'approve' && app?.guild_id) {
-      await supabase
-        .from('servers')
-        .update({ economy_tier: 'advanced', advanced_since: now })
-        .eq('discord_id', app.guild_id);
-    }
 
     return NextResponse.json({ ok: true });
   }

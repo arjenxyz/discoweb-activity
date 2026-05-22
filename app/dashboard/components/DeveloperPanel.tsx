@@ -77,29 +77,12 @@ type EconomyApp = {
   } | null;
 };
 
-type EconomyTierApp = {
-  id: string;
-  guild_id: string;
-  applicant_user_id: string;
-  status: string;
-  starter_package?: number | null;
-  reviewed_by?: string | null;
-  reviewed_at?: string | null;
-  created_at: string;
-  server?: {
-    discord_id: string;
-    name: string;
-    member_count: number | null;
-    is_setup: boolean;
-    economy_tier: string;
-  } | null;
-};
+
 
 type ServerRow = {
   discord_id: string;
   name: string;
   is_setup: boolean;
-  economy_tier: string;
   member_count: number | null;
   created_at: string;
   admin_role_id?: string | null;
@@ -257,7 +240,7 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
   const [logFilter, setLogFilter] = useState<string>('all');
   const [selectedLog, setSelectedLog] = useState<LogItem | null>(null);
   const [economyApps, setEconomyApps] = useState<EconomyApp[]>([]);
-  const [tierApps, setTierApps] = useState<EconomyTierApp[]>([]);
+
   const [autoApprove, setAutoApprove] = useState(false);
   const [thresholds, setThresholds] = useState({ voteThreshold: 120, directMemberThreshold: 500, autoApproveDays: 7 });
   const [suspiciousFlags, setSuspiciousFlags] = useState<SuspiciousFlag[]>([]);
@@ -396,7 +379,7 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
         setSelectedLog(null);
       } else if (section === 'apps') {
         setEconomyApps(data.economy ?? []);
-        setTierApps(data.tier ?? []);
+
         setAutoApprove(Boolean(data.autoApprove));
         if (data.thresholds) {
           setThresholds(data.thresholds);
@@ -1023,7 +1006,7 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
     finally { setInviteLoading(false); }
   };
 
-  const handleDecision = async (table: 'economy_applications' | 'economy_tier_applications', id: string, action: 'approve' | 'reject') => {
+  const handleDecision = async (table: 'economy_applications', id: string, action: 'approve' | 'reject') => {
     const reason = action === 'reject' ? window.prompt(t('developer_panel_reject_reason_placeholder')) ?? '' : undefined;
     try {
       const res = await fetch(apiUrl('/api/admin/dev-panel'), {
@@ -1044,12 +1027,11 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
       <div className="absolute top-0 right-0 w-64 h-64 bg-[#5865F2]/8 rounded-full blur-[80px] pointer-events-none" />
 
       {/* Stats */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
         {([
           { label: t('developer_stat_users'),    value: overview?.userCount,           color: 'from-[#5865F2]/20 to-[#5865F2]/5  border-[#5865F2]/20',  text: 'text-[#7289da]' },
           { label: t('developer_stat_servers'),  value: overview?.serverCount,         color: 'from-emerald-500/20 to-emerald-500/5 border-emerald-500/20', text: 'text-emerald-400' },
           { label: t('developer_stat_profiles'), value: overview?.profileCount,        color: 'from-amber-500/20 to-amber-500/5  border-amber-500/20',  text: 'text-amber-400' },
-          { label: t('developer_stat_advanced'), value: overview?.advancedServerCount, color: 'from-violet-500/20 to-violet-500/5 border-violet-500/20', text: 'text-violet-400' },
         ]).map((s) => (
           <div key={s.label} className={`relative overflow-hidden rounded-2xl border bg-gradient-to-br ${s.color} p-4`}>
             <p className="text-[11px] font-medium text-white/40 uppercase tracking-wider">{s.label}</p>
@@ -1197,7 +1179,7 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6">
         {/* Economy apps */}
         <div className="rounded-3xl border border-white/10 bg-[#0b0d12]/80 backdrop-blur-md p-6 flex flex-col max-h-[600px]">
           <p className="text-lg font-bold text-white mb-4 border-b border-white/5 pb-3">{t('developer_apps_economy_title')}</p>
@@ -1233,35 +1215,21 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
           </div>
         </div>
 
-        {/* Tier apps */}
-        <div className="rounded-3xl border border-white/10 bg-[#0b0d12]/80 backdrop-blur-md p-6 flex flex-col max-h-[600px]">
-          <p className="text-lg font-bold text-white mb-4 border-b border-white/5 pb-3">{t('developer_apps_tier_title')}</p>
-          <div className="flex flex-col gap-3 overflow-y-auto custom-scrollbar pr-2">
-            {tierApps.map((app) => (
-              <div key={app.id} className="rounded-2xl border border-white/[0.07] bg-white/[0.02] hover:bg-white/[0.04] transition-colors p-4">
-                <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-                  <div>
-                    <p className="text-sm font-bold text-white">{app.server?.name ?? app.guild_id}</p>
-                    <p className="text-xs text-white/40">{app.guild_id}</p>
-                  </div>
-                  <span className="text-xs text-white/30">{formatDate(app.created_at)}</span>
-                </div>
-                <p className="text-sm text-white/50 mb-4 bg-black/30 rounded-xl p-3 border border-white/5">{t('dev_applicant_label')}: <strong className="text-white">{app.applicant_user_id}</strong></p>
-                <div className="flex gap-2">
-                  <button onClick={() => handleDecision('economy_tier_applications', app.id, 'approve')}
-                    className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-emerald-400/25 bg-emerald-500/10 hover:bg-emerald-500/20 px-4 py-2 text-xs font-bold text-emerald-300 transition">
-                    <LuCheck className="w-4 h-4" />{t('developer_apps_approve')}
-                  </button>
-                  <button onClick={() => handleDecision('economy_tier_applications', app.id, 'reject')}
-                    className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-red-500/25 bg-red-500/10 hover:bg-red-500/20 px-4 py-2 text-xs font-bold text-red-300 transition">
+
+      </div>
+    </div>
+  );
+
+  const serversSection = (
+    <div className="grid h-[calc(100vh-140px)] gap-6 lg:grid-cols-[380px_1fr]">
+      <div className="flex flex-col rounded-3xl border border-white/10 bg-[#0b0d12]/80 backdrop-blur-md p-5 overflow-hidden">
+        <div className="flex-1 overflow-y-auto pr-2 space-y-2.5 custom-scrollbar">
           {servers.map((server) => (
             <button key={server.discord_id} onClick={() => setSelectedServer(server)}
               className={`w-full text-left rounded-2xl border px-4 py-3.5 transition-all ${selectedServer?.discord_id === server.discord_id ? 'border-[#5865F2]/50 bg-[#5865F2]/10 shadow-[0_0_15px_rgba(88,101,242,0.15)]' : 'border-white/[0.05] bg-white/[0.02] hover:bg-white/[0.06]'}`}>
               <div className="flex items-center justify-between gap-3">
                 <p className="text-sm font-bold text-white truncate">{server.name}</p>
-                <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold border ${server.economy_tier === 'advanced' ? 'border-violet-500/30 bg-violet-500/10 text-violet-300' : 'border-white/10 text-white/40'}`}>
-                  {server.economy_tier}
-                </span>
+
               </div>
               <p className="mt-1 text-xs text-white/40">{server.discord_id}</p>
               <div className="mt-2.5 flex items-center justify-between text-xs font-medium text-white/50 bg-black/30 rounded-lg p-2 border border-white/5">
@@ -1275,17 +1243,63 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
       </div>
       <div className="flex flex-col rounded-3xl border border-white/10 bg-[#0b0d12]/80 backdrop-blur-md p-6 h-full overflow-hidden">
         {selectedServer ? (
-                {inviteResult.expires && <p className="text-[10px] text-white/30 mt-1">{t('dev_invite_validity')} {formatDate(inviteResult.expires)}</p>}
-                <button onClick={() => navigator.clipboard.writeText(inviteResult.url)}
-                  className="mt-2 flex items-center gap-1.5 rounded-lg bg-white/10 hover:bg-white/15 px-2.5 py-1 text-[10px] text-white/60 transition">
-                  <LuCopy className="w-3 h-3" /> {t('dev_copy_button')}
-                </button>
+          <div className="flex flex-col gap-5 h-full">
+            <div className="border-b border-white/5 pb-4">
+              <h2 className="text-2xl font-black text-white">{selectedServer.name}</h2>
+              <p className="text-sm text-white/40 mt-1">{selectedServer.discord_id}</p>
+            </div>
+            <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
+              <div className="rounded-2xl bg-black/40 border border-white/10 p-5 grid gap-4 text-sm">
+                {([
+                  [t('dev_server_detail_members'), `${selectedServer.member_count ?? 0}`],
+                  [t('dev_server_detail_setup'), selectedServer.is_setup ? t('dev_has') : t('dev_not_has')],
+
+                  [t('dev_server_detail_admin_role'), selectedServer.admin_role_id ?? '—'],
+                  [t('dev_server_detail_verify_role'), selectedServer.verify_role_id ?? '—'],
+                  [t('dev_server_detail_market'), selectedServer.market_hours_enabled ? t('dev_on') : t('dev_off')],
+                  [t('dev_server_detail_market_time'), `${selectedServer.market_open_time ?? '—'} / ${selectedServer.market_close_time ?? '—'} (${selectedServer.market_timezone ?? '—'})`],
+                  [t('dev_server_detail_created'), formatDate(selectedServer.created_at)],
+                ] as const).map(([label, val]) => (
+                  <div key={label} className="flex flex-wrap items-center justify-between gap-4 border-b border-white/5 pb-3 last:border-0 last:pb-0">
+                    <span className="text-white/50">{label}</span>
+                    <span className="text-white font-medium text-right">{val}</span>
+                  </div>
+                ))}
               </div>
-            )}
+              
+              <div className="mt-5 p-5 rounded-2xl bg-[#5865F2]/10 border border-[#5865F2]/20">
+                <p className="text-sm font-semibold text-[#7289da] mb-3">{t('dev_invite_title')}</p>
+                <div className="flex flex-wrap items-center gap-3">
+                  <button onClick={() => generateInvite(selectedServer.discord_id)} disabled={inviteLoading}
+                    className="rounded-xl border border-[#5865F2]/40 bg-[#5865F2] hover:bg-[#5865F2]/90 px-5 py-2.5 text-sm font-bold text-white shadow-[0_0_15px_rgba(88,101,242,0.3)] transition disabled:opacity-50">
+                    {inviteLoading ? '...' : t('dev_create_invite')}
+                  </button>
+                  {inviteResult && (
+                    <div className="flex-1 flex flex-col min-w-[200px] text-xs">
+                      <input 
+                        type="text" 
+                        readOnly 
+                        value={inviteResult.url} 
+                        onClick={(e) => {
+                          e.currentTarget.select();
+                          try { navigator.clipboard.writeText(inviteResult.url); } catch(err) {}
+                        }}
+                        className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-emerald-400 font-mono outline-none focus:border-[#5865F2]/50 transition-colors cursor-pointer"
+                        title="Tıklayarak kopyalayabilirsiniz"
+                      />
+                      {inviteResult.expires && <span className="text-white/40 mt-2">{t('dev_expires')}: {formatDate(inviteResult.expires)}</span>}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         ) : (
-          <div className="flex h-full items-center justify-center">
-            <p className="text-xs text-white/25">{t('developer_servers_hint')}</p>
+          <div className="flex h-full flex-col items-center justify-center space-y-4">
+            <div className="h-20 w-20 rounded-full bg-white/5 flex items-center justify-center">
+              <LuServer className="h-10 w-10 text-white/20" />
+            </div>
+            <p className="text-sm font-medium text-white/30">{t('developer_servers_hint')}</p>
           </div>
         )}
       </div>

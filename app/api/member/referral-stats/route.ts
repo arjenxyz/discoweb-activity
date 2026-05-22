@@ -5,7 +5,7 @@
  * - total_invites, total_earned_papel
  * - claimed milestones + next milestone
  * - son 10 davet geçmişi (invitee maskelenmiş)
- * - advanced passive income özeti
+
  */
 
 import { NextResponse } from 'next/server';
@@ -87,35 +87,7 @@ export async function GET(request: Request) {
       created_at: row.created_at,
     }));
 
-    // Advanced passive income (referral_usages / referral_passive_income_log — optional tables)
-    let advanced: { active_referrals: number; pending_amount: number; total_passive_earned: number } | null = null;
 
-    try {
-      const [usagesRes, passiveRes] = await Promise.all([
-        supabase
-          .from('referral_usages')
-          .select('id')
-          .eq('guild_id', selectedGuildId)
-          .eq('inviter_id', userId)
-          .eq('status', 'active'),
-        supabase
-          .from('referral_passive_income_log')
-          .select('amount, status')
-          .eq('guild_id', selectedGuildId)
-          .eq('user_id', userId),
-      ]);
-
-      if (!usagesRes.error && !passiveRes.error) {
-        const logs = passiveRes.data ?? [];
-        advanced = {
-          active_referrals: (usagesRes.data ?? []).length,
-          pending_amount: logs.filter((l) => l.status === 'pending').reduce((s, l) => s + Number(l.amount ?? 0), 0),
-          total_passive_earned: logs.filter((l) => l.status === 'paid').reduce((s, l) => s + Number(l.amount ?? 0), 0),
-        };
-      }
-    } catch {
-      // optional tables may not exist — ignore
-    }
 
     return NextResponse.json({
       total_invites: totalInvites,
@@ -124,7 +96,7 @@ export async function GET(request: Request) {
       next_milestone: nextMilestone,
       next_milestone_bonus: nextMilestoneBonus,
       invite_history: inviteHistory,
-      advanced,
+
     });
   } catch (err) {
     console.error('[referral-stats]', err);

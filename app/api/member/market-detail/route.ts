@@ -34,7 +34,7 @@ export async function GET(request: Request) {
   const { data: listing } = await supabase
     .from('server_listings')
     .select(
-      'guild_id, status, market_price, ipo_price, total_lots, founder_lots, public_lots, circulating_lots, current_day_high, current_day_low, category, description, vesting_start_date, founder_vested_lots, support_threshold, support_days_below, delist_days_below, treasury_balance, created_at',
+      'guild_id, status, market_price, total_lots, founder_lots, public_lots, circulating_lots, current_day_high, current_day_low, category, description, vesting_start_date, founder_vested_lots, support_threshold, support_days_below, delist_days_below, created_at',
     )
     .eq('guild_id', guildId)
     .eq('status', 'approved')
@@ -78,18 +78,7 @@ export async function GET(request: Request) {
     .order('traded_at', { ascending: false })
     .limit(20);
 
-  // ── 5. Treasury info ────────────────────────────────────────────────────────
-  const { data: treasury } = await supabase
-    .from('server_mari_treasury')
-    .select('balance, support_reserve, total_collected, total_paid_out, last_updated')
-    .eq('guild_id', guildId)
-    .maybeSingle();
 
-  const { data: treasuryHoldings } = await supabase
-    .from('treasury_holdings')
-    .select('lot_count, avg_buy_price')
-    .eq('guild_id', guildId)
-    .maybeSingle();
 
   // ── 6. Current week dividend pool ──────────────────────────────────────────
   const weekStart = new Date();
@@ -109,14 +98,13 @@ export async function GET(request: Request) {
   const publicLots = Number(listing.public_lots ?? 0);
   const circulatingLots = Number(listing.circulating_lots ?? 0);
   const availableLots = publicLots - circulatingLots;
-  const treasuryLots = Number(treasuryHoldings?.lot_count ?? 0);
 
   return NextResponse.json({
     listing: {
       guild_id: listing.guild_id,
       status: listing.status,
       market_price: marketPrice,
-      ipo_price: Number(listing.ipo_price),
+
       price_change_pct: priceChangePct,
       current_day_high: listing.current_day_high ? Number(listing.current_day_high) : null,
       current_day_low: listing.current_day_low ? Number(listing.current_day_low) : null,
@@ -135,19 +123,7 @@ export async function GET(request: Request) {
       public: publicLots,
       circulating: circulatingLots,
       available: availableLots,
-      treasury: treasuryLots,
     },
-    treasury: treasury
-      ? {
-          balance: Number(treasury.balance ?? 0),
-          support_reserve: Number(treasury.support_reserve ?? 0),
-          total_collected: Number(treasury.total_collected ?? 0),
-          total_paid_out: Number(treasury.total_paid_out ?? 0),
-          lot_count: treasuryLots,
-          avg_buy_price: Number(treasuryHoldings?.avg_buy_price ?? 0),
-          last_updated: treasury.last_updated,
-        }
-      : null,
     dividend_pool: dividendPool
       ? {
           week_start: weekStartDate,

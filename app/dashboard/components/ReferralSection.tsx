@@ -20,7 +20,7 @@ type ReferralStats = {
   next_milestone: number | null;
   next_milestone_bonus: number;
   invite_history: { invitee_masked: string; status: string; created_at: string }[];
-  advanced: { active_referrals: number; pending_amount: number; total_passive_earned: number } | null;
+
 };
 
 type LeaderboardEntry = {
@@ -75,13 +75,6 @@ export default function ReferralSection() {
   const [leaderboardLoading, setLeaderboardLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'stats' | 'leaderboard'>('stats');
 
-  // Yüksek Ekonomi pasif gelir referral state'leri
-  const [advancedCode, setAdvancedCode] = useState<string | null>(null);
-  const [advancedCodeUsage, setAdvancedCodeUsage] = useState(0);
-  const [advancedCodeCopied, setAdvancedCodeCopied] = useState(false);
-  const [advancedInput, setAdvancedInput] = useState('');
-  const [advancedSubmitting, setAdvancedSubmitting] = useState(false);
-  const [advancedStatus, setAdvancedStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const discordSdkRef = useRef<any | null>(null);
   const sdkReadyRef = useRef(false);
@@ -110,18 +103,6 @@ export default function ReferralSection() {
     }).catch(() => {});
   }, []);
 
-  // Load advanced code
-  useEffect(() => {
-    fetch(apiUrl('/api/member/referral-code'))
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.economy_tier === 'advanced' && d.code) {
-          setAdvancedCode(d.code);
-          setAdvancedCodeUsage(d.usage_count ?? 0);
-        }
-      })
-      .catch(() => {});
-  }, []);
 
   // Load stats
   useEffect(() => {
@@ -419,35 +400,7 @@ export default function ReferralSection() {
     }
   };
 
-  const handleAdvancedCodeSubmit = async () => {
-    const code = advancedInput.trim().toUpperCase();
-    if (!code) return;
-    setAdvancedSubmitting(true);
-    setAdvancedStatus(null);
-    try {
-      const res = await fetchWithCreds('/api/member/referral-code', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        const msgs: Record<string, string> = {
-          invalid_code: t('referral_advanced_invalid_code'),
-          own_code: t('referral_advanced_own_code'),
-          already_used: t('referral_advanced_already_used'),
-          not_advanced: t('referral_advanced_not_advanced'),
-        };
-        throw new Error(msgs[data.error] ?? t('referral_advanced_generic_error'));
-      }
-      setAdvancedStatus({ type: 'success', message: t('referral_advanced_success') });
-      setAdvancedInput('');
-    } catch (e: unknown) {
-      setAdvancedStatus({ type: 'error', message: e instanceof Error ? e.message : t('referral_advanced_error') });
-    } finally {
-      setAdvancedSubmitting(false);
-    }
-  };
+
 
 
   // Display stats to use (from API or fallback to profile data)
@@ -564,16 +517,6 @@ export default function ReferralSection() {
           <p className="text-[10px] text-white/30">{t('referral_stats_invites_unit')}</p>
         </div>
 
-        {stats?.advanced ? (
-          <div className="rounded-2xl border border-blue-500/20 bg-blue-500/5 p-4 flex flex-col gap-1">
-            <div className="flex items-center gap-1.5 text-blue-400/70">
-              <LuClock className="h-3.5 w-3.5" />
-              <span className="text-[10px] font-semibold uppercase tracking-wider">{t('referral_stats_pending')}</span>
-            </div>
-            <p className="text-lg font-black text-white">{stats.advanced.pending_amount.toLocaleString()}</p>
-            <p className="text-[10px] text-blue-300/40">MRI</p>
-          </div>
-        ) : (
           <div className="rounded-2xl border border-indigo-500/15 bg-indigo-500/5 p-4 flex flex-col gap-1">
             <div className="flex items-center gap-1.5 text-indigo-400/60">
               <LuTrophy className="h-3.5 w-3.5" />
@@ -582,7 +525,6 @@ export default function ReferralSection() {
             <p className="text-lg font-black text-white">{stats?.next_milestone ?? nextMilestone}</p>
             <p className="text-[10px] text-indigo-300/40">{t('referral_stats_target_unit')}</p>
           </div>
-        )}
       </div>
 
       {/* Tab Bar */}
@@ -711,26 +653,7 @@ export default function ReferralSection() {
             )}
           </div>
 
-          {/* Advanced Pasif Gelir Özeti */}
-          {stats?.advanced && (
-            <div className="rounded-3xl border border-blue-500/20 bg-blue-500/[0.04] p-5">
-              <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-blue-400">Yüksek Ekonomi · Pasif Gelir</p>
-              <div className="grid grid-cols-3 gap-3">
-                <div className="flex flex-col gap-0.5">
-                  <p className="text-[10px] text-white/40">{t('referral_passive_total_earned')}</p>
-                  <p className="text-base font-black text-white">{stats.advanced.total_passive_earned.toLocaleString()}</p>
-                </div>
-                <div className="flex flex-col gap-0.5">
-                  <p className="text-[10px] text-white/40">{t('referral_passive_pending')}</p>
-                  <p className="text-base font-black text-blue-300">{stats.advanced.pending_amount.toLocaleString()}</p>
-                </div>
-                <div className="flex flex-col gap-0.5">
-                  <p className="text-[10px] text-white/40">{t('referral_stats_active_referrals')}</p>
-                  <p className="text-base font-black text-white">{stats.advanced.active_referrals}</p>
-                </div>
-              </div>
-            </div>
-          )}
+
 
           {/* Davet Ekranı */}
           {/* Arkadaşını Davet Et — sadece Discord Activity içindeyken */}
@@ -813,59 +736,7 @@ export default function ReferralSection() {
             </div>
           )}
 
-          {/* Yüksek Ekonomi Pasif Gelir Referral */}
-          {advancedCode !== null && (
-            <div className="rounded-3xl border border-blue-500/20 bg-blue-500/[0.04] p-6">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-blue-400 mb-1">{t('referral_advanced_title')}</p>
-              <h2 className="text-lg font-black text-white">{t('referral_advanced_subtitle')}</h2>
-              <p className="mt-1 text-sm text-white/40">
-                {t('referral_advanced_description')}
-              </p>
-              <div className="mt-4 flex items-center gap-3">
-                <div className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
-                  <p className="text-xl font-black tracking-widest text-white">{advancedCode}</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    navigator.clipboard.writeText(advancedCode).catch(() => {});
-                    setAdvancedCodeCopied(true);
-                    setTimeout(() => setAdvancedCodeCopied(false), 2000);
-                  }}
-                  className="rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-blue-500"
-                >
-                  {advancedCodeCopied ? t('referral_advanced_copied') : t('referral_advanced_copy_button')}
-                </button>
-              </div>
-              <p className="mt-2 text-xs text-white/25">{t('referral_advanced_usage_text', { count: advancedCodeUsage })}</p>
-              <div className="mt-4 border-t border-white/[0.06] pt-4">
-                <p className="text-sm font-semibold text-white mb-2">{t('referral_advanced_use_title')}</p>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={advancedInput}
-                    onChange={(e) => setAdvancedInput(e.target.value.toUpperCase())}
-                    placeholder={t('referral_advanced_placeholder')}
-                    maxLength={8}
-                    className="flex-1 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/20 outline-none focus:border-blue-500/50 uppercase"
-                  />
-                  <button
-                    type="button"
-                    disabled={advancedSubmitting || !advancedInput}
-                    onClick={handleAdvancedCodeSubmit}
-                    className="rounded-xl bg-white/10 px-4 py-2 text-sm font-bold text-white transition hover:bg-white/15 disabled:opacity-40"
-                  >
-                    {advancedSubmitting ? '...' : t('referral_advanced_use_button')}
-                  </button>
-                </div>
-                {advancedStatus && (
-                  <p className={`mt-2 text-xs ${advancedStatus.type === 'success' ? 'text-emerald-400' : 'text-red-400'}`}>
-                    {advancedStatus.message}
-                  </p>
-                )}
-              </div>
-            </div>
-          )}
+
         </>
       )}
 

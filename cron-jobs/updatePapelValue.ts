@@ -57,7 +57,7 @@ async function updatePapelValues() {
   // Tüm setup'lı sunucuları çek
   const { data: servers } = await supabase
     .from('servers')
-    .select('discord_id, economy_tier')
+    .select('discord_id')
     .eq('is_setup', true);
 
   if (!servers?.length) return;
@@ -87,19 +87,8 @@ async function updatePapelValues() {
       const weeklySpend = Math.abs((ledger ?? []).reduce((s, l) => s + (l.amount ?? 0), 0));
       const dailySpendVolume = weeklySpend / 7;
 
-      // Hazine bakiyesi
-      const { data: treasury } = await supabase
-        .from('server_treasury')
-        .select('balance')
-        .eq('guild_id', guildId)
-        .maybeSingle();
-
-      const treasuryBalance = treasury?.balance ?? 0;
-
       // Papel değer çarpanı formülü (plan belgesi)
-      const papelValueMultiplier =
-        (dailySpendVolume / effectiveSupply) *
-        (1 + treasuryBalance / effectiveSupply);
+      const papelValueMultiplier = (dailySpendVolume / effectiveSupply);
 
       await supabase
         .from('servers')
