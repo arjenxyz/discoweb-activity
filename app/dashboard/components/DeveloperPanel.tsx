@@ -1103,53 +1103,58 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
   );
 
   const logsSection = (
-    <div className="grid gap-4 lg:grid-cols-[1.3fr_0.7fr]">
-      <div className="rounded-2xl border border-white/10 bg-[#0b0d12] p-4">
+    <div className="grid h-[calc(100vh-140px)] gap-6 lg:grid-cols-[380px_1fr]">
+      <div className="flex flex-col rounded-3xl border border-white/10 bg-[#0b0d12]/80 backdrop-blur-md p-5 overflow-hidden">
         {/* Filter chips */}
-        <div className="flex flex-wrap gap-1.5 mb-4">
+        <div className="flex flex-wrap gap-2 mb-6">
           {['all','auth_login','auth_logout','new_user','new_server','bug','suggestion','error_log','client_error'].map((type) => (
             <button key={type} onClick={() => setLogFilter(type)}
-              className={`rounded-full border px-3 py-1 text-[11px] font-medium transition ${logFilter === type ? 'border-[#5865F2]/50 bg-[#5865F2]/20 text-white' : 'border-white/10 text-white/40 hover:text-white/70'}`}>
+              className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold transition ${logFilter === type ? 'border-[#5865F2]/50 bg-[#5865F2]/20 text-white' : 'border-white/10 text-white/40 hover:text-white/70 hover:bg-white/5'}`}>
               {type === 'all' ? t('developer_logs_all') : type}
             </button>
           ))}
         </div>
-        <div className="flex flex-col gap-1.5 max-h-[480px] overflow-y-auto pr-1">
+        <div className="flex-1 overflow-y-auto pr-2 space-y-2.5 custom-scrollbar">
           {filteredLogs.map((log) => (
             <button key={log.id} onClick={() => setSelectedLog(log)}
-              className={`text-left rounded-xl border px-3 py-2.5 transition-all ${selectedLog?.id === log.id ? 'border-[#5865F2]/40 bg-[#5865F2]/10' : 'border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.05]'}`}>
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-xs font-semibold text-white truncate">{log.title}</p>
-                <span className="shrink-0 text-[10px] text-white/30">{formatDate(log.created_at)}</span>
+              className={`w-full text-left rounded-2xl border px-4 py-3.5 transition-all ${selectedLog?.id === log.id ? 'border-[#5865F2]/50 bg-[#5865F2]/10 shadow-[0_0_15px_rgba(88,101,242,0.15)]' : 'border-white/[0.05] bg-white/[0.02] hover:bg-white/[0.06]'}`}>
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-bold text-white truncate">{log.title}</p>
+                <span className="shrink-0 text-xs text-white/30">{formatDate(log.created_at)}</span>
               </div>
-              <p className="mt-0.5 text-[11px] text-white/40">{log.type}</p>
+              <p className="mt-1.5 text-xs font-medium text-white/50">{log.type}</p>
             </button>
           ))}
-          {filteredLogs.length === 0 && <p className="text-xs text-white/30 py-4 text-center">{t('developer_logs_empty')}</p>}
+          {filteredLogs.length === 0 && <p className="text-sm text-white/30 py-8 text-center font-medium">{t('developer_logs_empty')}</p>}
         </div>
       </div>
-      <div className="rounded-2xl border border-white/10 bg-[#0b0d12] p-4">
+      <div className="flex flex-col rounded-3xl border border-white/10 bg-[#0b0d12]/80 backdrop-blur-md p-6 h-full overflow-hidden">
         {selectedLog ? (
-          <>
-            <p className="text-sm font-bold text-white">{selectedLog.title}</p>
-            <p className="text-[11px] text-white/40 mt-0.5">{formatDate(selectedLog.created_at)}</p>
-            <div className="mt-3 rounded-xl bg-black/40 border border-white/[0.06] p-3 text-[11px] text-white/60 max-h-[400px] overflow-y-auto">
-              <pre className="whitespace-pre-wrap font-mono">{prettyJson(selectedLog.data)}</pre>
+          <div className="flex flex-col h-full">
+            <h2 className="text-xl font-black text-white">{selectedLog.title}</h2>
+            <p className="text-sm font-medium text-white/40 mt-1.5">{formatDate(selectedLog.created_at)}</p>
+            <div className="mt-5 flex-1 rounded-2xl bg-black/60 border border-white/[0.08] p-5 overflow-y-auto custom-scrollbar text-sm text-white/70">
+              <pre className="whitespace-pre-wrap font-mono leading-relaxed">{prettyJson(selectedLog.data)}</pre>
             </div>
             
             {/* AI Fix Panel Integration for error_log types */}
             {(selectedLog.type === 'error_log' || selectedLog.type === 'api_error') && (
-              <AIFixPanel 
-                logId={selectedLog.id}
-                errorTitle={selectedLog.title}
-                filePath={(selectedLog.data as any)?.file_path as string | undefined}
-                stackTrace={(selectedLog.data as any)?.context?.stack as string | undefined}
-              />
+              <div className="mt-5">
+                <AIFixPanel 
+                  logId={selectedLog.id}
+                  errorTitle={selectedLog.title}
+                  filePath={(selectedLog.data as any)?.file_path as string | undefined}
+                  stackTrace={(selectedLog.data as any)?.context?.stack as string | undefined}
+                />
+              </div>
             )}
-          </>
+          </div>
         ) : (
-          <div className="flex h-full items-center justify-center">
-            <p className="text-xs text-white/25">{t('developer_logs_hint')}</p>
+          <div className="flex h-full flex-col items-center justify-center space-y-4">
+            <div className="h-20 w-20 rounded-full bg-white/5 flex items-center justify-center">
+              <LuScrollText className="h-10 w-10 text-white/20" />
+            </div>
+            <p className="text-sm font-medium text-white/30">{t('developer_logs_hint')}</p>
           </div>
         )}
       </div>
@@ -1157,161 +1162,119 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
   );
 
   const appsSection = (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
       {/* Auto approve + thresholds */}
-      <div className="rounded-2xl border border-white/10 bg-[#0b0d12] p-5">
-        <div className="flex items-center justify-between mb-4">
+      <div className="rounded-3xl border border-white/10 bg-[#0b0d12]/80 backdrop-blur-md p-6">
+        <div className="flex items-center justify-between mb-6 border-b border-white/5 pb-4">
           <div>
-            <p className="text-sm font-semibold text-white">{t('developer_apps_auto_title')}</p>
-            <p className="text-xs text-white/40">{t('developer_apps_auto_desc')}</p>
+            <p className="text-lg font-bold text-white">{t('developer_apps_auto_title')}</p>
+            <p className="text-sm text-white/40 mt-1">{t('developer_apps_auto_desc')}</p>
           </div>
           <button onClick={() => setAutoApproveFlag(!autoApprove)}
-            className={`relative h-7 w-12 rounded-full transition-colors duration-200 ${autoApprove ? 'bg-emerald-500' : 'bg-white/20'}`}>
-            <span className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow-md transition-transform duration-200 ${autoApprove ? 'translate-x-6' : 'translate-x-1'}`} />
+            className={`relative h-8 w-14 rounded-full transition-colors duration-200 ${autoApprove ? 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.3)]' : 'bg-white/20'}`}>
+            <span className={`absolute top-1 h-6 w-6 rounded-full bg-white shadow-md transition-transform duration-200 ${autoApprove ? 'translate-x-7' : 'translate-x-1'}`} />
           </button>
         </div>
-        <div className="grid gap-2.5">
+        <div className="grid gap-4 lg:grid-cols-3">
           {([
             { key: 'economy_vote_threshold',          labelKey: 'dev_votes_label',               stateKey: 'voteThreshold' },
             { key: 'economy_direct_member_threshold', labelKey: 'dev_member_label',       stateKey: 'directMemberThreshold' },
             { key: 'economy_auto_approve_days',       labelKey: 'dev_apps_auto_days',     stateKey: 'autoApproveDays' },
           ] as const).map(({ key, labelKey, stateKey }) => (
-            <div key={key} className="flex items-center gap-3">
-              <span className="flex-1 text-xs text-white/50">{t(labelKey)}</span>
-              <input type="number" min={1} value={thresholdInputs[stateKey] ?? String(thresholds[stateKey])}
-                onChange={(e) => setThresholdInputs((p) => ({ ...p, [stateKey]: e.target.value }))}
-                className="w-24 rounded-lg border border-white/10 bg-black/30 px-2.5 py-1.5 text-xs text-white focus:border-[#5865F2]/50 focus:outline-none" />
-              <button onClick={() => saveThreshold(key, thresholdInputs[stateKey])} disabled={thresholdSaving === key}
-                className="rounded-lg border border-[#5865F2]/30 bg-[#5865F2]/15 hover:bg-[#5865F2]/25 px-3 py-1.5 text-[11px] font-medium text-[#7289da] transition disabled:opacity-50">
-                {thresholdSaving === key ? '...' : t('dev_save_button')}
-              </button>
+            <div key={key} className="flex flex-col gap-3 rounded-2xl bg-black/40 border border-white/5 p-4">
+              <span className="text-sm font-medium text-white/50">{t(labelKey)}</span>
+              <div className="flex items-center gap-2">
+                <input type="number" min={1} value={thresholdInputs[stateKey] ?? String(thresholds[stateKey])}
+                  onChange={(e) => setThresholdInputs((p) => ({ ...p, [stateKey]: e.target.value }))}
+                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white focus:border-[#5865F2]/50 focus:outline-none focus:bg-black/50 transition-colors" />
+                <button onClick={() => saveThreshold(key, thresholdInputs[stateKey])} disabled={thresholdSaving === key}
+                  className="rounded-xl border border-[#5865F2]/30 bg-[#5865F2]/15 hover:bg-[#5865F2]/25 px-4 py-2.5 text-sm font-bold text-[#7289da] transition disabled:opacity-50">
+                  {thresholdSaving === key ? '...' : t('dev_save_button')}
+                </button>
+              </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Economy apps */}
-      <div className="rounded-2xl border border-white/10 bg-[#0b0d12] p-5">
-        <p className="text-sm font-semibold text-white mb-3">{t('developer_apps_economy_title')}</p>
-        <div className="flex flex-col gap-2">
-          {economyApps.map((app) => (
-            <div key={app.id} className="rounded-xl border border-white/[0.07] bg-white/[0.03] p-3.5">
-              <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-                <div>
-                  <p className="text-xs font-bold text-white">{app.server?.name ?? app.guild_id}</p>
-                  <p className="text-[10px] text-white/30">{app.guild_id}</p>
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Economy apps */}
+        <div className="rounded-3xl border border-white/10 bg-[#0b0d12]/80 backdrop-blur-md p-6 flex flex-col max-h-[600px]">
+          <p className="text-lg font-bold text-white mb-4 border-b border-white/5 pb-3">{t('developer_apps_economy_title')}</p>
+          <div className="flex flex-col gap-3 overflow-y-auto custom-scrollbar pr-2">
+            {economyApps.map((app) => (
+              <div key={app.id} className="rounded-2xl border border-white/[0.07] bg-white/[0.02] hover:bg-white/[0.04] transition-colors p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                  <div>
+                    <p className="text-sm font-bold text-white">{app.server?.name ?? app.guild_id}</p>
+                    <p className="text-xs text-white/40">{app.guild_id}</p>
+                  </div>
+                  <span className={`rounded-full border px-3 py-1 text-xs font-bold ${app.status === 'pending' ? 'border-amber-500/30 bg-amber-500/10 text-amber-300' : 'border-white/10 text-white/40'}`}>{app.status}</span>
                 </div>
-                <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${app.status === 'pending' ? 'border-amber-500/30 bg-amber-500/10 text-amber-300' : 'border-white/10 text-white/40'}`}>{app.status}</span>
-              </div>
-              <div className="flex flex-wrap gap-3 text-[11px] text-white/50 mb-3">
-                <span>{t('dev_member_label')}: <strong className="text-white">{app.criteria?.memberCount ?? 0}</strong></span>
-                <span>{t('dev_votes_label')}: <strong className="text-white">{app.criteria?.voteCount ?? 0}</strong>/{app.criteria?.voteThreshold ?? 120}</span>
-                <span>{t('dev_setup_label')}: <strong className={app.criteria?.isSetup ? 'text-emerald-400' : 'text-red-400'}>{app.criteria?.isSetup ? t('dev_has') : t('dev_not_has')}</strong></span>
-                <span>{t('dev_eligible_label')}: <strong className={app.criteria?.eligible ? 'text-emerald-400' : 'text-red-400'}>{app.criteria?.eligible ? t('dev_yes') : t('dev_no')}</strong></span>
-              </div>
-              <div className="flex gap-2">
-                <button onClick={() => handleDecision('economy_applications', app.id, 'approve')}
-                  className="flex items-center gap-1.5 rounded-lg border border-emerald-400/25 bg-emerald-500/10 hover:bg-emerald-500/20 px-3 py-1.5 text-[11px] font-medium text-emerald-300 transition">
-                  <LuCheck className="w-3 h-3" />{t('developer_apps_approve')}
-                </button>
-                <button onClick={() => handleDecision('economy_applications', app.id, 'reject')}
-                  className="flex items-center gap-1.5 rounded-lg border border-red-500/25 bg-red-500/10 hover:bg-red-500/20 px-3 py-1.5 text-[11px] font-medium text-red-300 transition">
-                  <LuX className="w-3 h-3" />{t('developer_apps_reject')}
-                </button>
-              </div>
-            </div>
-          ))}
-          {economyApps.length === 0 && <p className="text-xs text-white/30 py-3 text-center">{t('developer_apps_empty')}</p>}
-        </div>
-      </div>
-
-      {/* Tier apps */}
-      <div className="rounded-2xl border border-white/10 bg-[#0b0d12] p-5">
-        <p className="text-sm font-semibold text-white mb-3">{t('developer_apps_tier_title')}</p>
-        <div className="flex flex-col gap-2">
-          {tierApps.map((app) => (
-            <div key={app.id} className="rounded-xl border border-white/[0.07] bg-white/[0.03] p-3.5">
-              <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-                <div>
-                  <p className="text-xs font-bold text-white">{app.server?.name ?? app.guild_id}</p>
-                  <p className="text-[10px] text-white/30">{app.guild_id}</p>
+                <div className="flex flex-wrap gap-4 text-xs font-medium text-white/50 mb-4 bg-black/30 rounded-xl p-3 border border-white/5">
+                  <span>{t('dev_member_label')}: <strong className="text-white text-sm">{app.criteria?.memberCount ?? 0}</strong></span>
+                  <span>{t('dev_votes_label')}: <strong className="text-white text-sm">{app.criteria?.voteCount ?? 0}</strong>/{app.criteria?.voteThreshold ?? 120}</span>
+                  <span>{t('dev_setup_label')}: <strong className={app.criteria?.isSetup ? 'text-emerald-400' : 'text-red-400'}>{app.criteria?.isSetup ? t('dev_has') : t('dev_not_has')}</strong></span>
+                  <span>{t('dev_eligible_label')}: <strong className={app.criteria?.eligible ? 'text-emerald-400' : 'text-red-400'}>{app.criteria?.eligible ? t('dev_yes') : t('dev_no')}</strong></span>
                 </div>
-                <span className="text-[10px] text-white/30">{formatDate(app.created_at)}</span>
+                <div className="flex gap-2">
+                  <button onClick={() => handleDecision('economy_applications', app.id, 'approve')}
+                    className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-emerald-400/25 bg-emerald-500/10 hover:bg-emerald-500/20 px-4 py-2 text-xs font-bold text-emerald-300 transition">
+                    <LuCheck className="w-4 h-4" />{t('developer_apps_approve')}
+                  </button>
+                  <button onClick={() => handleDecision('economy_applications', app.id, 'reject')}
+                    className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-red-500/25 bg-red-500/10 hover:bg-red-500/20 px-4 py-2 text-xs font-bold text-red-300 transition">
+                    <LuX className="w-4 h-4" />{t('developer_apps_reject')}
+                  </button>
+                </div>
               </div>
-              <p className="text-[11px] text-white/50 mb-3">{t('dev_applicant_label')}: <strong className="text-white">{app.applicant_user_id}</strong></p>
-              <div className="flex gap-2">
-                <button onClick={() => handleDecision('economy_tier_applications', app.id, 'approve')}
-                  className="flex items-center gap-1.5 rounded-lg border border-emerald-400/25 bg-emerald-500/10 hover:bg-emerald-500/20 px-3 py-1.5 text-[11px] font-medium text-emerald-300 transition">
-                  <LuCheck className="w-3 h-3" />{t('developer_apps_approve')}
-                </button>
-                <button onClick={() => handleDecision('economy_tier_applications', app.id, 'reject')}
-                  className="flex items-center gap-1.5 rounded-lg border border-red-500/25 bg-red-500/10 hover:bg-red-500/20 px-3 py-1.5 text-[11px] font-medium text-red-300 transition">
-                  <LuX className="w-3 h-3" />{t('developer_apps_reject')}
-                </button>
-              </div>
-            </div>
-          ))}
-          {tierApps.length === 0 && <p className="text-xs text-white/30 py-3 text-center">{t('developer_apps_empty')}</p>}
+            ))}
+            {economyApps.length === 0 && <p className="text-sm font-medium text-white/30 py-8 text-center">{t('developer_apps_empty')}</p>}
+          </div>
         </div>
-      </div>
-    </div>
-  );
 
-  const serversSection = (
-    <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-      <div className="rounded-2xl border border-white/10 bg-[#0b0d12] p-4">
-        <div className="flex flex-col gap-1.5 max-h-[560px] overflow-y-auto pr-1">
+        {/* Tier apps */}
+        <div className="rounded-3xl border border-white/10 bg-[#0b0d12]/80 backdrop-blur-md p-6 flex flex-col max-h-[600px]">
+          <p className="text-lg font-bold text-white mb-4 border-b border-white/5 pb-3">{t('developer_apps_tier_title')}</p>
+          <div className="flex flex-col gap-3 overflow-y-auto custom-scrollbar pr-2">
+            {tierApps.map((app) => (
+              <div key={app.id} className="rounded-2xl border border-white/[0.07] bg-white/[0.02] hover:bg-white/[0.04] transition-colors p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                  <div>
+                    <p className="text-sm font-bold text-white">{app.server?.name ?? app.guild_id}</p>
+                    <p className="text-xs text-white/40">{app.guild_id}</p>
+                  </div>
+                  <span className="text-xs text-white/30">{formatDate(app.created_at)}</span>
+                </div>
+                <p className="text-sm text-white/50 mb-4 bg-black/30 rounded-xl p-3 border border-white/5">{t('dev_applicant_label')}: <strong className="text-white">{app.applicant_user_id}</strong></p>
+                <div className="flex gap-2">
+                  <button onClick={() => handleDecision('economy_tier_applications', app.id, 'approve')}
+                    className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-emerald-400/25 bg-emerald-500/10 hover:bg-emerald-500/20 px-4 py-2 text-xs font-bold text-emerald-300 transition">
+                    <LuCheck className="w-4 h-4" />{t('developer_apps_approve')}
+                  </button>
+                  <button onClick={() => handleDecision('economy_tier_applications', app.id, 'reject')}
+                    className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-red-500/25 bg-red-500/10 hover:bg-red-500/20 px-4 py-2 text-xs font-bold text-red-300 transition">
           {servers.map((server) => (
             <button key={server.discord_id} onClick={() => setSelectedServer(server)}
-              className={`text-left rounded-xl border px-3 py-2.5 transition-all ${selectedServer?.discord_id === server.discord_id ? 'border-[#5865F2]/40 bg-[#5865F2]/10' : 'border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.05]'}`}>
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-xs font-bold text-white truncate">{server.name}</p>
-                <span className={`shrink-0 rounded-full px-2 py-0.5 text-[9px] font-bold border ${server.economy_tier === 'advanced' ? 'border-violet-500/30 bg-violet-500/10 text-violet-300' : 'border-white/10 text-white/30'}`}>
+              className={`w-full text-left rounded-2xl border px-4 py-3.5 transition-all ${selectedServer?.discord_id === server.discord_id ? 'border-[#5865F2]/50 bg-[#5865F2]/10 shadow-[0_0_15px_rgba(88,101,242,0.15)]' : 'border-white/[0.05] bg-white/[0.02] hover:bg-white/[0.06]'}`}>
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-bold text-white truncate">{server.name}</p>
+                <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold border ${server.economy_tier === 'advanced' ? 'border-violet-500/30 bg-violet-500/10 text-violet-300' : 'border-white/10 text-white/40'}`}>
                   {server.economy_tier}
                 </span>
               </div>
-              <p className="mt-0.5 text-[10px] text-white/30">{server.discord_id}</p>
-              <div className="mt-1 flex gap-3 text-[10px] text-white/40">
+              <p className="mt-1 text-xs text-white/40">{server.discord_id}</p>
+              <div className="mt-2.5 flex items-center justify-between text-xs font-medium text-white/50 bg-black/30 rounded-lg p-2 border border-white/5">
                 <span>{server.member_count ?? 0} {t('dev_members_suffix')}</span>
-                <span className={server.is_setup ? 'text-emerald-400' : 'text-white/25'}>{server.is_setup ? t('dev_established') : t('dev_not_established')}</span>
+                <span className={server.is_setup ? 'text-emerald-400' : 'text-white/30'}>{server.is_setup ? t('dev_established') : t('dev_not_established')}</span>
               </div>
             </button>
           ))}
-          {servers.length === 0 && <p className="text-xs text-white/30 py-4 text-center">{t('developer_servers_empty')}</p>}
+          {servers.length === 0 && <p className="text-sm font-medium text-white/30 py-8 text-center">{t('developer_servers_empty')}</p>}
         </div>
       </div>
-      <div className="rounded-2xl border border-white/10 bg-[#0b0d12] p-4">
+      <div className="flex flex-col rounded-3xl border border-white/10 bg-[#0b0d12]/80 backdrop-blur-md p-6 h-full overflow-hidden">
         {selectedServer ? (
-          <div className="flex flex-col gap-3">
-            <div>
-              <p className="text-sm font-bold text-white">{selectedServer.name}</p>
-              <p className="text-[11px] text-white/30 mt-0.5">{selectedServer.discord_id}</p>
-            </div>
-            <div className="rounded-xl bg-black/30 border border-white/[0.06] p-3 grid gap-2 text-[11px]">
-              {([
-                [t('dev_server_detail_members'), `${selectedServer.member_count ?? 0}`],
-                [t('dev_server_detail_setup'), selectedServer.is_setup ? t('dev_has') : t('dev_not_has')],
-                [t('dev_server_detail_economy'), selectedServer.economy_tier],
-                [t('dev_server_detail_admin_role'), selectedServer.admin_role_id ?? '—'],
-                [t('dev_server_detail_verify_role'), selectedServer.verify_role_id ?? '—'],
-                [t('dev_server_detail_market'), selectedServer.market_hours_enabled ? `${selectedServer.market_open_time ?? ''}-${selectedServer.market_close_time ?? ''}` : t('dev_market_closed')],
-                [t('dev_server_detail_timezone'), selectedServer.market_timezone ?? '—'],
-              ] as [string, string][]).map(([k, v]) => (
-                <div key={k} className="flex items-center justify-between gap-2">
-                  <span className="text-white/40">{k}</span>
-                  <span className="font-semibold text-white text-right">{v}</span>
-                </div>
-              ))}
-            </div>
-            <button onClick={() => { setInviteResult(null); generateInvite(selectedServer.discord_id); }} disabled={inviteLoading}
-              className="flex items-center justify-center gap-2 w-full rounded-xl border border-[#5865F2]/30 bg-[#5865F2]/15 hover:bg-[#5865F2]/25 px-4 py-2.5 text-xs font-semibold text-[#7289da] transition disabled:opacity-50">
-              <LuLink className="w-3.5 h-3.5" />
-              {inviteLoading ? t('dev_invite_loading') : t('dev_invite_button')}
-            </button>
-            {inviteResult && (
-              <div className="rounded-xl border border-emerald-400/20 bg-emerald-500/10 p-3">
-                <p className="text-[11px] font-bold text-emerald-300 mb-1.5">{t('dev_invite_ready')}</p>
-                <a href={inviteResult.url} target="_blank" rel="noopener noreferrer" className="text-xs text-emerald-400 underline break-all">{inviteResult.url}</a>
                 {inviteResult.expires && <p className="text-[10px] text-white/30 mt-1">{t('dev_invite_validity')} {formatDate(inviteResult.expires)}</p>}
                 <button onClick={() => navigator.clipboard.writeText(inviteResult.url)}
                   className="mt-2 flex items-center gap-1.5 rounded-lg bg-white/10 hover:bg-white/15 px-2.5 py-1 text-[10px] text-white/60 transition">
