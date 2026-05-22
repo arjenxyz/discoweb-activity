@@ -1142,8 +1142,8 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
               <AIFixPanel 
                 logId={selectedLog.id}
                 errorTitle={selectedLog.title}
-                filePath={selectedLog.data?.file_path}
-                stackTrace={selectedLog.data?.context?.stack}
+                filePath={(selectedLog.data as any)?.file_path as string | undefined}
+                stackTrace={(selectedLog.data as any)?.context?.stack as string | undefined}
               />
             )}
           </>
