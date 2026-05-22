@@ -27,6 +27,12 @@ const isDebugRequest = (request: Request): boolean => {
   }
 };
 
+const normalizeGuildId = (value: string | null | undefined): string | null => {
+  if (!value) return null;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+};
+
 /** GET — return pending (unsettled) earnings summary without claiming */
 export async function GET(request: Request) {
   const maintenance = await checkMaintenance(['site']);
@@ -40,8 +46,11 @@ export async function GET(request: Request) {
   const userId = await getSessionUserId();
   if (!userId) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 
-  const selectedGuildId = await getSelectedGuildId(request);
+  const selectedGuildId = normalizeGuildId(await getSelectedGuildId(request));
   const debugEnabled = isDebugRequest(request);
+  if (!selectedGuildId) {
+    return NextResponse.json({ pending: 0, messageTotal: 0, voiceTotal: 0, count: 0 });
+  }
 
   const { data: server } = await supabase
     .from('servers')
@@ -63,10 +72,11 @@ export async function GET(request: Request) {
   }
 
   // Bot writes daily_earnings with Discord guild ID, so query with both server.id and selectedGuildId
+  const guildCandidates = Array.from(new Set([server.id, selectedGuildId].filter(Boolean)));
   const { data: rows } = await supabase
     .from('daily_earnings')
     .select('amount,source')
-    .or(`guild_id.eq.${server.id},guild_id.eq.${selectedGuildId}`)
+    .in('guild_id', guildCandidates)
     .eq('user_id', userId)
     .is('settled_at', null)
     .is('deleted_at', null);
@@ -125,7 +135,10 @@ export async function POST(request: Request) {
     const userId = await getSessionUserId();
     if (!userId) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 
-    const selectedGuildId = await getSelectedGuildId(request);
+    const selectedGuildId = normalizeGuildId(await getSelectedGuildId(request));
+    if (!selectedGuildId) {
+      return NextResponse.json({ error: 'guild_not_selected' }, { status: 400 });
+    }
 
     // Find server internal id
     const { data: server } = await supabase
@@ -148,10 +161,11 @@ export async function POST(request: Request) {
     }
 
     // Fetch unsettled daily_earnings for this user + guild (bot may use Discord ID or internal ID)
+    const guildCandidates = Array.from(new Set([server.id, selectedGuildId].filter(Boolean)));
     const { data: rowsData } = await supabase
       .from('daily_earnings')
       .select('id,amount,source,metadata,created_at')
-      .or(`guild_id.eq.${server.id},guild_id.eq.${selectedGuildId}`)
+      .in('guild_id', guildCandidates)
       .eq('user_id', userId)
       .is('settled_at', null)
       .is('deleted_at', null)
@@ -183,7 +197,16 @@ export async function POST(request: Request) {
     }
 
     // Sum amounts
-    const total = Number(rows.reduce((s: number, r) => s + Number(r.amount ?? 0), 0).toFixed(2));
+    const safeAmount = (value: unknown): number => {
+      if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
+      if (typeof value === 'string') {
+        const normalized = value.replace(',', '.').trim();
+        const parsed = Number(normalized);
+        return Number.isFinite(parsed) ? parsed : 0;
+      }
+      return 0;
+    };
+    const total = Number(rows.reduce((s: number, r) => s + safeAmount(r.amount), 0).toFixed(2));
 
     type WalletRow = { balance?: number; guild_id?: string };
 
@@ -191,7 +214,7 @@ export async function POST(request: Request) {
     const { data: walletRows } = await supabase
       .from('member_wallets')
       .select('balance,guild_id')
-      .or(`guild_id.eq.${selectedGuildId},guild_id.eq.${server.id}`)
+      .in('guild_id', guildCandidates)
       .eq('user_id', userId);
     const walletRow = ((walletRows as Array<WalletRow> | null) ?? [])
       .find(row => row.guild_id === selectedGuildId) ?? ((walletRows as Array<WalletRow> | null) ?? [])[0];
@@ -212,8 +235,8 @@ export async function POST(request: Request) {
     assertNoError('wallet_upsert', (walletUpsertRes as { error?: { message?: string; code?: string } }).error ?? null);
 
     // Insert single ledger entry with a stable/known type.
-    const msgTotal = Number(rows.filter(r => r.source === 'message').reduce((s: number, r) => s + Number(r.amount ?? 0), 0).toFixed(2));
-    const voiceTotal = Number(rows.filter(r => r.source === 'voice').reduce((s: number, r) => s + Number(r.amount ?? 0), 0).toFixed(2));
+    const msgTotal = Number(rows.filter(r => r.source === 'message').reduce((s: number, r) => s + safeAmount(r.amount), 0).toFixed(2));
+    const voiceTotal = Number(rows.filter(r => r.source === 'voice').reduce((s: number, r) => s + safeAmount(r.amount), 0).toFixed(2));
     const ledgerInsertRes = await (supabase.from('wallet_ledger') as unknown as {
       insert: (values: Record<string, unknown>) => Promise<unknown>;
     }).insert({
@@ -241,8 +264,8 @@ export async function POST(request: Request) {
 
     // Send claim mail
     try {
-      const msgTotal = Number(rows.filter(r => r.source === 'message').reduce((s: number, r) => s + Number(r.amount ?? 0), 0).toFixed(2));
-      const voiceTotal = Number(rows.filter(r => r.source === 'voice').reduce((s: number, r) => s + Number(r.amount ?? 0), 0).toFixed(2));
+      const msgTotal = Number(rows.filter(r => r.source === 'message').reduce((s: number, r) => s + safeAmount(r.amount), 0).toFixed(2));
+      const voiceTotal = Number(rows.filter(r => r.source === 'voice').reduce((s: number, r) => s + safeAmount(r.amount), 0).toFixed(2));
       // Use the guild ID that bot writes with (selectedGuildId = Discord guild ID)
       const mailGuildId = selectedGuildId;
       await supabase.from('system_mails').insert({
