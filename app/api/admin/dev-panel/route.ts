@@ -42,17 +42,20 @@ type LogItem = {
 async function getOverview(supabase: ReturnType<typeof getSupabase>) {
   if (!supabase) return null;
 
-  const [{ count: userCount }, { count: serverCount }, { count: profileCount }] = await Promise.all([
+  const [{ count: userCount }, { count: serverCount }, { count: profileCount }, { data: configData }] = await Promise.all([
     supabase.from('users').select('id', { count: 'exact', head: true }),
     supabase.from('servers').select('id', { count: 'exact', head: true }),
     supabase.from('member_profiles').select('id', { count: 'exact', head: true }),
+    supabase.from('app_config').select('key, value').eq('key', 'economy_auto_approve').limit(1),
   ]);
+
+  const economyAutoApprove = ((configData?.[0] as { value: string } | undefined)?.value ?? 'false') === 'true';
 
   return {
     userCount: userCount ?? 0,
     serverCount: serverCount ?? 0,
     profileCount: profileCount ?? 0,
-    economyAutoApprove: (autoConfig?.value ?? 'false') === 'true',
+    economyAutoApprove,
   };
 }
 
