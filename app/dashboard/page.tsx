@@ -114,7 +114,7 @@ export default function DashboardPage() {
   const [overviewStats, setOverviewStats] = useState<OverviewStats | OverviewStatsExpanded | null>(null);
   const [overviewLoading, setOverviewLoading] = useState(true);
   const [pendingEarnings, setPendingEarnings] = useState<{ pending: number; messageTotal: number; voiceTotal: number; count: number } | null>(null);
-  const [claimResult, setClaimResult] = useState<{ kind: 'idle' | 'success' | 'error'; message?: string }>({ kind: 'idle' });
+  const [claimResult, setClaimResult] = useState<{ kind: 'idle' | 'success' | 'error' | 'empty'; message?: string }>({ kind: 'idle' });
   const [claimLoading, setClaimLoading] = useState(false);
   const [badgeInfo, setBadgeInfo] = useState<BadgeInfo | null>(null);
   const [storeItems, setStoreItems] = useState<StoreItem[]>([]);
@@ -736,11 +736,11 @@ export default function DashboardPage() {
         if (data.totalTransferred > 0) {
           setWalletBalance(prev => Number((prev + data.totalTransferred).toFixed(2)));
           setClaimResult({ kind: 'success', message: `${data.totalTransferred.toFixed(2)} papel hesabınıza yüklendi.` });
+          setPendingEarnings({ pending: 0, messageTotal: 0, voiceTotal: 0, count: 0 });
+          await refreshWalletBalance();
         } else {
-          setClaimResult({ kind: 'success', message: 'Alınacak yeni kazanç bulunamadı.' });
+          setClaimResult({ kind: 'empty', message: 'Alınacak yeni kazanç bulunamadı.' });
         }
-        setPendingEarnings({ pending: 0, messageTotal: 0, voiceTotal: 0, count: 0 });
-        await refreshWalletBalance();
       } else {
         const errorData = await res.json().catch(() => ({ error: 'unknown' }));
         const message = typeof errorData?.message === 'string'

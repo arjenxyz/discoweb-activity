@@ -26,7 +26,7 @@ type OverviewSectionProps = {
   formatRoleColor: (color: number) => string;
   pendingEarnings?: { pending: number; messageTotal: number; voiceTotal: number; count: number } | null;
   claimLoading?: boolean;
-  claimResult?: { kind: 'idle' | 'success' | 'error'; message?: string };
+  claimResult?: { kind: 'idle' | 'success' | 'error' | 'empty'; message?: string };
   onClaim?: () => void;
 };
 
@@ -280,6 +280,9 @@ export default function OverviewSection({
                 )}
                 {claimResult?.kind === 'success' && claimResult.message && (
                   <p className="mt-2 text-sm text-emerald-300">{claimResult.message}</p>
+                )}
+                {claimResult?.kind === 'empty' && claimResult.message && (
+                  <p className="mt-2 text-sm text-white/70">{claimResult.message}</p>
                 )}
               </div>
             </div>
