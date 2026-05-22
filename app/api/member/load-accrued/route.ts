@@ -11,6 +11,12 @@ const getSupabase = (): SupabaseClient | null => {
   return createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
 };
 
+const assertNoError = (label: string, error: { message?: string; code?: string } | null) => {
+  if (!error) return;
+  const msg = `[load-accrued] ${label} failed: ${error.code ?? 'unknown'} ${error.message ?? ''}`.trim();
+  throw new Error(msg);
+};
+
 /** GET — return pending (unsettled) earnings summary without claiming */
 export async function GET(request: Request) {
   const maintenance = await checkMaintenance(['site']);
@@ -133,7 +139,7 @@ export async function POST(request: Request) {
 
     // Upsert new balance (final)
     const finalBalance = Number((current + total).toFixed(2));
-    await (supabase.from('member_wallets') as unknown as {
+    const walletUpsertRes = await (supabase.from('member_wallets') as unknown as {
       upsert: (values: Record<string, unknown>, options?: { onConflict?: string }) => Promise<unknown>;
     }).upsert({
       guild_id: walletGuildId,
@@ -141,13 +147,14 @@ export async function POST(request: Request) {
       balance: finalBalance,
       updated_at: new Date().toISOString(),
     }, { onConflict: 'guild_id,user_id' });
+    assertNoError('wallet_upsert', (walletUpsertRes as { error?: { message?: string; code?: string } }).error ?? null);
 
     // Insert ledger entries per row (incrementing balance_after)
     for (const r of rows) {
       const amt = Number(r.amount ?? 0);
       running = Number((running + amt).toFixed(2));
       const type = r.source === 'voice' ? 'earn_voice' : 'earn_message';
-      await (supabase.from('wallet_ledger') as unknown as {
+      const ledgerInsertRes = await (supabase.from('wallet_ledger') as unknown as {
         insert: (values: Record<string, unknown>) => Promise<unknown>;
       }).insert({
         guild_id: walletGuildId,
@@ -157,11 +164,16 @@ export async function POST(request: Request) {
         balance_after: running,
         metadata: r.metadata ?? {},
       });
+      assertNoError('wallet_ledger_insert', (ledgerInsertRes as { error?: { message?: string; code?: string } }).error ?? null);
     }
 
     // Mark daily_earnings as settled to avoid re-loading
     const ids = rows.map(r => r.id);
-    await supabase.from('daily_earnings').update({ settled_at: new Date().toISOString() }).in('id', ids);
+    const settleRes = await supabase
+      .from('daily_earnings')
+      .update({ settled_at: new Date().toISOString() })
+      .in('id', ids);
+    assertNoError('daily_earnings_settle', settleRes.error ?? null);
 
     // Send claim mail
     try {
