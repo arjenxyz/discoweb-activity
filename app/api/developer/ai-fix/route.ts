@@ -2,8 +2,6 @@ import { NextResponse } from 'next/server';
 import { requireSessionUser } from '@/lib/auth';
 import OpenAI from 'openai';
 import { GoogleGenAI } from '@google/genai';
-import fs from 'fs/promises';
-import path from 'path';
 
 const DEV_GUILD_ID = process.env.DISCORD_GUILD_ID ?? '';
 const DEV_ROLE_ID = process.env.DEVELOPER_ROLE_ID ?? '';
@@ -49,17 +47,39 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Dosya yolu eksik.' }, { status: 400 });
     }
 
-    const rootDir = process.cwd();
-    const absolutePath = path.resolve(rootDir, filePath);
-    if (!absolutePath.startsWith(rootDir)) {
-      return NextResponse.json({ error: 'Geçersiz dosya yolu.' }, { status: 400 });
+    const githubToken = process.env.GITHUB_TOKEN;
+    if (!githubToken) {
+      return NextResponse.json({ error: 'GITHUB_TOKEN bulunamadı. Lütfen çevre değişkenlerine ekleyin.' }, { status: 500 });
     }
 
+    // GitHub'dan dosya içeriğini çek
+    const repoOwner = 'arjenxyz';
+    const repoName = 'discoweb-activity';
+    
+    // Windows vs Linux formatındaki filePath'leri (app\api\...) GitHub uyumlu hale (app/api/...) getir
+    const ghFilePath = filePath.replace(/\\/g, '/');
+
     let fileContent = '';
+    let fileSha = '';
     try {
-      fileContent = await fs.readFile(absolutePath, 'utf8');
-    } catch (e) {
-      return NextResponse.json({ error: 'Dosya okunamadı: ' + filePath }, { status: 404 });
+      const ghRes = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/contents/${ghFilePath}`, {
+        headers: {
+          Authorization: `Bearer ${githubToken}`,
+          Accept: 'application/vnd.github.v3+json'
+        },
+        // Vercel cache'i engellemek için
+        cache: 'no-store'
+      });
+
+      if (!ghRes.ok) {
+        throw new Error(`GitHub API Hatası: ${ghRes.status} ${ghRes.statusText}`);
+      }
+
+      const ghData = await ghRes.json();
+      fileSha = ghData.sha; // Push işlemi için SHA gereklidir
+      fileContent = Buffer.from(ghData.content, 'base64').toString('utf8');
+    } catch (e: any) {
+      return NextResponse.json({ error: `GitHub'dan dosya okunamadı (${ghFilePath}): ` + e.message }, { status: 404 });
     }
 
     const prompt = `
@@ -153,14 +173,15 @@ ${fileContent}
       fixedCode = match[1];
     }
 
-    // 4. Düzeltilmiş kodu aynı dosyaya yaz
-    await fs.writeFile(absolutePath, fixedCode, 'utf8');
+    // 4. Sabit diske yazma işlemi iptal edildi. AI'dan gelen kod arayüze döndürülüyor.
+    // Kullanıcı arayüzde onayladıktan sonra github-commit API'sine gidip GitHub'a pushlanacak.
 
     return NextResponse.json({ 
       success: true, 
       fixedCode,
+      fileSha,
       provider: successfulProvider,
-      message: `Dosya başarıyla ${successfulProvider.toUpperCase()} tarafından düzeltildi ve üzerine yazıldı.` 
+      message: `Dosya başarıyla ${successfulProvider.toUpperCase()} tarafından düzeltildi. Onay bekleniyor...` 
     });
 
   } catch (error: any) {

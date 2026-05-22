@@ -1,10 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireSessionUser } from '@/lib/auth';
-import { exec } from 'child_process';
-import { promisify } from 'util';
 import { createClient } from '@supabase/supabase-js';
-
-const execAsync = promisify(exec);
 
 const DEV_GUILD_ID = process.env.DISCORD_GUILD_ID ?? '';
 const DEV_ROLE_ID = process.env.DEVELOPER_ROLE_ID ?? '';
@@ -47,17 +43,49 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Yetkisiz erişim.' }, { status: 403 });
     }
 
-    const { logId, errorTitle } = await request.json();
+    const { logId, errorTitle, filePath, fixedCode, fileSha } = await request.json();
+    
+    if (!filePath || !fixedCode || !fileSha) {
+      return NextResponse.json({ error: 'Dosya yolu, kod veya SHA eksik.' }, { status: 400 });
+    }
+
+    const githubToken = process.env.GITHUB_TOKEN;
+    if (!githubToken) {
+      return NextResponse.json({ error: 'GITHUB_TOKEN bulunamadı. Lütfen çevre değişkenlerine ekleyin.' }, { status: 500 });
+    }
+
     const safeTitle = (errorTitle || 'Unknown Error').replace(/"/g, '\\"');
     const commitMessage = `🪄 AI Fix: ${safeTitle}`;
+    
+    const repoOwner = 'arjenxyz';
+    const repoName = 'discoweb-activity';
+    const ghFilePath = filePath.replace(/\\/g, '/');
 
-    // Git komutlarını çalıştır
-    // Not: Bu işlem sunucusuz ortamlarda (Vercel) değil, fiziksel/sanal makinelerde (VPS, Local) çalışır.
-    await execAsync('git add .');
-    await execAsync(`git commit -m "${commitMessage}"`);
-    await execAsync('git push origin main');
+    // 1. Kodu Base64 formatına çevir (GitHub API zorunluluğu)
+    const base64Content = Buffer.from(fixedCode, 'utf8').toString('base64');
 
-    // Veritabanında hatayı 'resolved' (çözüldü) olarak işaretle
+    // 2. GitHub API üzerinden dosyayı güncelle (Direct Commit to Main)
+    const ghRes = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/contents/${ghFilePath}`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${githubToken}`,
+        Accept: 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message: commitMessage,
+        content: base64Content,
+        sha: fileSha,
+        branch: 'main' // Doğrudan canlıya at
+      })
+    });
+
+    if (!ghRes.ok) {
+      const errorData = await ghRes.json();
+      throw new Error(`GitHub Commit Hatası: ${errorData.message}`);
+    }
+
+    // 3. Veritabanında hatayı 'resolved' (çözüldü) olarak işaretle
     try {
       const supabase = getAdminSupabase();
       if (supabase && logId) {
@@ -72,27 +100,14 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ 
       success: true, 
-      message: 'Değişiklikler başarıyla kaydedildi ve Github deposuna gönderildi.' 
+      message: 'Değişiklikler başarıyla GitHub deposuna gönderildi ve canlı site güncelleniyor.' 
     });
 
   } catch (error: any) {
-    console.error("Git Commit Error:", error);
-    
-    // Klasör git deposu değilse veya push yetkisi yoksa kullanıcıyı bilgilendir
-    const errorString = String(error.message || error);
-    let friendlyMessage = 'Git işleminde bir hata oluştu.';
-    
-    if (errorString.includes('not a git repository')) {
-      friendlyMessage = 'Bu klasör bir Git deposu değil.';
-    } else if (errorString.includes('Authentication failed') || errorString.includes('Permission denied')) {
-      friendlyMessage = 'GitHub push yetkisi bulunamadı. Lütfen SSH veya Token ayarlarınızı kontrol edin.';
-    } else if (errorString.includes('nothing to commit')) {
-      friendlyMessage = 'Değişiklik bulunamadı veya AI düzeltme yapmadı.';
-    }
-
+    console.error("GitHub Commit API Error:", error);
     return NextResponse.json({ 
-      error: friendlyMessage, 
-      details: errorString 
+      error: 'GitHub API işleminde hata oluştu.', 
+      details: String(error.message || error) 
     }, { status: 500 });
   }
 }

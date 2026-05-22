@@ -12,16 +12,44 @@ const getAdminSupabase = () => {
 /**
  * Hata yığınından (stack trace) dosya yolunu (file path) ayıklamaya çalışır
  */
-function extractFilePath(stack?: string): string | null {
-  if (!stack) return null;
-  // Örnek Stack: "Error: blabla\n at Object.GET (C:\Users\...\route.ts:45:12)"
-  const match = stack.match(/\((.*?\.(ts|tsx|js|jsx)):\d+:\d+\)/);
-  if (match && match[1]) {
-    // Sadece projenin kök dizininden sonrasını almak için temizleme yapabiliriz
-    // Şimdilik ham yolu kaydediyoruz, AI zaten bunu okuyacak.
-    return match[1];
+function extractFilePath(stack?: string, reqUrl?: string): string | null {
+  let filePath: string | null = null;
+  
+  if (stack) {
+    const match = stack.match(/\((.*?\.(ts|tsx|js|jsx)):\d+:\d+\)/);
+    if (match && match[1]) {
+      filePath = match[1];
+    }
   }
-  return null;
+
+  // Vercel ortamında orijinal dosya yolu gizlenir (Örn: /var/task/.next/server/chunks/...)
+  // Bu durumda Request URL üzerinden orijinal dosyayı tersine mühendislikle (Reverse Routing) tahmin ediyoruz.
+  if (!filePath || filePath.includes('/var/task/') || filePath.includes('.next/server/')) {
+    if (reqUrl) {
+      try {
+        const parsed = new URL(reqUrl);
+        let pathname = parsed.pathname;
+
+        // Varsa /activity/api önekini /api olarak düzelt (next.config.ts rewrites)
+        if (pathname.startsWith('/activity/api/')) {
+          pathname = pathname.replace('/activity/api/', '/api/');
+        }
+
+        // URL'ye göre dosya yolu tahmini
+        if (pathname.startsWith('/api/')) {
+          if (pathname.endsWith('/')) pathname = pathname.slice(0, -1);
+          filePath = `app${pathname}/route.ts`;
+        } else {
+          if (pathname.endsWith('/')) pathname = pathname.slice(0, -1);
+          filePath = `app${pathname === '/' ? '' : pathname}/page.tsx`;
+        }
+      } catch (e) {
+        console.warn('URL parse error:', e);
+      }
+    }
+  }
+
+  return filePath;
 }
 
 /**
@@ -38,7 +66,7 @@ export function withErrorHandler(handler: (req: Request, ...args: any[]) => Prom
 
       const errorMessage = error instanceof Error ? error.message : String(error);
       const stack = error instanceof Error ? error.stack : undefined;
-      const filePath = extractFilePath(stack);
+      const filePath = extractFilePath(stack, req.url);
 
       try {
         const supabase = getAdminSupabase();

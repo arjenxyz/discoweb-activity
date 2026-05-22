@@ -11,6 +11,7 @@ type AIFixPanelProps = {
 export default function AIFixPanel({ logId, errorTitle, filePath, stackTrace }: AIFixPanelProps) {
   const [status, setStatus] = useState<'idle' | 'analyzing' | 'fixed' | 'committing' | 'done' | 'error'>('idle');
   const [aiResponse, setAiResponse] = useState<string | null>(null);
+  const [fileSha, setFileSha] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleAiFix = async () => {
@@ -34,6 +35,7 @@ export default function AIFixPanel({ logId, errorTitle, filePath, stackTrace }: 
       if (!res.ok) throw new Error(data.error || 'AI Analiz Hatası');
 
       setAiResponse(data.fixedCode || data.explanation);
+      setFileSha(data.fileSha);
       setStatus('fixed');
     } catch (err: any) {
       setErrorMessage(err.message);
@@ -49,7 +51,13 @@ export default function AIFixPanel({ logId, errorTitle, filePath, stackTrace }: 
       const res = await fetch('/api/developer/git-commit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ logId, errorTitle })
+        body: JSON.stringify({ 
+          logId, 
+          errorTitle, 
+          filePath, 
+          fixedCode: aiResponse, 
+          fileSha 
+        })
       });
 
       const data = await res.json();
