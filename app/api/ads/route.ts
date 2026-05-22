@@ -18,7 +18,7 @@ export async function GET() {
     .from('ads')
     .select('id, invite_url, server_name, server_description, server_icon, member_count, online_count, target_guild_id, mari_reward, task_enabled')
     .eq('active', true)
-    .maybeSingle();
+    .order('created_at', { ascending: false });
 
-  return NextResponse.json({ ad: data ?? null });
+  return NextResponse.json({ ads: data ?? [] });
 }
