@@ -9,6 +9,8 @@ import {
 } from 'react-icons/lu';
 import { apiUrl } from '@/lib/api';
 import { useT } from '@/contexts/LocaleContext';
+import DeveloperSidebarNav from '@/app/developer/components/DeveloperSidebarNav';
+import DeveloperHeader from '@/app/developer/components/DeveloperHeader';
 type Props = {
   maintenance: boolean;
   onMaintenanceChange: (value: boolean) => void;
@@ -2308,75 +2310,22 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
   /* ─── LAYOUT ─── */
 
   const inner = (
-    <div className="flex flex-1 min-h-0">
-      {/* Sidebar */}
-      <aside className="sticky top-0 h-full w-[220px] shrink-0 flex-col border-r border-white/[0.06] bg-[#0b0d12] hidden md:flex">
-        {/* Logo / back */}
-        <div className="flex h-14 shrink-0 items-center justify-between px-4 border-b border-white/[0.06]">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#5865F2]/20 border border-[#5865F2]/30">
-              <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5 text-[#7289da]">
-                <path fillRule="evenodd" d="M8.837 1.626c-.246-.835-1.428-.835-1.674 0l-1.32 4.064H1.8c-.88 0-1.245 1.128-.534 1.64l3.353 2.437-1.28 3.94c-.255.785.643 1.436 1.31.967L8 12.09l3.352 2.584c.666.469 1.564-.182 1.309-.967l-1.28-3.94 3.353-2.437c.711-.512.346-1.64-.534-1.64H11.157L8.837 1.626z" clipRule="evenodd"/>
-              </svg>
-            </div>
-            <span className="text-sm font-bold text-white">{t('dev_panel_title')}</span>
-          </div>
-          <button onClick={onClose}
-            className="flex h-7 w-7 items-center justify-center rounded-lg text-white/30 hover:bg-white/[0.06] hover:text-white/70 transition"
-            title={t('dev_back_button')}>
-            <LuChevronLeft className="h-4 w-4" />
-          </button>
-        </div>
-
-        {/* Nav */}
-        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
-          {NAV_ITEMS.map(({ id, labelKey, Icon, accent }) => {
-            const active = activeTab === id;
-            return (
-              <button key={id} onClick={() => setActiveTab(id)}
-                className={`group relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-150 ${active ? 'bg-white/10 text-white' : 'text-white/40 hover:bg-white/[0.06] hover:text-white/75'}`}>
-                <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition-all ${active ? accent : 'text-white/30 group-hover:text-white/60'}`}>
-                  <Icon className="h-4 w-4" />
-                </span>
-                <span className="text-sm font-medium leading-none">{t(labelKey)}</span>
-                {active && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-white/50" />}
-              </button>
-            );
-          })}
-        </nav>
-      </aside>
-
-      {/* Main */}
-      <div className="flex flex-1 flex-col min-w-0 overflow-hidden bg-[#0e1018]">
-        {/* Section header */}
-        <div className="flex h-14 shrink-0 items-center justify-between border-b border-white/[0.06] bg-[#0e1018] px-5">
-          <div className="flex items-center gap-2.5">
-            <span className={`${activeNav.accent}`}><activeNav.Icon className="h-4 w-4" /></span>
-            <span className="text-sm font-bold text-white">{t(activeNav.labelKey)}</span>
-            {loadingTab && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/15 border-t-white/60" />}
-          </div>
-          <button onClick={() => fetchSection(activeTab)} disabled={loadingTab}
-            className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] px-3 py-1.5 text-xs text-white/50 transition hover:text-white/80 disabled:opacity-40">
-            <LuRefreshCw className={`h-3 w-3 ${loadingTab ? 'animate-spin' : ''}`} />
-            {t('dev_refresh_button')}
-          </button>
-        </div>
-
-        {/* Mobile tab bar */}
-        <div className="flex gap-1 overflow-x-auto border-b border-white/[0.06] bg-[#0b0d12] px-3 py-2 md:hidden">
-          {NAV_ITEMS.map(({ id, labelKey, Icon, accent }) => (
-            <button key={id} onClick={() => setActiveTab(id)}
-              className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition ${activeTab === id ? `bg-white/10 text-white border border-white/15` : 'text-white/40 border border-transparent hover:text-white/70'}`}>
-              <span className={activeTab === id ? accent : 'text-white/25'}><Icon className="h-3.5 w-3.5" /></span>
-              {t(labelKey)}
-            </button>
-          ))}
-        </div>
-
-        {/* Content */}
-        <main className="flex-1 overflow-y-auto p-5 relative">
+    <div className="flex h-screen w-full bg-[#0b0d12] overflow-hidden">
+      <DeveloperSidebarNav
+        activeSection={activeTab}
+        onNavigate={(section: TabId) => setActiveTab(section)}
+        profile={{ username: 'Admin', avatarUrl: null }}
+      />
+      <div className="flex flex-1 flex-col min-w-0 bg-[#0e1018]">
+        <DeveloperHeader
+          activeSection={activeTab}
+          onNavigate={(section: TabId) => setActiveTab(section)}
+          profile={{ username: 'Admin', avatarUrl: null }}
+          onClose={onClose}
+        />
+        <main className="flex-1 overflow-y-auto p-5 md:p-8 relative">
           {/* Glow */}
-          <div className="pointer-events-none absolute top-0 right-0 w-80 h-80 bg-[#5865F2]/5 rounded-full blur-[100px]" />
+          <div className="pointer-events-none absolute top-0 right-0 w-80 h-80 bg-[#10B981]/10 rounded-full blur-[100px]" />
 
           {error && (
             <div className="mb-4 flex items-center gap-2.5 rounded-xl border border-red-500/20 bg-red-500/8 px-4 py-3">
@@ -2391,21 +2340,10 @@ export default function DeveloperPanel({ maintenance, onMaintenanceChange, onClo
     </div>
   );
 
-  if (variant === 'page') {
-    return (
-      <div className="h-[calc(100vh-0px)] bg-[#0b0d12] text-white overflow-hidden flex flex-col">
-        {inner}
-      </div>
-    );
-  }
-
   return (
     <>
-      <div className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div
-        className="fixed right-0 top-0 z-50 flex h-full w-full max-w-[680px] flex-col bg-[#0b0d12] text-white shadow-2xl border-l border-white/[0.06]"
-        onClick={(e) => e.stopPropagation()}
-      >
+      {variant === 'panel' && <div className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm" onClick={onClose} />}
+      <div className={variant === 'panel' ? "fixed inset-y-0 right-0 z-50 flex h-full w-full max-w-6xl flex-col bg-[#0b0d12] text-white shadow-2xl border-l border-white/[0.06]" : "h-[100dvh] w-full bg-[#0b0d12] text-white overflow-hidden flex flex-col"}>
         {inner}
       </div>
     </>
