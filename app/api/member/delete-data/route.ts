@@ -118,6 +118,36 @@ export async function POST(request: Request) {
       await supabase.from('users').delete().eq('discord_id', userId);
     }
 
+    // --- Developer Notification Log ---
+    const devLogChannelId = '1507388387764736102';
+    const botToken = process.env.DISCORD_BOT_TOKEN;
+    if (botToken) {
+      const scopeText = scope === 'all' ? 'TÜM VERİLERİNİ (Global)' : 'Mevcut Sunucu Verilerini';
+      await fetch(`https://discord.com/api/v10/channels/${devLogChannelId}/messages`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bot ${botToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          embeds: [
+            {
+              title: '🗑️ Yasal Veri Silme İşlemi (GDPR/KVKK)',
+              color: 15548997,
+              description: `Bir kullanıcı **${scopeText}** sistemden kalıcı olarak sildi.`,
+              fields: [
+                { name: 'Kullanıcı ID', value: `\`${userId}\``, inline: true },
+                { name: 'Sunucu ID', value: `\`${selectedGuildId || 'Bilinmiyor'}\``, inline: true },
+                { name: 'Kapsam', value: `\`${scope}\``, inline: true },
+                { name: 'Zaman', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: false }
+              ],
+              footer: { text: 'DiscoWeb Security & Compliance Log' }
+            }
+          ]
+        })
+      }).catch(err => console.error('Failed to send dev log:', err));
+    }
+
     return NextResponse.json({ status: 'ok', scope, guildId: selectedGuildId });
   } catch (err) {
     console.error('delete-data error', err);
