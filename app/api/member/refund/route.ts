@@ -4,7 +4,6 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { checkMaintenance } from '@/lib/maintenance';
 import { getSessionUserId } from '@/lib/auth';
 
-const DEFAULT_SLUG = 'default';
 const GUILD_ID = process.env.DISCORD_GUILD_ID ?? null;
 const TIMEZONE_OFFSET_MINUTES = Number(process.env.PAPEL_TIMEZONE_OFFSET || 180);
 
@@ -30,15 +29,19 @@ const getTodayStartLocal = () => {
   return new Date(Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), local.getUTCDate()));
 };
 
-const getBalance = async (supabase: SupabaseClient, userId: string, guildId: string) => {
-  const { data } = (await supabase
+const getBalance = async (supabase: SupabaseClient, userId: string, primaryGuildId: string, fallbackGuildId: string) => {
+  const { data: walletRows } = await supabase
     .from('member_wallets')
-    .select('balance')
-    .eq('guild_id', guildId)
-    .eq('user_id', userId)
-    .maybeSingle()) as unknown as { data: { balance?: number } | null };
+    .select('balance,guild_id')
+    .or(`guild_id.eq.${primaryGuildId},guild_id.eq.${fallbackGuildId}`)
+    .eq('user_id', userId);
 
-  return Number(data?.balance ?? 0);
+  const rows = (walletRows as Array<{ balance?: number; guild_id?: string }> | null) ?? [];
+  const wallet = rows.find(row => row.guild_id === primaryGuildId) ?? rows[0];
+  return {
+    balance: Number(wallet?.balance ?? 0),
+    guildId: wallet?.guild_id ?? primaryGuildId,
+  };
 };
 
 const setBalance = async (supabase: SupabaseClient, userId: string, guildId: string, balance: number) => {
@@ -69,7 +72,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'missing_service_role' }, { status: 500 });
   }
 
-  const cookieStore = await cookies();
   const userId = await getSessionUserId();
   if (!userId) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
@@ -113,13 +115,13 @@ export async function POST(request: Request) {
 
   await supabase.from('store_orders').update({ status: 'refunded' }).eq('id', order.id);
 
-  const currentBalance = await getBalance(supabase, userId, server.id);
-  const nextBalance = Number((currentBalance + Number(order.amount)).toFixed(2));
-  await setBalance(supabase, userId, server.id, nextBalance);
+  const senderBalance = await getBalance(supabase, userId, selectedGuildId ?? server.id, server.id);
+  const nextBalance = Number((senderBalance.balance + Number(order.amount)).toFixed(2));
+  await setBalance(supabase, userId, senderBalance.guildId, nextBalance);
   await (supabase.from('wallet_ledger') as unknown as {
     insert: (values: Record<string, unknown>) => Promise<unknown>;
   }).insert({
-    guild_id: server.id,
+    guild_id: senderBalance.guildId,
     user_id: userId,
     amount: Number(order.amount),
     type: 'refund',

@@ -1,12 +1,8 @@
-import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { checkMaintenance } from '@/lib/maintenance';
 import { getSessionUserId } from '@/lib/auth';
 import { getSelectedGuildId } from '@/lib/guild';
-
-const DEFAULT_SLUG = 'default';
-const GUILD_ID = process.env.DISCORD_GUILD_ID ?? null;
 
 const getSupabase = () => {
   const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -72,18 +68,16 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'server_not_found' }, { status: 404 });
   }
 
-  const [walletRes] = await Promise.all([
-    supabase
-      .from('member_wallets')
-      .select('balance,mari_balance')
-      .eq('guild_id', selectedGuildId)
-      .eq('user_id', userId)
-      .maybeSingle(),
-  ]);
-  const wallet = walletRes.data;
+  const walletRowsResponse = await supabase
+    .from('member_wallets')
+    .select('balance,mari_balance,guild_id')
+    .or(`guild_id.eq.${selectedGuildId},guild_id.eq.${server.id}`);
+  const walletRows = walletRowsResponse.data ?? [];
+  const wallet = (walletRows as Array<{ balance?: number; mari_balance?: number; guild_id?: string }>)
+    .find(row => row.guild_id === selectedGuildId) ?? walletRows[0];
 
   // Eğer kullanıcıya ait cüzdan satırı yoksa otomatik oluştur
-  if (!walletRes.data) {
+  if (!wallet) {
     const { error: walletCreateError } = await supabase.from('member_wallets').upsert(
       {
         guild_id: selectedGuildId,
@@ -103,7 +97,7 @@ export async function GET(request: Request) {
   const { data: sentToday } = await supabase
     .from('wallet_ledger')
     .select('amount')
-    .eq('guild_id', selectedGuildId)
+    .or(`guild_id.eq.${selectedGuildId},guild_id.eq.${server.id}`)
     .eq('user_id', userId)
     .eq('type', 'transfer_out')
     .gte('created_at', getTodayStartIso());

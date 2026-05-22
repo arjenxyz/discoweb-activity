@@ -92,7 +92,7 @@ export async function POST(request: Request) {
     if (!server) return NextResponse.json({ error: 'server_not_found' }, { status: 404 });
 
     // Fetch unsettled daily_earnings for this user + guild (bot may use Discord ID or internal ID)
-    const { data: rows } = await supabase
+    const { data: rowsData } = await supabase
       .from('daily_earnings')
       .select('id,amount,source,metadata,created_at')
       .or(`guild_id.eq.${server.id},guild_id.eq.${selectedGuildId}`)
@@ -101,28 +101,42 @@ export async function POST(request: Request) {
       .is('deleted_at', null)
       .order('created_at', { ascending: true });
 
-    if (!rows || rows.length === 0) {
+    type DailyEarningRow = {
+      id: string;
+      amount?: number | null;
+      source?: string | null;
+      metadata?: Record<string, unknown> | null;
+    };
+
+    const rows = (rowsData ?? []) as DailyEarningRow[];
+    if (rows.length === 0) {
       return NextResponse.json({ totalTransferred: 0, count: 0 });
     }
 
     // Sum amounts
-    const total = Number(rows.reduce((s: number, r: any) => s + Number(r.amount ?? 0), 0).toFixed(2));
+    const total = Number(rows.reduce((s: number, r) => s + Number(r.amount ?? 0), 0).toFixed(2));
 
-    // Get current balance
-    const { data: wallet } = await supabase
+    type WalletRow = { balance?: number; guild_id?: string };
+
+    // Get current balance, preferring the selected guild wallet row but falling back to the server row if needed.
+    const { data: walletRows } = await supabase
       .from('member_wallets')
-      .select('balance')
-      .eq('guild_id', server.id)
-      .eq('user_id', userId)
-      .maybeSingle();
+      .select('balance,guild_id')
+      .or(`guild_id.eq.${selectedGuildId},guild_id.eq.${server.id}`)
+      .eq('user_id', userId);
+    const walletRow = ((walletRows as Array<WalletRow> | null) ?? [])
+      .find(row => row.guild_id === selectedGuildId) ?? ((walletRows as Array<WalletRow> | null) ?? [])[0];
+    const walletGuildId = walletRow?.guild_id ?? selectedGuildId;
 
-    const current = Number(wallet?.balance ?? 0);
+    const current = Number(walletRow?.balance ?? 0);
     let running = current;
 
     // Upsert new balance (final)
     const finalBalance = Number((current + total).toFixed(2));
-    await (supabase.from('member_wallets') as any).upsert({
-      guild_id: server.id,
+    await (supabase.from('member_wallets') as unknown as {
+      upsert: (values: Record<string, unknown>, options?: { onConflict?: string }) => Promise<unknown>;
+    }).upsert({
+      guild_id: walletGuildId,
       user_id: userId,
       balance: finalBalance,
       updated_at: new Date().toISOString(),
@@ -133,8 +147,10 @@ export async function POST(request: Request) {
       const amt = Number(r.amount ?? 0);
       running = Number((running + amt).toFixed(2));
       const type = r.source === 'voice' ? 'earn_voice' : 'earn_message';
-      await (supabase.from('wallet_ledger') as any).insert({
-        guild_id: server.id,
+      await (supabase.from('wallet_ledger') as unknown as {
+        insert: (values: Record<string, unknown>) => Promise<unknown>;
+      }).insert({
+        guild_id: walletGuildId,
         user_id: userId,
         amount: amt,
         type,
@@ -144,13 +160,13 @@ export async function POST(request: Request) {
     }
 
     // Mark daily_earnings as settled to avoid re-loading
-    const ids = rows.map((r: any) => r.id);
-    await supabase.from('daily_earnings').update({ settled_at: new Date().toISOString() }).in('id', ids as any[]);
+    const ids = rows.map(r => r.id);
+    await supabase.from('daily_earnings').update({ settled_at: new Date().toISOString() }).in('id', ids);
 
     // Send claim mail
     try {
-      const msgTotal = Number(rows.filter((r: any) => r.source === 'message').reduce((s: number, r: any) => s + Number(r.amount ?? 0), 0).toFixed(2));
-      const voiceTotal = Number(rows.filter((r: any) => r.source === 'voice').reduce((s: number, r: any) => s + Number(r.amount ?? 0), 0).toFixed(2));
+      const msgTotal = Number(rows.filter(r => r.source === 'message').reduce((s: number, r) => s + Number(r.amount ?? 0), 0).toFixed(2));
+      const voiceTotal = Number(rows.filter(r => r.source === 'voice').reduce((s: number, r) => s + Number(r.amount ?? 0), 0).toFixed(2));
       // Use the guild ID that bot writes with (selectedGuildId = Discord guild ID)
       const mailGuildId = selectedGuildId;
       await supabase.from('system_mails').insert({

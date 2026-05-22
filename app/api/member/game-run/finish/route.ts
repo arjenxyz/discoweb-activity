@@ -88,18 +88,20 @@ export async function POST(request: Request) {
 
   const awardedPapel = Math.min(MAX_PAPEL_PER_RUN, Math.floor(score / SCORE_TO_PAPEL));
 
-  const { data: walletRow } = await supabase
+  const { data: walletRows } = await supabase
     .from('member_wallets')
-    .select('balance')
-    .eq('guild_id', server.id)
-    .eq('user_id', userId)
-    .maybeSingle();
+    .select('balance,guild_id')
+    .or(`guild_id.eq.${guildId},guild_id.eq.${server.id}`)
+    .eq('user_id', userId);
+  const walletRow = (walletRows as Array<{ balance?: number; guild_id?: string }> | null ?? [])
+    .find(row => row.guild_id === guildId) ?? (walletRows as Array<{ balance?: number; guild_id?: string }> | null ?? [])[0];
+  const walletGuildId = walletRow?.guild_id ?? guildId;
 
   const currentBalance = Number(walletRow?.balance ?? 0);
   const newBalance = Number((currentBalance + awardedPapel).toFixed(2));
 
   const { error: walletErr } = await supabase.from('member_wallets').upsert({
-    guild_id: server.id,
+    guild_id: walletGuildId,
     user_id: userId,
     balance: newBalance,
     updated_at: new Date().toISOString(),
@@ -111,7 +113,7 @@ export async function POST(request: Request) {
 
   if (awardedPapel > 0) {
     await supabase.from('wallet_ledger').insert({
-      guild_id: server.id,
+      guild_id: walletGuildId,
       user_id: userId,
       amount: awardedPapel,
       type: 'promotion',
