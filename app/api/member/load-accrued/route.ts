@@ -17,6 +17,16 @@ const assertNoError = (label: string, error: { message?: string; code?: string }
   throw new Error(msg);
 };
 
+const isDebugRequest = (request: Request): boolean => {
+  try {
+    const url = new URL(request.url);
+    const flag = url.searchParams.get('debug');
+    return flag === '1' || flag === 'true';
+  } catch {
+    return false;
+  }
+};
+
 /** GET — return pending (unsettled) earnings summary without claiming */
 export async function GET(request: Request) {
   const maintenance = await checkMaintenance(['site']);
@@ -31,6 +41,7 @@ export async function GET(request: Request) {
   if (!userId) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 
   const selectedGuildId = await getSelectedGuildId(request);
+  const debugEnabled = isDebugRequest(request);
 
   const { data: server } = await supabase
     .from('servers')
@@ -39,7 +50,17 @@ export async function GET(request: Request) {
     .eq('is_setup', true)
     .maybeSingle();
 
-  if (!server) return NextResponse.json({ pending: 0, messageTotal: 0, voiceTotal: 0, count: 0 });
+  if (!server) {
+    return NextResponse.json({
+      pending: 0,
+      messageTotal: 0,
+      voiceTotal: 0,
+      count: 0,
+      ...(debugEnabled
+        ? { debug: { selectedGuildId, serverFound: false, serverId: null, matchedRows: 0 } }
+        : {}),
+    });
+  }
 
   // Bot writes daily_earnings with Discord guild ID, so query with both server.id and selectedGuildId
   const { data: rows } = await supabase
@@ -51,7 +72,15 @@ export async function GET(request: Request) {
     .is('deleted_at', null);
 
   if (!rows || rows.length === 0) {
-    return NextResponse.json({ pending: 0, messageTotal: 0, voiceTotal: 0, count: 0 });
+    return NextResponse.json({
+      pending: 0,
+      messageTotal: 0,
+      voiceTotal: 0,
+      count: 0,
+      ...(debugEnabled
+        ? { debug: { selectedGuildId, serverFound: true, serverId: server.id, matchedRows: 0 } }
+        : {}),
+    });
   }
 
   let messageTotal = 0;
@@ -68,12 +97,23 @@ export async function GET(request: Request) {
     messageTotal: Number(messageTotal.toFixed(2)),
     voiceTotal: Number(voiceTotal.toFixed(2)),
     count: rows.length,
+    ...(debugEnabled
+      ? {
+          debug: {
+            selectedGuildId,
+            serverFound: true,
+            serverId: server.id,
+            matchedRows: rows.length,
+          },
+        }
+      : {}),
   });
 }
 
 /** POST — claim (settle) all pending earnings into wallet */
 export async function POST(request: Request) {
   try {
+    const debugEnabled = isDebugRequest(request);
     const maintenance = await checkMaintenance(['site']);
     if (maintenance.blocked) {
       return NextResponse.json({ error: 'maintenance', key: maintenance.key, reason: maintenance.reason }, { status: 503 });
@@ -95,7 +135,17 @@ export async function POST(request: Request) {
       .eq('is_setup', true)
       .maybeSingle();
 
-    if (!server) return NextResponse.json({ error: 'server_not_found' }, { status: 404 });
+    if (!server) {
+      return NextResponse.json(
+        {
+          error: 'server_not_found',
+          ...(debugEnabled
+            ? { debug: { selectedGuildId, serverFound: false, serverId: null, matchedRows: 0 } }
+            : {}),
+        },
+        { status: 404 },
+      );
+    }
 
     // Fetch unsettled daily_earnings for this user + guild (bot may use Discord ID or internal ID)
     const { data: rowsData } = await supabase
@@ -116,7 +166,20 @@ export async function POST(request: Request) {
 
     const rows = (rowsData ?? []) as DailyEarningRow[];
     if (rows.length === 0) {
-      return NextResponse.json({ totalTransferred: 0, count: 0 });
+      return NextResponse.json({
+        totalTransferred: 0,
+        count: 0,
+        ...(debugEnabled
+          ? {
+              debug: {
+                selectedGuildId,
+                serverFound: true,
+                serverId: server.id,
+                matchedRows: 0,
+              },
+            }
+          : {}),
+      });
     }
 
     // Sum amounts
@@ -217,7 +280,22 @@ export async function POST(request: Request) {
       console.error('[load-accrued] mail send failed', mailErr);
     }
 
-    return NextResponse.json({ status: 'ok', totalTransferred: total, count: rows.length });
+    return NextResponse.json({
+      status: 'ok',
+      totalTransferred: total,
+      count: rows.length,
+      ...(debugEnabled
+        ? {
+            debug: {
+              selectedGuildId,
+              serverFound: true,
+              serverId: server.id,
+              matchedRows: rows.length,
+              walletGuildId,
+            },
+          }
+        : {}),
+    });
   } catch (error) {
     console.error('[load-accrued] POST error:', error);
     return NextResponse.json({ error: 'internal_server_error' }, { status: 500 });
