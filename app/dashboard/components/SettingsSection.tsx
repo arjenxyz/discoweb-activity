@@ -20,19 +20,7 @@ export default function SettingsSection({
   onBack,
 }: SettingsSectionProps) {
   const { locale, setDiscordLocale } = useLocale();
-  const [serverTime, setServerTime] = useState('');
 
-  useEffect(() => {
-    const updateTime = () => {
-      const now = new Date();
-      const istanbulTime = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Istanbul' }));
-      const formatted = `UTC+3 ${istanbulTime.toLocaleDateString('tr-TR')} ${istanbulTime.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}`;
-      setServerTime(formatted);
-    };
-    updateTime();
-    const interval = setInterval(updateTime, 60000); // update every minute
-    return () => clearInterval(interval);
-  }, []);
 
   const greeting = (() => {
     const h = new Date().getHours();
@@ -455,10 +443,6 @@ export default function SettingsSection({
             {greeting}{profile?.nickname ? `, ${profile.nickname}` : ''}
           </p>
           <h1 className="text-3xl font-bold tracking-tight text-white">Ayarlar</h1>
-        </div>
-        <div className="flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900/50 px-4 py-2 text-sm text-slate-400 backdrop-blur-sm">
-          <div className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-          {serverTime}
         </div>
       </div>
 

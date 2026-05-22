@@ -1,9 +1,10 @@
-﻿'use client';
+'use client';
 
 import Image from 'next/image';
 import { useEffect, useMemo, useState } from 'react';
 import { apiUrl } from '@/lib/api';
 import fetchWithCreds from '@/lib/fetchWithCreds';
+import { LuCheckCircle2 } from 'react-icons/lu';
 
 // ---------- types (unchanged) ----------
 type AnnouncementMessage = {
@@ -52,35 +53,35 @@ function formatRelativeDate(value: string) {
 
   const time = date.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
 
-  if (diffDays === 0) return `Bugün ${time}`;
-  if (diffDays === 1) return `Dün ${time}`;
+  if (diffDays === 0) return `Bugün saat ${time}`;
+  if (diffDays === 1) return `Dün saat ${time}`;
   return date.toLocaleDateString('tr-TR', {
     year: 'numeric',
-    month: 'short',
+    month: '2-digit',
     day: '2-digit',
   }) + ` ${time}`;
 }
 
 function parseAnnouncementBody(body: string) {
   const lines = body.split('\n');
-  let mediaUrl = '';
-  let linkUrl = '';
+  const mediaUrls: string[] = [];
+  const linkUrls: string[] = [];
   const filtered: string[] = [];
 
   lines.forEach((line) => {
     const trimmed = line.trim();
     if (trimmed.toLowerCase().startsWith('medya:')) {
-      mediaUrl = trimmed.slice(6).trim();
+      mediaUrls.push(trimmed.slice(6).trim());
       return;
     }
     if (trimmed.toLowerCase().startsWith('link:')) {
-      linkUrl = trimmed.slice(5).trim();
+      linkUrls.push(trimmed.slice(5).trim());
       return;
     }
     filtered.push(line);
   });
 
-  return { body: filtered.join('\n').trim(), mediaUrl, linkUrl };
+  return { body: filtered.join('\n').trim(), mediaUrls, linkUrls };
 }
 
 function isVideoUrl(url: string) {
@@ -117,6 +118,58 @@ function getYouTubeEmbedUrl(url: string) {
     return null;
   }
   return null;
+}
+
+// ----- Link Preview (Open Graph Embed) -----
+function LinkPreviewEmbed({ url }: { url: string }) {
+  const [og, setOg] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetch(`/api/og-preview?url=${encodeURIComponent(url)}`)
+      .then(res => res.json())
+      .then(data => {
+        if (isMounted && data && !data.error) setOg(data);
+        if (isMounted) setLoading(false);
+      })
+      .catch(() => {
+        if (isMounted) setLoading(false);
+      });
+    return () => { isMounted = false; };
+  }, [url]);
+
+  if (loading) return <div className="mt-2 h-20 w-80 animate-pulse rounded bg-[#2b2d31]"></div>;
+  if (!og || (!og.title && !og.image && !og.description)) {
+    return (
+      <a href={url} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block text-[#00a8fc] hover:underline break-all">
+        {url}
+      </a>
+    );
+  }
+
+  return (
+    <div className="mt-2 flex max-w-[520px] overflow-hidden rounded bg-[#2b2d31] shadow-sm">
+      <div className="w-1 shrink-0" style={{ backgroundColor: og.themeColor || '#202225' }} />
+      <div className="flex flex-1 flex-col gap-2 p-4">
+        {og.siteName && <span className="text-xs font-semibold text-[#dbdee1]">{og.siteName}</span>}
+        {og.title && (
+          <a href={url} target="_blank" rel="noopener noreferrer" className="font-semibold text-[#00a8fc] hover:underline line-clamp-2">
+            {og.title}
+          </a>
+        )}
+        {og.description && (
+          <p className="text-sm text-[#dbdee1] line-clamp-3">{og.description}</p>
+        )}
+        {og.image && (
+          <div className="mt-2">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={og.image} alt={og.title || 'Embed Image'} className="max-h-[300px] max-w-full rounded object-contain bg-[#1e1f22]" />
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 // ---------- component ----------
@@ -229,235 +282,208 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
 
   // ----- render -----
   const content = (
-    <div className="mx-auto w-full max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
-      {/* loading / error / empty – dark mode */}
+    <div className="w-full flex-1">
+      {/* loading / error / empty */}
       {loading && (
         <div className="flex flex-col items-center justify-center py-20 text-[#949ba4]">
-          <svg
-            className="animate-spin h-8 w-8 mb-3 text-[#5865f2]"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
+          <svg className="mb-3 h-8 w-8 animate-spin text-[#5865f2]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-            />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
           </svg>
-          <span className="text-sm">Duyurular yükleniyor…</span>
+          <span className="text-sm font-medium">Mesajlar yükleniyor...</span>
         </div>
       )}
 
       {!loading && error && (
-        <div className="rounded-lg border border-[#ed4245]/30 bg-[#ed4245]/10 p-4 text-sm text-[#ed4245]">
+        <div className="mx-4 my-4 rounded border border-[#ed4245]/30 bg-[#ed4245]/10 p-4 text-sm text-[#ed4245]">
           <p className="font-semibold">Bir hata oluştu</p>
           <p>{error}</p>
         </div>
       )}
 
       {!loading && !error && messages.length === 0 && (
-        <div className="rounded-lg bg-[#2b2d31] p-8 text-center text-sm text-[#949ba4]">
-          Henüz hiç duyuru yayınlanmadı.
+        <div className="flex flex-col items-center justify-center py-20 text-center text-sm text-[#949ba4]">
+          Henüz buralar çok sessiz...
         </div>
       )}
 
       {!loading && !error && sortedMessages.length > 0 && (
-        <div className="space-y-6">
+        <div className="flex flex-col py-4">
           {sortedMessages.map((msg, index) => {
             const parsed = parseAnnouncementBody(msg.body);
-            const embeddableVideoUrl =
-              getEmbeddableVideoUrl(parsed.mediaUrl) ?? getEmbeddableVideoUrl(parsed.linkUrl);
-            const youtubeEmbed =
-              getYouTubeEmbedUrl(parsed.mediaUrl) ?? getYouTubeEmbedUrl(parsed.linkUrl);
-            const mediaKey = `${msg.id}:${parsed.mediaUrl || parsed.linkUrl}`;
-            const mediaFailed = mediaErrors[mediaKey];
-            const pollTotal = msg.poll?.options.reduce((sum, o) => sum + o.voteCount, 0) ?? 0;
+            
+            // Medya & Link Rendering Rules
+            const renderMediaList = [...parsed.mediaUrls, ...parsed.linkUrls].map((url, i) => {
+              const youtubeEmbed = getYouTubeEmbedUrl(url);
+              const embeddableVideoUrl = getEmbeddableVideoUrl(url);
+              const mediaKey = `${msg.id}:${url}:${i}`;
+              const mediaFailed = mediaErrors[mediaKey];
 
-            const authorName = msg.author_name && msg.author_name.toLowerCase() !== 'system' ? msg.author_name : 'Developer';
-            const authorAvatar = msg.author_avatar_url;
+              // YouTube Embed
+              if (youtubeEmbed) {
+                return (
+                  <div key={mediaKey} className="mt-2 max-w-[520px] overflow-hidden rounded bg-[#2b2d31]">
+                    <div className="aspect-video">
+                      <iframe src={youtubeEmbed} title="YouTube" allowFullScreen className="h-full w-full border-0" />
+                    </div>
+                  </div>
+                );
+              }
+              // Direct Video Embed
+              if (embeddableVideoUrl) {
+                return (
+                  <div key={mediaKey} className="mt-2 max-w-[520px] rounded bg-[#2b2d31] p-2">
+                    <video
+                      src={embeddableVideoUrl}
+                      controls
+                      playsInline
+                      className="max-h-[350px] w-full rounded object-contain"
+                      onError={() => setMediaErrors((prev) => ({ ...prev, [mediaKey]: true }))}
+                    />
+                    {mediaFailed && (
+                      <div className="mt-2 text-xs text-[#ed4245]">Medya oynatılamadı.</div>
+                    )}
+                  </div>
+                );
+              }
+              
+              // If it came from 'medya:', assume it's a direct image unless it failed
+              if (parsed.mediaUrls.includes(url)) {
+                return (
+                  <div key={mediaKey} className="mt-2">
+                    <a href={url} target="_blank" rel="noopener noreferrer">
+                      <img
+                        src={url}
+                        alt="Medya eklentisi"
+                        className="max-h-[350px] max-w-[400px] rounded object-contain bg-[#2b2d31]"
+                        onError={() => setMediaErrors((prev) => ({ ...prev, [mediaKey]: true }))}
+                      />
+                    </a>
+                  </div>
+                );
+              }
+
+              // Otherwise it's a regular link, render OG Embed
+              return <LinkPreviewEmbed key={mediaKey} url={url} />;
+            });
+
+            const pollTotal = msg.poll?.options.reduce((sum, o) => sum + o.voteCount, 0) ?? 0;
+            const isSystem = msg.author_name?.toLowerCase() === 'system';
+            const authorName = isSystem ? 'DiscoWeb' : (msg.author_name || 'Geliştirici');
+            const authorAvatar = msg.author_avatar_url || '/logo.png';
+
             return (
-              <div key={msg.id} className="flex flex-col gap-4">
+              <div key={msg.id} className="relative group hover:bg-[#2b2d31]/40 px-4 py-2 mt-[17px] transition-colors">
+                
+                {/* New Divider Line */}
                 {newDividerIndex === index && (
-                  <div className="flex items-center gap-3">
-                    <div className="h-px flex-1 bg-[#2b2d31]" />
-                    <span className="rounded-full border border-[#5865f2]/40 bg-[#5865f2]/10 px-3 py-1 text-[11px] font-semibold text-[#c9cdfb]">
-                      Yeni
-                    </span>
-                    <div className="h-px flex-1 bg-[#2b2d31]" />
+                  <div className="absolute top-0 left-0 right-0 -mt-[17px] flex items-center px-4">
+                    <div className="h-[1px] flex-1 bg-[#ed4245]" />
+                    <span className="mx-2 text-xs font-bold text-[#ed4245]">YENİ MESAJLAR</span>
+                    <div className="h-[1px] flex-1 bg-[#ed4245]" />
                   </div>
                 )}
+
                 <div className="flex gap-4">
-                {/* Avatar */}
-                <div className="flex-shrink-0 mt-0.5">
-                  {authorAvatar ? (
+                  {/* Avatar */}
+                  <div className="mt-1 flex-shrink-0 cursor-pointer">
                     <Image
                       src={authorAvatar}
                       alt={authorName}
                       width={40}
                       height={40}
-                      className="rounded-full"
+                      className="rounded-full bg-[#313338] hover:opacity-80 transition"
+                      unoptimized
                     />
-                  ) : (
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#5865f2] text-sm font-semibold text-white">
-                      DV
-                    </div>
-                  )}
-                </div>
-
-                {/* Message body */}
-                <div className="min-w-0 flex-1">
-                  {/* Author & timestamp */}
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-sm font-semibold text-[#f0b236]">
-                      {authorName}
-                    </span>
-                    <span className="text-xs text-[#949ba4]">
-                      {formatRelativeDate(msg.created_at)}
-                    </span>
                   </div>
 
-                  {/* Main content */}
-                  <div className="mt-1 text-sm leading-7 text-[#dbdee1]">
-                    {msg.title && (
-                      <p className="font-semibold text-[#dbdee1]">{msg.title}</p>
+                  {/* Message Content */}
+                  <div className="min-w-0 flex-1">
+                    {/* Header: Name, Tag, Time */}
+                    <div className="flex items-end gap-2 leading-tight">
+                      <span className="font-semibold text-white hover:underline cursor-pointer">
+                        {authorName}
+                      </span>
+                      {isSystem && (
+                        <span className="inline-flex items-center gap-1 rounded bg-[#5865f2] px-1.5 py-[2px] text-[10px] font-bold text-white shadow-sm">
+                          <LuCheckCircle2 className="h-3 w-3" />
+                          DEVELOPER
+                        </span>
+                      )}
+                      <span className="ml-1 text-xs font-medium text-[#949ba4]">
+                        {formatRelativeDate(msg.created_at)}
+                      </span>
+                    </div>
+
+                    {/* Title & Body */}
+                    <div className="mt-1 space-y-1 text-sm leading-[1.375rem] text-[#dbdee1]">
+                      {msg.title && (
+                        <h3 className="font-bold text-white text-[15px]">{msg.title}</h3>
+                      )}
+                      {parsed.body && (
+                        <div className="whitespace-pre-wrap">{parsed.body}</div>
+                      )}
+                    </div>
+
+                    {/* Media / Link Renders */}
+                    {renderMediaList.length > 0 && (
+                      <div className="flex flex-col gap-2 mt-2">
+                        {renderMediaList}
+                      </div>
                     )}
-                    {parsed.body && (
-                      <p className="whitespace-pre-line">{parsed.body}</p>
+
+                    {/* Poll */}
+                    {msg.poll && (
+                      <div className="mt-3 max-w-[520px] rounded-lg border border-[#2b2d31] bg-[#2b2d31]/50 p-4 shadow-sm">
+                        <div className="mb-3 flex items-center gap-2">
+                          <div className="font-semibold text-[#dbdee1]">Anket:</div>
+                          <span className="text-[15px] font-bold text-white">{msg.poll.question}</span>
+                        </div>
+                        <div className="space-y-2">
+                          {msg.poll.options
+                            .slice()
+                            .sort((a, b) => a.position - b.position)
+                            .map((opt) => {
+                              const selected = msg.poll!.userVoteOptionId === opt.id;
+                              const percentage = pollTotal > 0 ? Math.round((opt.voteCount / pollTotal) * 100) : 0;
+                              return (
+                                <button
+                                  key={opt.id}
+                                  type="button"
+                                  onClick={() => handleVote(msg.poll!.id, opt.id)}
+                                  disabled={voteLoadingId === opt.id}
+                                  className="group relative flex w-full items-center justify-between overflow-hidden rounded-[8px] bg-[#2b2d31] p-3 text-left transition disabled:cursor-not-allowed hover:bg-[#313338]"
+                                >
+                                  {/* Progress bar */}
+                                  <div
+                                    className={`absolute inset-0 transition-all duration-500 ease-out ${
+                                      selected ? 'bg-[#5865f2]/20' : 'bg-[#1e1f22]/50'
+                                    }`}
+                                    style={{ width: `${percentage}%` }}
+                                  />
+                                  <div className="relative z-10 flex items-center gap-3">
+                                    <div className={`flex h-4 w-4 items-center justify-center rounded-full border-2 ${selected ? 'border-[#5865f2]' : 'border-[#80848e]'}`}>
+                                      {selected && <div className="h-2 w-2 rounded-full bg-[#5865f2]" />}
+                                    </div>
+                                    <span className={`text-[15px] font-medium ${selected ? 'text-white' : 'text-[#dbdee1]'}`}>
+                                      {opt.label}
+                                    </span>
+                                  </div>
+                                  <span className="relative z-10 text-xs font-semibold text-[#949ba4]">
+                                    {percentage}% ({opt.voteCount})
+                                  </span>
+                                </button>
+                              );
+                            })}
+                        </div>
+                        <div className="mt-3 text-xs text-[#949ba4]">
+                          Toplam {pollTotal} oy kullanıldı
+                        </div>
+                      </div>
                     )}
                   </div>
-
-                  {/* YouTube embed */}
-                  {youtubeEmbed ? (
-                    <div className="mt-3 overflow-hidden rounded-lg border-l-4 border-[#5865f2] bg-[#2b2d31]">
-                      <div className="aspect-video">
-                        <iframe
-                          src={youtubeEmbed}
-                          title="YouTube"
-                          allowFullScreen
-                          className="h-full w-full"
-                        />
-                      </div>
-                    </div>
-                  ) : embeddableVideoUrl ? (
-                    <div className="mt-3 rounded-r-lg border-l-4 border-[#5865f2] bg-[#2b2d31] p-3">
-                      <video
-                        src={embeddableVideoUrl}
-                        controls
-                        playsInline
-                        className="max-h-80 w-full rounded object-contain"
-                        onError={() =>
-                          setMediaErrors((prev) => ({ ...prev, [mediaKey]: true }))
-                        }
-                      />
-                      {mediaFailed && (
-                        <div className="mt-2 rounded bg-[#1e1f22] px-3 py-2 text-xs text-[#949ba4]">
-                          Medya yüklenemedi. Bağlantıyı yeni sekmede açmayı deneyin.
-                        </div>
-                      )}
-                    </div>
-                  ) : parsed.mediaUrl ? (
-                    /* Media embed (image) */
-                    <div className="mt-3 rounded-r-lg border-l-4 border-[#5865f2] bg-[#2b2d31] p-3">
-                      <div className="relative h-80 w-full">
-                        <Image
-                          src={parsed.mediaUrl}
-                          alt="medya"
-                          fill
-                          className="rounded object-contain"
-                          unoptimized
-                          onError={() =>
-                            setMediaErrors((prev) => ({ ...prev, [mediaKey]: true }))
-                          }
-                        />
-                      </div>
-                      {mediaFailed && (
-                        <div className="mt-2 rounded bg-[#1e1f22] px-3 py-2 text-xs text-[#949ba4]">
-                          Medya yüklenemedi. Bağlantı süresi dolmuş olabilir.
-                        </div>
-                      )}
-                    </div>
-                  ) : null}
-
-                  {/* Link */}
-                  {parsed.linkUrl && (
-                    <a
-                      href={parsed.linkUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-3 inline-flex w-full items-center justify-between rounded-2xl border border-[#5865f2]/20 bg-[#111419] px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:border-[#5865f2] hover:bg-[#1e2747]"
-                    >
-                      <span>{youtubeEmbed ? 'YouTube’da aç' : isVideoUrl(parsed.linkUrl) ? 'Videoyu aç' : 'Linke Git'}</span>
-                      <svg
-                        className="h-4 w-4 text-[#00a8fc]"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth={1.5}
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M10.5 6h5.25a2.25 2.25 0 012.25 2.25v5.25m-.75-5.25L13.5 12m0 0l-3.75-3.75M13.5 12H3"
-                        />
-                      </svg>
-                    </a>
-                  )}
-
-                  {/* Poll */}
-                  {msg.poll && (
-                    <div className="mt-4 rounded-lg bg-[#2b2d31] p-4">
-                      <p className="mb-3 text-sm font-semibold text-[#dbdee1]">
-                        {msg.poll.question}
-                      </p>
-                      <div className="space-y-2">
-                        {msg.poll.options
-                          .slice()
-                          .sort((a, b) => a.position - b.position)
-                          .map((opt) => {
-                            const selected = msg.poll!.userVoteOptionId === opt.id;
-                            const percentage =
-                              pollTotal > 0
-                                ? Math.round((opt.voteCount / pollTotal) * 100)
-                                : 0;
-                            return (
-                              <button
-                                key={opt.id}
-                                type="button"
-                                onClick={() => handleVote(msg.poll!.id, opt.id)}
-                                disabled={voteLoadingId === opt.id}
-                                className={`group relative w-full overflow-hidden rounded-md px-3 py-2 text-left text-sm transition disabled:cursor-not-allowed disabled:opacity-60 ${
-                                  selected
-                                    ? 'bg-[#5865f2]/20 ring-1 ring-[#5865f2]'
-                                    : 'bg-[#1e1f22] hover:bg-[#313338]'
-                                }`}
-                              >
-                                {/* Progress bar background */}
-                                <div
-                                  className={`absolute inset-0 transition-all duration-300 ${
-                                    selected ? 'bg-[#5865f2]/10' : 'bg-[#3b3d44]/30'
-                                  }`}
-                                  style={{ width: `${percentage}%` }}
-                                />
-                                <div className="relative z-10 flex items-center justify-between">
-                                  <span className="font-medium text-[#dbdee1]">
-                                    {opt.label}
-                                  </span>
-                                  <span className="text-xs text-[#949ba4]">
-                                    {opt.voteCount} oy
-                                    {percentage > 0 && ` (%${percentage})`}
-                                  </span>
-                                </div>
-                              </button>
-                            );
-                          })}
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
-            </div>
             );
           })}
         </div>
@@ -468,7 +494,7 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
   // ----- variant handling -----
   if (variant === 'panel') {
     return (
-      <div className="rounded-xl bg-[#313338] shadow-2xl">
+      <div className="flex h-full w-full flex-col bg-[#313338]">
         {content}
       </div>
     );
@@ -476,8 +502,15 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
 
   // full page
   return (
-    <div className="min-h-0">
-      {content}
+    <div className="min-h-screen bg-[#313338] text-[#dbdee1]">
+      <div className="mx-auto max-w-4xl shadow-sm border-x border-[#1e1f22]/50 bg-[#313338]">
+        {/* Fake Discord Channel Header */}
+        <div className="sticky top-0 z-10 flex h-12 items-center gap-2 border-b border-[#1e1f22] bg-[#313338] px-4 shadow-sm backdrop-blur-md">
+          <svg className="h-6 w-6 text-[#80848e]" fill="currentColor" viewBox="0 0 24 24"><path fillRule="evenodd" clipRule="evenodd" d="M5.88657 21C5.57547 21 5.3399 20.7189 5.39427 20.4126L6.00001 17H2.59511C2.28449 17 2.04905 16.7198 2.10259 16.4138L2.27759 15.4138C2.31946 15.1746 2.52722 15 2.77011 15H6.35001L7.41001 9H4.00511C3.69449 9 3.45905 8.71977 3.51259 8.41381L3.68759 7.41381C3.72946 7.17456 3.93722 7 4.18011 7H7.76001L8.39677 3.41262C8.43914 3.17391 8.64664 3 8.88907 3H9.87344C10.1845 3 10.4201 3.28107 10.3657 3.58738L9.76001 7H15.76L16.3968 3.41262C16.4391 3.17391 16.6466 3 16.8891 3H17.8734C18.1845 3 18.4201 3.28107 18.3657 3.58738L17.76 7H21.1649C21.4755 7 21.711 7.28023 21.6574 7.58619L21.4824 8.58619C21.4405 8.82544 21.2328 9 20.9899 9H17.41L16.35 15H19.7549C20.0655 15 20.301 15.2802 20.2474 15.5862L20.0724 16.5862C20.0305 16.8254 19.8228 17 19.5799 17H16L15.3632 20.5874C15.3209 20.8261 15.1134 21 14.8709 21H13.8866C13.5755 21 13.3399 20.7189 13.3943 20.4126L14 17H8.00001L7.36323 20.5874C7.32086 20.8261 7.11336 21 6.87093 21H5.88657ZM9.41045 9L8.35045 15H14.3504L15.4104 9H9.41045Z" /></svg>
+          <span className="text-[15px] font-bold text-white">duyurular</span>
+        </div>
+        {content}
+      </div>
     </div>
   );
 }
