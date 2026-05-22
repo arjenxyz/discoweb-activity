@@ -22,21 +22,50 @@ export async function GET(request: NextRequest) {
   if (!supabase) {
     return NextResponse.json({ error: 'missing_service_role' }, { status: 500 });
   }
+import { NextRequest, NextResponse } from 'next/server';
+import { getSessionUserId } from '@/lib/auth';
+import { getSupabaseServiceClient } from '@/lib/supabaseServiceClient';
+import { getSelectedGuildId } from '@/lib/guild';
+import { checkMaintenance } from '@/lib/maintenance';
+
+export async function GET(request: NextRequest) {
+  const selectedGuildId = await getSelectedGuildId(request);
+  if (!selectedGuildId) {
+    return NextResponse.json({ error: 'no_guild_selected' }, { status: 400 });
+  }
+
+  const maintenance = await checkMaintenance(['site']);
+  if (maintenance.blocked) {
+    return NextResponse.json(
+      { error: 'maintenance', key: maintenance.key, reason: maintenance.reason },
+      { status: 503 },
+    );
+  }
+
+  const supabase = getSupabaseServiceClient();
+  if (!supabase) {
+    return NextResponse.json({ error: 'missing_service_role' }, { status: 500 });
+  }
 
   const userId = await getSessionUserId();
   if (!userId) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
 
-  const [{ data: tiers }, { data: profile }] = await Promise.all([
+  const [{ data: tiers }, { data: boosterTiersRaw }, { data: profile }] = await Promise.all([
     supabase
       .from('badge_tiers')
       .select('id,name,emoji,days_required,color,description,sort_order,reward_papel,reward_earn_multiplier,reward_message,role_id,background_image')
       .eq('guild_id', selectedGuildId)
       .order('sort_order', { ascending: true }),
     supabase
+      .from('booster_tiers')
+      .select('id,name,emoji,months_required,color,description,sort_order,reward_papel,reward_earn_multiplier,reward_message,role_id,background_image')
+      .eq('guild_id', selectedGuildId)
+      .order('sort_order', { ascending: true }),
+    supabase
       .from('member_profiles')
-      .select('has_tag,tag_granted_at,created_at')
+      .select('has_tag,tag_granted_at,is_booster,booster_since,created_at')
       .eq('guild_id', selectedGuildId)
       .eq('user_id', userId)
       .single(),
@@ -62,6 +91,31 @@ export async function GET(request: NextRequest) {
   const currentBadge = [...sortedTiers].reverse().find((t) => t.days_required <= tagDays) ?? null;
   const nextBadge = sortedTiers.find((t) => t.days_required > tagDays) ?? null;
   const daysToNext = nextBadge ? nextBadge.days_required - tagDays : null;
+
+  // Booster logic
+  const isBooster = profile?.is_booster === true || profile?.is_booster === 'true';
+  const boosterSince = profile?.booster_since ?? null;
+  let boosterMonths = 0;
+  if (isBooster && boosterSince) {
+    const sinceDate = new Date(boosterSince);
+    const now = new Date();
+    boosterMonths = (now.getFullYear() - sinceDate.getFullYear()) * 12 + now.getMonth() - sinceDate.getMonth();
+    if (now.getDate() < sinceDate.getDate()) {
+      boosterMonths -= 1;
+    }
+    boosterMonths = Math.max(0, boosterMonths);
+  }
+
+  const allBoosterTiers = (boosterTiersRaw ?? []) as Array<{
+    id: string; name: string; emoji: string | null; months_required: number;
+    color: string | null; description: string | null; sort_order: number;
+    reward_papel: number | null; reward_earn_multiplier: number | null; reward_message: string | null;
+    role_id: string | null; background_image: string | null;
+  }>;
+  const currentBoosterBadge = [...allBoosterTiers].reverse().find((t) => t.months_required <= boosterMonths) ?? null;
+  const nextBoosterBadge = allBoosterTiers.find((t) => t.months_required > boosterMonths) ?? null;
+  const monthsToNext = nextBoosterBadge ? nextBoosterBadge.months_required - boosterMonths : null;
+  const boosterEarnMultiplier = currentBoosterBadge?.reward_earn_multiplier ?? 1.0;
 
   // Determine earn multiplier from current badge (default 1.0)
   const earnMultiplier = currentBadge?.reward_earn_multiplier ?? 1.0;
@@ -184,5 +238,12 @@ export async function GET(request: NextRequest) {
     hasTag,
     earnMultiplier,
     allTiers: sortedTiers,
+    currentBoosterBadge,
+    nextBoosterBadge,
+    boosterMonths,
+    monthsToNext,
+    isBooster,
+    boosterEarnMultiplier,
+    allBoosterTiers,
   });
 }

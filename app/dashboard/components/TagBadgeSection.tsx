@@ -34,6 +34,14 @@ function EmojiText({ text }: { text: string }) {
   );
 }
 
+function TierIcon({ emoji, defaultIcon }: { emoji: string | null; defaultIcon: React.ReactNode }) {
+  if (!emoji) return <>{defaultIcon}</>;
+  if (emoji.startsWith('http')) {
+    return <Image src={emoji} alt="icon" width={24} height={24} className="rounded-sm" unoptimized />;
+  }
+  return <EmojiText text={emoji} />;
+}
+
 // ─── Tier Row (Dashboard Style) ───────────────────────────────────────────────
 function TierRow({ tier, unlocked, isCurrent, tagDays, isLast }: {
   tier: BadgeTier;
@@ -59,16 +67,33 @@ function TierRow({ tier, unlocked, isCurrent, tagDays, isLast }: {
       
       {/* Timeline Node */}
       <div className="relative z-10 flex-shrink-0 mt-1">
-        <div
-          className="flex h-10 w-10 items-center justify-center rounded-full text-lg"
-          style={{
-            background: unlocked ? `${color}15` : 'rgba(255,255,255,0.03)',
-            border: `1.5px solid ${unlocked ? color + '50' : 'rgba(255,255,255,0.08)'}`,
-            boxShadow: isCurrent ? `0 0 15px ${color}30` : undefined,
-          }}
-        >
-          {unlocked ? (tier.emoji ? <EmojiText text={tier.emoji} /> : '🏅') : <LuLock className="h-4 w-4 text-white/30" />}
-        </div>
+        {tier.background_image ? (
+          <div
+            className="relative flex h-10 w-10 items-center justify-center rounded-lg overflow-hidden text-lg shadow-lg"
+            style={{
+              opacity: unlocked ? 1 : 0.4,
+              filter: unlocked ? 'none' : 'grayscale(100%)',
+              border: `1.5px solid ${unlocked ? color + '50' : 'rgba(255,255,255,0.08)'}`,
+              boxShadow: isCurrent ? `0 0 15px ${color}30` : undefined,
+            }}
+          >
+            <Image src={tier.background_image} alt="bg" fill className="object-cover" unoptimized />
+            <div className="absolute inset-0 flex items-center justify-center z-10 bg-black/20">
+              {unlocked ? <TierIcon emoji={tier.emoji} defaultIcon="🏅" /> : <LuLock className="h-4 w-4 text-white/80 drop-shadow-md" />}
+            </div>
+          </div>
+        ) : (
+          <div
+            className="flex h-10 w-10 items-center justify-center rounded-full text-lg"
+            style={{
+              background: unlocked ? `${color}15` : 'rgba(255,255,255,0.03)',
+              border: `1.5px solid ${unlocked ? color + '50' : 'rgba(255,255,255,0.08)'}`,
+              boxShadow: isCurrent ? `0 0 15px ${color}30` : undefined,
+            }}
+          >
+            {unlocked ? <TierIcon emoji={tier.emoji} defaultIcon="🏅" /> : <LuLock className="h-4 w-4 text-white/30" />}
+          </div>
+        )}
       </div>
 
       {/* Content Card */}
@@ -150,6 +175,13 @@ export default function TagBadgeSection({ badgeInfo, loading, overviewStats }: P
   const earnMultiplier = badgeInfo?.earnMultiplier ?? 1;
   const allTiers = badgeInfo?.allTiers ?? [];
 
+  const boosterMonths = badgeInfo?.boosterMonths ?? 0;
+  const currentBoosterBadge = badgeInfo?.currentBoosterBadge ?? null;
+  const nextBoosterBadge = badgeInfo?.nextBoosterBadge ?? null;
+  const monthsToNext = badgeInfo?.monthsToNext ?? null;
+  const allBoosterTiers = badgeInfo?.allBoosterTiers ?? [];
+  const boosterEarnMultiplier = badgeInfo?.boosterEarnMultiplier ?? 1;
+
   if (loading) {
     return (
       <section className="flex flex-col gap-4 p-4 sm:p-6">
@@ -222,9 +254,18 @@ export default function TagBadgeSection({ badgeInfo, loading, overviewStats }: P
                 <div>
                   <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-2xl shadow-[0_0_15px_rgba(99,102,241,0.15)]">
-                        {currentBadge ? (currentBadge.emoji ? <EmojiText text={currentBadge.emoji} /> : '🏅') : <LuShieldCheck className="h-6 w-6 text-indigo-400" />}
-                      </div>
+                      {currentBadge?.background_image ? (
+                        <div className="relative flex h-14 w-14 items-center justify-center rounded-xl overflow-hidden shadow-lg border border-indigo-500/30">
+                          <Image src={currentBadge.background_image} alt="bg" fill className="object-cover" unoptimized />
+                          <div className="absolute inset-0 flex items-center justify-center z-10 text-2xl drop-shadow-md">
+                            <TierIcon emoji={currentBadge.emoji} defaultIcon={<LuShieldCheck className="h-6 w-6 text-white" />} />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-2xl shadow-[0_0_15px_rgba(99,102,241,0.15)]">
+                          {currentBadge ? <TierIcon emoji={currentBadge.emoji} defaultIcon="🏅" /> : <LuShieldCheck className="h-6 w-6 text-indigo-400" />}
+                        </div>
+                      )}
                       <div>
                         <h2 className="text-lg font-bold text-white leading-tight">
                           {currentBadge?.name ?? 'Tag Aktif'}
@@ -334,15 +375,24 @@ export default function TagBadgeSection({ badgeInfo, loading, overviewStats }: P
                 <div>
                   <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-pink-500/10 border border-pink-500/20 text-2xl shadow-[0_0_15px_rgba(236,72,153,0.15)]">
-                        💎
-                      </div>
+                      {currentBoosterBadge?.background_image ? (
+                        <div className="relative flex h-14 w-14 items-center justify-center rounded-xl overflow-hidden shadow-lg border border-pink-500/30">
+                          <Image src={currentBoosterBadge.background_image} alt="bg" fill className="object-cover" unoptimized />
+                          <div className="absolute inset-0 flex items-center justify-center z-10 text-2xl drop-shadow-md">
+                            <TierIcon emoji={currentBoosterBadge.emoji} defaultIcon="💎" />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-pink-500/10 border border-pink-500/20 text-2xl shadow-[0_0_15px_rgba(236,72,153,0.15)]">
+                          {currentBoosterBadge ? <TierIcon emoji={currentBoosterBadge.emoji} defaultIcon="💎" /> : '💎'}
+                        </div>
+                      )}
                       <div>
                         <h2 className="text-lg font-bold text-white leading-tight">
-                          Aktif Booster
+                          {currentBoosterBadge?.name ?? 'Aktif Booster'}
                         </h2>
                         <p className="text-xs text-pink-300/70 font-medium">
-                          Sunucu Destekçisi
+                          {boosterMonths} Ay Destek
                         </p>
                       </div>
                     </div>
@@ -354,18 +404,42 @@ export default function TagBadgeSection({ badgeInfo, loading, overviewStats }: P
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="rounded-xl border border-pink-500/10 bg-pink-500/[0.02] p-4">
-                      <p className="text-[10px] text-pink-400/60 mb-2 font-bold uppercase tracking-wider"><LuHeart className="h-3 w-3 inline mr-1" />Ayrıcalıklar</p>
-                      <p className="text-sm font-bold text-pink-300">Özel Rol & Renk</p>
-                      <p className="text-xs text-pink-300/50 mt-1">Sunucumuzda booster üyelere özel renk ve yetkilere sahipsiniz.</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div className="rounded-xl border border-white/5 bg-white/[0.01] p-3">
+                      <p className="text-[10px] text-white/40 mb-1"><LuCalendar className="h-3 w-3 inline mr-1" />Destek Süresi</p>
+                      <p className="text-lg font-bold text-white">{boosterMonths} <span className="text-xs text-white/30 font-normal">Ay</span></p>
                     </div>
-                    <div className="rounded-xl border border-violet-500/10 bg-violet-500/[0.02] p-4">
-                      <p className="text-[10px] text-violet-400/60 mb-2 font-bold uppercase tracking-wider"><LuCoins className="h-3 w-3 inline mr-1" />Ekstra Kazanç</p>
-                      <p className="text-sm font-bold text-violet-300 mb-1">+{boosterBonusMessage} <span className="text-xs font-normal text-violet-300/50">Mesaj Başına</span></p>
-                      <p className="text-sm font-bold text-violet-300">+{boosterBonusVoice} <span className="text-xs font-normal text-violet-300/50">Sesli Sohbet (dk)</span></p>
+                    <div className="rounded-xl border border-white/5 bg-white/[0.01] p-3">
+                      <p className="text-[10px] text-white/40 mb-1"><LuShieldCheck className="h-3 w-3 inline mr-1" />Rozet</p>
+                      <p className="text-lg font-bold text-white">{allBoosterTiers.filter(t => boosterMonths >= t.months_required).length} <span className="text-xs text-white/30 font-normal">/ {allBoosterTiers.length}</span></p>
                     </div>
+                    <div className="rounded-xl border border-emerald-500/10 bg-emerald-500/[0.02] p-3">
+                      <p className="text-[10px] text-emerald-400/60 mb-1"><LuZap className="h-3 w-3 inline mr-1" />Çarpan</p>
+                      <p className="text-lg font-bold text-emerald-400">×{boosterEarnMultiplier}</p>
+                    </div>
+                    {(boosterBonusMessage > 0 || boosterBonusVoice > 0) && (
+                      <div className="rounded-xl border border-violet-500/10 bg-violet-500/[0.02] p-3">
+                        <p className="text-[10px] text-violet-400/60 mb-1"><LuCoins className="h-3 w-3 inline mr-1" />Ekstra Kazanç</p>
+                        <p className="text-sm font-bold text-violet-300 mb-0.5">+{boosterBonusMessage} <span className="text-[10px] font-normal text-violet-300/50">Msj</span></p>
+                        <p className="text-sm font-bold text-violet-300">+{boosterBonusVoice} <span className="text-[10px] font-normal text-violet-300/50">Ses</span></p>
+                      </div>
+                    )}
                   </div>
+
+                  {nextBoosterBadge && (
+                    <div className="mt-5 rounded-xl border border-white/5 bg-white/[0.01] p-4">
+                      <div className="mb-2 flex items-center justify-between text-xs">
+                        <span className="text-white/40">{t('badge_next_badge', { name: nextBoosterBadge.name })}</span>
+                        <span className="font-semibold text-white/80">{monthsToNext} Ay Kaldı</span>
+                      </div>
+                      <div className="relative h-2 overflow-hidden rounded-full bg-white/[0.04]">
+                        <div
+                          className="h-full rounded-full transition-all duration-1000"
+                          style={{ width: `${Math.min(100, Math.round(((boosterMonths - (currentBoosterBadge?.months_required ?? 0)) / ((nextBoosterBadge.months_required) - (currentBoosterBadge?.months_required ?? 0))) * 100))}%`, background: `linear-gradient(90deg, ${currentBoosterBadge?.color ?? '#f472b6'}cc, ${nextBoosterBadge.color ?? '#f472b6'}dd)` }}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="flex items-start gap-4">
@@ -381,6 +455,34 @@ export default function TagBadgeSection({ badgeInfo, loading, overviewStats }: P
                 </div>
               )}
             </div>
+
+            {/* Booster Yol Haritası */}
+            {allBoosterTiers.length > 0 && (
+              <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5">
+                <div className="flex items-center gap-2 mb-6 border-b border-white/5 pb-4">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-pink-500/10">
+                    <LuTrendingUp className="h-4 w-4 text-pink-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-white">Booster Yol Haritası</h3>
+                    <p className="text-[10px] text-white/40">Zamanla kazanabileceğiniz tüm ayrıcalıklar</p>
+                  </div>
+                </div>
+                
+                <div className="pl-2">
+                  {allBoosterTiers.map((tier, idx) => (
+                    <TierRow
+                      key={tier.id}
+                      tier={{ ...tier, days_required: tier.months_required }}
+                      unlocked={boosterMonths >= tier.months_required}
+                      isCurrent={currentBoosterBadge?.id === tier.id}
+                      tagDays={boosterMonths}
+                      isLast={idx === allBoosterTiers.length - 1}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
