@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LuWand2, LuCheck, LuLoader2, LuGithub } from 'react-icons/lu';
+import { LuWand, LuCheck, LuLoader, LuGithub } from 'react-icons/lu';
 
 type AIFixPanelProps = {
   logId: string;
@@ -68,7 +68,7 @@ export default function AIFixPanel({ logId, errorTitle, filePath, stackTrace }: 
     <div className="mt-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 overflow-hidden">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-bold text-emerald-400 flex items-center gap-2">
-          <LuWand2 className="h-4 w-4" /> Otonom AI Çözücü
+          <LuWand className="h-4 w-4" /> Otonom AI Çözücü
         </h3>
         
         {status === 'idle' && (
@@ -76,20 +76,20 @@ export default function AIFixPanel({ logId, errorTitle, filePath, stackTrace }: 
             onClick={handleAiFix}
             className="flex items-center gap-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white transition shadow-[0_0_15px_rgba(16,185,129,0.3)]"
           >
-            <LuWand2 className="h-3.5 w-3.5" /> AI İle Çöz
+            <LuWand className="h-3.5 w-3.5" /> AI İle Çöz
           </button>
         )}
       </div>
 
       {status === 'analyzing' && (
         <div className="flex items-center gap-3 text-emerald-300/70 text-sm">
-          <LuLoader2 className="h-4 w-4 animate-spin" /> Yapay Zeka kodu inceliyor ve çözümü uyguluyor...
+          <LuLoader className="h-4 w-4 animate-spin" /> Yapay Zeka kodu inceliyor ve çözümü uyguluyor...
         </div>
       )}
 
       {status === 'committing' && (
         <div className="flex items-center gap-3 text-blue-300/70 text-sm">
-          <LuLoader2 className="h-4 w-4 animate-spin" /> Değişiklikler GitHub'a pushlanıyor...
+          <LuLoader className="h-4 w-4 animate-spin" /> Değişiklikler GitHub'a pushlanıyor...
         </div>
       )}
 
