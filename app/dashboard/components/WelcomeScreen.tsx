@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import type { ActivityReadiness } from './ActivityReadinessGate';
-import DeveloperAboutModal from './DeveloperAboutModal';
+
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { apiUrl } from '@/lib/api';
 import { VideoBackground, MuteButton } from './VideoBackground';

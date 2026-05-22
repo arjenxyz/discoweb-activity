@@ -336,12 +336,7 @@ export default function SplashScreen({ onEnter }: Props) {
           <div className="flex items-center gap-2.5">
             <span className="text-[11px] text-white/35">© {new Date().getFullYear()} DiscoWeb</span>
             <span className="text-white/20 text-xs">·</span>
-            {isDeveloper && (
-              <>
-                <span className="text-white/20 text-xs">·</span>
-                <button type="button" onClick={() => router.push('/activity/developer')} className="text-xs text-white/35 hover:text-white/65 transition-colors">Developer</button>
-              </>
-            )}
+
           </div>
           <div className="flex items-center gap-2.5">
             <button type="button" onClick={() => openLink('https://discoweb.tech/terms')} className="text-xs text-white/35 hover:text-white/65 transition-colors">{t('splash_terms')}</button>
