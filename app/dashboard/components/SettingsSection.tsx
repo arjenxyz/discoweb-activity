@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { LuVolume2, LuGlobe, LuUser, LuFileCheck, LuCheck, LuAlertTriangle, LuArrowLeft, LuShieldAlert, LuInfo } from 'react-icons/lu';
+import { LuVolume2, LuGlobe, LuUser, LuFileCheck, LuCheck, LuTriangleAlert, LuArrowLeft, LuShieldAlert, LuInfo } from 'react-icons/lu';
 import { useLocale } from '@/contexts/LocaleContext';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import type { MemberProfile } from '../types';
@@ -188,7 +188,7 @@ export default function SettingsSection({
         <div className="bg-slate-900/50 p-6">
           <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-4">
             <div className="flex gap-3">
-              <LuAlertTriangle className="h-5 w-5 shrink-0 text-amber-500" />
+              <LuTriangleAlert className="h-5 w-5 shrink-0 text-amber-500" />
               <p className="text-sm leading-relaxed text-amber-200/90">
                 İşlemi onayladığınız an, belirlediğiniz kapsama giren veri tabanı kayıtları sistemden tamamen kaldırılır. Yedeklere erişilemez. Emin olmadan lütfen onaylamayın.
               </p>
@@ -362,7 +362,7 @@ export default function SettingsSection({
       <div className="rounded-2xl border border-red-500/20 bg-red-950/10 backdrop-blur-sm">
         <div className="border-b border-red-500/20 px-6 py-4">
           <div className="flex items-center gap-2">
-            <LuAlertTriangle className="h-5 w-5 text-red-500" />
+            <LuTriangleAlert className="h-5 w-5 text-red-500" />
             <h4 className="font-semibold text-red-500">Tehlikeli Bölge (Danger Zone)</h4>
           </div>
         </div>
