@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Image from 'next/image';
 import { LuShieldCheck, LuLock, LuCoins, LuZap, LuStar, LuCalendar, LuTrendingUp, LuCircleCheck, LuTag, LuHeart } from 'react-icons/lu';
 import type { BadgeInfo, BadgeTier, OverviewStats, OverviewStatsExpanded } from '../types';
@@ -134,8 +135,8 @@ function TierRow({ tier, unlocked, isCurrent, tagDays, isLast }: {
   );
 }
 
-// ─── Main ─────────────────────────────────────────────────────────────────────
 export default function TagBadgeSection({ badgeInfo, loading, overviewStats }: Props) {
+  const [activeTab, setActiveTab] = useState<'tag' | 'booster'>('tag');
   const t = useT();
   const expanded = overviewStats as OverviewStatsExpanded | null | undefined;
   const isBooster = expanded?.isBooster ?? false;
@@ -190,11 +191,36 @@ export default function TagBadgeSection({ badgeInfo, loading, overviewStats }: P
         </div>
       </div>
 
-      {/* DURUM KARTLARI — Tag + Booster yan yana */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      {/* SEKMELER */}
+      <div className="flex gap-3">
+        <button
+          onClick={() => setActiveTab('tag')}
+          className={`flex-1 rounded-2xl border px-4 py-3 sm:py-4 text-sm font-semibold transition-all ${
+            activeTab === 'tag'
+              ? 'border-indigo-500/30 bg-indigo-500/10 text-indigo-300'
+              : 'border-white/[0.08] bg-white/[0.04] text-white/40 hover:bg-white/[0.08] hover:text-white/80'
+          }`}
+        >
+          Tag Verileri
+        </button>
+        <button
+          onClick={() => setActiveTab('booster')}
+          className={`flex-1 rounded-2xl border px-4 py-3 sm:py-4 text-sm font-semibold transition-all ${
+            activeTab === 'booster'
+              ? 'border-pink-500/30 bg-pink-500/10 text-pink-300'
+              : 'border-white/[0.08] bg-white/[0.04] text-white/40 hover:bg-white/[0.08] hover:text-white/80'
+          }`}
+        >
+          Booster Verileri
+        </button>
+      </div>
+
+      {/* DURUM KARTLARI */}
+      <div>
 
         {/* TAG KARTI */}
-        <div className={`${card} relative overflow-hidden`}>
+        {activeTab === 'tag' && (
+          <div className={`${card} relative overflow-hidden`}>
           <div
             className="pointer-events-none absolute top-0 left-0 right-0 h-0.5"
             style={{ background: hasTag ? `linear-gradient(90deg, transparent, ${currentColor}99, transparent)` : 'rgba(255,255,255,0.04)' }}
@@ -313,8 +339,10 @@ export default function TagBadgeSection({ badgeInfo, loading, overviewStats }: P
             )}
           </div>
         </div>
+        )}
 
         {/* BOOSTER KARTI */}
+        {activeTab === 'booster' && (
         <div className={`${card} relative overflow-hidden`}>
           <div
             className="pointer-events-none absolute top-0 left-0 right-0 h-0.5"
@@ -397,10 +425,11 @@ export default function TagBadgeSection({ badgeInfo, loading, overviewStats }: P
             )}
           </div>
         </div>
+        )}
       </div>
 
       {/* ROZET YOL HARİTASI */}
-      {allTiers.length > 0 && (
+      {activeTab === 'tag' && allTiers.length > 0 && (
         <div className={card}>
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2">
