@@ -73,7 +73,7 @@ function TierRow({ tier, unlocked, isCurrent, tagDays, isLast }: {
       </div>
 
       {/* Content */}
-      <div className={`flex-1 pb-10 transition-opacity duration-300 ${unlocked ? 'opacity-100' : 'opacity-40'}`}>
+      <div className={`flex-1 pb-10 transition-all duration-300 ${unlocked ? 'opacity-100' : 'opacity-80 grayscale-[20%]'}`}>
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
           <div>
             <div className="flex flex-wrap items-center gap-2 mb-1">
@@ -86,10 +86,15 @@ function TierRow({ tier, unlocked, isCurrent, tagDays, isLast }: {
                 </span>
               )}
               {unlocked && !isCurrent && <LuCircleCheck className="h-4 w-4 text-emerald-400" />}
+              {!unlocked && (
+                <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-semibold text-white/40 flex items-center gap-1">
+                  <LuLock className="h-3 w-3" /> Hedef
+                </span>
+              )}
             </div>
             <p className="text-sm font-medium text-white/40 mb-2">
               {t('badge_days_required', { days: tier.days_required })}
-              {!unlocked && daysLeft > 0 && <span className="ml-2 text-white/30 font-normal">({t('badge_days_left', { days: daysLeft })})</span>}
+              {!unlocked && daysLeft > 0 && <span className="ml-2 text-indigo-300/80 font-bold">({t('badge_days_left', { days: daysLeft })})</span>}
             </p>
             {tier.description && <p className="text-sm leading-relaxed text-white/50 max-w-2xl">{tier.description}</p>}
             
@@ -97,17 +102,17 @@ function TierRow({ tier, unlocked, isCurrent, tagDays, isLast }: {
             {hasRewards && (
               <div className="mt-4 flex flex-wrap gap-2">
                 {(tier.reward_papel ?? 0) > 0 && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-yellow-500/20 bg-gradient-to-r from-yellow-500/10 to-transparent px-3 py-1 text-xs font-semibold text-yellow-400">
+                  <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${unlocked ? 'border-yellow-500/20 bg-gradient-to-r from-yellow-500/10 to-transparent text-yellow-400' : 'border-yellow-500/10 bg-white/5 text-yellow-500/60'}`}>
                     <LuCoins className="h-3.5 w-3.5" />+{tier.reward_papel} Papel
                   </span>
                 )}
                 {(tier.reward_earn_multiplier ?? 1) > 1 && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-gradient-to-r from-emerald-500/10 to-transparent px-3 py-1 text-xs font-semibold text-emerald-400">
+                  <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${unlocked ? 'border-emerald-500/20 bg-gradient-to-r from-emerald-500/10 to-transparent text-emerald-400' : 'border-emerald-500/10 bg-white/5 text-emerald-500/60'}`}>
                     <LuZap className="h-3.5 w-3.5" />{tier.reward_earn_multiplier}x Çarpan
                   </span>
                 )}
                 {tier.reward_message && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-indigo-500/20 bg-gradient-to-r from-indigo-500/10 to-transparent px-3 py-1 text-xs font-medium text-indigo-300">
+                  <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${unlocked ? 'border-indigo-500/20 bg-gradient-to-r from-indigo-500/10 to-transparent text-indigo-300' : 'border-indigo-500/10 bg-white/5 text-indigo-400/60'}`}>
                     <LuStar className="h-3.5 w-3.5" />{tier.reward_message}
                   </span>
                 )}
