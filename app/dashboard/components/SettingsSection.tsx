@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { LuVolume2, LuGlobe, LuUser, LuFileCheck, LuCheck } from 'react-icons/lu';
+import { LuVolume2, LuGlobe, LuUser, LuFileCheck, LuCheck, LuAlertTriangle, LuArrowLeft, LuShieldAlert, LuInfo } from 'react-icons/lu';
 import { useLocale } from '@/contexts/LocaleContext';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import type { MemberProfile } from '../types';
@@ -48,7 +48,7 @@ export default function SettingsSection({
     { key: 'data_processing', title: 'Veri İşleme Onayı', description: 'Veri işleme ve analiz için izin verdiniz.' },
   ];
 
-  const [activeTab, setActiveTab] = useState<'sound' | 'language' | 'account' | 'contracts'>('sound');
+  const [activeTab, setActiveTab] = useState<'sound' | 'language' | 'account' | 'contracts'>('account');
   const [soundEnabled, setSoundEnabled] = useState(() => {
     if (typeof window === 'undefined') return true;
     const stored = window.localStorage.getItem('dashboard_music_enabled');
@@ -111,16 +111,6 @@ export default function SettingsSection({
     setDiscordLocale(value);
   };
 
-  const playConfirmSound = () => {
-    try {
-      const sound = new Audio('/music/to.mp3');
-      sound.volume = 0.75;
-      void sound.play();
-    } catch {
-      // ignore audio playback failures
-    }
-  };
-
   const openDeleteModal = (scope: 'all' | 'current') => {
     setDeleteScope(scope);
     setDeleteError(null);
@@ -131,7 +121,6 @@ export default function SettingsSection({
     if (!deleteScope) return;
     setDeleteLoading(true);
     setDeleteError(null);
-    playConfirmSound();
 
     try {
       const response = await fetchWithCreds('/api/member/delete-data', {
@@ -165,66 +154,58 @@ export default function SettingsSection({
 
   const deleteOptionConfig = {
     all: {
-      title: 'Tüm verileri sil',
-      description: 'DiscoWeb içindeki tüm kişisel verilerinizi kalıcı olarak siler. Bu işlem geri alınamaz.',
-      button: 'Tüm Verileri Sil',
-      tone: 'bg-red-600 hover:bg-red-500',
+      title: 'Tüm Verileri Kalıcı Olarak Sil',
+      description: 'DiscoWeb platformundaki tüm kişisel verilerinizi kalıcı ve geri dönülemez şekilde siler.',
+      button: 'Tüm Verilerimi Sil',
+      tone: 'bg-red-500 hover:bg-red-600 focus:ring-red-500/50',
+      borderTone: 'border-red-500/30 bg-red-500/5',
+      iconTone: 'text-red-400',
     },
     current: {
-      title: 'Sunucu verilerini sil',
-      description: 'Mevcut sunucuya ait DiscoWeb verilerini siler. Hesabınız ve diğer sunucular etkilenmez.',
-      button: 'Sunucu Verilerini Sil',
-      tone: 'bg-amber-600 hover:bg-amber-500',
+      title: 'Yalnızca Mevcut Sunucu Verilerini Sil',
+      description: 'Hesabınızı etkilemeden, yalnızca bulunduğunuz sunucuya ait kayıt ve istatistikleri temizler.',
+      button: 'Mevcut Sunucu Verilerini Sil',
+      tone: 'bg-orange-500 hover:bg-orange-600 focus:ring-orange-500/50',
+      borderTone: 'border-orange-500/30 bg-orange-500/5',
+      iconTone: 'text-orange-400',
     },
   };
 
   const confirmModal = deleteModalOpen && deleteScope ? (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 px-4 py-6">
-      <div className="w-full max-w-2xl overflow-hidden rounded-[24px] border border-white/10 bg-[#05070d]/95 shadow-2xl shadow-black/70">
-        <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 px-6 py-5">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-amber-300">Invincible Onay</p>
-              <h2 className="mt-2 text-2xl font-black text-white">Are you sure?</h2>
-            </div>
-            <button
-              type="button"
-              onClick={() => setDeleteModalOpen(false)}
-              className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/80 transition hover:bg-white/10"
-            >
-              Kapat
-            </button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 px-4 py-6 backdrop-blur-sm transition-all duration-300">
+      <div className="w-full max-w-lg overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl shadow-black/70 animate-in fade-in zoom-in-95 duration-200">
+        
+        <div className="flex flex-col items-center border-b border-slate-800 p-8 text-center">
+          <div className={`mb-4 flex h-16 w-16 items-center justify-center rounded-full ${deleteOptionConfig[deleteScope].borderTone}`}>
+             <LuShieldAlert className={`h-8 w-8 ${deleteOptionConfig[deleteScope].iconTone}`} />
           </div>
+          <h2 className="text-xl font-bold text-white">Bu işlem geri alınamaz!</h2>
+          <p className="mt-2 text-sm text-slate-400">
+            {deleteOptionConfig[deleteScope].description}
+          </p>
         </div>
 
-        <div className="space-y-5 px-6 py-5 sm:px-7">
-          <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-            <div className="space-y-3 rounded-3xl border border-white/10 bg-white/5 p-4">
-              <p className="text-lg font-semibold text-white">{deleteOptionConfig[deleteScope].title}</p>
-              <p className="text-sm text-white/70">{deleteOptionConfig[deleteScope].description}</p>
-              <p className="text-sm text-white/70">Bu işlem geri alınamaz. Emin değilseniz önce verilerinizi kontrol edin.</p>
-            </div>
-            <div className="overflow-hidden rounded-3xl border border-white/10 bg-slate-950 p-3">
-              <img
-                src="/store-background/invincible/invincible.png"
-                alt="Invincible meme"
-                className="h-48 w-full object-cover"
-              />
+        <div className="bg-slate-900/50 p-6">
+          <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-4">
+            <div className="flex gap-3">
+              <LuAlertTriangle className="h-5 w-5 shrink-0 text-amber-500" />
+              <p className="text-sm leading-relaxed text-amber-200/90">
+                İşlemi onayladığınız an, belirlediğiniz kapsama giren veri tabanı kayıtları sistemden tamamen kaldırılır. Yedeklere erişilemez. Emin olmadan lütfen onaylamayın.
+              </p>
             </div>
           </div>
 
-          <div className="rounded-3xl border border-white/10 bg-[#111827]/80 p-4">
-            <p className="text-sm font-semibold text-white">Omni-Man Modu</p>
-            <p className="mt-2 text-sm text-white/70">DiscoWeb teması invincible olduğu için bu seçeneklerde ekstra görsel ve sesli onay ekledik. Eminsen onayla, yoksa geri dön.</p>
-          </div>
+          {deleteError && (
+            <div className="mt-4 rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-400">
+              {deleteError}
+            </div>
+          )}
 
-          {deleteError && <p className="text-sm font-medium text-red-300">{deleteError}</p>}
-
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+          <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
             <button
               type="button"
               onClick={() => setDeleteModalOpen(false)}
-              className="inline-flex w-full items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/10 sm:w-auto"
+              className="inline-flex items-center justify-center rounded-lg border border-slate-700 bg-transparent px-5 py-2.5 text-sm font-medium text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
             >
               Vazgeç
             </button>
@@ -232,7 +213,7 @@ export default function SettingsSection({
               type="button"
               onClick={handleDeleteConfirm}
               disabled={deleteLoading}
-              className={`inline-flex w-full items-center justify-center rounded-2xl px-4 py-3 text-sm font-semibold text-white transition sm:w-auto ${deleteOptionConfig[deleteScope].tone}`}
+              className={`inline-flex items-center justify-center rounded-lg px-5 py-2.5 text-sm font-medium text-white transition-all focus:outline-none focus:ring-4 ${deleteOptionConfig[deleteScope].tone}`}
             >
               {deleteLoading ? 'Siliniyor...' : deleteOptionConfig[deleteScope].button}
             </button>
@@ -243,234 +224,276 @@ export default function SettingsSection({
   ) : null;
 
   const soundSettingsContent = (
-    <div className="space-y-4">
-      <div className="rounded-2xl border border-white/10 bg-[#121827]/70 p-4">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className="text-sm font-semibold text-white">Müzik Etkinliği</p>
-            <p className="mt-1 text-xs text-white/60">Dashboard açıldığında müzik otomatik olarak başlaması için ayarlayın.</p>
-          </div>
-          <label className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm text-white">
-            <span>{soundEnabled ? 'Açık' : 'Kapalı'}</span>
-            <input
-              type="checkbox"
-              checked={soundEnabled}
-              onChange={(event) => setSoundEnabled(event.target.checked)}
-              className="h-4 w-4 rounded border-white/20 bg-slate-900 text-indigo-500 focus:ring-indigo-500"
-            />
-          </label>
-        </div>
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+      <div>
+        <h3 className="text-lg font-semibold text-white">Ses Ayarları</h3>
+        <p className="mt-1 text-sm text-slate-400">Arka plan müziği ve arayüz ses efektlerini buradan yapılandırın.</p>
       </div>
 
-      <div className="rounded-2xl border border-white/10 bg-[#121827]/70 p-4">
-        <p className="text-sm font-semibold text-white">Ses Seviyesi</p>
-        <p className="mt-1 text-xs text-white/60">Müzik sesini ayarlayın.</p>
-        <div className="mt-4 flex items-center gap-3">
-          <input
-            type="range"
-            min={0}
-            max={100}
-            value={soundVolume}
-            onChange={(event) => setSoundVolume(Number(event.target.value))}
-            className="h-2 w-full cursor-pointer appearance-none rounded-full bg-white/10 accent-indigo-500"
-          />
-          <span className="w-12 text-right text-sm text-white/80">{soundVolume}%</span>
+      <div className="flex flex-col gap-6 rounded-2xl border border-slate-800 bg-slate-900/40 p-6 backdrop-blur-sm">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className="font-medium text-white">Müzik Etkinliği</p>
+            <p className="text-sm text-slate-400">Dashboard açıldığında müziğin otomatik olarak başlamasına izin verin.</p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={soundEnabled}
+            onClick={() => setSoundEnabled(!soundEnabled)}
+            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${soundEnabled ? 'bg-indigo-500' : 'bg-slate-700'}`}
+          >
+            <span
+              aria-hidden="true"
+              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${soundEnabled ? 'translate-x-5' : 'translate-x-0'}`}
+            />
+          </button>
+        </div>
+        
+        <div className="h-px w-full bg-slate-800" />
+
+        <div>
+          <div className="flex items-center justify-between">
+            <p className="font-medium text-white">Ses Seviyesi</p>
+            <span className="text-sm font-medium text-indigo-400">{soundVolume}%</span>
+          </div>
+          <p className="mt-1 text-sm text-slate-400">Sistem genelindeki müzik ses seviyesini belirleyin.</p>
+          <div className="mt-6 flex items-center gap-4">
+            <LuVolume2 className="h-5 w-5 text-slate-500" />
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={soundVolume}
+              onChange={(event) => setSoundVolume(Number(event.target.value))}
+              className="h-2 w-full cursor-pointer appearance-none rounded-full bg-slate-800 accent-indigo-500 outline-none hover:bg-slate-700"
+            />
+          </div>
         </div>
       </div>
     </div>
   );
 
   const languageSettingsContent = (
-    <div className="space-y-4">
-      <div className="rounded-2xl border border-white/10 bg-[#121827]/70 p-4">
-        <p className="text-sm font-semibold text-white">Arayüz Dili</p>
-        <p className="mt-1 text-xs text-white/60">Uygulamanın tercih ettiğiniz dilde görünmesini sağlayın.</p>
-        <div className="mt-4 flex flex-wrap gap-3">
-          {['tr', 'en'].map((lang) => (
-            <button
-              key={lang}
-              type="button"
-              onClick={() => handleLocaleChange(lang as 'tr' | 'en')}
-              className={`rounded-2xl px-4 py-2 text-sm font-semibold transition ${locale === lang ? 'bg-indigo-600 text-white' : 'bg-white/5 text-white/80 hover:bg-white/10'}`}
-            >
-              {lang === 'tr' ? 'Türkçe' : 'English'}
-            </button>
-          ))}
-        </div>
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+      <div>
+        <h3 className="text-lg font-semibold text-white">Bölge & Dil</h3>
+        <p className="mt-1 text-sm text-slate-400">Uygulama arayüzünün dilini kişiselleştirin.</p>
       </div>
-      <div className="rounded-2xl border border-white/10 bg-[#121827]/70 p-4">
-        <p className="text-sm font-semibold text-white">Geçerli Dil</p>
-        <p className="mt-2 text-sm text-white/80">{locale === 'tr' ? 'Türkçe' : 'English'}</p>
+
+      <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 backdrop-blur-sm">
+        <div className="grid gap-4 sm:grid-cols-2">
+          {[
+            { id: 'tr', label: 'Türkçe', desc: 'Sistem dilini Türkçe yap' },
+            { id: 'en', label: 'English', desc: 'Set system language to English' },
+          ].map((lang) => {
+            const isActive = locale === lang.id;
+            return (
+              <div 
+                key={lang.id}
+                onClick={() => handleLocaleChange(lang.id as 'tr' | 'en')}
+                className={`group cursor-pointer rounded-xl border p-4 transition-all duration-200 ${isActive ? 'border-indigo-500 bg-indigo-500/10' : 'border-slate-800 bg-slate-900/50 hover:border-slate-700 hover:bg-slate-800/80'}`}
+              >
+                <div className="flex items-center justify-between">
+                  <p className={`font-semibold ${isActive ? 'text-indigo-400' : 'text-slate-300 group-hover:text-white'}`}>{lang.label}</p>
+                  {isActive && <LuCheck className="h-5 w-5 text-indigo-400" />}
+                </div>
+                <p className="mt-2 text-sm text-slate-500">{lang.desc}</p>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
 
   const accountSettingsContent = (
-    <div className="space-y-4">
-      <div className="rounded-2xl border border-white/10 bg-[#121827]/70 p-4">
-        <p className="text-sm font-semibold text-white">Hesap Bilgileri</p>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
-            <p className="text-xs text-white/50">Kullanıcı Adı</p>
-            <p className="mt-2 text-sm text-white">{profile?.username ?? 'Bilinmiyor'}</p>
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
+      <div>
+        <h3 className="text-lg font-semibold text-white">Hesap Verileri & Profil</h3>
+        <p className="mt-1 text-sm text-slate-400">Hesap bilgilerinizi görüntüleyin ve veri izni yönetimini sağlayın.</p>
+      </div>
+
+      {/* Profil Detayları */}
+      <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/40 backdrop-blur-sm">
+        <div className="border-b border-slate-800 bg-slate-900/50 px-6 py-4">
+          <h4 className="font-medium text-slate-200">Kişisel Bilgiler</h4>
+        </div>
+        <div className="grid grid-cols-1 divide-y divide-slate-800 sm:grid-cols-2 sm:divide-x sm:divide-y-0">
+          <div className="p-6">
+            <p className="text-xs font-medium uppercase tracking-wider text-slate-500">Kullanıcı Adı</p>
+            <p className="mt-2 text-lg font-medium text-white">{profile?.username ?? 'Bilinmiyor'}</p>
+            <p className="mt-1 text-sm text-slate-500">ID: {profile?.userId ?? '-'}</p>
           </div>
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
-            <p className="text-xs text-white/50">Görünür İsim</p>
-            <p className="mt-2 text-sm text-white">{profile?.displayName ?? profile?.nickname ?? 'Mevcut yok'}</p>
-          </div>
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
-            <p className="text-xs text-white/50">Discord ID</p>
-            <p className="mt-2 text-sm text-white">{profile?.userId ?? 'Bilinmiyor'}</p>
-          </div>
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
-            <p className="text-xs text-white/50">Roller</p>
-            <p className="mt-2 text-sm text-white">{profile?.roles?.length ? `${profile.roles.length} adet` : 'Yok'}</p>
+          <div className="p-6">
+            <p className="text-xs font-medium uppercase tracking-wider text-slate-500">Görünür İsim / Roller</p>
+            <p className="mt-2 text-lg font-medium text-white">{profile?.displayName ?? profile?.nickname ?? 'Belirtilmedi'}</p>
+            <p className="mt-1 text-sm text-slate-500">{profile?.roles?.length ? `${profile.roles.length} role sahip` : 'Rol bulunmuyor'}</p>
           </div>
         </div>
       </div>
-      <div className="rounded-2xl border border-white/10 bg-[#121827]/70 p-4">
-        <p className="text-sm font-semibold text-white">Hesap Detayı</p>
-        <p className="mt-2 text-sm text-white/60">Bu alan artık hesabınızdaki DiscoWeb verilerini yöneteceğiniz merkez olacak. Burada kaç sunucuda verilerinizin saklandığını görebilir ve gerektiğinde silme seçeneklerini kullanabilirsiniz.</p>
-      </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <div className="rounded-3xl border border-white/10 bg-white/5 p-5 shadow-sm shadow-black/10">
-          <p className="text-sm font-semibold text-white">Sunucu Verisi Yönetimi</p>
-          <p className="mt-3 text-4xl font-black text-white">{serverCount ?? 0}</p>
-          <p className="mt-2 text-sm text-white/70">Sunucuda verileriniz bulunuyor.</p>
-          <p className="mt-4 text-sm text-white/60">Kendi hesabına ait verilerin yönetim merkezi. Hangi sunucularda verileriniz varsa buradan görebilir ve işlemlerini başlatabilirsin.</p>
-        </div>
-
-        <div className="rounded-3xl border border-white/10 bg-white/5 p-5 shadow-sm shadow-black/10">
-          <p className="text-sm font-semibold text-white">Veri Yönetimi Merkezi</p>
-          <p className="mt-3 text-sm text-white/70">Bu bölüm, hesabına bağlı tüm sunucu verilerini izlemen ve gerektiğinde silme seçeneklerine erişmen için tasarlandı.</p>
-          <ul className="mt-4 space-y-3 text-sm text-white/70">
-            <li>• Sunucuya bağlı veriler burada gösterilecek</li>
-            <li>• Tüm verileri sil seçeneği hesabının tüm verilerini kaldırır</li>
-            <li>• Sunucu verilerini sil seçeneği yalnızca mevcut sunucuya ait kayıtları kaldırır</li>
-          </ul>
-        </div>
-      </div>
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        {(['current', 'all'] as const).map((scope) => {
-          const option = deleteOptionConfig[scope];
-          return (
-            <div key={scope} className="rounded-3xl border border-white/10 bg-white/5 p-5 shadow-sm shadow-black/10">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-sm font-semibold text-white">{option.title}</p>
-                  <p className="mt-2 text-sm text-white/70">{option.description}</p>
-                </div>
-                <div className="rounded-full bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/50">Önemli</div>
-              </div>
-              <button
-                type="button"
-                onClick={() => openDeleteModal(scope)}
-                className={`mt-6 inline-flex w-full items-center justify-center rounded-2xl px-4 py-3 text-sm font-semibold text-white transition ${option.tone}`}
-              >
-                {option.button}
-              </button>
+      {/* Sunucu Yönetimi Özeti */}
+      <div className="flex flex-col gap-6 sm:flex-row">
+        <div className="flex-1 rounded-2xl border border-indigo-500/20 bg-indigo-500/5 p-6 backdrop-blur-sm">
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-500/20 text-indigo-400">
+              <LuGlobe className="h-6 w-6" />
             </div>
-          );
-        })}
+            <div>
+              <p className="text-3xl font-bold text-white">{serverCount ?? 0}</p>
+              <p className="text-sm font-medium text-indigo-300">Aktif Sunucu Bağlantısı</p>
+            </div>
+          </div>
+          <p className="mt-4 text-sm leading-relaxed text-slate-400">
+            Kayıtlarınızın aktif olarak bulunduğu sunucu sayısı. Bu sunucularda ekonomi işlemleriniz ve portföyleriniz yer almaktadır.
+          </p>
+        </div>
       </div>
 
       {deleteMessage && (
-        <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
-          {deleteMessage}
+        <div className="flex items-center gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-emerald-300">
+          <LuCheck className="h-5 w-5" />
+          <p className="text-sm font-medium">{deleteMessage}</p>
         </div>
       )}
+
+      {/* Danger Zone */}
+      <div className="rounded-2xl border border-red-500/20 bg-red-950/10 backdrop-blur-sm">
+        <div className="border-b border-red-500/20 px-6 py-4">
+          <div className="flex items-center gap-2">
+            <LuAlertTriangle className="h-5 w-5 text-red-500" />
+            <h4 className="font-semibold text-red-500">Tehlikeli Bölge (Danger Zone)</h4>
+          </div>
+        </div>
+        <div className="divide-y divide-red-500/10">
+          {(['current', 'all'] as const).map((scope) => {
+            const option = deleteOptionConfig[scope];
+            return (
+              <div key={scope} className="flex flex-col items-start justify-between gap-4 p-6 sm:flex-row sm:items-center">
+                <div className="max-w-md">
+                  <p className="font-medium text-slate-200">{option.title}</p>
+                  <p className="mt-1 text-sm text-slate-400">{option.description}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => openDeleteModal(scope)}
+                  className="shrink-0 rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-2 text-sm font-medium text-red-400 transition-colors hover:bg-red-500 hover:text-white"
+                >
+                  {option.button}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 
   const contractsSettingsContent = (
-    <div className="space-y-4">
-      {contractItems.map((contract) => (
-        <div key={contract.key} className="rounded-2xl border border-white/10 bg-[#121827]/70 p-4">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-sm font-semibold text-white">{contract.title}</p>
-              <p className="mt-1 text-xs text-white/60">{contract.description}</p>
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+      <div>
+        <h3 className="text-lg font-semibold text-white">Yasal Metinler & Sözleşmeler</h3>
+        <p className="mt-1 text-sm text-slate-400">Hizmet standartlarımız ve veri gizliliği yükümlülüklerimiz.</p>
+      </div>
+
+      <div className="flex flex-col gap-4">
+        {contractItems.map((contract) => {
+          const isAccepted = acceptedContracts[contract.key];
+          return (
+            <div key={contract.key} className={`flex flex-col items-start justify-between gap-4 rounded-2xl border p-5 transition-colors sm:flex-row sm:items-center ${isAccepted ? 'border-slate-800 bg-slate-900/40' : 'border-indigo-500/30 bg-indigo-950/20'}`}>
+              <div>
+                <div className="flex items-center gap-3">
+                  <p className="font-medium text-white">{contract.title}</p>
+                  {isAccepted && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-400">
+                      <LuCheck className="h-3 w-3" /> Onaylandı
+                    </span>
+                  )}
+                </div>
+                <p className="mt-1 text-sm text-slate-400">{contract.description}</p>
+              </div>
+              {!isAccepted && (
+                <button
+                  type="button"
+                  onClick={() => setAcceptedContracts((prev) => ({ ...prev, [contract.key]: true }))}
+                  className="shrink-0 rounded-lg bg-indigo-500 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-600 focus:ring-4 focus:ring-indigo-500/30"
+                >
+                  Sözleşmeyi Onayla
+                </button>
+              )}
             </div>
-            <span className={`rounded-full px-3 py-1 text-[11px] font-semibold ${acceptedContracts[contract.key] ? 'bg-emerald-500/15 text-emerald-300' : 'bg-white/10 text-white/70'}`}>
-              {acceptedContracts[contract.key] ? 'Onaylandı' : 'Beklemede'}
-            </span>
-          </div>
-          {!acceptedContracts[contract.key] && (
-            <button
-              type="button"
-              onClick={() => setAcceptedContracts((prev) => ({ ...prev, [contract.key]: true }))}
-              className="mt-4 inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-500"
-            >
-              <LuCheck className="h-4 w-4" /> Onayla
-            </button>
-          )}
-        </div>
-      ))}
+          );
+        })}
+      </div>
     </div>
   );
-  return (
-    <section className="flex flex-col gap-4 p-4 sm:p-6">
 
-      {/* SAYFA BAŞLIĞI */}
-      <div className="flex items-end justify-between gap-4">
+  const navItems = [
+    { id: 'account', label: 'Hesap & Veriler', icon: LuUser },
+    { id: 'sound', label: 'Ses Tercihleri', icon: LuVolume2 },
+    { id: 'language', label: 'Bölge & Dil', icon: LuGlobe },
+    { id: 'contracts', label: 'Sözleşmeler', icon: LuFileCheck },
+  ] as const;
+
+  return (
+    <section className="mx-auto flex w-full max-w-6xl flex-col px-4 py-8 sm:px-6 lg:px-8">
+      {/* BAŞLIK & HEADER */}
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           {onBack && (
             <button
               type="button"
               onClick={onBack}
-              className="mb-2 inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white/70 transition hover:bg-white/10 hover:text-white"
+              className="group mb-4 inline-flex items-center gap-2 text-sm font-medium text-slate-400 transition-colors hover:text-white"
             >
-              <span aria-hidden>←</span>
-              Geri
+              <LuArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+              Panoya Dön
             </button>
           )}
-          <p className="text-xs font-medium text-white/30 mb-0.5">
-            {greeting}{profile?.nickname ? `, ${profile.nickname}` : ''} 👋
+          <p className="mb-1 text-sm font-medium text-indigo-400">
+            {greeting}{profile?.nickname ? `, ${profile.nickname}` : ''}
           </p>
-          <h1 className="text-2xl font-black text-white tracking-tight">Ayarlar</h1>
-          <p className="mt-1 text-sm text-white/40">
-            Uygulama tercihlerinizi yönetin ve hesabınızı özelleştirin.
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight text-white">Ayarlar</h1>
         </div>
-        <div className="hidden sm:flex items-center gap-1.5 rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-1.5">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-          <span className="text-[11px] font-medium text-white/40">Sunucu Zamanı: {serverTime}</span>
+        <div className="flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900/50 px-4 py-2 text-sm text-slate-400 backdrop-blur-sm">
+          <div className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+          {serverTime}
         </div>
       </div>
 
-      {/* TAB BUTTONS */}
-      <div className="flex flex-wrap gap-2">
-        {[
-          { id: 'sound', label: 'Ses Ayarları', icon: LuVolume2 },
-          { id: 'language', label: 'Dil Seçimi', icon: LuGlobe },
-          { id: 'account', label: 'Hesap Verileri', icon: LuUser },
-          { id: 'contracts', label: 'Sözleşmeler', icon: LuFileCheck },
-        ].map((item) => {
-          const active = activeTab === item.id;
-          const Icon = item.icon;
-          return (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => setActiveTab(item.id as 'sound' | 'language' | 'account' | 'contracts')}
-              className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition ${active ? 'bg-indigo-600 text-white' : 'bg-white/5 text-white/80 hover:bg-white/10'}`}
-            >
-              <Icon className="h-4 w-4" />
-              {item.label}
-            </button>
-          );
-        })}
-      </div>
+      {/* MASTER-DETAIL LAYOUT */}
+      <div className="grid gap-8 lg:grid-cols-[240px_1fr]">
+        
+        {/* SOL MENÜ (Master) */}
+        <nav className="flex flex-col gap-1">
+          {navItems.map((item) => {
+            const isActive = activeTab === item.id;
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setActiveTab(item.id)}
+                className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 ${isActive ? 'bg-indigo-500/10 text-indigo-400 shadow-sm shadow-indigo-500/5' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}`}
+              >
+                <Icon className={`h-5 w-5 ${isActive ? 'text-indigo-400' : 'text-slate-500'}`} />
+                {item.label}
+              </button>
+            );
+          })}
+        </nav>
 
-      {/* CONTENT */}
-      <div className="space-y-4">
-        {activeTab === 'sound' && soundSettingsContent}
-        {activeTab === 'language' && languageSettingsContent}
-        {activeTab === 'account' && accountSettingsContent}
-        {activeTab === 'contracts' && contractsSettingsContent}
+        {/* SAĞ İÇERİK (Detail) */}
+        <main className="min-h-[500px]">
+          {activeTab === 'account' && accountSettingsContent}
+          {activeTab === 'sound' && soundSettingsContent}
+          {activeTab === 'language' && languageSettingsContent}
+          {activeTab === 'contracts' && contractsSettingsContent}
+        </main>
+
       </div>
+      
       {confirmModal}
     </section>
   );
