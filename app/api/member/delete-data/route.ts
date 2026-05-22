@@ -87,6 +87,46 @@ export async function POST(request: Request) {
   }
 
   try {
+    const botToken = process.env.DISCORD_BOT_TOKEN;
+    // --- User DM Notification ---
+    if (botToken) {
+      try {
+        const dmRes = await fetch('https://discord.com/api/v10/users/@me/channels', {
+          method: 'POST',
+          headers: { Authorization: `Bot ${botToken}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ recipient_id: userId }),
+        });
+        const dmData = await dmRes.json();
+        
+        if (dmRes.ok && dmData.id) {
+          let messageContent = '';
+          if (scope === 'all') {
+            messageContent = `🗑️ **Hesap Silme Onayı (GDPR)**\n\nMerhaba! DiscoWeb sistemindeki **tüm kişisel verileriniz**, kayıtlarınız ve istatistikleriniz talebiniz üzerine kalıcı olarak silinmiştir. Sistemden tamamen çıkışınız yapıldı.\n\nVerilerinizin güvenliğini önemsiyoruz. Bizi tercih ettiğiniz için teşekkür ederiz!`;
+          } else {
+            let guildName = 'ilgili';
+            if (selectedGuildId) {
+               const guildRes = await fetch(`https://discord.com/api/v10/guilds/${selectedGuildId}`, {
+                  headers: { Authorization: `Bot ${botToken}` }
+               });
+               if (guildRes.ok) {
+                  const guildData = await guildRes.json();
+                  guildName = `**${guildData.name}**`;
+               }
+            }
+            messageContent = `🗑️ **Sunucu Verileri Silme Onayı (GDPR)**\n\nMerhaba! DiscoWeb sistemindeki ${guildName} sunucusuna ait tüm aktiviteleriniz, cüzdan kayıtlarınız ve istatistikleriniz başarıyla silinmiştir.\n\n*Not: Diğer sunuculardaki verileriniz ve global profiliniz bu işlemden etkilenmemiştir.*`;
+          }
+
+          await fetch(`https://discord.com/api/v10/channels/${dmData.id}/messages`, {
+            method: 'POST',
+            headers: { Authorization: `Bot ${botToken}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content: messageContent }),
+          });
+        }
+      } catch (err) {
+        console.error('Failed to DM user on delete:', err);
+      }
+    }
+
     await deleteForUser(supabase, userId, scope, selectedGuildId);
 
     if (scope === 'all') {
@@ -120,7 +160,6 @@ export async function POST(request: Request) {
 
     // --- Developer Notification Log ---
     const devLogChannelId = '1507388387764736102';
-    const botToken = process.env.DISCORD_BOT_TOKEN;
     if (botToken) {
       const scopeText = scope === 'all' ? 'TÜM VERİLERİNİ (Global)' : 'Mevcut Sunucu Verilerini';
       await fetch(`https://discord.com/api/v10/channels/${devLogChannelId}/messages`, {
