@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { LuVolume2, LuGlobe, LuUser, LuFileCheck, LuCheck, LuTriangleAlert, LuArrowLeft, LuShieldAlert, LuInfo, LuDownload, LuMessageSquare } from 'react-icons/lu';
+import { LuVolume2, LuGlobe, LuUser, LuFileCheck, LuCheck, LuTriangleAlert, LuArrowLeft, LuShieldAlert, LuInfo, LuDownload, LuMessageSquare, LuSave, LuUndo2 } from 'react-icons/lu';
 import { useLocale } from '@/contexts/LocaleContext';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import type { MemberProfile } from '../types';
@@ -21,7 +21,6 @@ export default function SettingsSection({
 }: SettingsSectionProps) {
   const { locale, setDiscordLocale } = useLocale();
 
-
   const greeting = (() => {
     const h = new Date().getHours();
     if (h < 6) return 'İyi geceler';
@@ -37,11 +36,78 @@ export default function SettingsSection({
   ];
 
   const [activeTab, setActiveTab] = useState<'sound' | 'language' | 'account' | 'contracts'>('account');
-  const [soundEnabled, setSoundEnabled] = useState(() => {
+  
+  // SAVED STATES (from local storage / context)
+  const [savedSoundEnabled, setSavedSoundEnabled] = useState(() => {
     if (typeof window === 'undefined') return true;
     const stored = window.localStorage.getItem('dashboard_music_enabled');
     return stored !== null ? stored === 'true' : true;
   });
+  const [savedSoundVolume, setSavedSoundVolume] = useState(() => {
+    if (typeof window === 'undefined') return 70;
+    const stored = window.localStorage.getItem('dashboard_music_volume');
+    if (stored !== null) {
+      const parsed = Number(stored);
+      if (Number.isFinite(parsed)) return Math.min(100, Math.max(0, parsed));
+    }
+    return 70;
+  });
+  const [savedAcceptedContracts, setSavedAcceptedContracts] = useState<Record<string, boolean>>(() => {
+    if (typeof window === 'undefined') return { privacy_policy: false, terms_of_service: false, data_processing: false };
+    const stored = window.localStorage.getItem('dashboard_accepted_contracts');
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored) as Record<string, boolean>;
+        return { privacy_policy: false, terms_of_service: false, data_processing: false, ...parsed };
+      } catch { /* ignore */ }
+    }
+    return { privacy_policy: false, terms_of_service: false, data_processing: false };
+  });
+
+  // DRAFT STATES (edited in UI before saving)
+  const [draftSoundEnabled, setDraftSoundEnabled] = useState(savedSoundEnabled);
+  const [draftSoundVolume, setDraftSoundVolume] = useState(savedSoundVolume);
+  const [draftAcceptedContracts, setDraftAcceptedContracts] = useState(savedAcceptedContracts);
+  const [draftLocale, setDraftLocale] = useState(locale);
+
+  // Sync initial locale to draft (handles next.js hydration)
+  useEffect(() => {
+    setDraftLocale(locale);
+  }, [locale]);
+
+  // Unsaved changes check
+  const hasUnsavedChanges = 
+    draftSoundEnabled !== savedSoundEnabled ||
+    draftSoundVolume !== savedSoundVolume ||
+    JSON.stringify(draftAcceptedContracts) !== JSON.stringify(savedAcceptedContracts) ||
+    draftLocale !== locale;
+
+  const handleSaveChanges = () => {
+    // 1. Commit to localStorage
+    window.localStorage.setItem('dashboard_music_enabled', String(draftSoundEnabled));
+    window.localStorage.setItem('dashboard_music_volume', String(draftSoundVolume));
+    window.localStorage.setItem('dashboard_accepted_contracts', JSON.stringify(draftAcceptedContracts));
+    window.dispatchEvent(new Event('dashboard-music-settings-changed'));
+
+    // 2. Commit locale to context
+    if (draftLocale !== locale) {
+      setDiscordLocale(draftLocale);
+    }
+
+    // 3. Sync saved state
+    setSavedSoundEnabled(draftSoundEnabled);
+    setSavedSoundVolume(draftSoundVolume);
+    setSavedAcceptedContracts(draftAcceptedContracts);
+  };
+
+  const handleResetChanges = () => {
+    setDraftSoundEnabled(savedSoundEnabled);
+    setDraftSoundVolume(savedSoundVolume);
+    setDraftAcceptedContracts(savedAcceptedContracts);
+    setDraftLocale(locale);
+  };
+
+  // Modals state
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteScope, setDeleteScope] = useState<'all' | 'current' | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -52,57 +118,6 @@ export default function SettingsSection({
   const [requestLoading, setRequestLoading] = useState(false);
   const [requestMessage, setRequestMessage] = useState<string | null>(null);
   const [requestError, setRequestError] = useState<string | null>(null);
-  const [soundVolume, setSoundVolume] = useState(() => {
-    if (typeof window === 'undefined') return 70;
-    const stored = window.localStorage.getItem('dashboard_music_volume');
-    if (stored !== null) {
-      const parsed = Number(stored);
-      if (Number.isFinite(parsed)) return Math.min(100, Math.max(0, parsed));
-    }
-    return 70;
-  });
-  const [acceptedContracts, setAcceptedContracts] = useState<Record<string, boolean>>(() => {
-    if (typeof window === 'undefined') return {
-      privacy_policy: false,
-      terms_of_service: false,
-      data_processing: false,
-    };
-    const stored = window.localStorage.getItem('dashboard_accepted_contracts');
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored) as Record<string, boolean>;
-        return {
-          privacy_policy: false,
-          terms_of_service: false,
-          data_processing: false,
-          ...parsed,
-        };
-      } catch {
-        // ignore invalid stored value
-      }
-    }
-    return {
-      privacy_policy: false,
-      terms_of_service: false,
-      data_processing: false,
-    };
-  });
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    window.localStorage.setItem('dashboard_music_enabled', String(soundEnabled));
-    window.localStorage.setItem('dashboard_music_volume', String(soundVolume));
-    window.dispatchEvent(new Event('dashboard-music-settings-changed'));
-  }, [soundEnabled, soundVolume]);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    window.localStorage.setItem('dashboard_accepted_contracts', JSON.stringify(acceptedContracts));
-  }, [acceptedContracts]);
-
-  const handleLocaleChange = (value: 'en' | 'tr') => {
-    setDiscordLocale(value);
-  };
 
   const openDeleteModal = (scope: 'all' | 'current') => {
     setDeleteScope(scope);
@@ -305,13 +320,13 @@ export default function SettingsSection({
           <button
             type="button"
             role="switch"
-            aria-checked={soundEnabled}
-            onClick={() => setSoundEnabled(!soundEnabled)}
-            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${soundEnabled ? 'bg-indigo-500' : 'bg-slate-700'}`}
+            aria-checked={draftSoundEnabled}
+            onClick={() => setDraftSoundEnabled(!draftSoundEnabled)}
+            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${draftSoundEnabled ? 'bg-indigo-500' : 'bg-slate-700'}`}
           >
             <span
               aria-hidden="true"
-              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${soundEnabled ? 'translate-x-5' : 'translate-x-0'}`}
+              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${draftSoundEnabled ? 'translate-x-5' : 'translate-x-0'}`}
             />
           </button>
         </div>
@@ -321,7 +336,7 @@ export default function SettingsSection({
         <div>
           <div className="flex items-center justify-between">
             <p className="font-medium text-white">Ses Seviyesi</p>
-            <span className="text-sm font-medium text-indigo-400">{soundVolume}%</span>
+            <span className="text-sm font-medium text-indigo-400">{draftSoundVolume}%</span>
           </div>
           <p className="mt-1 text-sm text-slate-400">Sistem genelindeki müzik ses seviyesini belirleyin.</p>
           <div className="mt-6 flex items-center gap-4">
@@ -330,8 +345,8 @@ export default function SettingsSection({
               type="range"
               min={0}
               max={100}
-              value={soundVolume}
-              onChange={(event) => setSoundVolume(Number(event.target.value))}
+              value={draftSoundVolume}
+              onChange={(event) => setDraftSoundVolume(Number(event.target.value))}
               className="h-2 w-full cursor-pointer appearance-none rounded-full bg-slate-800 accent-indigo-500 outline-none hover:bg-slate-700"
             />
           </div>
@@ -353,11 +368,11 @@ export default function SettingsSection({
             { id: 'tr', label: 'Türkçe', desc: 'Sistem dilini Türkçe yap' },
             { id: 'en', label: 'English', desc: 'Set system language to English' },
           ].map((lang) => {
-            const isActive = locale === lang.id;
+            const isActive = draftLocale === lang.id;
             return (
               <div 
                 key={lang.id}
-                onClick={() => handleLocaleChange(lang.id as 'tr' | 'en')}
+                onClick={() => setDraftLocale(lang.id as 'tr' | 'en')}
                 className={`group cursor-pointer rounded-xl border p-4 transition-all duration-200 ${isActive ? 'border-indigo-500 bg-indigo-500/10' : 'border-slate-800 bg-slate-900/50 hover:border-slate-700 hover:bg-slate-800/80'}`}
               >
                 <div className="flex items-center justify-between">
@@ -498,7 +513,7 @@ export default function SettingsSection({
 
       <div className="flex flex-col gap-4">
         {contractItems.map((contract) => {
-          const isAccepted = acceptedContracts[contract.key];
+          const isAccepted = draftAcceptedContracts[contract.key];
           return (
             <div key={contract.key} className={`flex flex-col items-start justify-between gap-4 rounded-2xl border p-5 transition-colors sm:flex-row sm:items-center ${isAccepted ? 'border-slate-800 bg-slate-900/40' : 'border-indigo-500/30 bg-indigo-950/20'}`}>
               <div>
@@ -515,7 +530,7 @@ export default function SettingsSection({
               {!isAccepted && (
                 <button
                   type="button"
-                  onClick={() => setAcceptedContracts((prev) => ({ ...prev, [contract.key]: true }))}
+                  onClick={() => setDraftAcceptedContracts((prev) => ({ ...prev, [contract.key]: true }))}
                   className="shrink-0 rounded-lg bg-indigo-500 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-600 focus:ring-4 focus:ring-indigo-500/30"
                 >
                   Sözleşmeyi Onayla
@@ -582,7 +597,7 @@ export default function SettingsSection({
         </aside>
 
         {/* SAĞ İÇERİK (Detail) */}
-        <main className="min-h-[500px]">
+        <main className="min-h-[500px] pb-24">
           {activeTab === 'account' && accountSettingsContent}
           {activeTab === 'sound' && soundSettingsContent}
           {activeTab === 'language' && languageSettingsContent}
@@ -591,6 +606,40 @@ export default function SettingsSection({
 
       </div>
       
+      {/* UNSAVED CHANGES BANNER */}
+      {hasUnsavedChanges && (
+        <div className="fixed bottom-0 left-0 z-40 flex w-full justify-center p-4 sm:p-6 animate-in slide-in-from-bottom-5 duration-300">
+          <div className="flex w-full max-w-4xl flex-col gap-4 rounded-2xl border border-indigo-500/30 bg-slate-900/95 p-4 px-6 shadow-[0_-8px_30px_-15px_rgba(99,102,241,0.3)] backdrop-blur-md sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-500/10">
+                <LuInfo className="h-5 w-5 text-indigo-400" />
+              </div>
+              <p className="text-sm font-medium text-slate-200">
+                Dikkat — kaydedilmemiş değişiklikleriniz var!
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={handleResetChanges}
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-lg px-4 text-sm font-medium text-slate-400 transition-colors hover:bg-slate-800 hover:text-white"
+              >
+                <LuUndo2 className="h-4 w-4" />
+                Sıfırla
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveChanges}
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-indigo-500 px-5 text-sm font-medium text-white transition-all hover:bg-indigo-600 focus:outline-none focus:ring-4 focus:ring-indigo-500/30"
+              >
+                <LuSave className="h-4 w-4" />
+                Değişiklikleri Kaydet
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {confirmModal}
       {requestConfirmModal}
     </section>
