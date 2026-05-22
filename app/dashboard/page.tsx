@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import fetchWithCreds from '@/lib/fetchWithCreds';
@@ -705,6 +705,10 @@ export default function DashboardPage() {
     };
 
     const loadBadges = async () => {
+      const fallbackBadgeInfo = {
+        currentBadge: null, nextBadge: null, tagDays: 0, daysToNext: null, hasTag: false, earnMultiplier: 1, allTiers: [],
+        currentBoosterBadge: null, nextBoosterBadge: null, boosterMonths: 0, monthsToNext: null, isBooster: false, boosterEarnMultiplier: 1, allBoosterTiers: []
+      };
       try {
         const response = await fetchWithCreds('/api/member/badges');
         if (response.ok) {
@@ -712,10 +716,10 @@ export default function DashboardPage() {
           setBadgeInfo(data);
         } else {
           // API hata döndürdüğünde loading ekranında takılmaması için boş set et
-          setBadgeInfo({ currentBadge: null, nextBadge: null, tagDays: 0, daysToNext: null, hasTag: false, earnMultiplier: 1, allTiers: [] });
+          setBadgeInfo(fallbackBadgeInfo);
         }
       } catch {
-        setBadgeInfo({ currentBadge: null, nextBadge: null, tagDays: 0, daysToNext: null, hasTag: false, earnMultiplier: 1, allTiers: [] });
+        setBadgeInfo(fallbackBadgeInfo);
       }
     };
 
