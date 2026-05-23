@@ -325,22 +325,23 @@ export default function WeeklyTasksSection({ initialTasks }: WeeklyTasksSectionP
                     </span>
                 </div>
 
-                  {requiredValue > 0 && (
+                {requiredValue > 0 && (
                   <div className="mt-4">
                     <div className="mb-2 flex items-center justify-between text-xs text-white/50">
-                        <span>{t('tasks_progress_label')}</span>
+                      <span>{t('tasks_progress_label')}</span>
                       <span className="inline-flex items-center gap-1">
                         <LuTrendingUp className="h-3.5 w-3.5" />
                         {progressValue}/{requiredValue}
                       </span>
-                      </div>
+                    </div>
                     <div className="h-2.5 w-full overflow-hidden rounded-full bg-white/10">
                       <div
                         className="h-full rounded-full bg-gradient-to-r from-indigo-400 via-cyan-400 to-emerald-400 transition-[width] duration-500"
                         style={{ width: `${progressPct}%` }}
                       />
-                      </div>
-                  )}
+                    </div>
+                  </div>
+                )}
 
                 <div className="mt-5 flex items-center justify-between">
                   <p className="text-xs text-white/45">{t('tasks_status_hint')}</p>
