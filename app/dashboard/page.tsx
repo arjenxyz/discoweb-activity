@@ -23,7 +23,6 @@ import NotificationsModal from './components/NotificationsModal';
 import TransferModal from './components/TransferModal';
 import PromotionsModal from './components/PromotionsModal';
 import DiscountsModal from './components/DiscountsModal';
-import EarningsModal from './components/EarningsModal';
 import MailDetailModal from './components/MailDetailModal';
 import ActivityReadinessGate, { type ActivityReadiness } from './components/ActivityReadinessGate';
 import SplashScreen from './components/SplashScreen';
@@ -210,7 +209,6 @@ export default function DashboardPage() {
   const [discountError, setDiscountError] = useState<string | null>(null);
   const [discountSuccess, setDiscountSuccess] = useState<string | null>(null);
   const [discountLoading, setDiscountLoading] = useState(false);
-  const [earningsModalOpen, setEarningsModalOpen] = useState(false);
   const [headerServer, setHeaderServer] = useState({
     data: null as { id: string; name: string; iconUrl: string | null } | null,
     loading: true,
@@ -1374,7 +1372,6 @@ export default function DashboardPage() {
             onOpenTransfer: handleOpenTransfer,
             onOpenPromotions: openPromotionsModal,
             onOpenDiscounts: openDiscountsModal,
-            onOpenEarnings: () => setEarningsModalOpen(true),
             menuRef: settingsMenuRef,
           }}
         />
@@ -1681,11 +1678,6 @@ export default function DashboardPage() {
           }}
         />
       )}
-
-      <EarningsModal
-        open={earningsModalOpen}
-        onClose={() => setEarningsModalOpen(false)}
-      />
 
       <DiscountsModal
         isOpen={discountsModalOpen}

@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 
-import { LuHouse, LuMail, LuStore, LuSettings, LuChevronRight, LuSend, LuTag, LuCompass, LuLayoutGrid, LuShieldCheck, LuNewspaper, LuGamepad2, LuTrendingUp, LuChartBar } from 'react-icons/lu';
+import { LuHouse, LuMail, LuStore, LuSettings, LuChevronRight, LuSend, LuTag, LuCompass, LuLayoutGrid, LuShieldCheck, LuNewspaper, LuGamepad2, LuChartBar } from 'react-icons/lu';
 import Image from 'next/image';
 import DiscordAgreementButton from '@/components/DiscordAgreementButton';
 import type { Notification, Section } from '../types';
@@ -53,7 +53,6 @@ type DashboardHeaderProps = {
     onOpenPromotions: () => void;
     onOpenDiscounts: () => void;
     onOpenReferral?: () => void;
-    onOpenEarnings?: () => void;
     menuRef: RefObject<HTMLDivElement | null>;
   };
   maintenance?: {
@@ -331,7 +330,7 @@ export default function DashboardHeader({
                       <LuChevronRight className="h-3.5 w-3.5 text-white/30" />
                     </button>
 
-                    <div className="grid gap-1.5 pt-1 grid-cols-4">
+                    <div className="grid gap-1.5 pt-1 grid-cols-3">
                       <button
                         type="button"
                         onClick={settings.onOpenTransfer}
@@ -347,14 +346,6 @@ export default function DashboardHeader({
                       >
                         <LuTag className="h-3.5 w-3.5" />
                         {t('dashboard_promotions')}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => { setIsProfileOpen(false); settings.onOpenEarnings?.(); }}
-                        className="flex flex-col items-center gap-1 rounded-xl border border-emerald-500/20 bg-emerald-500/[0.08] py-2.5 text-xs text-emerald-400 transition hover:bg-emerald-500/15"
-                      >
-                        <LuTrendingUp className="h-3.5 w-3.5" />
-                        {t('dashboard_earnings_info')}
                       </button>
                       <button
                         type="button"
@@ -558,15 +549,12 @@ export default function DashboardHeader({
                 <LuChevronRight className="h-3.5 w-3.5 text-white/30" />
               </button>
 
-              <div className="grid gap-1.5 pt-1 grid-cols-4">
+              <div className="grid gap-1.5 pt-1 grid-cols-3">
                 <button type="button" onClick={() => { setIsProfileOpen(false); settings.onOpenTransfer(); }} className="flex flex-col items-center gap-1 rounded-xl border border-white/[0.06] bg-white/[0.03] py-2.5 text-xs text-white/60 transition hover:bg-white/[0.07] hover:text-white">
                   <LuSend className="h-3.5 w-3.5" />{t('dashboard_papel_transfer')}
                 </button>
                 <button type="button" onClick={() => { setIsProfileOpen(false); settings.onOpenPromotions(); }} className="flex flex-col items-center gap-1 rounded-xl border border-white/[0.06] bg-white/[0.03] py-2.5 text-xs text-white/60 transition hover:bg-white/[0.07] hover:text-white">
                   <LuTag className="h-3.5 w-3.5" />{t('dashboard_promotions')}
-                </button>
-                <button type="button" onClick={() => { setIsProfileOpen(false); settings.onOpenEarnings?.(); }} className="flex flex-col items-center gap-1 rounded-xl border border-emerald-500/20 bg-emerald-500/[0.08] py-2.5 text-xs text-emerald-400 transition hover:bg-emerald-500/15">
-                  <LuTrendingUp className="h-3.5 w-3.5" />{t('dashboard_earnings_info')}
                 </button>
                 <button type="button" onClick={() => { setIsProfileOpen(false); onOpenLeaderboard?.(); }} className="flex flex-col items-center gap-1 rounded-xl border border-white/[0.06] bg-white/[0.03] py-2.5 text-xs text-white/60 transition hover:bg-white/[0.07] hover:text-white">
                   <LuChartBar className="h-3.5 w-3.5" />{t('dashboard_nav_leaderboard')}
