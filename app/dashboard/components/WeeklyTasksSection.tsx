@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { LuCircleCheck, LuClock, LuListChecks, LuLock, LuSparkles } from 'react-icons/lu';
+import { LuCircleCheck, LuClock, LuGift, LuListChecks, LuLock, LuSparkles, LuTarget, LuTrendingUp } from 'react-icons/lu';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { useT } from '@/contexts/LocaleContext';
 
@@ -28,6 +28,8 @@ type WeeklyTasksResponse = {
 type WeeklyTasksSectionProps = {
   initialTasks?: WeeklyTasksResponse | null;
 };
+
+type TaskFilter = 'all' | WeeklyTaskItem['status'];
 
 const formatRange = (start: string, end: string, locale?: string) => {
   try {
@@ -91,12 +93,20 @@ const getWeeklyTaskError = (code: string | undefined, detail: string | undefined
   }
 };
 
+const statusOrder: Record<WeeklyTaskItem['status'], number> = {
+  claimable: 0,
+  in_progress: 1,
+  locked: 2,
+  claimed: 3,
+};
+
 export default function WeeklyTasksSection({ initialTasks }: WeeklyTasksSectionProps) {
   const t = useT();
   const [tasksData, setTasksData] = useState<WeeklyTasksResponse | null>(initialTasks ?? null);
   const [loading, setLoading] = useState(!initialTasks);
   const [error, setError] = useState<string | null>(null);
   const [claimingId, setClaimingId] = useState<string | null>(null);
+  const [filter, setFilter] = useState<TaskFilter>('all');
 
   const loadTasks = useCallback(async () => {
     setLoading(true);
@@ -151,20 +161,89 @@ export default function WeeklyTasksSection({ initialTasks }: WeeklyTasksSectionP
     return `${t('tasks_week_label')} · ${formatRange(tasksData.weekStart, tasksData.weekEnd)}`;
   }, [tasksData, t]);
 
+  const sortedTasks = useMemo(() => {
+    if (!tasksData?.tasks) return [];
+    return [...tasksData.tasks].sort((a, b) => statusOrder[a.status] - statusOrder[b.status]);
+  }, [tasksData]);
+
+  const filteredTasks = useMemo(() => {
+    if (filter === 'all') return sortedTasks;
+    return sortedTasks.filter((task) => task.status === filter);
+  }, [sortedTasks, filter]);
+
+  const taskStats = useMemo(() => {
+    const base = { total: 0, claimable: 0, claimed: 0, in_progress: 0, locked: 0, rewardTotal: 0 };
+    if (!tasksData?.tasks?.length) return base;
+    return tasksData.tasks.reduce(
+      (acc, task) => {
+        acc.total += 1;
+        acc.rewardTotal += Number(task.rewardMari ?? 0);
+        acc[task.status] += 1;
+        return acc;
+      },
+      { ...base },
+    );
+  }, [tasksData]);
+
+  const completionRate = useMemo(() => {
+    if (!taskStats.total) return 0;
+    return Math.round((taskStats.claimed / taskStats.total) * 100);
+  }, [taskStats]);
+
+  const filters: Array<{ id: TaskFilter; label: string; count: number }> = useMemo(
+    () => [
+      { id: 'all', label: t('tasks_week_label'), count: taskStats.total },
+      { id: 'claimable', label: t('tasks_status_claimable'), count: taskStats.claimable },
+      { id: 'in_progress', label: t('tasks_status_in_progress'), count: taskStats.in_progress },
+      { id: 'claimed', label: t('tasks_status_claimed'), count: taskStats.claimed },
+    ],
+    [t, taskStats],
+  );
+
   return (
-    <section className="space-y-6">
-      <header className="rounded-3xl border border-white/10 bg-gradient-to-br from-[#141922] via-[#0f1420] to-[#0b111a] p-6">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.4em] text-white/40">{t('tasks_kicker')}</p>
-            <h2 className="mt-2 text-2xl font-semibold text-white">{t('tasks_title')}</h2>
-            <p className="mt-2 text-sm text-white/60">{t('tasks_subtitle')}</p>
+    <section className="space-y-5">
+      <header className="overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#11182a] via-[#101728] to-[#0b0f1a] p-6 shadow-[0_20px_80px_rgba(3,8,20,0.35)]">
+        <div className="relative z-10">
+          <div className="flex flex-wrap items-start justify-between gap-5">
+            <div className="max-w-2xl">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-indigo-200/60">{t('tasks_kicker')}</p>
+              <h2 className="mt-2 text-2xl font-semibold text-white">{t('tasks_title')}</h2>
+              <p className="mt-2 text-sm text-white/60">{t('tasks_subtitle')}</p>
+              <p className="mt-3 inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/70">
+                <LuListChecks className="h-3.5 w-3.5 text-indigo-200/80" />
+                {weekLabel}
+              </p>
+            </div>
+
+            <div className="grid min-w-[220px] gap-2">
+              <div className="rounded-2xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3">
+                <p className="text-[11px] text-emerald-100/75">{t('tasks_status_claimable')}</p>
+                <p className="mt-1 text-xl font-bold text-emerald-100">{taskStats.claimable}</p>
+              </div>
+              <div className="rounded-2xl border border-sky-500/25 bg-sky-500/10 px-4 py-3">
+                <p className="text-[11px] text-sky-100/75">{t('tasks_status_claimed')}</p>
+                <p className="mt-1 text-xl font-bold text-sky-100">{taskStats.claimed}</p>
+              </div>
+            </div>
           </div>
-          <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/70">
-            <LuListChecks className="h-4 w-4" />
-            <span>{weekLabel}</span>
+
+          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3">
+              <p className="text-[11px] text-white/50">{t('tasks_progress_label')}</p>
+              <p className="mt-1 text-lg font-semibold text-white">{completionRate}%</p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3">
+              <p className="text-[11px] text-white/50">{t('tasks_week_label')}</p>
+              <p className="mt-1 text-lg font-semibold text-white">{taskStats.total}</p>
+            </div>
+            <div className="rounded-2xl border border-violet-500/20 bg-violet-500/10 px-4 py-3">
+              <p className="text-[11px] text-violet-100/75">Toplam Ödül</p>
+              <p className="mt-1 text-lg font-semibold text-violet-100">{taskStats.rewardTotal} Mari</p>
+            </div>
           </div>
         </div>
+        <div className="pointer-events-none absolute -right-20 -top-16 h-64 w-64 rounded-full bg-indigo-500/20 blur-3xl" />
+        <div className="pointer-events-none absolute -left-20 bottom-0 h-40 w-40 rounded-full bg-cyan-400/15 blur-3xl" />
       </header>
 
       {loading && (
@@ -186,8 +265,26 @@ export default function WeeklyTasksSection({ initialTasks }: WeeklyTasksSectionP
       )}
 
       {!loading && !error && tasksData?.tasks?.length ? (
-        <div className="grid gap-4 lg:grid-cols-2">
-          {tasksData.tasks.map((task) => {
+        <>
+          <div className="flex flex-wrap items-center gap-2">
+            {filters.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setFilter(item.id)}
+                className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                  filter === item.id
+                    ? 'border-indigo-400/40 bg-indigo-500/20 text-white'
+                    : 'border-white/10 bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                {item.label} <span className="ml-1 text-white/45">{item.count}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="space-y-3">
+            {filteredTasks.map((task) => {
             const badge = statusBadge(task.status, t);
             const Icon = badge.icon;
             const progressValue = task.progress ?? 0;
@@ -195,13 +292,25 @@ export default function WeeklyTasksSection({ initialTasks }: WeeklyTasksSectionP
             const progressPct = requiredValue > 0 ? Math.min(100, Math.round((progressValue / requiredValue) * 100)) : 0;
 
             return (
-              <div key={task.id} className="rounded-2xl border border-white/10 bg-[#0f1420] p-5">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-lg font-semibold text-white">{task.title}</p>
-                    {task.description && (
-                      <p className="mt-1 text-sm text-white/60">{task.description}</p>
-                    )}
+              <article
+                key={task.id}
+                className="rounded-2xl border border-white/10 bg-gradient-to-br from-[#101523] to-[#0d121d] p-5 shadow-[0_10px_35px_rgba(0,0,0,0.25)]"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="flex min-w-[260px] flex-1 items-start gap-3">
+                    <div className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/70">
+                      {task.status === 'claimable' ? (
+                        <LuGift className="h-4.5 w-4.5 text-emerald-300" />
+                      ) : task.status === 'claimed' ? (
+                        <LuCircleCheck className="h-4.5 w-4.5 text-sky-300" />
+                      ) : (
+                        <LuTarget className="h-4.5 w-4.5 text-indigo-200/80" />
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-base font-semibold text-white">{task.title}</p>
+                      {task.description && <p className="mt-1 text-sm text-white/60">{task.description}</p>}
+                    </div>
                   </div>
                   <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold ${badge.className}`}>
                     <Icon className="h-3.5 w-3.5" />
@@ -209,26 +318,29 @@ export default function WeeklyTasksSection({ initialTasks }: WeeklyTasksSectionP
                   </span>
                 </div>
 
-                <div className="mt-4 space-y-3">
-                  <div className="flex flex-wrap items-center gap-2 text-xs text-white/60">
+                <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-white/60">
                     <span className="rounded-lg border border-white/10 bg-white/5 px-2 py-1">{getRequirementLabel(task, t)}</span>
-                    <span className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2 py-1 text-emerald-100/80">
+                  <span className="rounded-lg border border-violet-500/30 bg-violet-500/10 px-2 py-1 text-violet-100/85">
                       +{task.rewardMari} Mari
                     </span>
-                  </div>
+                </div>
 
                   {requiredValue > 0 && (
-                    <div>
-                      <div className="flex items-center justify-between text-xs text-white/50">
+                  <div className="mt-4">
+                    <div className="mb-2 flex items-center justify-between text-xs text-white/50">
                         <span>{t('tasks_progress_label')}</span>
-                        <span>{progressValue}/{requiredValue}</span>
+                      <span className="inline-flex items-center gap-1">
+                        <LuTrendingUp className="h-3.5 w-3.5" />
+                        {progressValue}/{requiredValue}
+                      </span>
                       </div>
-                      <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-white/10">
-                        <div className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-cyan-400" style={{ width: `${progressPct}%` }} />
+                    <div className="h-2.5 w-full overflow-hidden rounded-full bg-white/10">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-indigo-400 via-cyan-400 to-emerald-400 transition-[width] duration-500"
+                        style={{ width: `${progressPct}%` }}
+                      />
                       </div>
-                    </div>
                   )}
-                </div>
 
                 <div className="mt-5 flex items-center justify-between">
                   <p className="text-xs text-white/45">{t('tasks_status_hint')}</p>
@@ -245,10 +357,16 @@ export default function WeeklyTasksSection({ initialTasks }: WeeklyTasksSectionP
                     <span className="text-xs font-semibold text-white/40">{t(`tasks_status_${task.status}`)}</span>
                   )}
                 </div>
-              </div>
+              </article>
             );
           })}
-        </div>
+            {filteredTasks.length === 0 && (
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-white/60">
+                {t('tasks_empty')}
+              </div>
+            )}
+          </div>
+        </>
       ) : null}
 
       {!loading && !tasksData && (
