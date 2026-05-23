@@ -20,7 +20,7 @@ import DiscoverSection from './components/DiscoverSection';
 import TagBadgeSection from './components/TagBadgeSection';
 import NotificationDetailModal from './components/NotificationDetailModal';
 import NotificationsModal from './components/NotificationsModal';
-import TransferModal from './components/TransferModal';
+import TransferModal, { TransferConfirmModal } from './components/TransferModal';
 import PromotionsModal from './components/PromotionsModal';
 import DiscountsModal from './components/DiscountsModal';
 import MailDetailModal from './components/MailDetailModal';
@@ -1575,69 +1575,18 @@ export default function DashboardPage() {
         onSubmit={handleTransfer}
       />
       {transferConfirmOpen && transferRecipientProfile && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-6">
-          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#0b0d12] p-6 shadow-2xl">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-lg font-semibold text-white">{t('transfer_confirm_title')}</p>
-                <p className="text-xs text-white/50">{t('transfer_confirm_subtitle')}</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setTransferConfirmOpen(false)}
-                className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/60 transition hover:border-white/30 hover:text-white"
-              >
-                {t('transfer_close_button')}
-              </button>
-            </div>
-
-            <div className="mt-5 space-y-4">
-              <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5">
-                <div className="h-10 w-10 overflow-hidden rounded-full border border-white/10 bg-white/5">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={transferRecipientProfile.avatarUrl || '/gif/cat.gif'}
-                    alt="avatar"
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-white truncate">
-                    {transferRecipientProfile.displayName || transferRecipientProfile.nickname || transferRecipientProfile.username}
-                  </p>
-                  <p className="text-xs text-white/40 truncate">{transferRecipientProfile.username}</p>
-                </div>
-              </div>
-
-              <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/80 space-y-1">
-                <p>{t('transfer_confirm_amount', { amount: moneyFormatter.format(Number(transferAmount || 0)) })}</p>
-                <p>{t('transfer_confirm_tax', { amount: moneyFormatter.format(Number((Number(transferAmount || 0) * transferTaxRate).toFixed(2))) })}</p>
-                <p>{t('transfer_confirm_total_debit', { amount: moneyFormatter.format(Number((Number(transferAmount || 0) * (1 + transferTaxRate)).toFixed(2))) })}</p>
-                <p>{t('transfer_confirm_mari_fee', { amount: String(transferMariFee) })}</p>
-              </div>
-
-              {transferError && <p className="text-sm text-rose-300">{transferError}</p>}
-            </div>
-
-            <div className="mt-6 flex items-center justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setTransferConfirmOpen(false)}
-                className="rounded-full border border-white/10 px-4 py-2 text-xs text-white/60 transition hover:border-white/30 hover:text-white"
-              >
-                {t('transfer_confirm_cancel')}
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmTransfer}
-                disabled={transferLoading}
-                className="rounded-full bg-indigo-500 px-4 py-2 text-xs font-semibold text-white transition hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {transferLoading ? t('transfer_submitting') : t('transfer_confirm_submit')}
-              </button>
-            </div>
-          </div>
-        </div>
+        <TransferConfirmModal
+          open={transferConfirmOpen}
+          loading={transferLoading}
+          error={transferError}
+          recipientProfile={transferRecipientProfile}
+          amount={moneyFormatter.format(Number(transferAmount || 0))}
+          taxAmount={moneyFormatter.format(Number((Number(transferAmount || 0) * transferTaxRate).toFixed(2)))}
+          totalDebit={moneyFormatter.format(Number((Number(transferAmount || 0) * (1 + transferTaxRate)).toFixed(2)))}
+          mariFee={transferMariFee}
+          onClose={() => setTransferConfirmOpen(false)}
+          onConfirm={handleConfirmTransfer}
+        />
       )}
       <PromotionsModal
         isOpen={promotionsModalOpen}
