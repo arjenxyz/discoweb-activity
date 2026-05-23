@@ -16,8 +16,9 @@ export async function GET() {
 
   const { data } = await supabase
     .from('ads')
-    .select('id, invite_url, server_name, server_description, server_icon, member_count, online_count, target_guild_id, mari_reward, task_enabled')
+    .select('id, invite_url, server_name, server_description, server_icon, member_count, online_count, target_guild_id, mari_reward, task_enabled, sort_order')
     .eq('active', true)
+    .order('sort_order', { ascending: false })
     .order('created_at', { ascending: false });
 
   return NextResponse.json({ ads: data ?? [] });

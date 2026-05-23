@@ -256,7 +256,7 @@ export default function DiscoverSection() {
           <span className="text-sm">{t('loading')}</span>
         </div>
       ) : ads.length > 0 ? (
-        <div className="grid gap-4">
+        <div className="grid gap-4 lg:grid-cols-2">
           {ads.map((ad) => {
             const memberStatus = memberStatuses[ad.id] || 'loading';
             const isJoined = joinedSet[ad.id];
