@@ -60,6 +60,7 @@ type DashboardHeaderProps = {
     showIndicator: boolean;
   };
   mailUnreadCount?: number;
+  duyuruEveryoneUnreadCount?: number;
   onOpenLeaderboard?: () => void;
   openLink?: (url: string) => Promise<void>;
 };
@@ -84,6 +85,7 @@ export default function DashboardHeader({
   profile,
   server,
   mailUnreadCount = 0,
+  duyuruEveryoneUnreadCount = 0,
   settings,
   openLink,
 }: DashboardHeaderProps) {
@@ -475,10 +477,18 @@ export default function DashboardHeader({
                         >
                           <span className={isActive ? 'text-white' : 'text-white/40'}>{item.icon}</span>
                           <span>{item.label}</span>
-                          {isActive && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-white" />}
+                          {isActive
+                            && !(item.key === 'mail' && mailUnreadCount > 0)
+                            && !(item.key === 'duyuru' && duyuruEveryoneUnreadCount > 0)
+                            && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-white" />}
                           {item.key === 'mail' && mailUnreadCount > 0 && (
                             <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white">
                               {mailUnreadCount > 9 ? '9+' : mailUnreadCount}
+                            </span>
+                          )}
+                          {item.key === 'duyuru' && duyuruEveryoneUnreadCount > 0 && (
+                            <span className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white">
+                              {duyuruEveryoneUnreadCount > 9 ? '9+' : duyuruEveryoneUnreadCount}
                             </span>
                           )}
                         </button>

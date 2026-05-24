@@ -11,6 +11,7 @@ type SidebarNavProps = {
   unauthorized: boolean;
   onNavigate: (section: Section) => void;
   profile: MemberProfile | null;
+  duyuruEveryoneUnreadCount?: number;
 };
 
 export default function SidebarNav({
@@ -18,6 +19,7 @@ export default function SidebarNav({
   unauthorized,
   onNavigate,
   profile,
+  duyuruEveryoneUnreadCount = 0,
 }: SidebarNavProps) {
   const t = useT();
   const [collapsed, setCollapsed] = useState(false);
@@ -169,8 +171,21 @@ export default function SidebarNav({
                       {label}
                     </span>
                   )}
-                  {!collapsed && active && (
+                  {!collapsed && key === 'duyuru' && duyuruEveryoneUnreadCount > 0 && (
+                    <span className="relative ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white">
+                      {duyuruEveryoneUnreadCount > 9 ? '9+' : duyuruEveryoneUnreadCount}
+                    </span>
+                  )}
+                  {!collapsed && active && key !== 'duyuru' && (
                     <span className="relative ml-auto h-1.5 w-1.5 rounded-full bg-white/60" />
+                  )}
+                  {!collapsed && active && key === 'duyuru' && duyuruEveryoneUnreadCount === 0 && (
+                    <span className="relative ml-auto h-1.5 w-1.5 rounded-full bg-white/60" />
+                  )}
+                  {collapsed && key === 'duyuru' && duyuruEveryoneUnreadCount > 0 && (
+                    <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-500 px-0.5 text-[8px] font-bold text-white">
+                      {duyuruEveryoneUnreadCount > 9 ? '9+' : duyuruEveryoneUnreadCount}
+                    </span>
                   )}
                 </button>
               );

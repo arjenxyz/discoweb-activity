@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServiceClient } from '@/lib/supabaseServiceClient';
 import { requireSessionUser } from '@/lib/auth';
+import { announcementMentionsEveryone, splitEveryonePing } from '@/lib/announcementEveryone';
 
 export async function GET(request: NextRequest) {
   try {
@@ -20,6 +21,7 @@ export async function GET(request: NextRequest) {
         created_at,
         author_name,
         author_avatar_url,
+        mentions_everyone,
         announcement_translations!inner (
           title,
           content,
@@ -71,6 +73,19 @@ export async function GET(request: NextRequest) {
 
     const auth = await requireSessionUser(request);
     const userId = auth.ok ? auth.userId : null;
+    const announcementIdsForRead = data?.map((item) => item.id) ?? [];
+    const readSet = new Set<string>();
+
+    if (userId && announcementIdsForRead.length > 0) {
+      const { data: readRows } = await supabaseServiceClient
+        .from('announcement_reads')
+        .select('announcement_id')
+        .eq('user_id', userId)
+        .in('announcement_id', announcementIdsForRead);
+
+      readRows?.forEach((row) => readSet.add(row.announcement_id));
+    }
+
     const pollIds = Array.from(pollsByAnnouncementId.values()).map((poll) => poll.id);
 
     const voteCounts = new Map<string, number>();
@@ -93,13 +108,20 @@ export async function GET(request: NextRequest) {
     // Transform data to match expected format
     const messages = data?.map(item => {
       const poll = pollsByAnnouncementId.get(item.id);
+      const title = item.announcement_translations[0]?.title || '';
+      const body = item.announcement_translations[0]?.content || '';
+      const mentionsEveryone = Boolean(item.mentions_everyone)
+        || announcementMentionsEveryone(title, body);
+
       return {
         id: item.id,
-        title: item.announcement_translations[0]?.title || '',
-        body: item.announcement_translations[0]?.content || '',
+        title,
+        body,
         created_at: item.created_at,
         author_name: item.author_name ?? 'System',
         author_avatar_url: item.author_avatar_url ?? null,
+        mentions_everyone: mentionsEveryone,
+        is_read: userId ? readSet.has(item.id) : true,
         poll: poll
           ? {
               id: poll.id,
@@ -151,10 +173,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Mesaj verilerini al
-    const { title, body, lang = 'tr', poll } = await request.json();
+    const { title, body, lang = 'tr', poll, mentionsEveryone: mentionsEveryoneFlag } = await request.json();
     if (!title?.trim() || !body?.trim()) {
       return NextResponse.json({ error: 'Başlık ve mesaj içeriği gerekli' }, { status: 400 });
     }
+
+    const titleTrimmed = title.trim();
+    const bodyTrimmed = body.trim();
+    const mentionsEveryone = Boolean(mentionsEveryoneFlag)
+      || announcementMentionsEveryone(titleTrimmed, bodyTrimmed);
 
     const pollQuestion = poll?.question?.trim?.() ?? '';
     const pollOptions = Array.isArray(poll?.options)
@@ -191,6 +218,7 @@ export async function POST(request: NextRequest) {
         is_active: true,
         author_name: authorName,
         author_avatar_url: authorAvatarUrl,
+        mentions_everyone: mentionsEveryone,
       })
       .select()
       .single();
@@ -206,8 +234,8 @@ export async function POST(request: NextRequest) {
       .insert({
         announcement_id: announcement.id,
         lang_code: lang,
-        title: title.trim(),
-        content: body.trim(),
+        title: titleTrimmed,
+        content: bodyTrimmed,
       })
       .select()
       .single();
@@ -276,17 +304,22 @@ export async function POST(request: NextRequest) {
         if (configData?.value) {
           const channelId = configData.value;
 
-          // Discord embed oluştur
+          const embedDescription = splitEveryonePing(bodyTrimmed).body || bodyTrimmed;
           const embed = {
-            title: title.trim(),
-            description: body.trim(),
-            color: 0x5865F2, // Discord blurple
+            title: titleTrimmed,
+            description: embedDescription,
+            color: mentionsEveryone ? 0xFEE75C : 0x5865F2,
             author: {
               name: authorName,
               icon_url: authorAvatarUrl,
             },
             timestamp: new Date().toISOString(),
           };
+
+          const discordPayload: { content?: string; embeds: typeof embed[] } = { embeds: [embed] };
+          if (mentionsEveryone) {
+            discordPayload.content = '@everyone';
+          }
 
           // Discord API'ye mesaj gönder
           const discordResponse = await fetch(
@@ -297,7 +330,7 @@ export async function POST(request: NextRequest) {
                 Authorization: `Bot ${BOT_TOKEN}`,
                 'Content-Type': 'application/json',
               },
-              body: JSON.stringify({ embeds: [embed] }),
+              body: JSON.stringify(discordPayload),
             }
           );
 

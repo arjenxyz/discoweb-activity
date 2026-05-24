@@ -1051,6 +1051,47 @@ export default function DashboardPage() {
     [mailItems],
   );
 
+  const [duyuruEveryoneUnreadCount, setDuyuruEveryoneUnreadCount] = useState(0);
+
+  const refreshDuyuruEveryoneCount = useCallback(async () => {
+    if (unauthorized) {
+      setDuyuruEveryoneUnreadCount(0);
+      return;
+    }
+    try {
+      const res = await fetchWithCreds(apiUrl('/api/duyuru/unread-everyone'), { cache: 'no-store' });
+      if (!res.ok) return;
+      const data = (await res.json()) as { count?: number };
+      setDuyuruEveryoneUnreadCount(Number(data.count ?? 0));
+    } catch {
+      // ignore
+    }
+  }, [unauthorized]);
+
+  useEffect(() => {
+    void refreshDuyuruEveryoneCount();
+    const onRefresh = () => { void refreshDuyuruEveryoneCount(); };
+    window.addEventListener('duyuru:refresh-count', onRefresh);
+    return () => window.removeEventListener('duyuru:refresh-count', onRefresh);
+  }, [refreshDuyuruEveryoneCount]);
+
+  useEffect(() => {
+    if (effectiveSection !== 'duyuru' || unauthorized) return;
+    void (async () => {
+      try {
+        await fetchWithCreds(apiUrl('/api/duyuru/read'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({}),
+        });
+        setDuyuruEveryoneUnreadCount(0);
+        window.dispatchEvent(new CustomEvent('duyuru:refresh-count'));
+      } catch {
+        // ignore
+      }
+    })();
+  }, [effectiveSection, unauthorized]);
+
   const unreadCount = useMemo(
     () => notifications.filter((item) => !item.is_read).length,
     [notifications],
@@ -1347,6 +1388,7 @@ export default function DashboardPage() {
             unauthorized={unauthorized}
             onNavigate={setActiveSection}
             profile={profile}
+            duyuruEveryoneUnreadCount={duyuruEveryoneUnreadCount}
           />
         )}
 
@@ -1386,6 +1428,7 @@ export default function DashboardPage() {
             menuRef: notificationsMenuRef,
           }}
           mailUnreadCount={mailUnreadCount}
+          duyuruEveryoneUnreadCount={duyuruEveryoneUnreadCount}
           onOpenLeaderboard={() => setLeaderboardOpen(true)}
           openLink={openLink}
           renderNotificationBody={renderNotificationBody}
