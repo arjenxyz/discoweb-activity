@@ -14,6 +14,11 @@ const getSupabase = () => {
 
 // Mail'den ödül miktarını çıkar - önce metadata, sonra başlık
 function getRewardAmount(mail: any): number {
+  if (mail.metadata && typeof mail.metadata === 'object') {
+    if (mail.metadata.already_credited === true) return 0;
+    if (mail.metadata.source === 'quiz_reward') return 0;
+    if (mail.metadata.source === 'quiz_motivation') return 0;
+  }
   // 1. metadata.reward_amount (güvenilir kaynak)
   if (mail.metadata && typeof mail.metadata === 'object' && typeof mail.metadata.reward_amount === 'number') {
     return mail.metadata.reward_amount;

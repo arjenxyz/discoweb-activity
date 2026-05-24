@@ -117,11 +117,25 @@ function LoadingRow({ label }: { label: string }) {
   );
 }
 
-export default function QuizEventSection() {
+export default function QuizEventSection({ onQuizEnded }: { onQuizEnded?: () => void }) {
   const [events, setEvents] = useState<EventCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const hadLiveRef = useRef(false);
+
+  const activeEvents = useMemo(
+    () => events.filter((e) => e.status === 'scheduled' || e.status === 'live'),
+    [events],
+  );
+
+  useEffect(() => {
+    const isLive = events.some((e) => e.status === 'live');
+    if (isLive) hadLiveRef.current = true;
+    if (hadLiveRef.current && !isLive && activeEvents.length === 0) {
+      onQuizEnded?.();
+    }
+  }, [events, activeEvents.length, onQuizEnded]);
 
   const refresh = useCallback(async () => {
     try {
@@ -131,12 +145,13 @@ export default function QuizEventSection() {
       const list = (data.events ?? []) as EventCard[];
       setEvents(list);
       setSelectedId((prev) => {
-        if (prev && list.find((e) => e.id === prev)) return prev;
-        const live = list.find((e) => e.status === 'live');
+        const active = list.filter((e) => e.status === 'scheduled' || e.status === 'live');
+        if (prev && active.find((e) => e.id === prev)) return prev;
+        const live = active.find((e) => e.status === 'live');
         if (live) return live.id;
-        const upcoming = list.find((e) => e.status === 'scheduled');
+        const upcoming = active.find((e) => e.status === 'scheduled');
         if (upcoming) return upcoming.id;
-        return list[0]?.id ?? null;
+        return active[0]?.id ?? null;
       });
       setError(null);
     } catch (e) {
@@ -164,7 +179,10 @@ export default function QuizEventSection() {
     };
   }, [refresh]);
 
-  const selected = useMemo(() => events.find((e) => e.id === selectedId) ?? null, [events, selectedId]);
+  const selected = useMemo(
+    () => activeEvents.find((e) => e.id === selectedId) ?? null,
+    [activeEvents, selectedId],
+  );
 
   return (
     <section className="flex flex-col gap-3 pt-4 pb-4 px-4 sm:pt-5 sm:pb-5 sm:px-5">
@@ -182,7 +200,7 @@ export default function QuizEventSection() {
         </div>
       )}
 
-      {!loading && !error && events.length === 0 && (
+      {!loading && !error && activeEvents.length === 0 && !hadLiveRef.current && (
         <div className={`${CARD} py-12 text-center`}>
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-white/[0.08] bg-white/[0.04]">
             <LuTrophy className="h-5 w-5 text-white/25" strokeWidth={1.5} />
@@ -192,9 +210,9 @@ export default function QuizEventSection() {
         </div>
       )}
 
-      {!loading && events.length > 1 && (
+      {!loading && activeEvents.length > 1 && (
         <div className="flex flex-wrap gap-1.5 border-b border-white/[0.08] pb-3">
-          {events.map((e) => (
+          {activeEvents.map((e) => (
             <button
               key={e.id}
               type="button"
@@ -214,12 +232,20 @@ export default function QuizEventSection() {
         </div>
       )}
 
-      {selected && <EventPanel event={selected} onRefresh={refresh} />}
+      {selected && <EventPanel event={selected} onRefresh={refresh} onQuizEnded={onQuizEnded} />}
     </section>
   );
 }
 
-function EventPanel({ event: initialEvent, onRefresh }: { event: EventCard; onRefresh: () => void }) {
+function EventPanel({
+  event: initialEvent,
+  onRefresh,
+  onQuizEnded,
+}: {
+  event: EventCard;
+  onRefresh: () => void;
+  onQuizEnded?: () => void;
+}) {
   const [state, setState] = useState<StateResponse | null>(null);
   const [joining, setJoining] = useState(false);
   const [joinError, setJoinError] = useState<string | null>(null);
@@ -241,9 +267,10 @@ function EventPanel({ event: initialEvent, onRefresh }: { event: EventCard; onRe
       }
     : initialEvent;
 
-  const isActive = event.status === 'scheduled' || event.status === 'live';
+  const eventStatus = state?.event?.status ?? initialEvent.status;
+  const isActive = eventStatus === 'scheduled' || eventStatus === 'live';
   const isOverdue =
-    event.status === 'scheduled' && new Date(event.start_at).getTime() <= Date.now();
+    eventStatus === 'scheduled' && new Date(event.start_at).getTime() <= Date.now();
 
   const pollState = useCallback(async () => {
     try {
@@ -256,15 +283,24 @@ function EventPanel({ event: initialEvent, onRefresh }: { event: EventCard; onRe
       if (data.current_question && data.current_question.position !== lastAnswer?.position) {
         setLastAnswer(null);
       }
+      if (data.event.status === 'finished' || data.event.status === 'cancelled') {
+        onRefresh();
+        onQuizEnded?.();
+        return;
+      }
       if (data.event.status !== 'scheduled') {
         onRefresh();
       }
     } catch {
       // ignore
     }
-  }, [initialEvent.id, lastAnswer?.position, onRefresh]);
+  }, [initialEvent.id, lastAnswer?.position, onRefresh, onQuizEnded]);
 
   useEffect(() => {
+    if (eventStatus === 'finished' || eventStatus === 'cancelled') {
+      onQuizEnded?.();
+      return;
+    }
     if (!isActive) {
       setState(null);
       return;
@@ -275,7 +311,7 @@ function EventPanel({ event: initialEvent, onRefresh }: { event: EventCard; onRe
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
     };
-  }, [isActive, event.status, isOverdue, pollState]);
+  }, [eventStatus, isActive, event.status, isOverdue, pollState, onQuizEnded]);
 
   const join = async () => {
     setJoining(true);
@@ -331,11 +367,11 @@ function EventPanel({ event: initialEvent, onRefresh }: { event: EventCard; onRe
     }
   };
 
-  if (event.status === 'finished' || event.status === 'cancelled') {
-    return <FinishedView event={event} />;
+  if (eventStatus === 'finished' || eventStatus === 'cancelled') {
+    return <FinishRedirect />;
   }
 
-  if (event.status === 'scheduled') {
+  if (eventStatus === 'scheduled') {
     return (
       <ScheduledView
         event={event}
@@ -357,7 +393,7 @@ function EventPanel({ event: initialEvent, onRefresh }: { event: EventCard; onRe
     return <MissedRegistrationView event={event} />;
   }
 
-  if (state.me?.eliminated_at) {
+  if (state.me?.eliminated_at && eventStatus === 'live') {
     return <EliminatedView event={state.event} me={state.me} />;
   }
 
@@ -716,7 +752,7 @@ function EliminatedView({ event, me }: { event: EventCard; me: MyState }) {
         </div>
         <h2 className="mt-4 text-xl font-black text-white">Elendin</h2>
         <p className="mx-auto mt-2 max-w-sm text-sm text-white/40">
-          {event.wrong_allowed} yanlış hakkını kullandın. Bu etkinlikte daha fazla soru cevaplayamazsın.
+          {event.wrong_allowed} yanlış hakkını kullandın. Etkinlik bitince otomatik olarak ana sayfaya döneceksin.
         </p>
         <div className="mt-6 grid grid-cols-3 gap-3">
           <StatCard label="Doğru" value={`${me.total_correct}`} icon={<LuCheck className="h-4 w-4" />} color="text-emerald-400" compact />
@@ -728,46 +764,11 @@ function EliminatedView({ event, me }: { event: EventCard; me: MyState }) {
   );
 }
 
-function FinishedView({ event }: { event: EventCard }) {
-  const cancelled = event.status === 'cancelled';
+function FinishRedirect() {
   return (
-    <div className={`${CARD} relative overflow-hidden`}>
-      <div className="absolute top-0 left-0 h-32 w-32 rounded-full bg-amber-500/8 blur-[50px] pointer-events-none" />
-      <div className="relative z-10">
-        <StatusBadge />
-        <h2 className="mt-3 text-xl font-black text-white">{event.title}</h2>
-        <p className="mt-1 text-sm text-white/40">
-          {cancelled ? 'Bu etkinlik iptal edildi.' : 'Etkinlik tamamlandı.'}
-        </p>
-
-        {event.me ? (
-          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <StatCard label="Doğru" value={`${event.me.total_correct}/${event.total_questions}`} icon={<LuCheck className="h-4 w-4" />} color="text-emerald-400" />
-            <StatCard label="Yanlış" value={`${event.me.wrong_count}`} icon={<LuX className="h-4 w-4" />} color="text-rose-400" />
-            <StatCard
-              label="Mükemmel"
-              value={event.me.perfect_score ? 'Evet' : 'Hayır'}
-              icon={<LuTrophy className="h-4 w-4" />}
-              color={event.me.perfect_score ? 'text-amber-400' : 'text-white/20'}
-              highlight={event.me.perfect_score}
-            />
-            <StatCard
-              label="Kazanç"
-              value={Number(event.me.papel_earned).toLocaleString('tr-TR')}
-              sub="papel"
-              icon={<LuCoins className="h-4 w-4" />}
-              color="text-amber-400"
-              highlight
-            />
-          </div>
-        ) : (
-          <p className="mt-5 text-sm text-white/40">Bu etkinliğe katılmadın.</p>
-        )}
-
-        {(event.checkpoints ?? []).length > 0 && (
-          <CheckpointList checkpoints={event.checkpoints ?? []} total={event.total_questions} />
-        )}
-      </div>
+    <div className="flex items-center justify-center gap-3 py-12 text-white/30">
+      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/10 border-t-white/40" />
+      <span className="text-sm">Ana sayfaya dönülüyor…</span>
     </div>
   );
 }
@@ -776,14 +777,14 @@ function CheckpointList({ checkpoints, total }: { checkpoints: Checkpoint[]; tot
   return (
     <div className="mb-5">
       <p className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-white/30">
-        Checkpoint ödülleri
+        Checkpoint ödülleri (etkinlik boyunca)
       </p>
       <div className="grid gap-2 sm:grid-cols-2">
         {checkpoints.map((c) => (
           <div key={c.position} className={`${INNER} flex items-center justify-between gap-3`}>
             <div>
               <p className="text-xs font-semibold text-white/70">
-                Soru {c.position}{c.label ? ` � ${c.label}` : ''}
+                Soru {c.position}{c.label ? <span className="text-white/35">{` · ${c.label}`}</span> : null}
               </p>
               <p className="text-[10px] text-white/30">{c.position}/{total} soru</p>
             </div>

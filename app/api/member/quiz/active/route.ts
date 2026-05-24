@@ -1,7 +1,7 @@
 /**
  * GET /api/member/quiz/active
  *
- * Kullanıcıya görünür aktif / yakında / az önce biten quiz event'leri döner.
+ * Kullanıcıya görünür yaklaşan ve canlı quiz event'leri döner (bitmişler dahil değil).
  * Görünürlük: global event'ler herkese; guild event'ler sadece o sunucudaki üyelere.
  *
  * Dönen alanlar client'a güvenli (correct_index ASLA gönderilmez).
@@ -47,7 +47,7 @@ export async function GET(request: Request) {
     .from('quiz_events')
     .select('id, scope, guild_id, lang, title, description, start_at, end_at, total_questions, seconds_per_question, reveal_seconds, wrong_allowed, prize_pool_papel, status, current_position, current_question_started_at, questions_locked_at')
     .or(orFilter)
-    .in('status', ['scheduled', 'live', 'finished'])
+    .in('status', ['scheduled', 'live'])
     .gte('start_at', dayAgo)
     .order('start_at', { ascending: true })
     .limit(20);

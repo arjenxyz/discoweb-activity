@@ -70,9 +70,11 @@ async function missedAsWrong(supabase: SupabaseClient, ev: Event) {
 export async function runQuizTick(
   supabase: SupabaseClient,
   eventId?: string,
-): Promise<{ lock_failures: { event_id: string; error: string }[] }> {
+): Promise<{ lock_failures: { event_id: string; error: string }[]; finished: number; advanced: number }> {
   const now = new Date();
   const lock_failures: { event_id: string; error: string }[] = [];
+  let finished = 0;
+  let advanced = 0;
 
   const lockWindow = new Date(now.getTime() + 5 * 60 * 1000).toISOString();
   let lockQuery = supabase
@@ -127,27 +129,42 @@ export async function runQuizTick(
 
   const { data: live } = await liveQuery;
   for (const ev of (live ?? []) as Event[]) {
-    const startedAt = ev.current_question_started_at
+    let startedAt = ev.current_question_started_at
       ? new Date(ev.current_question_started_at).getTime()
       : 0;
+    if (!startedAt && ev.current_position > 0) {
+      const repairIso = now.toISOString();
+      await supabase
+        .from('quiz_events')
+        .update({ current_question_started_at: repairIso })
+        .eq('id', ev.id)
+        .eq('status', 'live')
+        .is('current_question_started_at', null);
+      startedAt = now.getTime();
+    }
     if (!startedAt) continue;
     const tickMs = (ev.seconds_per_question + (ev.reveal_seconds ?? 2)) * 1000;
     if (now.getTime() - startedAt < tickMs) continue;
 
     const nextPos = ev.current_position + 1;
     if (nextPos > ev.total_questions) {
-      await supabase
+      const { error } = await supabase
         .from('quiz_events')
         .update({ status: 'finished', current_question_started_at: null })
         .eq('id', ev.id)
         .eq('status', 'live')
         .eq('current_position', ev.current_position);
+      if (error) {
+        console.warn('[quiz-tick] finish failed', ev.id, error.message);
+      } else {
+        finished += 1;
+      }
       await missedAsWrong(supabase, ev);
       continue;
     }
 
     await missedAsWrong(supabase, ev);
-    await supabase
+    const { error } = await supabase
       .from('quiz_events')
       .update({
         current_position: nextPos,
@@ -156,7 +173,12 @@ export async function runQuizTick(
       .eq('id', ev.id)
       .eq('status', 'live')
       .eq('current_position', ev.current_position);
+    if (error) {
+      console.warn('[quiz-tick] advance failed', ev.id, error.message);
+    } else {
+      advanced += 1;
+    }
   }
 
-  return { lock_failures };
+  return { lock_failures, finished, advanced };
 }

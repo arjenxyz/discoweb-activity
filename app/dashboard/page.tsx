@@ -881,6 +881,8 @@ export default function DashboardPage() {
       tickRef.current += 1;
       void refreshMailRef.current?.();
       if (tickRef.current % 2 === 0) void refreshWalletRef.current?.();
+      // Canlı quiz varken state machine ilerlesin (quiz sekmesinde olmasa bile)
+      void fetchWithCreds(apiUrl('/api/member/quiz/active'), { cache: 'no-store' }).catch(() => {});
       if (tickRef.current % 20 === 0) void refreshStoreRef.current?.();
     }, 15000);
 
@@ -1563,7 +1565,7 @@ export default function DashboardPage() {
             )}
 
             {effectiveSection === 'quiz' && !isSiteMaintenance && (
-              <QuizEventSection />
+              <QuizEventSection onQuizEnded={() => setActiveSection('overview')} />
             )}
           </main>
         </div>

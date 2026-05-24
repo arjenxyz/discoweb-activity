@@ -17,6 +17,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { requireSessionUser } from '@/lib/auth';
 import { getSelectedGuildId } from '@/lib/guild';
+import { runQuizTick } from '@/lib/quiz/tick';
 
 const getSupabase = () => {
   const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -126,6 +127,12 @@ export async function POST(request: Request) {
     .update(patch)
     .eq('event_id', body.event_id)
     .eq('user_id', userId);
+
+  try {
+    await runQuizTick(supabase, body.event_id);
+  } catch (e) {
+    console.warn('[quiz/answer] tick failed', e);
+  }
 
   return NextResponse.json({
     ok: true,
