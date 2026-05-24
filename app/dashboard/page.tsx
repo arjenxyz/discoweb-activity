@@ -631,11 +631,14 @@ export default function DashboardPage() {
 
   const loadPendingEarnings = useCallback(async () => {
     try {
-      const res = await fetchWithCreds('/api/member/load-accrued');
+      const res = await fetchWithCreds('/api/member/load-accrued?debug=1');
+      const data = await res.json();
+      console.log('[pending-earnings] status:', res.status, 'response:', JSON.stringify(data));
       if (res.ok) {
-        const data = await res.json();
         setPendingEarnings(data);
         setClaimResult(prev => prev.kind === 'idle' ? { kind: 'idle' } : prev);
+      } else {
+        console.warn('[pending-earnings] non-ok response:', res.status, data);
       }
     } catch (err) {
       console.error('[pending-earnings] fetch failed:', err);
