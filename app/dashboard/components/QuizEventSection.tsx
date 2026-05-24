@@ -185,7 +185,14 @@ function EventPanel({ event: initialEvent, onRefresh }: { event: EventCard; onRe
   const [lastAnswer, setLastAnswer] = useState<{ correctIndex: number; selected: number; isCorrect: boolean; position: number } | null>(null);
   const pollRef = useRef<NodeJS.Timeout | null>(null);
 
-  const event = state?.event ?? initialEvent;
+  const event: EventCard = state?.event
+    ? {
+        ...initialEvent,
+        ...state.event,
+        checkpoints: initialEvent.checkpoints ?? state.event.checkpoints ?? [],
+        me: state.me ?? initialEvent.me ?? null,
+      }
+    : initialEvent;
   const isActive = event.status === 'scheduled' || event.status === 'live';
 
   const pollState = useCallback(async () => {
@@ -295,8 +302,8 @@ function EventPanel({ event: initialEvent, onRefresh }: { event: EventCard; onRe
     return <p className="py-12 text-center text-sm text-white/40">Bağlanılıyor…</p>;
   }
 
-  if (state.registration_closed || !state.joined) {
-    return <MissedRegistrationView event={state.event} />;
+  if (state.registration_closed || !(state.joined ?? !!state.me)) {
+    return <MissedRegistrationView event={event} />;
   }
 
   if (state.me?.eliminated_at) {
@@ -331,9 +338,13 @@ function ScheduledView({
   onCountdownEnd?: () => void;
 }) {
   const { text: countdown, ended } = useCountdown(event.start_at);
+  const countdownFiredRef = useRef(false);
 
   useEffect(() => {
-    if (ended) onCountdownEnd?.();
+    if (ended && !countdownFiredRef.current) {
+      countdownFiredRef.current = true;
+      onCountdownEnd?.();
+    }
   }, [ended, onCountdownEnd]);
 
   return (
@@ -369,11 +380,11 @@ function ScheduledView({
         </div>
       </dl>
 
-      {event.checkpoints.length > 0 && (
+      {((event.checkpoints ?? []).length > 0) && (
         <div className="mb-8">
           <p className="mb-3 text-xs uppercase tracking-wider text-white/40">Checkpoint ödülleri</p>
           <ul className="space-y-2 text-sm">
-            {event.checkpoints.map((c) => (
+            {(event.checkpoints ?? []).map((c) => (
               <li key={c.position} className="flex justify-between text-white/70">
                 <span>Soru {c.position}{c.label ? ` — ${c.label}` : ''}</span>
                 <span className="text-white/90">+{Number(c.papel_reward).toLocaleString('tr-TR')} papel</span>
@@ -495,7 +506,7 @@ function LivePlayView({
       <h2 className="text-lg font-medium leading-snug text-white/95">{q.question_text}</h2>
 
       <div className="mt-8 space-y-2">
-        {q.options.map((opt, i) => {
+        {(q.options ?? []).map((opt, i) => {
           const isSelected = lastAnswer?.selected === i;
           const isCorrect = correctIdx === i;
           const showResult = alreadyAnswered && correctIdx !== null;
