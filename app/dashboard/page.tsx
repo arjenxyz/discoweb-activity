@@ -727,11 +727,14 @@ export default function DashboardPage() {
     run();
   }, [activityReadinessLoading, isBlockedByReadiness, loadPendingEarnings]);
 
-  // Biriken kazancı otomatik yenile (20 saniyede bir)
+  // Biriken kazancı activity tekrar öne gelince yenile (polling yok, sıfır overhead)
   useEffect(() => {
     if (activityReadinessLoading || isBlockedByReadiness) return;
-    const id = setInterval(() => loadPendingEarnings(), 20_000);
-    return () => clearInterval(id);
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') loadPendingEarnings();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
   }, [activityReadinessLoading, isBlockedByReadiness, loadPendingEarnings]);
 
   const claimEarnings = useCallback(async () => {
@@ -851,6 +854,7 @@ export default function DashboardPage() {
         .then((data: unknown) => { if (data && typeof data === 'object') setOverviewStats(data as OverviewStats); })
         .catch(() => {});
     },
+    onDailyEarningsUpdate: () => { void loadPendingEarnings(); },
   });
 
   useEffect(() => {

@@ -23,6 +23,8 @@ export interface RealtimeDashboardOptions {
   onTreasuryUpdate?: (balance: number) => void;
   /** Sunucu genel istatistikleri güncellenince çağrılır */
   onOverviewStatsUpdate?: () => void;
+  /** Biriken kazanç (daily_earnings) değişince çağrılır */
+  onDailyEarningsUpdate?: () => void;
 }
 
 export function useRealtimeDashboard({
@@ -36,6 +38,7 @@ export function useRealtimeDashboard({
   onMarketEventInsert,
   onTreasuryUpdate,
   onOverviewStatsUpdate,
+  onDailyEarningsUpdate,
 }: RealtimeDashboardOptions) {
   const channelsRef = useRef<RealtimeChannel[]>([]);
 
@@ -191,7 +194,29 @@ export function useRealtimeDashboard({
       channels.push(ch);
     }
 
-    // 8. Sunucu mesaj/ses istatistikleri
+    // 8. Biriken kazanç (daily_earnings) — bot yeni kazanç yazdığında anlık güncelle
+    if (onDailyEarningsUpdate) {
+      const ch = supabase
+        .channel(`earnings:${guildId}:${userId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'daily_earnings',
+            filter: `guild_id=eq.${guildId}`,
+          },
+          (payload: { new: Record<string, unknown> }) => {
+            if (payload.new?.user_id === userId) {
+              onDailyEarningsUpdate();
+            }
+          },
+        )
+        .subscribe();
+      channels.push(ch);
+    }
+
+    // 9. Sunucu mesaj/ses istatistikleri
     if (onOverviewStatsUpdate) {
       const ch = supabase
         .channel(`serverstats:${guildId}`)
