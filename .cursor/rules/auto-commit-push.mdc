@@ -1,0 +1,24 @@
+---
+description: Her kod değişikliğinden sonra otomatik git commit ve push
+alwaysApply: true
+---
+
+# Otomatik commit ve push
+
+Kullanıcı açıkça "commit etme" demedikçe, anlamlı bir görev tamamlandığında (bug fix, feature, refactor vb.) **her zaman**:
+
+1. `git status` ve `git diff` ile değişiklikleri kontrol et
+2. İlgili dosyaları stage et (`.env`, secret, `tsconfig.tsbuildinfo` gibi build artifact'ları hariç)
+3. Kısa, net bir commit mesajı yaz (İngilizce, conventional: `feat:`, `fix:`, `docs:` vb.)
+4. `git push origin main` (veya aktif branch) ile remote'a gönder
+5. Kullanıcıya commit hash ve push edilen repo(ları) bildir
+
+## Çoklu repo
+
+discoweb-main ve activity-web ayrı repolardır. Her ikisinde de değişiklik varsa **ikisini de** commit/push et.
+
+## İstisnalar
+
+- Kullanıcı "commit etme", "push etme" veya "sadece göster" derse uygulama
+- Sadece soru/inceleme (değişiklik yok) → commit gerekmez
+- Commit hook başarısız olursa düzelt ve **yeni** commit oluştur (amend kullanma, hook kuralına uy)
