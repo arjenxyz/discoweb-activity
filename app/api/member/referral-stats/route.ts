@@ -13,16 +13,9 @@ import { createClient } from '@supabase/supabase-js';
 import { requireSessionUser } from '@/lib/auth';
 import { getSelectedGuildId } from '@/lib/guild';
 
-export const dynamic = 'force-dynamic';
+import { REFERRAL_MILESTONE_REWARDS, REFERRAL_MILESTONES } from '@/lib/referral/constants';
 
-const MILESTONE_REWARDS: Record<number, number> = {
-  5: 500,
-  10: 1500,
-  20: 3000,
-  50: 10000,
-  100: 25000,
-};
-const MILESTONES = [5, 10, 20, 50, 100];
+export const dynamic = 'force-dynamic';
 
 const getSupabase = () => {
   const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -76,8 +69,8 @@ export async function GET(request: Request) {
 
     const totalInvites = Number(profileRes.data?.total_invites ?? 0);
     const claimedMilestones = (milestonesRes.data ?? []).map((m) => Number(m.milestone));
-    const nextMilestone = MILESTONES.find((m) => m > totalInvites && !claimedMilestones.includes(m)) ?? null;
-    const nextMilestoneBonus = nextMilestone ? (MILESTONE_REWARDS[nextMilestone] ?? 0) : 0;
+    const nextMilestone = REFERRAL_MILESTONES.find((m) => m > totalInvites && !claimedMilestones.includes(m)) ?? null;
+    const nextMilestoneBonus = nextMilestone ? (REFERRAL_MILESTONE_REWARDS[nextMilestone] ?? 0) : 0;
 
     const totalEarnedPapel = (ledgerRes.data ?? []).reduce((sum, row) => sum + Number(row.amount ?? 0), 0);
 

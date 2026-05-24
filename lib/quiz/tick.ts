@@ -5,6 +5,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { lockEventQuestions } from './lockQuestions';
+import { commitAnswersForPosition } from './commitAnswers';
 
 type Event = {
   id: string;
@@ -27,7 +28,16 @@ async function missedAsWrong(supabase: SupabaseClient, ev: Event) {
 
   if (!participants?.length) return;
 
-  const missed = participants.filter((p) => p.last_position < ev.current_position);
+  const { data: attempts } = await supabase
+    .from('quiz_event_attempts')
+    .select('user_id')
+    .eq('event_id', ev.id)
+    .eq('position', ev.current_position);
+  const answeredUsers = new Set((attempts ?? []).map((a) => a.user_id));
+
+  const missed = participants.filter(
+    (p) => p.last_position < ev.current_position && !answeredUsers.has(p.user_id),
+  );
   if (!missed.length) return;
 
   const { data: fullEv } = await supabase
@@ -145,6 +155,13 @@ export async function runQuizTick(
     if (!startedAt) continue;
     const tickMs = (ev.seconds_per_question + (ev.reveal_seconds ?? 2)) * 1000;
     if (now.getTime() - startedAt < tickMs) continue;
+
+    const { data: fullEv } = await supabase
+      .from('quiz_events')
+      .select('wrong_allowed')
+      .eq('id', ev.id)
+      .single();
+    await commitAnswersForPosition(supabase, ev.id, ev.current_position, fullEv?.wrong_allowed ?? 3);
 
     const nextPos = ev.current_position + 1;
     if (nextPos > ev.total_questions) {

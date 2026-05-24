@@ -15,6 +15,7 @@ import { createClient } from '@supabase/supabase-js';
 import { requireSessionUser } from '@/lib/auth';
 import { getSelectedGuildId } from '@/lib/guild';
 import { runQuizTick } from '@/lib/quiz/tick';
+import { commitAnswersForPosition, isQuestionAnswerPhaseOver } from '@/lib/quiz/commitAnswers';
 
 const getSupabase = () => {
   const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -62,7 +63,8 @@ export async function GET(request: Request) {
     .eq('user_id', userId)
     .maybeSingle();
 
-  const joined = !!participant;
+  let meState = participant ?? null;
+  const joined = !!meState;
   const canJoin = event.status === 'scheduled' && !joined;
   const registrationClosed = !joined && event.status === 'live';
   const startPending = event.status === 'scheduled' && new Date(event.start_at) <= new Date();
@@ -88,8 +90,26 @@ export async function GET(request: Request) {
   }
 
   // Bu pozisyona cevap verilmiş mi? (sadece katılımcılar)
-  let answeredThisPosition: { selected_index: number | null; is_correct: boolean } | null = null;
+  let answeredThisPosition: {
+    selected_index: number | null;
+    is_correct?: boolean;
+    correct_index?: number;
+    revealed: boolean;
+  } | null = null;
   if (joined && event.status === 'live' && event.current_position > 0) {
+    const revealed = isQuestionAnswerPhaseOver(
+      event.current_question_started_at,
+      event.seconds_per_question,
+    );
+    if (revealed) {
+      await commitAnswersForPosition(
+        supabase,
+        eventId,
+        event.current_position,
+        event.wrong_allowed ?? 3,
+      );
+    }
+
     const { data: attempt } = await supabase
       .from('quiz_event_attempts')
       .select('selected_index, is_correct')
@@ -97,7 +117,40 @@ export async function GET(request: Request) {
       .eq('user_id', userId)
       .eq('position', event.current_position)
       .maybeSingle();
-    if (attempt) answeredThisPosition = { selected_index: attempt.selected_index, is_correct: attempt.is_correct };
+
+    if (attempt) {
+      if (revealed) {
+        const { data: qRow } = await supabase
+          .from('quiz_event_questions')
+          .select('correct_index')
+          .eq('event_id', eventId)
+          .eq('position', event.current_position)
+          .maybeSingle();
+        answeredThisPosition = {
+          selected_index: attempt.selected_index,
+          is_correct: attempt.is_correct,
+          correct_index: qRow?.correct_index ?? undefined,
+          revealed: true,
+        };
+      } else {
+        answeredThisPosition = {
+          selected_index: attempt.selected_index,
+          revealed: false,
+        };
+      }
+    }
+
+    if (revealed) {
+      const { data: refreshedParticipant } = await supabase
+        .from('quiz_event_participants')
+        .select('wrong_count, total_correct, last_position, eliminated_at, papel_earned, perfect_score')
+        .eq('event_id', eventId)
+        .eq('user_id', userId)
+        .maybeSingle();
+      if (refreshedParticipant) {
+        meState = refreshedParticipant;
+      }
+    }
   }
 
   return NextResponse.json({
@@ -122,7 +175,7 @@ export async function GET(request: Request) {
     },
     current_question: currentQuestion,
     answered_this_position: answeredThisPosition,
-    me: participant ?? null,
+    me: meState,
     joined,
     can_join: canJoin,
     registration_closed: registrationClosed,

@@ -316,6 +316,8 @@
   "referral_error_code_not_found": "Kod bulunamadı",
   "referral_error_invalid_code": "Geçersiz kod",
   "referral_error_new_account": "Hesap çok yeni",
+  "referral_error_ip_limit": "Bu IP adresinden bugün çok fazla davet kabul edildi. Yarın tekrar dene.",
+  "referral_error_inviter_limit": "Davet eden kişinin günlük davet limiti doldu. Daha sonra tekrar dene.",
   "referral_error_self": "Kendini davet edemezsin",
   "referral_error_server": "Sunucu hatası",
   "referral_error_validation_failed": "Doğrulama başarısız",

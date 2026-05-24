@@ -1,12 +1,11 @@
-'use client';
-
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { LuCoins, LuUsers, LuClock, LuTrophy, LuStar } from 'react-icons/lu';
+import { LuCoins, LuUsers, LuTrophy, LuStar } from 'react-icons/lu';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { siteConfig } from '@/config/site';
 import { apiUrl } from '@/lib/api';
 import { useT } from '@/contexts/LocaleContext';
+import { REFERRAL_MILESTONE_REWARDS, REFERRAL_MILESTONES } from '@/lib/referral/constants';
 
 type ReferralStatus = {
   type: 'success' | 'error';
@@ -30,15 +29,6 @@ type LeaderboardEntry = {
   total_earned: number;
   is_me: boolean;
 };
-
-const MILESTONE_REWARDS: Record<number, number> = {
-  5: 500,
-  10: 1500,
-  20: 3000,
-  50: 10000,
-  100: 25000,
-};
-const MILESTONES = [5, 10, 20, 50, 100];
 
 export default function ReferralSection() {
   const t = useT();
@@ -76,7 +66,54 @@ export default function ReferralSection() {
   const [activeTab, setActiveTab] = useState<'stats' | 'leaderboard'>('stats');
 
 
-  const discordSdkRef = useRef<any | null>(null);
+  const refreshStats = useCallback(() => {
+    fetchWithCreds('/api/member/referral-stats')
+      .then((r) => r.json())
+      .then((data) => {
+        if (!data.error) setStats(data);
+      })
+      .catch(() => {});
+  }, []);
+
+  const onReferralApplied = useCallback(
+    (reward: number, inviterLabel: string) => {
+      setReferredBy(inviterLabel);
+      setShowCelebration(true);
+      setTimeout(() => setShowCelebration(false), 3500);
+      refreshStats();
+      try {
+        window.dispatchEvent(new CustomEvent('wallet:refresh'));
+      } catch {
+        /* ignore */
+      }
+      void fetchWithCreds('/api/member/profile')
+        .then((r) => r.json())
+        .then((data) => {
+          setTotalInvites(Number(data.total_invites ?? 0));
+          setReferralReward(Number(data.referral_reward ?? reward));
+        })
+        .catch(() => {});
+    },
+    [refreshStats],
+  );
+
+  const referralErrorMessages = useMemo(
+    (): Record<string, string> => ({
+      already_referred: t('referral_error_already_referred'),
+      code_not_found: t('referral_error_code_not_found'),
+      cannot_use_own_code: t('referral_error_own_code'),
+      self_referral: t('referral_error_self'),
+      invalid_code: t('referral_error_invalid_code'),
+      update_failed: t('referral_error_update_failed'),
+      history_failed: t('referral_error_history_failed'),
+      new_account: t('referral_error_new_account'),
+      referrer_not_found: t('referral_pending_referrer_not_found'),
+      ip_rate_limit: t('referral_error_ip_limit'),
+      inviter_daily_limit: t('referral_error_inviter_limit'),
+    }),
+    [t],
+  );
+  const discordSdkRef = useRef<{ commands: { shareLink: (args: unknown) => Promise<{ success?: boolean }>; openInviteDialog: () => Promise<void> } } | null>(null);
   const sdkReadyRef = useRef(false);
 
   // Load profile
@@ -134,47 +171,23 @@ export default function ReferralSection() {
       .finally(() => setLeaderboardLoading(false));
   }, [activeTab]);
 
-  // Auto-apply referral from URL
+  // URL ?ref= — otomatik uygulama yok; SDK ile aynı onay akışı
   useEffect(() => {
     const refCode = searchParams.get('ref');
-    if (!refCode || refSubmitted) return;
+    if (!refCode || refSubmitted || referredBy || pendingReferrer) return;
 
-    const submitRef = async () => {
-      setStatus(null);
-      try {
-        const res = await fetchWithCreds('/api/member/referral', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code: refCode.trim().toUpperCase() }),
-        });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) {
-          const messages: Record<string, string> = {
-            already_referred: t('referral_error_already_referred'),
-            code_not_found: t('referral_error_code_not_found'),
-            cannot_use_own_code: t('referral_error_own_code'),
-            invalid_code: t('referral_error_invalid_code'),
-            update_failed: t('referral_error_update_failed'),
-            history_failed: t('referral_error_history_failed'),
-            increment_failed: t('referral_error_increment_failed'),
-            new_account: t('referral_error_new_account'),
-          };
-          setStatus({ type: 'error', message: messages[data.error] ?? t('referral_error_validation_failed') });
-        } else {
-          setStatus({ type: 'success', message: t('referral_success_added') });
-          setReferredBy(refCode.trim().toUpperCase());
-          setTotalInvites((prev) => prev + 1);
-          setShowCelebration(true);
-          setTimeout(() => setShowCelebration(false), 3000);
-        }
-      } catch {
-        setStatus({ type: 'error', message: t('referral_error_server') });
-      } finally {
-        setRefSubmitted(true);
+    const code = refCode.trim().toUpperCase();
+    if (code.length !== 6) return;
+
+    import('@/lib/pendingReferral').then(({ setPendingReferral, getPendingReferral }) => {
+      if (!getPendingReferral()) {
+        setPendingReferral({ type: 'by_code', code });
+        setPendingReferrerState({ type: 'by_code', code });
       }
-    };
-    void submitRef();
-  }, [searchParams, refSubmitted]);
+    }).catch(() => {});
+
+    setRefSubmitted(true);
+  }, [searchParams, refSubmitted, referredBy, pendingReferrer]);
 
   // Discord SDK init
   useEffect(() => {
@@ -236,7 +249,10 @@ export default function ReferralSection() {
     void checkSdk();
   }, []);
 
-  const nextMilestone = useMemo(() => MILESTONES.find((m) => m > totalInvites) ?? MILESTONES[MILESTONES.length - 1], [totalInvites]);
+  const nextMilestone = useMemo(
+    () => REFERRAL_MILESTONES.find((m) => m > totalInvites) ?? REFERRAL_MILESTONES[REFERRAL_MILESTONES.length - 1],
+    [totalInvites],
+  );
   const progressPercent = useMemo(() => Math.min(100, Math.round((totalInvites / nextMilestone) * 100)), [totalInvites, nextMilestone]);
   const milestoneText = totalInvites >= nextMilestone
     ? t('referral_milestone_reached')
@@ -332,25 +348,18 @@ export default function ReferralSection() {
       }
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        const msgs: Record<string, string> = {
-          already_referred: t('referral_pending_already_referred'),
-          new_account: t('referral_pending_new_account'),
-          self_referral: t('referral_pending_self_referral'),
-          referrer_not_found: t('referral_pending_referrer_not_found'),
-          code_not_found: t('referral_pending_code_not_found'),
-        };
-        setPendingStatus({ type: 'error', message: msgs[data.error] ?? t('referral_pending_unknown_error', { error: data.error ?? 'bilinmiyor' }) });
+        setPendingStatus({
+          type: 'error',
+          message: referralErrorMessages[data.error as string] ?? t('referral_pending_unknown_error', { error: data.error ?? 'bilinmiyor' }),
+        });
       } else {
-        const reward = data.reward ?? referralReward;
+        const reward = Number(data.reward ?? referralReward);
         setPendingStatus({ type: 'success', message: t('referral_pending_success', { reward }) });
-        setReferredBy(
+        const label =
           pendingReferrer.type === 'by_code'
             ? pendingReferrer.code
-            : pendingReferrer.referrer_discord_id,
-        );
-        setShowCelebration(true);
-        setTimeout(() => setShowCelebration(false), 3500);
-        // Clear pending
+            : pendingReferrer.referrer_discord_id;
+        onReferralApplied(reward, label);
         import('@/lib/pendingReferral').then(({ setPendingReferral }) => setPendingReferral(null)).catch(() => {});
         setPendingReferrerState(null);
       }
@@ -377,21 +386,15 @@ export default function ReferralSection() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        const msgs: Record<string, string> = {
-          already_referred: t('referral_manual_already_referred'),
-          code_not_found: t('referral_manual_code_not_found'),
-          cannot_use_own_code: t('referral_manual_own_code'),
-          invalid_code: t('referral_manual_invalid_code'),
-          new_account: t('referral_manual_new_account'),
-          update_failed: t('referral_manual_update_failed'),
-        };
-        setManualStatus({ type: 'error', message: msgs[data.error] ?? t('referral_manual_unknown_error', { error: data.error ?? 'bilinmiyor' }) });
+        setManualStatus({
+          type: 'error',
+          message: referralErrorMessages[data.error as string] ?? t('referral_manual_unknown_error', { error: data.error ?? 'bilinmiyor' }),
+        });
       } else {
-        setManualStatus({ type: 'success', message: t('referral_manual_success', { reward: data.reward ?? referralReward }) });
-        setReferredBy(code);
+        const reward = Number(data.reward ?? referralReward);
+        setManualStatus({ type: 'success', message: t('referral_manual_success', { reward }) });
+        onReferralApplied(reward, code);
         setManualCode('');
-        setShowCelebration(true);
-        setTimeout(() => setShowCelebration(false), 3500);
       }
     } catch {
       setManualStatus({ type: 'error', message: t('referral_manual_server_error') });
@@ -573,9 +576,9 @@ export default function ReferralSection() {
           <div className="rounded-3xl border border-white/15 bg-white/5 p-5">
             <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-white/40">{t('referral_milestone_title')}</p>
             <div className="flex gap-2 overflow-x-auto pb-1">
-              {MILESTONES.map((m) => {
+              {REFERRAL_MILESTONES.map((m) => {
                 const claimed = claimedMilestones.includes(m);
-                const isCurrent = !claimed && m > displayTotalInvites && (MILESTONES.find(ms => ms > displayTotalInvites) === m);
+                const isCurrent = !claimed && m > displayTotalInvites && (REFERRAL_MILESTONES.find((ms) => ms > displayTotalInvites) === m);
                 return (
                   <div
                     key={m}
@@ -594,7 +597,7 @@ export default function ReferralSection() {
                     )}
                     <span className="text-[10px] font-semibold">{t('referral_milestone_invite_count', { count: m })}</span>
                     <span className={`text-[10px] font-black ${claimed ? 'text-amber-300' : isCurrent ? 'text-indigo-300' : 'text-white/20'}`}>
-                      +{(MILESTONE_REWARDS[m] ?? 0).toLocaleString()}
+                      +{(REFERRAL_MILESTONE_REWARDS[m] ?? 0).toLocaleString()}
                     </span>
                     {claimed && <span className="text-[9px] text-amber-400/70">{t('referral_milestone_badge_reached')}</span>}
                   </div>

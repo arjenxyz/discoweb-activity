@@ -2,15 +2,7 @@
  * POST /api/member/quiz/answer
  * body: { event_id: string, position: number, selected_index: 0|1|2|3 }
  *
- * Server-side doğrulama:
- *   - Event live olmalı
- *   - position == event.current_position (geç/erken cevap bloklanır)
- *   - Kullanıcı participant olmalı ve eliminate olmamış olmalı
- *   - Aynı pozisyona ikinci cevap engellenir
- *   - Süre aşımı: ms_elapsed > seconds_per_question * 1000 ise otomatik yanlış sayılır
- *   - Doğru cevap quiz_event_questions.correct_index ile karşılaştırılır
- *
- * Wrong_count >= wrong_allowed → eliminate
+ * Cevap kaydedilir; doğru/yanlış sonucu soru süresi bitene kadar client'a gönderilmez.
  */
 
 import { NextResponse } from 'next/server';
@@ -49,7 +41,7 @@ export async function POST(request: Request) {
 
   const { data: event } = await supabase
     .from('quiz_events')
-    .select('id, scope, guild_id, status, current_position, current_question_started_at, seconds_per_question, wrong_allowed')
+    .select('id, scope, guild_id, status, current_position, current_question_started_at, seconds_per_question, reveal_seconds, wrong_allowed')
     .eq('id', body.event_id)
     .single();
   if (!event) return NextResponse.json({ error: 'not_found' }, { status: 404 });
@@ -69,11 +61,18 @@ export async function POST(request: Request) {
   const startedAt = new Date(event.current_question_started_at).getTime();
   const now = Date.now();
   const msElapsed = now - startedAt;
-  const timeoutMs = event.seconds_per_question * 1000;
+  const revealSeconds = event.reveal_seconds ?? 2;
+  const questionWindowMs = event.seconds_per_question * 1000;
+  const roundMs = (event.seconds_per_question + revealSeconds) * 1000;
+  if (msElapsed > roundMs) {
+    return NextResponse.json({ error: 'question_closed' }, { status: 400 });
+  }
+
+  const lateAnswer = msElapsed > questionWindowMs;
 
   const { data: participant } = await supabase
     .from('quiz_event_participants')
-    .select('user_id, wrong_count, last_position, eliminated_at, total_correct')
+    .select('user_id, eliminated_at, last_position')
     .eq('event_id', body.event_id)
     .eq('user_id', userId)
     .maybeSingle();
@@ -81,7 +80,15 @@ export async function POST(request: Request) {
   if (participant.eliminated_at) {
     return NextResponse.json({ error: 'eliminated' }, { status: 400 });
   }
-  if (participant.last_position >= body.position) {
+
+  const { data: existingAttempt } = await supabase
+    .from('quiz_event_attempts')
+    .select('selected_index')
+    .eq('event_id', body.event_id)
+    .eq('user_id', userId)
+    .eq('position', body.position)
+    .maybeSingle();
+  if (existingAttempt) {
     return NextResponse.json({ error: 'already_answered' }, { status: 400 });
   }
 
@@ -93,10 +100,8 @@ export async function POST(request: Request) {
     .single();
   if (!question) return NextResponse.json({ error: 'question_not_found' }, { status: 500 });
 
-  const lateAnswer = msElapsed > timeoutMs;
   const isCorrect = !lateAnswer && body.selected_index === question.correct_index;
 
-  // Cevap audit
   await supabase.from('quiz_event_attempts').upsert(
     {
       event_id: body.event_id,
@@ -110,24 +115,6 @@ export async function POST(request: Request) {
     { onConflict: 'event_id,user_id,position' },
   );
 
-  // Participant update
-  const newWrong = participant.wrong_count + (isCorrect ? 0 : 1);
-  const newCorrect = participant.total_correct + (isCorrect ? 1 : 0);
-  const patch: Record<string, unknown> = {
-    last_position: body.position,
-    wrong_count: newWrong,
-    total_correct: newCorrect,
-  };
-  if (newWrong >= event.wrong_allowed) {
-    patch.eliminated_at = new Date().toISOString();
-  }
-
-  await supabase
-    .from('quiz_event_participants')
-    .update(patch)
-    .eq('event_id', body.event_id)
-    .eq('user_id', userId);
-
   try {
     await runQuizTick(supabase, body.event_id);
   } catch (e) {
@@ -136,11 +123,7 @@ export async function POST(request: Request) {
 
   return NextResponse.json({
     ok: true,
-    is_correct: isCorrect,
-    late: lateAnswer,
-    wrong_count: newWrong,
-    total_correct: newCorrect,
-    eliminated: newWrong >= event.wrong_allowed,
-    correct_index: question.correct_index, // Cevap sonrası göstermek için (kullanıcı zaten cevapladı)
+    selected_index: body.selected_index,
+    pending_reveal: true,
   });
 }

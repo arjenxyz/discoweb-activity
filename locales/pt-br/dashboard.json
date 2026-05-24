@@ -297,6 +297,8 @@
   "referral_error_code_not_found": "Código não encontrado",
   "referral_error_invalid_code": "Código inválido",
   "referral_error_new_account": "Conta muito nova",
+  "referral_error_ip_limit": "Muitos convites foram aceitos deste IP hoje. Tente novamente amanhã.",
+  "referral_error_inviter_limit": "O limite diário de convites do indicador foi atingido. Tente mais tarde.",
   "referral_error_self": "Você não pode se auto-convidar",
   "referral_error_server": "Erro no servidor",
   "referral_error_validation_failed": "Falha na validação",

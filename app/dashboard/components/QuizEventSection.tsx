@@ -59,7 +59,12 @@ type StateResponse = {
     category: string | null;
     difficulty: string | null;
   } | null;
-  answered_this_position: { selected_index: number | null; is_correct: boolean } | null;
+  answered_this_position: {
+    selected_index: number | null;
+    is_correct?: boolean;
+    correct_index?: number;
+    revealed: boolean;
+  } | null;
   me: MyState | null;
   joined: boolean;
   can_join: boolean;
@@ -376,9 +381,7 @@ function EventPanel({
   const [joinError, setJoinError] = useState<string | null>(null);
   const [answering, setAnswering] = useState(false);
   const [lastAnswer, setLastAnswer] = useState<{
-    correctIndex: number;
     selected: number;
-    isCorrect: boolean;
     position: number;
   } | null>(null);
   const pollRef = useRef<NodeJS.Timeout | null>(null);
@@ -481,9 +484,7 @@ function EventPanel({
       const data = await res.json();
       if (!res.ok) return;
       setLastAnswer({
-        correctIndex: data.correct_index,
         selected: idx,
-        isCorrect: data.is_correct,
         position: state.current_question.position,
       });
       await pollState();
@@ -529,6 +530,7 @@ function EventPanel({
       onAnswer={submit}
       answering={answering}
       lastAnswer={lastAnswer}
+      onRevealPoll={pollState}
     />
   );
 }
@@ -700,12 +702,14 @@ function LivePlayView({
   onAnswer,
   answering,
   lastAnswer,
+  onRevealPoll,
 }: {
   state: StateResponse;
   eventCard: EventCard;
   onAnswer: (idx: number) => void;
   answering: boolean;
-  lastAnswer: { correctIndex: number; selected: number; isCorrect: boolean; position: number } | null;
+  lastAnswer: { selected: number; position: number } | null;
+  onRevealPoll: () => void;
 }) {
   const { event, current_question: q, me, answered_this_position: answered } = state;
   const [secondsLeft, setSecondsLeft] = useState(event.seconds_per_question);
@@ -723,6 +727,21 @@ function LivePlayView({
     return () => clearInterval(iv);
   }, [event.current_question_started_at, event.seconds_per_question]);
 
+  const selectedIndex =
+    answered?.selected_index ??
+    (lastAnswer?.position === q?.position ? (lastAnswer?.selected ?? null) : null);
+  const hasAnswered = selectedIndex !== null;
+  const timerEnded = secondsLeft <= 0;
+  const showResult = !!answered?.revealed && answered.correct_index !== undefined;
+  const correctIdx = showResult ? answered!.correct_index! : null;
+
+  useEffect(() => {
+    if (!hasAnswered || showResult || !timerEnded) return;
+    onRevealPoll();
+    const iv = setInterval(onRevealPoll, 500);
+    return () => clearInterval(iv);
+  }, [hasAnswered, showResult, timerEnded, onRevealPoll]);
+
   if (!q) {
     return (
       <div className={`${CARD} py-10 text-center`}>
@@ -733,8 +752,7 @@ function LivePlayView({
     );
   }
 
-  const alreadyAnswered = !!answered || !!lastAnswer;
-  const correctIdx = lastAnswer?.correctIndex ?? null;
+  const alreadyAnswered = hasAnswered;
   const heartsLeft = event.wrong_allowed - (me?.wrong_count ?? 0);
   const progressPct = Math.round((q.position / event.total_questions) * 100);
 
@@ -794,21 +812,22 @@ function LivePlayView({
 
           <div className="mt-5 grid gap-2 sm:grid-cols-2">
             {(q.options ?? []).map((opt, i) => {
-              const isSelected = lastAnswer?.selected === i;
+              const isSelected = selectedIndex === i;
               const isCorrect = correctIdx === i;
-              const showResult = alreadyAnswered && correctIdx !== null;
               return (
                 <button
                   key={i}
                   type="button"
                   onClick={() => onAnswer(i)}
-                  disabled={alreadyAnswered || answering || secondsLeft === 0}
+                  disabled={alreadyAnswered || answering || timerEnded}
                   className={`flex items-center gap-3 rounded-xl border p-3.5 text-left transition-colors ${
                     showResult && isCorrect
                       ? 'border-emerald-500/30 bg-emerald-500/10'
                       : showResult && isSelected && !isCorrect
                         ? 'border-rose-500/30 bg-rose-500/10'
-                        : alreadyAnswered
+                        : isSelected && !showResult
+                          ? 'border-amber-500/30 bg-amber-500/10'
+                          : alreadyAnswered
                           ? 'border-white/[0.04] bg-white/[0.02] opacity-40'
                           : 'border-white/[0.08] bg-white/[0.03] hover:border-white/[0.16] hover:bg-white/[0.06]'
                   }`}
@@ -819,7 +838,9 @@ function LivePlayView({
                         ? 'bg-emerald-500 text-black'
                         : showResult && isSelected
                           ? 'bg-rose-500 text-white'
-                          : 'bg-white/[0.08] text-white/60'
+                          : isSelected && !showResult
+                            ? 'bg-amber-500/80 text-black'
+                            : 'bg-white/[0.08] text-white/60'
                     }`}
                   >
                     {'ABCD'[i]}
@@ -833,6 +854,11 @@ function LivePlayView({
               );
             })}
           </div>
+          {hasAnswered && !showResult && (
+            <p className="mt-4 text-center text-xs text-white/40">
+              Cevabın kaydedildi. Sonuç süre bitince gösterilecek.
+            </p>
+          )}
         </div>
       </div>
 

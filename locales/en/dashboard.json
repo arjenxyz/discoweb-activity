@@ -316,6 +316,8 @@
   "referral_error_code_not_found": "Code not found",
   "referral_error_invalid_code": "Invalid code",
   "referral_error_new_account": "Account is too new",
+  "referral_error_ip_limit": "Too many invites were accepted from this IP today. Try again tomorrow.",
+  "referral_error_inviter_limit": "The inviter's daily invite limit is full. Try again later.",
   "referral_error_self": "You cannot invite yourself",
   "referral_error_server": "Server error",
   "referral_error_validation_failed": "Validation failed",
