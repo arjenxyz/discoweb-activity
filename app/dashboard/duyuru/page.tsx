@@ -139,32 +139,32 @@ function LinkPreviewEmbed({ url }: { url: string }) {
     return () => { isMounted = false; };
   }, [url]);
 
-  if (loading) return <div className="mt-2 h-20 w-80 animate-pulse rounded bg-[#2b2d31]"></div>;
+  if (loading) return <div className="mt-2 h-20 w-80 animate-pulse rounded-xl bg-white/[0.05]"></div>;
   if (!og || (!og.title && !og.image && !og.description)) {
     return (
-      <a href={url} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block text-[#00a8fc] hover:underline break-all">
+      <a href={url} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block text-white/60 hover:text-white hover:underline break-all transition-colors">
         {url}
       </a>
     );
   }
 
   return (
-    <div className="mt-2 flex max-w-[520px] overflow-hidden rounded bg-[#2b2d31] shadow-sm">
-      <div className="w-1 shrink-0" style={{ backgroundColor: og.themeColor || '#202225' }} />
+    <div className="mt-2 flex max-w-[520px] overflow-hidden rounded-xl bg-white/[0.05] border border-white/[0.07]">
+      <div className="w-1 shrink-0 rounded-l-xl" style={{ backgroundColor: og.themeColor || 'rgba(255,255,255,0.15)' }} />
       <div className="flex flex-1 flex-col gap-2 p-4">
-        {og.siteName && <span className="text-xs font-semibold text-[#dbdee1]">{og.siteName}</span>}
+        {og.siteName && <span className="text-xs font-semibold text-white/40">{og.siteName}</span>}
         {og.title && (
-          <a href={url} target="_blank" rel="noopener noreferrer" className="font-semibold text-[#00a8fc] hover:underline line-clamp-2">
+          <a href={url} target="_blank" rel="noopener noreferrer" className="font-semibold text-white hover:underline line-clamp-2">
             {og.title}
           </a>
         )}
         {og.description && (
-          <p className="text-sm text-[#dbdee1] line-clamp-3">{og.description}</p>
+          <p className="text-sm text-white/60 line-clamp-3">{og.description}</p>
         )}
         {og.image && (
           <div className="mt-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={og.image} alt={og.title || 'Embed Image'} className="max-h-[300px] max-w-full rounded object-contain bg-[#1e1f22]" />
+            <img src={og.image} alt={og.title || 'Embed Image'} className="max-h-[300px] max-w-full rounded-lg object-contain bg-white/[0.05]" />
           </div>
         )}
       </div>
@@ -285,8 +285,8 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
     <div className="w-full flex-1">
       {/* loading / error / empty */}
       {loading && (
-        <div className="flex flex-col items-center justify-center py-20 text-[#949ba4]">
-          <svg className="mb-3 h-8 w-8 animate-spin text-[#5865f2]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <div className="flex flex-col items-center justify-center py-20 text-white/40">
+          <svg className="mb-3 h-8 w-8 animate-spin text-white/30" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
           </svg>
@@ -295,59 +295,54 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
       )}
 
       {!loading && error && (
-        <div className="mx-4 my-4 rounded border border-[#ed4245]/30 bg-[#ed4245]/10 p-4 text-sm text-[#ed4245]">
+        <div className="mx-4 my-4 rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-400">
           <p className="font-semibold">Bir hata oluştu</p>
           <p>{error}</p>
         </div>
       )}
 
       {!loading && !error && messages.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-20 text-center text-sm text-[#949ba4]">
+        <div className="flex flex-col items-center justify-center py-20 text-center text-sm text-white/30">
           Henüz buralar çok sessiz...
         </div>
       )}
 
       {!loading && !error && sortedMessages.length > 0 && (
-        <div className="flex flex-col py-4">
+        <div className="flex flex-col pb-4">
           {sortedMessages.map((msg, index) => {
             const parsed = parseAnnouncementBody(msg.body);
-            
-            // Medya & Link Rendering Rules
+
             const renderMediaList = [...parsed.mediaUrls, ...parsed.linkUrls].map((url, i) => {
               const youtubeEmbed = getYouTubeEmbedUrl(url);
               const embeddableVideoUrl = getEmbeddableVideoUrl(url);
               const mediaKey = `${msg.id}:${url}:${i}`;
               const mediaFailed = mediaErrors[mediaKey];
 
-              // YouTube Embed
               if (youtubeEmbed) {
                 return (
-                  <div key={mediaKey} className="mt-2 max-w-[520px] overflow-hidden rounded bg-[#2b2d31]">
+                  <div key={mediaKey} className="mt-2 max-w-[520px] overflow-hidden rounded-xl bg-white/[0.05]">
                     <div className="aspect-video">
                       <iframe src={youtubeEmbed} title="YouTube" allowFullScreen className="h-full w-full border-0" />
                     </div>
                   </div>
                 );
               }
-              // Direct Video Embed
               if (embeddableVideoUrl) {
                 return (
-                  <div key={mediaKey} className="mt-2 max-w-[520px] rounded bg-[#2b2d31] p-2">
+                  <div key={mediaKey} className="mt-2 max-w-[520px] rounded-xl bg-white/[0.05] p-2">
                     <video
                       src={embeddableVideoUrl}
                       controls
                       playsInline
-                      className="max-h-[350px] w-full rounded object-contain"
+                      className="max-h-[350px] w-full rounded-lg object-contain"
                       onError={() => setMediaErrors((prev) => ({ ...prev, [mediaKey]: true }))}
                     />
                     {mediaFailed && (
-                      <div className="mt-2 text-xs text-[#ed4245]">Medya oynatılamadı.</div>
+                      <div className="mt-2 text-xs text-red-400">Medya oynatılamadı.</div>
                     )}
                   </div>
                 );
               }
-              
-              // If it came from 'medya:', assume it's a direct image unless it failed
               if (parsed.mediaUrls.includes(url)) {
                 return (
                   <div key={mediaKey} className="mt-2">
@@ -355,15 +350,13 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
                       <img
                         src={url}
                         alt="Medya eklentisi"
-                        className="max-h-[350px] max-w-[400px] rounded object-contain bg-[#2b2d31]"
+                        className="max-h-[350px] max-w-[400px] rounded-xl object-contain bg-white/[0.05]"
                         onError={() => setMediaErrors((prev) => ({ ...prev, [mediaKey]: true }))}
                       />
                     </a>
                   </div>
                 );
               }
-
-              // Otherwise it's a regular link, render OG Embed
               return <LinkPreviewEmbed key={mediaKey} url={url} />;
             });
 
@@ -373,50 +366,48 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
             const authorAvatar = msg.author_avatar_url || '/logo.png';
 
             return (
-              <div key={msg.id} className="relative group hover:bg-[#2b2d31]/40 px-4 py-2 mt-[17px] transition-colors">
-                
+              <div key={msg.id} className={`relative group hover:bg-white/[0.03] px-4 py-2 transition-colors ${index === 0 ? 'mt-0' : 'mt-[17px]'}`}>
+
                 {/* New Divider Line */}
                 {newDividerIndex === index && (
                   <div className="absolute top-0 left-0 right-0 -mt-[17px] flex items-center px-4">
-                    <div className="h-[1px] flex-1 bg-[#ed4245]" />
-                    <span className="mx-2 text-xs font-bold text-[#ed4245]">YENİ MESAJLAR</span>
-                    <div className="h-[1px] flex-1 bg-[#ed4245]" />
+                    <div className="h-[1px] flex-1 bg-red-500/60" />
+                    <span className="mx-2 text-xs font-bold text-red-400">YENİ MESAJLAR</span>
+                    <div className="h-[1px] flex-1 bg-red-500/60" />
                   </div>
                 )}
 
                 <div className="flex gap-4">
                   {/* Avatar */}
-                  <div className="mt-1 flex-shrink-0 cursor-pointer">
+                  <div className="mt-1 flex-shrink-0">
                     <Image
                       src={authorAvatar}
                       alt={authorName}
                       width={40}
                       height={40}
-                      className="rounded-full bg-[#313338] hover:opacity-80 transition"
+                      className="rounded-full bg-white/10 hover:opacity-80 transition"
                       unoptimized
                     />
                   </div>
 
                   {/* Message Content */}
                   <div className="min-w-0 flex-1">
-                    {/* Header: Name, Tag, Time */}
                     <div className="flex items-end gap-2 leading-tight">
-                      <span className="font-semibold text-white hover:underline cursor-pointer">
+                      <span className="font-semibold text-white">
                         {authorName}
                       </span>
                       {isSystem && (
-                        <span className="inline-flex items-center gap-1 rounded bg-[#5865f2] px-1.5 py-[2px] text-[10px] font-bold text-white shadow-sm">
+                        <span className="inline-flex items-center gap-1 rounded-md bg-white/10 px-1.5 py-[2px] text-[10px] font-bold text-white/80">
                           <LuCircleCheck className="h-3 w-3" />
                           DEVELOPER
                         </span>
                       )}
-                      <span className="ml-1 text-xs font-medium text-[#949ba4]">
+                      <span className="ml-1 text-xs font-medium text-white/35">
                         {formatRelativeDate(msg.created_at)}
                       </span>
                     </div>
 
-                    {/* Title & Body */}
-                    <div className="mt-1 space-y-1 text-sm leading-[1.375rem] text-[#dbdee1]">
+                    <div className="mt-1 space-y-1 text-sm leading-[1.375rem] text-white/70">
                       {msg.title && (
                         <h3 className="font-bold text-white text-[15px]">{msg.title}</h3>
                       )}
@@ -425,18 +416,16 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
                       )}
                     </div>
 
-                    {/* Media / Link Renders */}
                     {renderMediaList.length > 0 && (
                       <div className="flex flex-col gap-2 mt-2">
                         {renderMediaList}
                       </div>
                     )}
 
-                    {/* Poll */}
                     {msg.poll && (
-                      <div className="mt-3 max-w-[520px] rounded-lg border border-[#2b2d31] bg-[#2b2d31]/50 p-4 shadow-sm">
+                      <div className="mt-3 max-w-[520px] rounded-xl border border-white/10 bg-white/[0.05] p-4">
                         <div className="mb-3 flex items-center gap-2">
-                          <div className="font-semibold text-[#dbdee1]">Anket:</div>
+                          <span className="text-sm font-semibold text-white/50">Anket:</span>
                           <span className="text-[15px] font-bold text-white">{msg.poll.question}</span>
                         </div>
                         <div className="space-y-2">
@@ -452,31 +441,28 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
                                   type="button"
                                   onClick={() => handleVote(msg.poll!.id, opt.id)}
                                   disabled={voteLoadingId === opt.id}
-                                  className="group relative flex w-full items-center justify-between overflow-hidden rounded-[8px] bg-[#2b2d31] p-3 text-left transition disabled:cursor-not-allowed hover:bg-[#313338]"
+                                  className="relative flex w-full items-center justify-between overflow-hidden rounded-lg bg-white/[0.05] p-3 text-left transition hover:bg-white/[0.09] disabled:cursor-not-allowed"
                                 >
-                                  {/* Progress bar */}
                                   <div
-                                    className={`absolute inset-0 transition-all duration-500 ease-out ${
-                                      selected ? 'bg-[#5865f2]/20' : 'bg-[#1e1f22]/50'
-                                    }`}
+                                    className={`absolute inset-0 transition-all duration-500 ease-out rounded-lg ${selected ? 'bg-white/10' : 'bg-white/[0.03]'}`}
                                     style={{ width: `${percentage}%` }}
                                   />
                                   <div className="relative z-10 flex items-center gap-3">
-                                    <div className={`flex h-4 w-4 items-center justify-center rounded-full border-2 ${selected ? 'border-[#5865f2]' : 'border-[#80848e]'}`}>
-                                      {selected && <div className="h-2 w-2 rounded-full bg-[#5865f2]" />}
+                                    <div className={`flex h-4 w-4 items-center justify-center rounded-full border-2 ${selected ? 'border-white/60' : 'border-white/20'}`}>
+                                      {selected && <div className="h-2 w-2 rounded-full bg-white/80" />}
                                     </div>
-                                    <span className={`text-[15px] font-medium ${selected ? 'text-white' : 'text-[#dbdee1]'}`}>
+                                    <span className={`text-[15px] font-medium ${selected ? 'text-white' : 'text-white/70'}`}>
                                       {opt.label}
                                     </span>
                                   </div>
-                                  <span className="relative z-10 text-xs font-semibold text-[#949ba4]">
+                                  <span className="relative z-10 text-xs font-semibold text-white/40">
                                     {percentage}% ({opt.voteCount})
                                   </span>
                                 </button>
                               );
                             })}
                         </div>
-                        <div className="mt-3 text-xs text-[#949ba4]">
+                        <div className="mt-3 text-xs text-white/30">
                           Toplam {pollTotal} oy kullanıldı
                         </div>
                       </div>
@@ -494,7 +480,7 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
   // ----- variant handling -----
   if (variant === 'panel') {
     return (
-      <div className="flex h-full w-full flex-col bg-[#313338]">
+      <div className="flex h-full w-full flex-col">
         {content}
       </div>
     );
@@ -502,11 +488,11 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
 
   // full page
   return (
-    <div className="min-h-screen bg-[#313338] text-[#dbdee1]">
-      <div className="mx-auto max-w-4xl shadow-sm border-x border-[#1e1f22]/50 bg-[#313338]">
-        {/* Fake Discord Channel Header */}
-        <div className="sticky top-0 z-10 flex h-12 items-center gap-2 border-b border-[#1e1f22] bg-[#313338] px-4 shadow-sm backdrop-blur-md">
-          <svg className="h-6 w-6 text-[#80848e]" fill="currentColor" viewBox="0 0 24 24"><path fillRule="evenodd" clipRule="evenodd" d="M5.88657 21C5.57547 21 5.3399 20.7189 5.39427 20.4126L6.00001 17H2.59511C2.28449 17 2.04905 16.7198 2.10259 16.4138L2.27759 15.4138C2.31946 15.1746 2.52722 15 2.77011 15H6.35001L7.41001 9H4.00511C3.69449 9 3.45905 8.71977 3.51259 8.41381L3.68759 7.41381C3.72946 7.17456 3.93722 7 4.18011 7H7.76001L8.39677 3.41262C8.43914 3.17391 8.64664 3 8.88907 3H9.87344C10.1845 3 10.4201 3.28107 10.3657 3.58738L9.76001 7H15.76L16.3968 3.41262C16.4391 3.17391 16.6466 3 16.8891 3H17.8734C18.1845 3 18.4201 3.28107 18.3657 3.58738L17.76 7H21.1649C21.4755 7 21.711 7.28023 21.6574 7.58619L21.4824 8.58619C21.4405 8.82544 21.2328 9 20.9899 9H17.41L16.35 15H19.7549C20.0655 15 20.301 15.2802 20.2474 15.5862L20.0724 16.5862C20.0305 16.8254 19.8228 17 19.5799 17H16L15.3632 20.5874C15.3209 20.8261 15.1134 21 14.8709 21H13.8866C13.5755 21 13.3399 20.7189 13.3943 20.4126L14 17H8.00001L7.36323 20.5874C7.32086 20.8261 7.11336 21 6.87093 21H5.88657ZM9.41045 9L8.35045 15H14.3504L15.4104 9H9.41045Z" /></svg>
+    <div className="min-h-screen text-white/80">
+      <div className="mx-auto max-w-4xl">
+        {/* Channel Header */}
+        <div className="sticky top-0 z-10 flex h-12 items-center gap-2 border-b border-white/[0.07] bg-[#0b0d12]/90 px-4 backdrop-blur-md">
+          <svg className="h-5 w-5 text-white/30" fill="currentColor" viewBox="0 0 24 24"><path fillRule="evenodd" clipRule="evenodd" d="M5.88657 21C5.57547 21 5.3399 20.7189 5.39427 20.4126L6.00001 17H2.59511C2.28449 17 2.04905 16.7198 2.10259 16.4138L2.27759 15.4138C2.31946 15.1746 2.52722 15 2.77011 15H6.35001L7.41001 9H4.00511C3.69449 9 3.45905 8.71977 3.51259 8.41381L3.68759 7.41381C3.72946 7.17456 3.93722 7 4.18011 7H7.76001L8.39677 3.41262C8.43914 3.17391 8.64664 3 8.88907 3H9.87344C10.1845 3 10.4201 3.28107 10.3657 3.58738L9.76001 7H15.76L16.3968 3.41262C16.4391 3.17391 16.6466 3 16.8891 3H17.8734C18.1845 3 18.4201 3.28107 18.3657 3.58738L17.76 7H21.1649C21.4755 7 21.711 7.28023 21.6574 7.58619L21.4824 8.58619C21.4405 8.82544 21.2328 9 20.9899 9H17.41L16.35 15H19.7549C20.0655 15 20.301 15.2802 20.2474 15.5862L20.0724 16.5862C20.0305 16.8254 19.8228 17 19.5799 17H16L15.3632 20.5874C15.3209 20.8261 15.1134 21 14.8709 21H13.8866C13.5755 21 13.3399 20.7189 13.3943 20.4126L14 17H8.00001L7.36323 20.5874C7.32086 20.8261 7.11336 21 6.87093 21H5.88657ZM9.41045 9L8.35045 15H14.3504L15.4104 9H9.41045Z" /></svg>
           <span className="text-[15px] font-bold text-white">duyurular</span>
         </div>
         {content}
