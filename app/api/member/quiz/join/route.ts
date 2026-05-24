@@ -2,8 +2,8 @@
  * POST /api/member/quiz/join
  * body: { event_id: string }
  *
- * Sadece status='live' event'lere katılınabilir.
- * (İstenirse status='scheduled' iken pre-join da açılabilir.)
+ * Ön kayıt: status='scheduled' iken katılım açık.
+ * Etkinlik live olduğunda yeni katılım kapatılır — sadece önceden kayıtlılar oynar.
  */
 
 import { NextResponse } from 'next/server';
@@ -37,18 +37,14 @@ export async function POST(request: Request) {
 
   const { data: event } = await supabase
     .from('quiz_events')
-    .select('id, scope, guild_id, status, current_position')
+    .select('id, scope, guild_id, status')
     .eq('id', body.event_id)
     .single();
   if (!event) return NextResponse.json({ error: 'not_found' }, { status: 404 });
   if (event.scope === 'guild' && event.guild_id !== guildId) {
     return NextResponse.json({ error: 'wrong_guild' }, { status: 403 });
   }
-  if (event.status !== 'live') {
-    return NextResponse.json({ error: 'not_live', status: event.status }, { status: 400 });
-  }
 
-  // Mevcut participant'ı bul (varsa)
   const { data: existing } = await supabase
     .from('quiz_event_participants')
     .select('event_id, wrong_count, last_position, eliminated_at')
@@ -57,21 +53,25 @@ export async function POST(request: Request) {
     .maybeSingle();
 
   if (existing) {
-    return NextResponse.json({ ok: true, joined: false, participant: existing });
+    return NextResponse.json({ ok: true, joined: true, already_registered: true, participant: existing });
   }
 
-  // Yeni katılım: kullanıcı pozisyonu kaçırdığı için missed olarak kaydedilecek
-  // ama wrong_count başlangıçta 0; tick cron sonraki çağrıda last_position güncelleyecek
-  const insertRow = {
-    event_id: body.event_id,
-    user_id: userId,
-    guild_id: guildId ?? null,
-    last_position: Math.max(0, event.current_position - 1), // bu pozisyonu cevaplayabilsin
-  };
+  if (event.status === 'live' || event.status === 'finished' || event.status === 'cancelled') {
+    return NextResponse.json({ error: 'registration_closed', status: event.status }, { status: 400 });
+  }
+
+  if (event.status !== 'scheduled') {
+    return NextResponse.json({ error: 'not_joinable', status: event.status }, { status: 400 });
+  }
 
   const { data, error } = await supabase
     .from('quiz_event_participants')
-    .insert(insertRow)
+    .insert({
+      event_id: body.event_id,
+      user_id: userId,
+      guild_id: guildId ?? null,
+      last_position: 0,
+    })
     .select()
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

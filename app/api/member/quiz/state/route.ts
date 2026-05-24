@@ -44,8 +44,20 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'wrong_guild' }, { status: 403 });
   }
 
+  const { data: participant } = await supabase
+    .from('quiz_event_participants')
+    .select('wrong_count, total_correct, last_position, eliminated_at, papel_earned, perfect_score')
+    .eq('event_id', eventId)
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  const joined = !!participant;
+  const canJoin = event.status === 'scheduled' && !joined;
+  const registrationClosed = !joined && event.status === 'live';
+
+  // Sorular yalnızca önceden kayıt olmuş katılımcılara gösterilir
   let currentQuestion: { position: number; question_text: string; options: string[]; category: string | null; difficulty: string | null } | null = null;
-  if (event.status === 'live' && event.current_position > 0) {
+  if (joined && event.status === 'live' && event.current_position > 0) {
     const { data: q } = await supabase
       .from('quiz_event_questions')
       .select('position, question_text, options, category, difficulty')
@@ -63,16 +75,9 @@ export async function GET(request: Request) {
     }
   }
 
-  const { data: participant } = await supabase
-    .from('quiz_event_participants')
-    .select('wrong_count, total_correct, last_position, eliminated_at, papel_earned, perfect_score')
-    .eq('event_id', eventId)
-    .eq('user_id', userId)
-    .maybeSingle();
-
-  // Bu pozisyona cevap verilmiş mi?
+  // Bu pozisyona cevap verilmiş mi? (sadece katılımcılar)
   let answeredThisPosition: { selected_index: number | null; is_correct: boolean } | null = null;
-  if (event.status === 'live' && event.current_position > 0) {
+  if (joined && event.status === 'live' && event.current_position > 0) {
     const { data: attempt } = await supabase
       .from('quiz_event_attempts')
       .select('selected_index, is_correct')
@@ -101,11 +106,14 @@ export async function GET(request: Request) {
       status: event.status,
       current_position: event.current_position,
       current_question_started_at: event.current_question_started_at,
+      questions_locked_at: event.questions_locked_at ?? null,
     },
     current_question: currentQuestion,
     answered_this_position: answeredThisPosition,
     me: participant ?? null,
-    joined: !!participant,
+    joined,
+    can_join: canJoin,
+    registration_closed: registrationClosed,
     server_now: new Date().toISOString(),
   });
 }
