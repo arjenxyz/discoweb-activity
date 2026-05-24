@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { LuChevronRight, LuHouse, LuMail, LuStore, LuMegaphone, LuCompass, LuShieldCheck, LuGamepad2 } from 'react-icons/lu';
+import { LuChevronRight, LuHouse, LuMail, LuStore, LuMegaphone, LuCompass, LuShieldCheck } from 'react-icons/lu';
 import type { MemberProfile, Section } from '../types';
 import { useT } from '@/contexts/LocaleContext';
 
@@ -48,7 +48,6 @@ export default function SidebarNav({
         { key: 'store' as Section, label: t('nav_store'), icon: LuStore },
         { key: 'tag-badge' as Section, label: t('nav_tag_badge'), icon: LuShieldCheck },
         { key: 'discover' as Section, label: t('nav_community'), icon: LuCompass },
-        { key: 'play-earn' as Section, label: t('nav_play_earn'), icon: LuGamepad2 },
       ],
     },
     {

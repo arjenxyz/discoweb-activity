@@ -27,7 +27,6 @@ import MailDetailModal from './components/MailDetailModal';
 import ActivityReadinessGate, { type ActivityReadiness } from './components/ActivityReadinessGate';
 import SplashScreen from './components/SplashScreen';
 import SidebarNav from './components/SidebarNav';
-import PlayEarnSection from './components/PlayEarnSection';
 import { sanitizeHtml } from '@/lib/sanitizeHtml';
 import { useRealtimeDashboard } from '@/lib/utils/useRealtimeDashboard';
 import { useT } from '@/contexts/LocaleContext';
@@ -1550,9 +1549,6 @@ export default function DashboardPage() {
 
             {effectiveSection === 'discover' && (
               <DiscoverSection />
-            )}
-            {effectiveSection === 'play-earn' && (
-              <PlayEarnSection />
             )}
           </main>
         </div>
