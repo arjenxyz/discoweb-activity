@@ -402,7 +402,20 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
             const displayBody = parsed.body ? stripEveryoneFromText(parsed.body) : '';
 
             return (
-              <div key={msg.id} className={`relative group hover:bg-white/[0.03] px-4 py-2 transition-colors ${index === 0 ? 'mt-0' : 'mt-[17px]'}`}>
+              <div
+                key={msg.id}
+                className={`relative group px-4 py-2 transition-colors ${index === 0 ? 'mt-0' : 'mt-[17px]'} ${
+                  msg.mentions_everyone
+                    ? 'border-l-[4px] border-[#fee75c] bg-[#fee75c]/[0.08] hover:bg-[#fee75c]/[0.11]'
+                    : 'hover:bg-white/[0.03]'
+                }`}
+              >
+                {msg.mentions_everyone && (
+                  <div
+                    className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-[#fee75c]/70"
+                    aria-hidden
+                  />
+                )}
 
                 {/* New Divider Line */}
                 {newDividerIndex === index && (
