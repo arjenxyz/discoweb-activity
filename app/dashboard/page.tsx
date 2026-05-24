@@ -629,6 +629,19 @@ export default function DashboardPage() {
     loadProfile();
   }, [activityReadinessLoading, isBlockedByReadiness]);
 
+  const loadPendingEarnings = useCallback(async () => {
+    try {
+      const res = await fetchWithCreds('/api/member/load-accrued');
+      if (res.ok) {
+        const data = await res.json();
+        setPendingEarnings(data);
+        setClaimResult(prev => prev.kind === 'idle' ? { kind: 'idle' } : prev);
+      }
+    } catch (err) {
+      console.error('[pending-earnings] fetch failed:', err);
+    }
+  }, []);
+
   const refreshWalletBalance = useCallback(async () => {
     try {
       const response = await fetchWithCreds('/api/member/wallet');
@@ -688,19 +701,6 @@ export default function DashboardPage() {
       setOverviewLoading(false);
     };
 
-    const loadPendingEarnings = async () => {
-      try {
-        const res = await fetchWithCreds('/api/member/load-accrued');
-        if (res.ok) {
-          const data = await res.json();
-          setPendingEarnings(data);
-          setClaimResult({ kind: 'idle' });
-        }
-      } catch (err) {
-        console.error('[pending-earnings] fetch failed:', err);
-      }
-    };
-
     const loadBadges = async () => {
       const fallbackBadgeInfo = {
         currentBadge: null, nextBadge: null, tagDays: 0, daysToNext: null, hasTag: false, earnMultiplier: 1, allTiers: [],
@@ -725,11 +725,20 @@ export default function DashboardPage() {
     };
 
     run();
-  }, [activityReadinessLoading, isBlockedByReadiness]);
+  }, [activityReadinessLoading, isBlockedByReadiness, loadPendingEarnings]);
+
+  // Biriken kazancı otomatik yenile (20 saniyede bir)
+  useEffect(() => {
+    if (activityReadinessLoading || isBlockedByReadiness) return;
+    const id = setInterval(() => loadPendingEarnings(), 20_000);
+    return () => clearInterval(id);
+  }, [activityReadinessLoading, isBlockedByReadiness, loadPendingEarnings]);
 
   const claimEarnings = useCallback(async () => {
     setClaimLoading(true);
     setClaimResult({ kind: 'idle' });
+    // Claim öncesi anlık miktarı yenile (kullanıcı eski değeri görmesin)
+    await loadPendingEarnings();
     try {
       const res = await fetchWithCreds('/api/member/load-accrued', { method: 'POST' });
       if (res.ok) {
@@ -757,7 +766,7 @@ export default function DashboardPage() {
       setClaimResult({ kind: 'error', message: 'Kazanç talebi sırasında bir hata oluştu. Lütfen tekrar deneyin.' });
     }
     setClaimLoading(false);
-  }, [refreshWalletBalance]);
+  }, [refreshWalletBalance, loadPendingEarnings]);
 
   const refreshStoreItems = useCallback(async (page = 1, append = false) => {
     if (page === 1) {
