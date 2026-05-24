@@ -130,6 +130,7 @@ export default function MailDetailModal({ mail, onClose, onDelete, onStar }: Mai
       const isReward = quizSource === 'quiz_reward';
       const totalEarn = Number(meta?.total_earned ?? 0);
       const title = meta?.quiz_title ?? mail.title;
+      const breakdown = meta?.breakdown ?? [];
       const stat = (label: string, value: string) => (
         <div key={label} className="flex items-center justify-between px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.05]">
           <span className="text-sm text-white/50">{label}</span>
@@ -165,13 +166,13 @@ export default function MailDetailModal({ mail, onClose, onDelete, onStar }: Mai
               stat('Ulaştığın soru', `${meta.last_position} / ${meta.total_questions}`)}
             {meta?.eliminated && !isReward && stat('Durum', 'Bu turda elendin')}
             {isReward && typeof meta?.is_perfect === 'boolean' &&
-              stat('Mükemmel skor', meta.is_perfect ? 'Evet' : 'Hayır')}
+              stat('Mükemmel skor', meta?.is_perfect ? 'Evet' : 'Hayır')}
           </div>
 
-          {isReward && Array.isArray(meta?.breakdown) && meta.breakdown.length > 0 && (
+          {isReward && breakdown.length > 0 && (
             <div className="space-y-2 pt-2 border-t border-white/[0.06]">
               <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-300/80 px-1">Ödeme detayı</p>
-              {meta.breakdown.map((b) => (
+              {breakdown.map((b) => (
                 <div key={b.position} className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.05] text-sm">
                   <span className="text-white/60 truncate">Checkpoint — soru {b.position}{b.label ? ` (${b.label})` : ''}</span>
                   <span className="font-mono text-emerald-400 ml-2">+{Number(b.papel_reward).toLocaleString('tr-TR')} Papel</span>
