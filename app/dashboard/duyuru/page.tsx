@@ -391,7 +391,7 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
             const displayBody = parsed.body ? stripEveryoneFromText(parsed.body) : '';
 
             return (
-              <div key={msg.id} className={`relative group hover:bg-white/[0.03] px-4 py-2 transition-colors ${index === 0 ? 'mt-0' : 'mt-[17px]'}`}>
+              <div key={msg.id} className={`relative group hover:bg-white/[0.03] px-4 py-2 transition-colors ${index === 0 ? 'mt-0' : 'mt-[17px]'} ${msg.mentions_everyone ? 'border-l-[3px] border-amber-400/80 bg-amber-400/[0.06]' : ''}`}>
 
                 {/* New Divider Line */}
                 {newDividerIndex === index && (
@@ -431,6 +431,14 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
                         {formatRelativeDate(msg.created_at)}
                       </span>
                     </div>
+
+                    {msg.mentions_everyone && (
+                      <div className="mt-2 flex items-center rounded-md border border-amber-400/35 bg-amber-400/20 px-3 py-2 shadow-[inset_0_1px_0_rgba(254,231,92,0.15)]">
+                        <span className="rounded bg-amber-400/40 px-2 py-0.5 text-sm font-bold text-amber-100">
+                          @everyone
+                        </span>
+                      </div>
+                    )}
 
                     <div className="mt-1 space-y-1 text-sm leading-[1.375rem] text-white/70">
                       {displayTitle && (
