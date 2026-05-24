@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { LuChevronRight, LuHouse, LuMail, LuStore, LuMegaphone, LuCompass, LuShieldCheck } from 'react-icons/lu';
+import { LuChevronRight, LuHouse, LuMail, LuStore, LuMegaphone, LuCompass, LuShieldCheck, LuTrophy } from 'react-icons/lu';
 import type { MemberProfile, Section } from '../types';
 import { useT } from '@/contexts/LocaleContext';
 
@@ -29,6 +29,7 @@ export default function SidebarNav({
     discover:        '/menu-background/varyant3.jpg',
     'tag-badge':     '/menu-background/varyant4.jpg',
     mail:            '/menu-background/varyant6.jpg',
+    quiz:            '/menu-background/varyant.jpg',
   };
 
   const NAV_GROUPS = [
@@ -47,6 +48,7 @@ export default function SidebarNav({
         { key: 'overview' as Section, label: t('nav_home'), icon: LuHouse },
         { key: 'store' as Section, label: t('nav_store'), icon: LuStore },
         { key: 'tag-badge' as Section, label: t('nav_tag_badge'), icon: LuShieldCheck },
+        { key: 'quiz' as Section, label: t('nav_quiz'), icon: LuTrophy },
         { key: 'discover' as Section, label: t('nav_community'), icon: LuCompass },
       ],
     },

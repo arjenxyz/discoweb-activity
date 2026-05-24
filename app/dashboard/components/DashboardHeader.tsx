@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 
-import { LuHouse, LuMail, LuStore, LuSettings, LuChevronRight, LuSend, LuTag, LuCompass, LuLayoutGrid, LuShieldCheck, LuNewspaper, LuChartBar } from 'react-icons/lu';
+import { LuHouse, LuMail, LuStore, LuSettings, LuChevronRight, LuSend, LuTag, LuCompass, LuLayoutGrid, LuShieldCheck, LuNewspaper, LuChartBar, LuTrophy } from 'react-icons/lu';
 import Image from 'next/image';
 import DiscordAgreementButton from '@/components/DiscordAgreementButton';
 import type { Notification, Section } from '../types';
@@ -134,6 +134,7 @@ export default function DashboardHeader({
         { key: 'overview', label: t('nav_home'), icon: <LuHouse className="h-4 w-4" /> },
         { key: 'store', label: t('nav_store'), icon: <LuStore className="h-4 w-4" /> },
         { key: 'tag-badge', label: t('nav_tag_badge'), icon: <LuShieldCheck className="h-4 w-4" /> },
+        { key: 'quiz', label: t('nav_quiz'), icon: <LuTrophy className="h-4 w-4" /> },
         { key: 'discover', label: t('nav_community'), icon: <LuCompass className="h-4 w-4" /> },
       ],
     },

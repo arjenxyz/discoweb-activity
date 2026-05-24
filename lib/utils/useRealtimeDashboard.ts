@@ -25,6 +25,10 @@ export interface RealtimeDashboardOptions {
   onOverviewStatsUpdate?: () => void;
   /** Biriken kazanç (daily_earnings) değişince çağrılır */
   onDailyEarningsUpdate?: () => void;
+  /** Quiz event row'u güncellenince çağrılır (status / current_position / paid_out_at) */
+  onQuizEventUpdate?: (payload: { id: string; status?: string; current_position?: number; current_question_started_at?: string | null; paid_out_at?: string | null }) => void;
+  /** Kullanıcının quiz participant satırı güncellenince çağrılır */
+  onQuizParticipantUpdate?: (payload: { event_id: string; user_id: string; wrong_count?: number; total_correct?: number; last_position?: number; eliminated_at?: string | null; papel_earned?: number; perfect_score?: boolean }) => void;
 }
 
 export function useRealtimeDashboard({
@@ -39,6 +43,8 @@ export function useRealtimeDashboard({
   onTreasuryUpdate,
   onOverviewStatsUpdate,
   onDailyEarningsUpdate,
+  onQuizEventUpdate,
+  onQuizParticipantUpdate,
 }: RealtimeDashboardOptions) {
   const channelsRef = useRef<RealtimeChannel[]>([]);
 
@@ -229,6 +235,70 @@ export function useRealtimeDashboard({
             filter: `guild_id=eq.${guildId}`,
           },
           () => onOverviewStatsUpdate(),
+        )
+        .subscribe();
+      channels.push(ch);
+    }
+
+    // 10. Quiz event state (status, current_position, current_question_started_at)
+    if (onQuizEventUpdate) {
+      const ch = supabase
+        .channel(`quiz_events:${guildId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'quiz_events',
+          },
+          (payload: { new: Record<string, unknown> }) => {
+            const rec = payload.new;
+            if (typeof rec.id !== 'string') return;
+            onQuizEventUpdate({
+              id: rec.id,
+              status: typeof rec.status === 'string' ? rec.status : undefined,
+              current_position: typeof rec.current_position === 'number' ? rec.current_position : undefined,
+              current_question_started_at: typeof rec.current_question_started_at === 'string' || rec.current_question_started_at === null
+                ? (rec.current_question_started_at as string | null)
+                : undefined,
+              paid_out_at: typeof rec.paid_out_at === 'string' || rec.paid_out_at === null
+                ? (rec.paid_out_at as string | null)
+                : undefined,
+            });
+          },
+        )
+        .subscribe();
+      channels.push(ch);
+    }
+
+    // 11. Kullanıcının quiz participant satırı (wrong_count, last_position, eliminated_at, papel_earned)
+    if (onQuizParticipantUpdate) {
+      const ch = supabase
+        .channel(`quiz_participants:${userId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'quiz_event_participants',
+            filter: `user_id=eq.${userId}`,
+          },
+          (payload: { new: Record<string, unknown> }) => {
+            const rec = payload.new;
+            if (typeof rec.event_id !== 'string' || typeof rec.user_id !== 'string') return;
+            onQuizParticipantUpdate({
+              event_id: rec.event_id,
+              user_id: rec.user_id,
+              wrong_count: typeof rec.wrong_count === 'number' ? rec.wrong_count : undefined,
+              total_correct: typeof rec.total_correct === 'number' ? rec.total_correct : undefined,
+              last_position: typeof rec.last_position === 'number' ? rec.last_position : undefined,
+              eliminated_at: typeof rec.eliminated_at === 'string' || rec.eliminated_at === null
+                ? (rec.eliminated_at as string | null)
+                : undefined,
+              papel_earned: typeof rec.papel_earned === 'number' ? rec.papel_earned : undefined,
+              perfect_score: typeof rec.perfect_score === 'boolean' ? rec.perfect_score : undefined,
+            });
+          },
         )
         .subscribe();
       channels.push(ch);

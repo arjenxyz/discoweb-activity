@@ -18,6 +18,7 @@ import MailSection from './components/MailSection';
 import SessionExpiredModal from './components/SessionExpiredModal';
 import DiscoverSection from './components/DiscoverSection';
 import TagBadgeSection from './components/TagBadgeSection';
+import QuizEventSection from './components/QuizEventSection';
 import NotificationDetailModal from './components/NotificationDetailModal';
 import NotificationsModal from './components/NotificationsModal';
 import TransferModal, { TransferConfirmModal } from './components/TransferModal';
@@ -857,6 +858,16 @@ export default function DashboardPage() {
         .catch(() => {});
     },
     onDailyEarningsUpdate: () => { void loadPendingEarnings(); },
+    onQuizEventUpdate: (payload) => {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('quiz-event-update', { detail: payload }));
+      }
+    },
+    onQuizParticipantUpdate: (payload) => {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('quiz-participant-update', { detail: payload }));
+      }
+    },
   });
 
   useEffect(() => {
@@ -1258,7 +1269,7 @@ export default function DashboardPage() {
     await refreshStoreItems(storePage + 1, true);
   };
 
-  const FULL_WIDTH_SECTIONS = ['mail', 'store', 'settings', 'duyuru'];
+  const FULL_WIDTH_SECTIONS = ['mail', 'store', 'settings', 'duyuru', 'quiz'];
   const mainWrapperClass = FULL_WIDTH_SECTIONS.includes(effectiveSection)
     ? (effectiveSection === 'store' && !isActivityEmbed)
       ? 'w-full max-w-4xl px-0 sm:px-6'
@@ -1549,6 +1560,10 @@ export default function DashboardPage() {
 
             {effectiveSection === 'discover' && (
               <DiscoverSection />
+            )}
+
+            {effectiveSection === 'quiz' && !isSiteMaintenance && (
+              <QuizEventSection />
             )}
           </main>
         </div>
