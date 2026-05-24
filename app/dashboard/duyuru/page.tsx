@@ -490,6 +490,9 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
   return (
     <div className="min-h-screen text-white/80">
       <div className="mx-auto max-w-4xl">
+        <div className="flex h-12 items-center gap-2 border-b border-white/[0.07] px-4">
+          <span className="text-[15px] font-semibold text-white/70">Duyurular</span>
+        </div>
         {content}
       </div>
     </div>
