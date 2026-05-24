@@ -1269,7 +1269,7 @@ export default function DashboardPage() {
   const mainSpacingClass = effectiveSection === 'mail'
     ? 'py-0 gap-0 pb-20 lg:pb-0'
     : effectiveSection === 'duyuru'
-      ? 'md:pt-20 pb-20 lg:pb-0 gap-0'
+      ? 'md:pt-16 pb-20 lg:pb-0 gap-0'
       : effectiveSection === 'store'
         ? isActivityEmbed
           ? 'md:pt-20 pb-28 gap-0 md:pb-0'
