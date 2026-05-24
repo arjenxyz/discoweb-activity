@@ -4,6 +4,12 @@ import Image from 'next/image';
 import { useEffect, useMemo, useState } from 'react';
 import { apiUrl } from '@/lib/api';
 import fetchWithCreds from '@/lib/fetchWithCreds';
+import {
+  getProxiedImageUrl,
+  getVideoPlaybackUrl,
+  isImageUrl,
+  normalizeMediaUrl,
+} from '@/lib/announcementMedia';
 import { LuCircleCheck } from 'react-icons/lu';
 
 // ---------- types (unchanged) ----------
@@ -71,30 +77,20 @@ function parseAnnouncementBody(body: string) {
   lines.forEach((line) => {
     const trimmed = line.trim();
     if (trimmed.toLowerCase().startsWith('medya:')) {
-      mediaUrls.push(trimmed.slice(6).trim());
+      mediaUrls.push(normalizeMediaUrl(trimmed.slice(6)));
       return;
     }
     if (trimmed.toLowerCase().startsWith('link:')) {
-      linkUrls.push(trimmed.slice(5).trim());
+      linkUrls.push(normalizeMediaUrl(trimmed.slice(5)));
       return;
     }
     filtered.push(line);
   });
 
-  return { body: filtered.join('\n').trim(), mediaUrls, linkUrls };
-}
+  let text = filtered.join('\n').trim();
+  if (text === '·' || text === '\u00B7') text = '';
 
-function isImageUrl(url: string) {
-  return /\.(jpg|jpeg|png|gif|webp|avif)(\?.*)?$/i.test(url);
-}
-
-function isVideoUrl(url: string) {
-  return /\.(mp4|webm|mov|m4v|avi|ogg|ogv)(\?.*)?$/i.test(url);
-}
-
-function getEmbeddableVideoUrl(url: string) {
-  if (!url) return null;
-  return isVideoUrl(url) ? url : null;
+  return { body: text, mediaUrls, linkUrls };
 }
 
 function getYouTubeEmbedUrl(url: string) {
@@ -238,7 +234,8 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
     return sortedMessages.findIndex((msg) => new Date(msg.created_at).getTime() > lastSeenTime);
   }, [lastSeenAt, sortedMessages]);
 
-  const handleVote = async (pollId: string, optionId: string) => {
+  const handleVote = async (pollId: string, optionId: string, alreadyVoted: boolean) => {
+    if (alreadyVoted) return;
     setVoteLoadingId(optionId);
     try {
       const token = (() => {
@@ -257,25 +254,28 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
         body: JSON.stringify({ pollId, optionId }),
       });
       const data = await res.json();
-      if (!res.ok || data.error) throw new Error(data.error || 'Oy kaydedilemedi.');
+      if (!res.ok || data.error) {
+        const msg =
+          data.error === 'already_voted'
+            ? 'Bu ankette zaten oy kullandınız. Oy değiştirilemez.'
+            : data.message || data.error || 'Oy kaydedilemedi.';
+        throw new Error(msg);
+      }
 
       setMessages((prev) =>
         prev.map((msg) => {
           if (!msg.poll || msg.poll.id !== pollId) return msg;
-          const prevVote = msg.poll.userVoteOptionId ?? null;
-          if (prevVote === optionId) return msg;
+          if (msg.poll.userVoteOptionId) return msg;
 
-          const updated = msg.poll.options.map((opt) => {
-            if (opt.id === optionId) return { ...opt, voteCount: opt.voteCount + 1 };
-            if (prevVote && opt.id === prevVote) return { ...opt, voteCount: Math.max(0, opt.voteCount - 1) };
-            return opt;
-          });
+          const updated = msg.poll.options.map((opt) =>
+            opt.id === optionId ? { ...opt, voteCount: opt.voteCount + 1 } : opt,
+          );
 
           return {
             ...msg,
             poll: { ...msg.poll, options: updated, userVoteOptionId: optionId },
           };
-        })
+        }),
       );
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : String(e));
@@ -318,9 +318,10 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
 
             const renderMediaList = [...parsed.mediaUrls, ...parsed.linkUrls].map((url, i) => {
               const youtubeEmbed = getYouTubeEmbedUrl(url);
-              const embeddableVideoUrl = getEmbeddableVideoUrl(url);
+              const videoPlaybackUrl = getVideoPlaybackUrl(url);
               const mediaKey = `${msg.id}:${url}:${i}`;
               const mediaFailed = mediaErrors[mediaKey];
+              const openUrl = normalizeMediaUrl(url);
 
               if (youtubeEmbed) {
                 return (
@@ -331,36 +332,45 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
                   </div>
                 );
               }
-              if (embeddableVideoUrl) {
+              if (videoPlaybackUrl) {
                 return (
                   <div key={mediaKey} className="mt-2 max-w-[520px] rounded-xl bg-white/[0.05] p-2">
                     <video
-                      src={embeddableVideoUrl}
+                      src={videoPlaybackUrl}
                       controls
                       playsInline
+                      preload="metadata"
                       className="max-h-[350px] w-full rounded-lg object-contain"
                       onError={() => setMediaErrors((prev) => ({ ...prev, [mediaKey]: true }))}
                     />
-                    {mediaFailed && (
-                      <div className="mt-2 text-xs text-red-400">Medya oynatılamadı.</div>
-                    )}
+                    {mediaFailed ? (
+                      <a
+                        href={openUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-2 inline-block text-xs text-amber-300/90 hover:text-amber-200 underline break-all"
+                      >
+                        Video oynatılamadı — Discord&apos;da veya yeni sekmede aç
+                      </a>
+                    ) : null}
                   </div>
                 );
               }
               if (parsed.mediaUrls.includes(url) || isImageUrl(url)) {
+                const imgSrc = getProxiedImageUrl(url);
                 return (
                   <div key={mediaKey} className="mt-2">
-                    <a href={url} target="_blank" rel="noopener noreferrer">
+                    <a href={openUrl} target="_blank" rel="noopener noreferrer">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src={url}
+                        src={imgSrc}
                         alt="Medya eklentisi"
                         className="max-h-[350px] max-w-[400px] rounded-xl object-contain bg-white/[0.05]"
                         onError={() => setMediaErrors((prev) => ({ ...prev, [mediaKey]: true }))}
                       />
                     </a>
                     {mediaFailed && (
-                      <a href={url} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block text-xs text-white/50 hover:text-white underline break-all">
+                      <a href={openUrl} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block text-xs text-white/50 hover:text-white underline break-all">
                         Medya yüklenemedi — bağlantıyı aç
                       </a>
                     )}
@@ -443,15 +453,20 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
                             .slice()
                             .sort((a, b) => a.position - b.position)
                             .map((opt) => {
+                              const hasVoted = !!msg.poll!.userVoteOptionId;
                               const selected = msg.poll!.userVoteOptionId === opt.id;
                               const percentage = pollTotal > 0 ? Math.round((opt.voteCount / pollTotal) * 100) : 0;
                               return (
                                 <button
                                   key={opt.id}
                                   type="button"
-                                  onClick={() => handleVote(msg.poll!.id, opt.id)}
-                                  disabled={voteLoadingId === opt.id}
-                                  className="relative flex w-full items-center justify-between overflow-hidden rounded-lg bg-white/[0.05] p-3 text-left transition hover:bg-white/[0.09] disabled:cursor-not-allowed"
+                                  onClick={() => handleVote(msg.poll!.id, opt.id, hasVoted)}
+                                  disabled={hasVoted || voteLoadingId === opt.id}
+                                  className={`relative flex w-full items-center justify-between overflow-hidden rounded-lg p-3 text-left transition disabled:cursor-default ${
+                                    hasVoted
+                                      ? 'bg-white/[0.04]'
+                                      : 'bg-white/[0.05] hover:bg-white/[0.09]'
+                                  }`}
                                 >
                                   <div
                                     className={`absolute inset-0 transition-all duration-500 ease-out rounded-lg ${selected ? 'bg-white/10' : 'bg-white/[0.03]'}`}
@@ -472,8 +487,13 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
                               );
                             })}
                         </div>
-                        <div className="mt-3 text-xs text-white/30">
-                          Toplam {pollTotal} oy kullanıldı
+                        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-white/30">
+                          <span>Toplam {pollTotal} oy kullanıldı</span>
+                          {msg.poll.userVoteOptionId ? (
+                            <span className="text-white/45">Oy kullandın — değiştirilemez</span>
+                          ) : (
+                            <span className="text-white/35">Her kullanıcı yalnızca bir kez oy kullanabilir</span>
+                          )}
                         </div>
                       </div>
                     )}

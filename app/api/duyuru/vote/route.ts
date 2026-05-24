@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     .maybeSingle();
 
   if (!optionRow || optionRow.poll_id !== pollId) {
-    return NextResponse.json({ error: 'Gecersiz secenek' }, { status: 400 });
+    return NextResponse.json({ error: 'Geçersiz seçenek' }, { status: 400 });
   }
 
   const { data: existingVote } = await supabaseServiceClient
@@ -35,31 +35,32 @@ export async function POST(request: NextRequest) {
     .eq('user_id', auth.userId)
     .maybeSingle();
 
-  if (existingVote?.option_id === optionId) {
-    return NextResponse.json({ ok: true });
+  if (existingVote) {
+    if (existingVote.option_id === optionId) {
+      return NextResponse.json({ ok: true, alreadyVoted: true });
+    }
+    return NextResponse.json(
+      { error: 'already_voted', message: 'Bu ankette zaten oy kullandınız. Oy değiştirilemez.' },
+      { status: 409 },
+    );
   }
 
-  if (existingVote) {
-    const { error: updateError } = await supabaseServiceClient
-      .from('announcement_poll_votes')
-      .update({ option_id: optionId })
-      .eq('id', existingVote.id);
+  const { error: insertError } = await supabaseServiceClient
+    .from('announcement_poll_votes')
+    .insert({
+      poll_id: pollId,
+      option_id: optionId,
+      user_id: auth.userId,
+    });
 
-    if (updateError) {
-      return NextResponse.json({ error: 'Oy guncellenemedi' }, { status: 500 });
+  if (insertError) {
+    if (insertError.code === '23505') {
+      return NextResponse.json(
+        { error: 'already_voted', message: 'Bu ankette zaten oy kullandınız.' },
+        { status: 409 },
+      );
     }
-  } else {
-    const { error: insertError } = await supabaseServiceClient
-      .from('announcement_poll_votes')
-      .insert({
-        poll_id: pollId,
-        option_id: optionId,
-        user_id: auth.userId,
-      });
-
-    if (insertError) {
-      return NextResponse.json({ error: 'Oy kaydedilemedi' }, { status: 500 });
-    }
+    return NextResponse.json({ error: 'Oy kaydedilemedi' }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true });
