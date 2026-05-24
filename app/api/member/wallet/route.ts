@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { checkMaintenance } from '@/lib/maintenance';
 import { requireSessionUser } from '@/lib/auth';
 import { getSelectedGuildId } from '@/lib/guild';
+import { getUserMariBalance } from '@/lib/mariWallet';
 
 const getSupabase = () => {
   const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -57,14 +58,12 @@ export async function GET(request: Request) {
 
   const walletRowsResponse = await supabase
     .from('member_wallets')
-    .select('balance,mari_balance,reserved_balance,mari_reserved,guild_id')
+    .select('balance,reserved_balance,guild_id')
     .or(`guild_id.eq.${selectedGuildId},guild_id.eq.${server.id}`)
     .eq('user_id', userId);
   const walletRows = (walletRowsResponse.data ?? []) as Array<{
     balance?: number;
-    mari_balance?: number;
     reserved_balance?: number;
-    mari_reserved?: number;
     guild_id?: string;
   }>;
 
@@ -72,22 +71,18 @@ export async function GET(request: Request) {
   const walletServer = walletRows.find(row => row.guild_id === server.id);
 
   let balance = 0;
-  let mari_balance = 0;
   let reserved_balance = 0;
-  let mari_reserved = 0;
 
   if (walletSelected) {
     balance += Number(walletSelected.balance ?? 0);
-    mari_balance += Number(walletSelected.mari_balance ?? 0);
     reserved_balance += Number(walletSelected.reserved_balance ?? 0);
-    mari_reserved += Number(walletSelected.mari_reserved ?? 0);
   }
   if (walletServer && walletServer.guild_id !== selectedGuildId) {
     balance += Number(walletServer.balance ?? 0);
-    mari_balance += Number(walletServer.mari_balance ?? 0);
     reserved_balance += Number(walletServer.reserved_balance ?? 0);
-    mari_reserved += Number(walletServer.mari_reserved ?? 0);
   }
+
+  const mari_balance = await getUserMariBalance(supabase, userId);
 
   // Eğer eski sunucu UUID tabanlı satır varsa ve yeni discord sunucu ID satırıyla birleştirildiyse:
   if (walletServer && walletServer.guild_id !== selectedGuildId) {
@@ -95,9 +90,7 @@ export async function GET(request: Request) {
       guild_id: selectedGuildId,
       user_id: userId,
       balance,
-      mari_balance,
       reserved_balance,
-      mari_reserved,
       updated_at: new Date().toISOString(),
     }, { onConflict: 'guild_id,user_id' });
 
@@ -112,7 +105,6 @@ export async function GET(request: Request) {
         guild_id: selectedGuildId,
         user_id: userId,
         balance: 0,
-        mari_balance: 0,
         updated_at: new Date().toISOString(),
       },
       { onConflict: 'guild_id,user_id' },

@@ -17,6 +17,7 @@ import { createClient } from '@supabase/supabase-js';
 import { requireSessionUser } from '@/lib/auth';
 import { getSelectedGuildId } from '@/lib/guild';
 import { checkGlobalFreeze } from '@/lib/maintenance';
+import { addUserMari, getUserMariBalance, insertMariLedger } from '@/lib/mariWallet';
 
 export const dynamic = 'force-dynamic';
 
@@ -168,7 +169,7 @@ export async function POST(request: Request) {
   // Papel bakiyesi yeterli mi?
   const { data: wallet } = await supabase
     .from('member_wallets')
-    .select('balance, reserved_balance, mari_balance')
+    .select('balance, reserved_balance')
     .eq('guild_id', guildId)
     .eq('user_id', userId)
     .maybeSingle();
@@ -181,27 +182,33 @@ export async function POST(request: Request) {
     }, { status: 400 });
   }
 
-  // Dönüşümü gerçekleştir
   const newPapelBalance = (wallet?.balance ?? 0) - papelAmount;
-  const newMariBalance = (wallet?.mari_balance ?? 0) + mariAmount;
+  const newMariBalance = await addUserMari(supabase, userId, mariAmount);
 
   await supabase
     .from('member_wallets')
     .update({
       balance: newPapelBalance,
-      mari_balance: newMariBalance,
       updated_at: new Date().toISOString(),
     })
     .eq('guild_id', guildId)
     .eq('user_id', userId);
 
-  // Logu kaydet
   await supabase.from('mari_conversions').insert({
     user_id: userId,
     guild_id: guildId,
     papel_amount: papelAmount,
     mari_amount: mariAmount,
     converted_at: new Date().toISOString(),
+  });
+
+  await insertMariLedger(supabase, {
+    userId,
+    amount: mariAmount,
+    type: 'mari_convert',
+    balanceAfter: newMariBalance,
+    contextGuildId: guildId,
+    metadata: { papel_amount: papelAmount, rate: mariRate },
   });
 
   return NextResponse.json({
@@ -233,7 +240,7 @@ export async function GET(request: Request) {
       .maybeSingle(),
     supabase
       .from('member_wallets')
-      .select('balance, reserved_balance, mari_balance')
+      .select('balance, reserved_balance')
       .eq('guild_id', guildId)
       .eq('user_id', userId)
       .maybeSingle(),
@@ -257,11 +264,12 @@ export async function GET(request: Request) {
 
   const todayServerMari = (todayServerRes.data ?? []).reduce((s, r) => s + r.mari_amount, 0);
   const todayGlobalMari = (todayGlobalRes.data ?? []).reduce((s, r) => s + r.mari_amount, 0);
+  const mariBalance = await getUserMariBalance(supabase, userId);
 
   return NextResponse.json({
     mari_rate: mariRate,            // 1 Mari = X papel
     papel_balance: (wallet?.balance ?? 0) - (wallet?.reserved_balance ?? 0),
-    mari_balance: wallet?.mari_balance ?? 0,
+    mari_balance: mariBalance,
     server_limit: SERVER_DAILY_MARI_LIMIT,
     server_used_today: todayServerMari,
     server_remaining_today: Math.max(0, SERVER_DAILY_MARI_LIMIT - todayServerMari),

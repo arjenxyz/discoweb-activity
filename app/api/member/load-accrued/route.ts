@@ -184,16 +184,14 @@ export async function POST(request: Request) {
 
     type WalletRow = {
       balance?: number;
-      mari_balance?: number;
       reserved_balance?: number;
-      mari_reserved?: number;
       guild_id?: string;
     };
 
     // Get current balance, preferring the selected guild wallet row but falling back to the server row if needed.
     const { data: walletRowsData } = await supabase
       .from('member_wallets')
-      .select('balance,mari_balance,reserved_balance,mari_reserved,guild_id')
+      .select('balance,reserved_balance,guild_id')
       .in('guild_id', guildCandidates)
       .eq('user_id', userId);
       
@@ -202,26 +200,20 @@ export async function POST(request: Request) {
     const walletRowServer = walletRowsList.find(row => row.guild_id === server?.id);
 
     let currentBalance = 0;
-    let currentMariBalance = 0;
     let currentReserved = 0;
-    let currentMariReserved = 0;
 
     if (walletRowSelected) {
       currentBalance += Number(walletRowSelected.balance ?? 0);
-      currentMariBalance += Number(walletRowSelected.mari_balance ?? 0);
       currentReserved += Number(walletRowSelected.reserved_balance ?? 0);
-      currentMariReserved += Number(walletRowSelected.mari_reserved ?? 0);
     }
     if (walletRowServer && walletRowServer.guild_id !== selectedGuildId) {
       currentBalance += Number(walletRowServer.balance ?? 0);
-      currentMariBalance += Number(walletRowServer.mari_balance ?? 0);
       currentReserved += Number(walletRowServer.reserved_balance ?? 0);
-      currentMariReserved += Number(walletRowServer.mari_reserved ?? 0);
     }
 
     const walletGuildId = selectedGuildId;
 
-    // Upsert new balance (final)
+    // Upsert new balance (final) — Papel only; Mari kişisel cüzdanda (lib/mariWallet)
     const finalBalance = Number((currentBalance + total).toFixed(2));
     const walletUpsertRes = await (supabase.from('member_wallets') as unknown as {
       upsert: (values: Record<string, unknown>, options?: { onConflict?: string }) => Promise<unknown>;
@@ -229,9 +221,7 @@ export async function POST(request: Request) {
       guild_id: walletGuildId,
       user_id: userId,
       balance: finalBalance,
-      mari_balance: currentMariBalance,
       reserved_balance: currentReserved,
-      mari_reserved: currentMariReserved,
       updated_at: new Date().toISOString(),
     }, { onConflict: 'guild_id,user_id' });
     

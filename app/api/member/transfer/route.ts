@@ -3,6 +3,11 @@ import { NextResponse } from 'next/server';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { checkMaintenance } from '@/lib/maintenance';
 import { requireSessionUser } from '@/lib/auth';
+import {
+  deductUserMari,
+  getUserMariBalance,
+  insertMariLedger,
+} from '@/lib/mariWallet';
 
 const GUILD_ID = process.env.DISCORD_GUILD_ID ?? null;
 
@@ -57,29 +62,27 @@ const getTodayStartIso = () => {
 const getBalance = async (supabase: SupabaseClient, userId: string, primaryGuildId: string, fallbackGuildId: string) => {
   const { data: walletRows } = await supabase
     .from('member_wallets')
-    .select('balance,mari_balance,guild_id')
+    .select('balance,guild_id')
     .or(`guild_id.eq.${primaryGuildId},guild_id.eq.${fallbackGuildId}`)
     .eq('user_id', userId);
 
-  const rows = (walletRows as Array<{ balance?: number; mari_balance?: number; guild_id?: string }> | null) ?? [];
+  const rows = (walletRows as Array<{ balance?: number; guild_id?: string }> | null) ?? [];
   const wallet = rows.find(row => row.guild_id === primaryGuildId) ?? rows[0];
   const actualGuildId = wallet?.guild_id ?? primaryGuildId;
 
   return {
     balance: Number(wallet?.balance ?? 0),
-    mariBalance: Number(wallet?.mari_balance ?? 0),
     guildId: actualGuildId,
   };
 };
 
-const setBalance = async (supabase: SupabaseClient, userId: string, guildId: string, balance: number, mariBalance?: number) => {
+const setPapelBalance = async (supabase: SupabaseClient, userId: string, guildId: string, balance: number) => {
   await (supabase.from('member_wallets') as unknown as {
     upsert: (values: Record<string, unknown>, options?: { onConflict?: string }) => Promise<unknown>;
   }).upsert({
     guild_id: guildId,
     user_id: userId,
     balance,
-    ...(typeof mariBalance === 'number' ? { mari_balance: mariBalance } : {}),
     updated_at: new Date().toISOString(),
   }, { onConflict: 'guild_id,user_id' });
 };
@@ -187,10 +190,11 @@ export async function POST(request: Request) {
 
   const senderBalance = await getBalance(supabase, userId, selectedGuildId ?? server.id, server.id);
   const mariFee = 1;
+  const senderMariBalance = await getUserMariBalance(supabase, userId);
   if (senderBalance.balance < totalDebit) {
     return NextResponse.json({ error: 'insufficient_funds' }, { status: 400 });
   }
-  if (senderBalance.mariBalance < mariFee) {
+  if (senderMariBalance < mariFee) {
     return NextResponse.json({ error: 'insufficient_mari' }, { status: 400 });
   }
 
@@ -198,9 +202,14 @@ export async function POST(request: Request) {
 
   const newSenderBalance = Number((senderBalance.balance - totalDebit).toFixed(2));
   const newReceiverBalance = Number((receiverBalance.balance + payload.amount).toFixed(2));
-  const newSenderMariBalance = Number((senderBalance.mariBalance - mariFee).toFixed(3));
+  let newSenderMariBalance: number;
+  try {
+    newSenderMariBalance = await deductUserMari(supabase, userId, mariFee);
+  } catch {
+    return NextResponse.json({ error: 'insufficient_mari' }, { status: 400 });
+  }
 
-  await setBalance(supabase, userId, senderBalance.guildId, newSenderBalance, newSenderMariBalance);
+  await setPapelBalance(supabase, userId, senderBalance.guildId, newSenderBalance);
   await addLedger(supabase, userId, senderBalance.guildId, payload.amount, 'transfer_out', newSenderBalance, {
     recipientId: payload.recipientId,
     tax: taxAmount,
@@ -212,7 +221,16 @@ export async function POST(request: Request) {
     });
   }
 
-  await setBalance(supabase, payload.recipientId, receiverBalance.guildId, newReceiverBalance, receiverBalance.mariBalance);
+  await insertMariLedger(supabase, {
+    userId,
+    amount: -mariFee,
+    type: 'transfer_mari_fee',
+    balanceAfter: newSenderMariBalance,
+    contextGuildId: selectedGuildId ?? server.id,
+    metadata: { recipient_id: payload.recipientId },
+  });
+
+  await setPapelBalance(supabase, payload.recipientId, receiverBalance.guildId, newReceiverBalance);
   await addLedger(supabase, payload.recipientId, receiverBalance.guildId, payload.amount, 'transfer_in', newReceiverBalance, {
     senderId: userId,
   });

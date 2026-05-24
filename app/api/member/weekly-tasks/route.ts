@@ -3,6 +3,7 @@ import { getSupabaseServiceClient } from '@/lib/supabaseServiceClient';
 import { requireSessionUser } from '@/lib/auth';
 import { getSelectedGuildId } from '@/lib/guild';
 import { checkMaintenance } from '@/lib/maintenance';
+import { addUserMari, insertMariLedger } from '@/lib/mariWallet';
 import { discordFetch } from '@/lib/discordRest';
 
 export const dynamic = 'force-dynamic';
@@ -383,14 +384,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'invalid_reward', message: 'Task reward must be a positive number.' }, { status: 400 });
   }
 
-  const { data: wallet } = await supabase
-    .from('member_wallets')
-    .select('mari_balance')
-    .eq('guild_id', guildId)
-    .eq('user_id', userId)
-    .maybeSingle() as { data: { mari_balance?: number } | null };
-
-  const newMariBalance = Number((Number(wallet?.mari_balance ?? 0) + reward).toFixed(6));
+  const newMariBalance = await addUserMari(supabase, userId, reward);
 
   const { error: claimError } = await supabase.from('weekly_task_claims').insert({
     task_id: task.id,
@@ -415,26 +409,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'claim_failed', message: claimError.message ?? 'Failed to record task claim.' }, { status: 500 });
   }
 
-  await supabase.from('member_wallets').upsert(
-    {
-      guild_id: guildId,
-      user_id: userId,
-      mari_balance: newMariBalance,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: 'guild_id,user_id' },
-  );
-
-  await supabase.from('wallet_ledger').insert({
-    guild_id: guildId,
-    user_id: userId,
+  await insertMariLedger(supabase, {
+    userId,
     amount: reward,
     type: 'weekly_task_reward',
-    balance_after: newMariBalance,
-    metadata: {
-      task_id: task.id,
-      requirement_type: task.requirement_type,
-    },
+    balanceAfter: newMariBalance,
+    contextGuildId: guildId,
+    metadata: { task_id: task.id, requirement_type: task.requirement_type },
   });
 
   return NextResponse.json({ ok: true, reward, mari_balance: newMariBalance });

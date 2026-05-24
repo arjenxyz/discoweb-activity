@@ -14,6 +14,12 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { requireSessionUser } from '@/lib/auth';
 import { checkMaintenance } from '@/lib/maintenance';
 import { insertMarketEvent, BIG_TRADE_LOT_THRESHOLD, FULL_EXIT_REMAINING } from '@/lib/marketEvents';
+import {
+  addUserMari,
+  deductUserMari,
+  getUserMariBalance,
+  MARI_WALLET_GUILD_ID,
+} from '@/lib/mariWallet';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,7 +29,7 @@ const FEE_TREASURY_SHARE = 0.60;
 const FEE_DIVIDEND_SHARE = 0.25;
 // FEE_PLATFORM_SHARE = 0.15 (implicit)
 
-const PLATFORM_GUILD_ID = process.env.PLATFORM_GUILD_ID ?? 'platform';
+const PLATFORM_GUILD_ID = MARI_WALLET_GUILD_ID;
 
 const getSupabase = (): SupabaseClient | null => {
   const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -37,22 +43,14 @@ const getTodayStartIso = () => {
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())).toISOString();
 };
 
-// Mari bakiyesi (member_wallets tablosu — guild_id = PLATFORM_GUILD_ID)
-const getMariBalance = async (supabase: SupabaseClient, userId: string): Promise<number> => {
-  const { data } = await supabase
-    .from('member_wallets')
-    .select('mari_balance')
-    .eq('user_id', userId)
-    .eq('guild_id', PLATFORM_GUILD_ID)
-    .maybeSingle();
-  return Number(data?.mari_balance ?? 0);
-};
+const getMariBalance = (supabase: SupabaseClient, userId: string) =>
+  getUserMariBalance(supabase, userId);
 
 const setMariBalance = async (supabase: SupabaseClient, userId: string, balance: number) => {
-  await supabase.from('member_wallets').upsert(
-    { user_id: userId, guild_id: PLATFORM_GUILD_ID, mari_balance: balance, updated_at: new Date().toISOString() },
-    { onConflict: 'user_id,guild_id' },
-  );
+  const current = await getUserMariBalance(supabase, userId);
+  const delta = balance - current;
+  if (delta > 0) await addUserMari(supabase, userId, delta);
+  else if (delta < 0) await deductUserMari(supabase, userId, -delta);
 };
 
 // Price nudge: buy → fiyat artar, sell → fiyat düşer
