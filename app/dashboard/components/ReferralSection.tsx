@@ -6,6 +6,7 @@ import { siteConfig } from '@/config/site';
 import { apiUrl } from '@/lib/api';
 import { useT } from '@/contexts/LocaleContext';
 import { REFERRAL_MILESTONE_REWARDS, REFERRAL_MILESTONES } from '@/lib/referral/constants';
+import type { DiscordSDK } from '@discord/embedded-app-sdk';
 
 type ReferralStatus = {
   type: 'success' | 'error';
@@ -113,7 +114,7 @@ export default function ReferralSection() {
     }),
     [t],
   );
-  const discordSdkRef = useRef<{ commands: { shareLink: (args: unknown) => Promise<{ success?: boolean }>; openInviteDialog: () => Promise<void> } } | null>(null);
+  const discordSdkRef = useRef<DiscordSDK | null>(null);
   const sdkReadyRef = useRef(false);
 
   // Load profile
