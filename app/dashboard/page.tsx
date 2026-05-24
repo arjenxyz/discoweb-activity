@@ -1600,7 +1600,9 @@ export default function DashboardPage() {
             )}
 
             {effectiveSection === 'duyuru' && !isSiteMaintenance && (
-              <DuyuruPage />
+              <div className="flex min-h-0 flex-1 flex-col">
+                <DuyuruPage variant="panel" />
+              </div>
             )}
 
             {effectiveSection === 'discover' && (
