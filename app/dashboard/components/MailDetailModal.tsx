@@ -109,6 +109,90 @@ export default function MailDetailModal({ mail, onClose, onDelete, onStar }: Mai
   const renderEmailBody = (body: string, category: string) => {
     if (!body) return null;
 
+    type QuizMailMeta = {
+      source?: string;
+      quiz_title?: string;
+      total_earned?: number;
+      total_correct?: number;
+      total_questions?: number;
+      wrong_count?: number;
+      last_position?: number;
+      eliminated?: boolean;
+      is_perfect?: boolean;
+      checkpoint_papel?: number;
+      perfect_bonus?: number;
+      breakdown?: Array<{ position: number; papel_reward: number; label?: string | null }>;
+    };
+    const meta = (mail as { metadata?: QuizMailMeta })?.metadata;
+    const quizSource = meta?.source;
+
+    if (quizSource === 'quiz_motivation' || quizSource === 'quiz_reward') {
+      const isReward = quizSource === 'quiz_reward';
+      const totalEarn = Number(meta?.total_earned ?? 0);
+      const title = meta?.quiz_title ?? mail.title;
+      const stat = (label: string, value: string) => (
+        <div key={label} className="flex items-center justify-between px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.05]">
+          <span className="text-sm text-white/50">{label}</span>
+          <span className="text-sm font-semibold text-white">{value}</span>
+        </div>
+      );
+
+      return (
+        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5 sm:p-6 space-y-4">
+          <div className="flex items-center gap-3">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg ${isReward ? 'bg-emerald-500/20' : 'bg-indigo-500/20'}`}>
+              {isReward ? '🏆' : '🎯'}
+            </div>
+            <div>
+              <p className="text-sm font-bold text-white">{title}</p>
+              <p className="text-[11px] text-white/40 mt-0.5">{formatDate(mail.created_at)}</p>
+            </div>
+          </div>
+
+          {isReward && totalEarn > 0 && (
+            <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-emerald-500/[0.08] border border-emerald-500/20">
+              <span className="text-sm text-white/60">{t('mail_receipt_reward_amount')}</span>
+              <span className="text-lg font-bold text-emerald-400">+{totalEarn.toLocaleString('tr-TR')} Papel</span>
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-300/80 px-1">Sonuç özeti</p>
+            {typeof meta?.total_correct === 'number' && typeof meta?.total_questions === 'number' &&
+              stat('Doğru cevap', `${meta.total_correct} / ${meta.total_questions}`)}
+            {typeof meta?.wrong_count === 'number' && stat('Yanlış', String(meta.wrong_count))}
+            {typeof meta?.last_position === 'number' && typeof meta?.total_questions === 'number' && !isReward &&
+              stat('Ulaştığın soru', `${meta.last_position} / ${meta.total_questions}`)}
+            {meta?.eliminated && !isReward && stat('Durum', 'Bu turda elendin')}
+            {isReward && typeof meta?.is_perfect === 'boolean' &&
+              stat('Mükemmel skor', meta.is_perfect ? 'Evet' : 'Hayır')}
+          </div>
+
+          {isReward && Array.isArray(meta?.breakdown) && meta.breakdown.length > 0 && (
+            <div className="space-y-2 pt-2 border-t border-white/[0.06]">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-300/80 px-1">Ödeme detayı</p>
+              {meta.breakdown.map((b) => (
+                <div key={b.position} className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.05] text-sm">
+                  <span className="text-white/60 truncate">Checkpoint — soru {b.position}{b.label ? ` (${b.label})` : ''}</span>
+                  <span className="font-mono text-emerald-400 ml-2">+{Number(b.papel_reward).toLocaleString('tr-TR')} Papel</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {typeof meta?.total_correct !== 'number' && body && (
+            <div className="pt-2 border-t border-white/[0.06] text-sm text-white/60 leading-relaxed whitespace-pre-wrap">
+              {body.includes('<') ? (
+                <div className="mail-body-content" dangerouslySetInnerHTML={{ __html: sanitizeHtml(body) }} />
+              ) : (
+                body
+              )}
+            </div>
+          )}
+        </div>
+      );
+    }
+
     // Makbuz render (order/reward - metadata varsa)
     if (category === 'order' || category === 'reward') {
       try {
