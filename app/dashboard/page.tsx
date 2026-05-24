@@ -28,7 +28,6 @@ import ActivityReadinessGate, { type ActivityReadiness } from './components/Acti
 import SplashScreen from './components/SplashScreen';
 import SidebarNav from './components/SidebarNav';
 import PlayEarnSection from './components/PlayEarnSection';
-import WeeklyTasksSection from './components/WeeklyTasksSection';
 import { sanitizeHtml } from '@/lib/sanitizeHtml';
 import { useRealtimeDashboard } from '@/lib/utils/useRealtimeDashboard';
 import { useT } from '@/contexts/LocaleContext';
@@ -1538,9 +1537,6 @@ export default function DashboardPage() {
             )}
             {effectiveSection === 'play-earn' && (
               <PlayEarnSection />
-            )}
-            {effectiveSection === 'tasks' && !isSiteMaintenance && (
-              <WeeklyTasksSection />
             )}
           </main>
         </div>
