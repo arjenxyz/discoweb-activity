@@ -88,6 +88,7 @@ export async function GET(request: Request) {
       id: event.id,
       scope: event.scope,
       guild_id: event.guild_id,
+      lang: event.lang ?? 'tr',
       title: event.title,
       description: event.description,
       start_at: event.start_at,
