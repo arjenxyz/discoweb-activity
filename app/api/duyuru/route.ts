@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServiceClient } from '@/lib/supabaseServiceClient';
 import { requireSessionUser } from '@/lib/auth';
-import { announcementMentionsEveryone, splitEveryonePing } from '@/lib/announcementEveryone';
+import { stripEveryoneFromText } from '@/lib/announcementEveryone';
 
 export async function GET(request: NextRequest) {
   try {
@@ -108,10 +108,9 @@ export async function GET(request: NextRequest) {
     // Transform data to match expected format
     const messages = data?.map(item => {
       const poll = pollsByAnnouncementId.get(item.id);
-      const title = item.announcement_translations[0]?.title || '';
-      const body = item.announcement_translations[0]?.content || '';
-      const mentionsEveryone = Boolean(item.mentions_everyone)
-        || announcementMentionsEveryone(title, body);
+      const title = stripEveryoneFromText(item.announcement_translations[0]?.title || '');
+      const body = stripEveryoneFromText(item.announcement_translations[0]?.content || '');
+      const mentionsEveryone = Boolean(item.mentions_everyone);
 
       return {
         id: item.id,
@@ -178,10 +177,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Başlık ve mesaj içeriği gerekli' }, { status: 400 });
     }
 
-    const titleTrimmed = title.trim();
-    const bodyTrimmed = body.trim();
-    const mentionsEveryone = Boolean(mentionsEveryoneFlag)
-      || announcementMentionsEveryone(titleTrimmed, bodyTrimmed);
+    const mentionsEveryone = Boolean(mentionsEveryoneFlag);
+    const titleTrimmed = stripEveryoneFromText(title.trim());
+    const bodyTrimmed = stripEveryoneFromText(body.trim());
 
     const pollQuestion = poll?.question?.trim?.() ?? '';
     const pollOptions = Array.isArray(poll?.options)
@@ -304,10 +302,9 @@ export async function POST(request: NextRequest) {
         if (configData?.value) {
           const channelId = configData.value;
 
-          const embedDescription = splitEveryonePing(bodyTrimmed).body || bodyTrimmed;
           const embed = {
             title: titleTrimmed,
-            description: embedDescription,
+            description: bodyTrimmed,
             color: mentionsEveryone ? 0xFEE75C : 0x5865F2,
             author: {
               name: authorName,

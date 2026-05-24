@@ -10,6 +10,7 @@ import {
   isImageUrl,
   normalizeMediaUrl,
 } from '@/lib/announcementMedia';
+import { stripEveryoneFromText } from '@/lib/announcementEveryone';
 import { LuCircleCheck } from 'react-icons/lu';
 
 // ---------- types (unchanged) ----------
@@ -93,22 +94,6 @@ function parseAnnouncementBody(body: string) {
   if (text === '·' || text === '\u00B7') text = '';
 
   return { body: text, mediaUrls, linkUrls };
-}
-
-function renderTextWithEveryone(text: string) {
-  const parts = text.split(/(@everyone\b)/gi);
-  return parts.map((part, index) =>
-    /^@everyone$/i.test(part) ? (
-      <span
-        key={`everyone-${index}`}
-        className="rounded bg-amber-400/30 px-1 py-0.5 font-semibold text-amber-200"
-      >
-        @everyone
-      </span>
-    ) : (
-      <span key={`text-${index}`}>{part}</span>
-    ),
-  );
 }
 
 function getYouTubeEmbedUrl(url: string) {
@@ -402,9 +387,11 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
             const isSystem = msg.author_name?.toLowerCase() === 'system';
             const authorName = isSystem ? 'DiscoWeb' : (msg.author_name || 'Geliştirici');
             const authorAvatar = msg.author_avatar_url || '/logo.png';
+            const displayTitle = msg.title ? stripEveryoneFromText(msg.title) : '';
+            const displayBody = parsed.body ? stripEveryoneFromText(parsed.body) : '';
 
             return (
-              <div key={msg.id} className={`relative group hover:bg-white/[0.03] px-4 py-2 transition-colors ${index === 0 ? 'mt-0' : 'mt-[17px]'} ${msg.mentions_everyone ? 'border-l-2 border-amber-400/50 bg-amber-400/[0.04]' : ''}`}>
+              <div key={msg.id} className={`relative group hover:bg-white/[0.03] px-4 py-2 transition-colors ${index === 0 ? 'mt-0' : 'mt-[17px]'}`}>
 
                 {/* New Divider Line */}
                 {newDividerIndex === index && (
@@ -412,13 +399,6 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
                     <div className="h-[1px] flex-1 bg-red-500/60" />
                     <span className="mx-2 text-xs font-bold text-red-400">YENİ MESAJLAR</span>
                     <div className="h-[1px] flex-1 bg-red-500/60" />
-                  </div>
-                )}
-
-                {msg.mentions_everyone && (
-                  <div className="mb-2 ml-12 flex items-center gap-2 rounded-md border border-amber-400/30 bg-amber-400/15 px-3 py-1.5">
-                    <span className="rounded bg-amber-400/35 px-1.5 py-0.5 text-xs font-bold text-amber-100">@everyone</span>
-                    <span className="text-xs font-medium text-amber-200/80">Bu duyuru herkesi etiketliyor</span>
                   </div>
                 )}
 
@@ -453,11 +433,11 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
                     </div>
 
                     <div className="mt-1 space-y-1 text-sm leading-[1.375rem] text-white/70">
-                      {msg.title && (
-                        <h3 className="font-bold text-white text-[15px]">{renderTextWithEveryone(msg.title)}</h3>
+                      {displayTitle && (
+                        <h3 className="font-bold text-white text-[15px]">{displayTitle}</h3>
                       )}
-                      {parsed.body && (
-                        <div className="whitespace-pre-wrap">{renderTextWithEveryone(parsed.body)}</div>
+                      {displayBody && (
+                        <div className="whitespace-pre-wrap">{displayBody}</div>
                       )}
                     </div>
 
