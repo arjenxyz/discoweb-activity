@@ -12,6 +12,7 @@ import {
   LuCoins,
   LuZap,
   LuCircleHelp,
+  LuInfo,
 } from 'react-icons/lu';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { apiUrl } from '@/lib/api';
@@ -99,12 +100,136 @@ function useCountdown(targetIso: string) {
   return { text, ended };
 }
 
-function StatusBadge({ live }: { live?: boolean }) {
+function InfoButton({ live, onClick }: { live?: boolean; onClick: () => void }) {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-1.5">
-      <span className={`h-1.5 w-1.5 rounded-full ${live ? 'animate-pulse bg-emerald-400' : 'bg-sky-400'}`} />
-      <span className="text-[11px] font-medium text-white/40">{live ? 'Canlı' : 'Yaklaşan'}</span>
-    </span>
+    <button
+      type="button"
+      onClick={onClick}
+      className="inline-flex items-center gap-1.5 rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-1.5 text-[11px] font-medium text-white/55 transition-colors hover:bg-white/[0.08] hover:text-white/80"
+    >
+      {live && <span className="h-1.5 w-1.5 rounded-full animate-pulse bg-emerald-400" />}
+      <LuInfo className="h-3.5 w-3.5" strokeWidth={2} />
+      Bilgi
+    </button>
+  );
+}
+
+function QuizInfoModal({ event, onClose }: { event: EventCard; onClose: () => void }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  const checkpoints = event.checkpoints ?? [];
+
+  return (
+    <div
+      className="fixed inset-0 z-[9999] flex items-end justify-center bg-black/70 p-4 backdrop-blur-sm sm:items-center"
+      onClick={onClose}
+      role="presentation"
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="quiz-info-title"
+        className="w-full max-w-md max-h-[85vh] overflow-y-auto rounded-2xl border border-white/[0.10] bg-[#12141c] p-5 shadow-2xl custom-scrollbar"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between gap-3 mb-4">
+          <div>
+            <p id="quiz-info-title" className="text-lg font-black text-white">
+              Etkinlik bilgisi
+            </p>
+            <p className="mt-0.5 text-sm text-white/40">{event.title}</p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg p-1.5 text-white/40 transition-colors hover:bg-white/[0.06] hover:text-white/70"
+            aria-label="Kapat"
+          >
+            <LuX className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 mb-5">
+          <StatCard
+            label="Soru"
+            value={`${event.total_questions}`}
+            sub={`${event.seconds_per_question} sn / soru`}
+            icon={<LuCircleHelp className="h-4 w-4" />}
+            color="text-violet-400"
+            compact
+          />
+          <StatCard
+            label="Hak"
+            value={`${event.wrong_allowed}`}
+            sub="yanlış hakkı"
+            icon={<LuHeart className="h-4 w-4" />}
+            color="text-rose-400"
+            compact
+          />
+          <StatCard
+            label="Havuz"
+            value={Number(event.prize_pool_papel).toLocaleString('tr-TR')}
+            sub="papel"
+            icon={<LuCoins className="h-4 w-4" />}
+            color="text-amber-400"
+            highlight
+            compact
+          />
+          <StatCard
+            label="Başlangıç"
+            value={new Date(event.start_at).toLocaleString('tr-TR', { dateStyle: 'short', timeStyle: 'short' })}
+            icon={<LuCalendar className="h-4 w-4" />}
+            color="text-sky-400"
+            compact
+            small
+          />
+        </div>
+
+        {checkpoints.length > 0 && (
+          <div className="mb-5">
+            <p className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-white/30">
+              Checkpoint ödülleri (etkinlik boyunca)
+            </p>
+            <div className="grid gap-2">
+              {checkpoints.map((c) => (
+                <div key={c.position} className={`${INNER} flex items-center justify-between gap-3`}>
+                  <div>
+                    <p className="text-xs font-semibold text-white/70">
+                      Soru {c.position}
+                      {c.label ? <span className="text-white/35">{` · ${c.label}`}</span> : null}
+                    </p>
+                    <p className="text-[10px] text-white/30">
+                      {c.position}/{event.total_questions} soru
+                    </p>
+                  </div>
+                  <span className="text-sm font-bold text-amber-300 tabular-nums">
+                    +{Number(c.papel_reward).toLocaleString('tr-TR')}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className={INNER}>
+          <div className="flex items-center gap-2 mb-2">
+            <LuZap className="h-3.5 w-3.5 text-white/30" />
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-white/30">Kurallar</span>
+          </div>
+          <ul className="space-y-1.5 text-xs text-white/45 leading-relaxed">
+            <li>Etkinlik başlamadan önce kayıt ol — geç katılım mümkün değil.</li>
+            <li>{event.wrong_allowed} yanlış hakkın var; aşınca elenirsin.</li>
+            <li>Her soru için {event.seconds_per_question} saniyen var.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -400,6 +525,7 @@ function EventPanel({
   return (
     <LivePlayView
       state={state}
+      eventCard={event}
       onAnswer={submit}
       answering={answering}
       lastAnswer={lastAnswer}
@@ -428,6 +554,7 @@ function ScheduledView({
   joinError: string | null;
   onCountdownEnd?: () => void;
 }) {
+  const [showInfo, setShowInfo] = useState(false);
   const { text: countdown, ended } = useCountdown(event.start_at);
   const countdownFiredRef = useRef(false);
   const overdue = ended || startPending;
@@ -451,7 +578,7 @@ function ScheduledView({
       <div className="relative z-10">
         <div className="flex items-start justify-between gap-4 mb-5">
           <div>
-            <StatusBadge />
+            <InfoButton onClick={() => setShowInfo(true)} />
             <h2 className="mt-3 text-xl sm:text-2xl font-black text-white tracking-tight">{event.title}</h2>
             {event.description && (
               <p className="mt-1.5 text-sm text-white/40 leading-relaxed">{event.description}</p>
@@ -507,27 +634,11 @@ function ScheduledView({
           />
         </div>
 
-        {(event.checkpoints ?? []).length > 0 && (
-          <CheckpointList checkpoints={event.checkpoints ?? []} total={event.total_questions} />
-        )}
-
         {startBlocked && (
           <div className={`${INNER} mb-4 border-amber-500/20 bg-amber-500/5`}>
             <p className="text-sm text-amber-200/90 leading-relaxed">{startBlocked}</p>
           </div>
         )}
-
-        <div className={`${INNER} mb-5`}>
-          <div className="flex items-center gap-2 mb-2">
-            <LuZap className="h-3.5 w-3.5 text-white/30" />
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-white/30">Kurallar</span>
-          </div>
-          <ul className="space-y-1 text-xs text-white/40 leading-relaxed">
-            <li>Etkinlik başlamadan önce kayıt ol — geç katılım mümkün değil.</li>
-            <li>{event.wrong_allowed} yanlış hakkın var; aşınca elenirsin.</li>
-            <li>Her soru için {event.seconds_per_question} saniyen var.</li>
-          </ul>
-        </div>
 
         <div className="border-t border-white/[0.08] pt-5">
           {joined ? (
@@ -560,6 +671,7 @@ function ScheduledView({
           ) : null}
         </div>
       </div>
+      {showInfo && <QuizInfoModal event={event} onClose={() => setShowInfo(false)} />}
     </div>
   );
 }
@@ -584,17 +696,20 @@ function MissedRegistrationView({ event }: { event: EventCard }) {
 
 function LivePlayView({
   state,
+  eventCard,
   onAnswer,
   answering,
   lastAnswer,
 }: {
   state: StateResponse;
+  eventCard: EventCard;
   onAnswer: (idx: number) => void;
   answering: boolean;
   lastAnswer: { correctIndex: number; selected: number; isCorrect: boolean; position: number } | null;
 }) {
   const { event, current_question: q, me, answered_this_position: answered } = state;
   const [secondsLeft, setSecondsLeft] = useState(event.seconds_per_question);
+  const [showInfo, setShowInfo] = useState(false);
 
   useEffect(() => {
     if (!event.current_question_started_at) return;
@@ -628,7 +743,7 @@ function LivePlayView({
       <div className={`${CARD} !py-3 !px-4`}>
         <div className="flex items-center justify-between gap-4">
           <div>
-            <StatusBadge live />
+            <InfoButton live onClick={() => setShowInfo(true)} />
             <p className="mt-2 text-[10px] font-semibold uppercase tracking-wider text-white/30">
               Soru {q.position} / {event.total_questions}
             </p>
@@ -738,6 +853,7 @@ function LivePlayView({
           </span>
         </span>
       </div>
+      {showInfo && <QuizInfoModal event={eventCard} onClose={() => setShowInfo(false)} />}
     </div>
   );
 }
@@ -769,31 +885,6 @@ function FinishRedirect() {
     <div className="flex items-center justify-center gap-3 py-12 text-white/30">
       <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/10 border-t-white/40" />
       <span className="text-sm">Ana sayfaya dönülüyor…</span>
-    </div>
-  );
-}
-
-function CheckpointList({ checkpoints, total }: { checkpoints: Checkpoint[]; total: number }) {
-  return (
-    <div className="mb-5">
-      <p className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-white/30">
-        Checkpoint ödülleri (etkinlik boyunca)
-      </p>
-      <div className="grid gap-2 sm:grid-cols-2">
-        {checkpoints.map((c) => (
-          <div key={c.position} className={`${INNER} flex items-center justify-between gap-3`}>
-            <div>
-              <p className="text-xs font-semibold text-white/70">
-                Soru {c.position}{c.label ? <span className="text-white/35">{` · ${c.label}`}</span> : null}
-              </p>
-              <p className="text-[10px] text-white/30">{c.position}/{total} soru</p>
-            </div>
-            <span className="text-sm font-bold text-amber-300 tabular-nums">
-              +{Number(c.papel_reward).toLocaleString('tr-TR')}
-            </span>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
