@@ -14,6 +14,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { requireSessionUser } from '@/lib/auth';
 import { getSelectedGuildId } from '@/lib/guild';
+import { runQuizTick } from '@/lib/quiz/tick';
 
 const getSupabase = () => {
   const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -34,11 +35,21 @@ export async function GET(request: Request) {
   const eventId = url.searchParams.get('event_id');
   if (!eventId) return NextResponse.json({ error: 'event_id_required' }, { status: 400 });
 
-  const { data: event } = await supabase
+  // Bot cron yoksa bile poll ile state machine ilerlesin
+  let startBlocked: string | null = null;
+  try {
+    const tickResult = await runQuizTick(supabase, eventId);
+    startBlocked = tickResult.lock_failures.find((f) => f.event_id === eventId)?.error ?? null;
+  } catch (e) {
+    console.warn('[quiz/state] tick failed', e);
+  }
+
+  const { data: eventRow } = await supabase
     .from('quiz_events')
     .select('*')
     .eq('id', eventId)
     .single();
+  const event = eventRow;
   if (!event) return NextResponse.json({ error: 'not_found' }, { status: 404 });
   if (event.scope === 'guild' && event.guild_id !== guildId) {
     return NextResponse.json({ error: 'wrong_guild' }, { status: 403 });
@@ -54,6 +65,7 @@ export async function GET(request: Request) {
   const joined = !!participant;
   const canJoin = event.status === 'scheduled' && !joined;
   const registrationClosed = !joined && event.status === 'live';
+  const startPending = event.status === 'scheduled' && new Date(event.start_at) <= new Date();
 
   // Sorular yalnızca önceden kayıt olmuş katılımcılara gösterilir
   let currentQuestion: { position: number; question_text: string; options: string[]; category: string | null; difficulty: string | null } | null = null;
@@ -114,6 +126,8 @@ export async function GET(request: Request) {
     joined,
     can_join: canJoin,
     registration_closed: registrationClosed,
+    start_pending: startPending,
+    start_blocked: startBlocked,
     server_now: new Date().toISOString(),
   });
 }

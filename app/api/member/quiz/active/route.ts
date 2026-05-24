@@ -11,6 +11,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { requireSessionUser } from '@/lib/auth';
 import { getSelectedGuildId } from '@/lib/guild';
+import { runQuizTick } from '@/lib/quiz/tick';
 
 const getSupabase = () => {
   const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -28,7 +29,14 @@ export async function GET(request: Request) {
   const userId = session.userId;
   const guildId = await getSelectedGuildId(request);
 
-  // Bu zaman penceresi içindeki event'leri al: scheduled (gelecekte), live, son 24 saatte biten
+  // Yaklaşan/canlı event'ler için state machine (bot cron yedek)
+  try {
+    await runQuizTick(supabase);
+  } catch (e) {
+    console.warn('[quiz/active] tick failed', e);
+  }
+
+  // Bu zaman penceresi içindeki event'leri al
   const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
   const orFilter = guildId

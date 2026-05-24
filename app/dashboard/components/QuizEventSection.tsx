@@ -52,6 +52,8 @@ type StateResponse = {
   joined: boolean;
   can_join: boolean;
   registration_closed: boolean;
+  start_pending?: boolean;
+  start_blocked?: string | null;
   server_now: string;
 };
 
@@ -194,6 +196,8 @@ function EventPanel({ event: initialEvent, onRefresh }: { event: EventCard; onRe
       }
     : initialEvent;
   const isActive = event.status === 'scheduled' || event.status === 'live';
+  const isOverdue =
+    event.status === 'scheduled' && new Date(event.start_at).getTime() <= Date.now();
 
   const pollState = useCallback(async () => {
     try {
@@ -204,7 +208,7 @@ function EventPanel({ event: initialEvent, onRefresh }: { event: EventCard; onRe
       if (data.current_question && data.current_question.position !== lastAnswer?.position) {
         setLastAnswer(null);
       }
-      if (data.event.status !== initialEvent.status) {
+      if (data.event.status !== 'scheduled') {
         onRefresh();
       }
     } catch {
@@ -218,11 +222,12 @@ function EventPanel({ event: initialEvent, onRefresh }: { event: EventCard; onRe
       return;
     }
     pollState();
-    pollRef.current = setInterval(pollState, event.status === 'live' ? 2000 : 3000);
+    const intervalMs = event.status === 'live' ? 2000 : isOverdue ? 1000 : 3000;
+    pollRef.current = setInterval(pollState, intervalMs);
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
     };
-  }, [isActive, event.status, pollState]);
+  }, [isActive, event.status, isOverdue, pollState]);
 
   const join = async () => {
     setJoining(true);
@@ -289,6 +294,8 @@ function EventPanel({ event: initialEvent, onRefresh }: { event: EventCard; onRe
         event={event}
         joined={state?.joined ?? !!event.me}
         canJoin={state?.can_join ?? !event.me}
+        startPending={state?.start_pending ?? isOverdue}
+        startBlocked={state?.start_blocked ?? null}
         onJoin={join}
         joining={joining}
         joinError={joinError}
@@ -324,6 +331,8 @@ function ScheduledView({
   event,
   joined,
   canJoin,
+  startPending,
+  startBlocked,
   onJoin,
   joining,
   joinError,
@@ -332,6 +341,8 @@ function ScheduledView({
   event: EventCard;
   joined: boolean;
   canJoin: boolean;
+  startPending?: boolean;
+  startBlocked?: string | null;
   onJoin: () => void;
   joining: boolean;
   joinError: string | null;
@@ -339,6 +350,7 @@ function ScheduledView({
 }) {
   const { text: countdown, ended } = useCountdown(event.start_at);
   const countdownFiredRef = useRef(false);
+  const overdue = ended || startPending;
 
   useEffect(() => {
     if (ended && !countdownFiredRef.current) {
@@ -346,6 +358,12 @@ function ScheduledView({
       onCountdownEnd?.();
     }
   }, [ended, onCountdownEnd]);
+
+  useEffect(() => {
+    if (!overdue || startBlocked) return;
+    const iv = setInterval(() => onCountdownEnd?.(), 2000);
+    return () => clearInterval(iv);
+  }, [overdue, startBlocked, onCountdownEnd]);
 
   return (
     <article>
@@ -356,8 +374,18 @@ function ScheduledView({
           {event.description && <p className="mt-2 text-sm leading-relaxed text-white/55">{event.description}</p>}
         </div>
         <div className="shrink-0 text-right">
-          <p className="text-[10px] uppercase tracking-wider text-white/35">Kalan süre</p>
-          <p className="mt-1 font-mono text-3xl font-light tabular-nums tracking-tight">{countdown}</p>
+          <p className="text-[10px] uppercase tracking-wider text-white/35">
+            {overdue ? 'Durum' : 'Kalan süre'}
+          </p>
+          {overdue ? (
+            startBlocked ? (
+              <p className="mt-1 text-sm text-amber-400/90">Başlatılamadı</p>
+            ) : (
+              <p className="mt-1 text-sm text-white/70">Başlatılıyor…</p>
+            )
+          ) : (
+            <p className="mt-1 font-mono text-3xl font-light tabular-nums tracking-tight">{countdown}</p>
+          )}
         </div>
       </div>
 
@@ -379,6 +407,12 @@ function ScheduledView({
           <dd className="mt-0.5 text-white/80">{Number(event.prize_pool_papel).toLocaleString('tr-TR')} papel</dd>
         </div>
       </dl>
+
+      {startBlocked && (
+        <p className="mb-6 rounded border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm leading-relaxed text-amber-200/90">
+          {startBlocked}
+        </p>
+      )}
 
       {((event.checkpoints ?? []).length > 0) && (
         <div className="mb-8">
