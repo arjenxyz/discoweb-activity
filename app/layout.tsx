@@ -11,6 +11,7 @@ import ErrorCollector from "./components/ErrorCollector";
 import { LocaleProvider } from "@/contexts/LocaleContext";
 import GlobalErrorReporter from "@/components/GlobalErrorReporter";
 import SpoilerWarningModal from "./components/SpoilerWarningModal";
+import MiniSplashOverlay from "./components/MiniSplashOverlay";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -50,6 +51,7 @@ export default function RootLayout({
             {children}
             <CartDrawer />
             <GlobalErrorReporter />
+            <MiniSplashOverlay />
           </CartProvider>
         </LocaleProvider>
       </body>
