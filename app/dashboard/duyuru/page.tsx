@@ -84,6 +84,10 @@ function parseAnnouncementBody(body: string) {
   return { body: filtered.join('\n').trim(), mediaUrls, linkUrls };
 }
 
+function isImageUrl(url: string) {
+  return /\.(jpg|jpeg|png|gif|webp|avif)(\?.*)?$/i.test(url);
+}
+
 function isVideoUrl(url: string) {
   return /\.(mp4|webm|mov|m4v|avi|ogg|ogv)(\?.*)?$/i.test(url);
 }
@@ -343,10 +347,11 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
                   </div>
                 );
               }
-              if (parsed.mediaUrls.includes(url)) {
+              if (parsed.mediaUrls.includes(url) || isImageUrl(url)) {
                 return (
                   <div key={mediaKey} className="mt-2">
                     <a href={url} target="_blank" rel="noopener noreferrer">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={url}
                         alt="Medya eklentisi"
@@ -354,6 +359,11 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
                         onError={() => setMediaErrors((prev) => ({ ...prev, [mediaKey]: true }))}
                       />
                     </a>
+                    {mediaFailed && (
+                      <a href={url} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block text-xs text-white/50 hover:text-white underline break-all">
+                        Medya yüklenemedi — bağlantıyı aç
+                      </a>
+                    )}
                   </div>
                 );
               }
