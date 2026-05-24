@@ -406,10 +406,16 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
                 key={msg.id}
                 className={`relative group transition-colors ${index === 0 ? 'mt-0' : 'mt-[17px]'} ${
                   msg.mentions_everyone
-                    ? 'mx-2 rounded-xl border border-[#fee75c]/20 bg-[#fee75c]/[0.07] px-3 py-3 shadow-[inset_3px_0_0_0_#fee75c] hover:bg-[#fee75c]/[0.1]'
+                    ? 'mx-2 overflow-hidden rounded-xl border border-[#fee75c]/20 bg-[#fee75c]/[0.07] px-3 py-3 hover:bg-[#fee75c]/[0.1]'
                     : 'px-4 py-2 hover:bg-white/[0.03]'
                 }`}
               >
+                {msg.mentions_everyone && (
+                  <div
+                    className="pointer-events-none absolute inset-y-0 left-0 w-[3px] bg-[#fee75c]"
+                    aria-hidden
+                  />
+                )}
 
                 {/* New Divider Line */}
                 {newDividerIndex === index && (
