@@ -1197,6 +1197,7 @@
   "custom_role_icon_error_invalid": "Geçersiz görsel dosyası.",
   "custom_role_icon_error_read": "Görsel okunamadı.",
   "custom_role_preview_profile": "Profil önizlemesi",
+  "custom_role_preview_icon_hint": "İkon, rol adının sağında görünür — Discord profilinizdeki gibi.",
   "custom_role_emoji_label": "Rol emojisi (isteğe bağlı)",
   "custom_role_hoist": "Üyeleri ayrı göster",
   "custom_role_mentionable": "Herkes etiketleyebilsin",

@@ -17,6 +17,8 @@ import type { CustomRoleRequestRow } from '@/lib/customRoles/types';
 import { CUSTOM_ROLE_ICON_MAX_BYTES } from '@/lib/customRoles/types';
 import { fileToDataUrl, validateRoleIconDataUrl } from '@/lib/customRoles/iconValidate';
 import DiscordProfileRolePreview from './DiscordProfileRolePreview';
+import { DiscordRolePill } from './DiscordRolePill';
+import { discordColorToHex } from '@/lib/customRoles/types';
 
 type Props = {
   profile?: MemberProfile | null;
@@ -302,6 +304,7 @@ export default function CustomRolePage({ profile }: Props) {
             avatarUrl={profile?.avatarUrl ?? null}
             about={profile?.about ?? null}
           />
+          <p className="text-center text-[11px] text-[#949ba4]">{t('custom_role_preview_icon_hint')}</p>
           <div className="rounded-xl border border-amber-500/25 bg-amber-500/10 px-3 py-2.5 text-xs leading-relaxed text-amber-100/90">
             {t('custom_role_hierarchy_warning')}
           </div>
@@ -320,21 +323,11 @@ export default function CustomRolePage({ profile }: Props) {
                 key={r.id}
                 className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
               >
-                <div className="flex min-w-0 items-center gap-2">
-                  {r.role_icon_url ? (
-                    <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full">
-                      <Image src={r.role_icon_url} alt="" fill className="object-cover" unoptimized />
-                    </span>
-                  ) : (
-                    <span
-                      className="h-8 w-8 shrink-0 rounded-full"
-                      style={{
-                        backgroundColor: `#${(r.role_color & 0xffffff).toString(16).padStart(6, '0')}`,
-                      }}
-                    />
-                  )}
-                  <span className="truncate text-sm text-slate-200">{r.role_name}</span>
-                </div>
+                <DiscordRolePill
+                  name={r.role_name}
+                  colorHex={discordColorToHex(r.role_color)}
+                  iconUrl={r.role_icon_url}
+                />
                 <span className="shrink-0 text-xs font-medium text-slate-500">
                   {statusLabel(r.status)}
                 </span>

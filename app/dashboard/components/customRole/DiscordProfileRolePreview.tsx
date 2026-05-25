@@ -1,8 +1,8 @@
 'use client';
 
 import Image from 'next/image';
-import { LuPlus, LuX } from 'react-icons/lu';
 import { discordColorToHex } from '@/lib/customRoles/types';
+import { DiscordRoleOverflowPill, DiscordRolePill } from './DiscordRolePill';
 
 type Props = {
   roleName: string;
@@ -13,6 +13,13 @@ type Props = {
   avatarUrl?: string | null;
   about?: string | null;
 };
+
+/** Profilde görünen örnek roller — kullanıcının tasarımı ortada vurgulu */
+const CONTEXT_ROLES: Array<{ name: string; color: string }> = [
+  { name: 'data', color: '#1e8f8f' },
+  { name: 'draft', color: '#c23b3b' },
+  { name: 'artist', color: '#9b7bb8' },
+];
 
 export default function DiscordProfileRolePreview({
   roleName,
@@ -30,12 +37,12 @@ export default function DiscordProfileRolePreview({
   const showName = roleName.trim() || 'Örnek Rol';
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-[#1e1f22] bg-[#313338] shadow-2xl">
-      <div className="relative h-24 bg-gradient-to-br from-[#4f545c] to-[#2b2d31]" />
+    <div className="overflow-hidden rounded-lg border border-[#1e1f22] bg-[#313338] shadow-2xl">
+      <div className="relative h-[94px] bg-[#4f545c]" />
 
-      <div className="relative px-4 pb-4">
-        <div className="-mt-10 mb-3 flex items-end justify-between">
-          <div className="relative h-[72px] w-[72px] shrink-0 overflow-hidden rounded-full border-[5px] border-[#313338] bg-[#5865f2]">
+      <div className="relative px-3 pb-3">
+        <div className="-mt-[38px] mb-2">
+          <div className="relative h-[80px] w-[80px] overflow-hidden rounded-full border-[6px] border-[#313338] bg-[#5865f2]">
             {avatarUrl ? (
               <Image src={avatarUrl} alt="" fill className="object-cover" unoptimized />
             ) : (
@@ -43,53 +50,48 @@ export default function DiscordProfileRolePreview({
                 {label.charAt(0).toUpperCase()}
               </span>
             )}
-            <span className="absolute bottom-0.5 right-0.5 h-4 w-4 rounded-full border-[3px] border-[#313338] bg-[#23a559]" />
+            <span className="absolute bottom-0 right-0 h-5 w-5 rounded-full border-[4px] border-[#313338] bg-[#23a559]" />
           </div>
         </div>
 
         {about && (
-          <div className="mb-3 max-w-[90%] rounded-lg bg-[#111214] px-3 py-2 text-xs text-[#dbdee1]">
+          <div className="mb-2 rounded-md bg-[#111214] px-2 py-1.5 text-[13px] leading-snug text-[#dbdee1]">
             {about}
           </div>
         )}
 
-        <h3 className="text-xl font-bold text-[#f2f3f5]">{label}</h3>
-        <p className="text-sm text-[#b5bac1]">
-          {username}
-          <span className="text-[#949ba4]"> • üye</span>
-        </p>
+        <h3 className="text-[20px] font-bold leading-tight text-[#f2f3f5]">{label}</h3>
+        <p className="mt-0.5 text-[14px] text-[#b5bac1]">{username}</p>
 
-        <div className="mt-4">
-          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#b5bac1]">
+        <div className="mt-3 rounded-md bg-[#2b2d31] p-2">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-[#b5bac1] opacity-80">
+            Spotify dinliyor
+          </p>
+          <p className="mt-1 truncate text-[13px] font-medium text-[#f2f3f5]">Örnek parça</p>
+          <p className="text-[12px] text-[#b5bac1]">Sanatçı</p>
+        </div>
+
+        <div className="mt-3">
+          <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-[#b5bac1]">
             Roller
           </p>
-          <div className="flex flex-wrap items-center gap-1.5">
-            <span
-              className="inline-flex max-w-full items-center gap-1.5 rounded-md bg-[#41434a] py-1 pl-1 pr-1.5 text-[13px] font-medium text-[#f2f3f5]"
-              style={{ borderLeft: `3px solid ${hex}` }}
-            >
-              {roleIconUrl ? (
-                <span className="relative h-5 w-5 shrink-0 overflow-hidden rounded-full">
-                  <Image src={roleIconUrl} alt="" fill className="object-cover" unoptimized />
-                </span>
-              ) : (
-                <span
-                  className="h-5 w-5 shrink-0 rounded-full"
-                  style={{ backgroundColor: hex }}
-                />
-              )}
-              <span className="truncate">{showName}</span>
-              <LuX className="h-3.5 w-3.5 shrink-0 text-[#b5bac1]/80" aria-hidden />
-            </span>
-            <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-[#41434a] text-[#b5bac1]">
-              <LuPlus className="h-4 w-4" aria-hidden />
-            </span>
+          <div className="flex flex-wrap gap-1">
+            {CONTEXT_ROLES.slice(0, 2).map((r) => (
+              <DiscordRolePill key={r.name} name={r.name} colorHex={r.color} />
+            ))}
+            <DiscordRolePill
+              name={showName}
+              colorHex={hex}
+              iconUrl={roleIconUrl}
+              highlight
+            />
+            {CONTEXT_ROLES.slice(2).map((r) => (
+              <DiscordRolePill key={r.name} name={r.name} colorHex={r.color} />
+            ))}
+            <DiscordRoleOverflowPill count={5} />
           </div>
         </div>
 
-        <p className="mt-4 text-[11px] leading-relaxed text-[#949ba4]">
-          Önizleme, Discord profilindeki rol görünümünü yansıtır. Onay sonrası rol sunucuda oluşturulur.
-        </p>
       </div>
     </div>
   );
