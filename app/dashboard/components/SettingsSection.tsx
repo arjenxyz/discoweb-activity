@@ -185,9 +185,9 @@ export default function SettingsSection({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 px-4 py-6 backdrop-blur-sm transition-all duration-300">
       <div className="w-full max-w-lg overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl shadow-black/70 animate-in fade-in zoom-in-95 duration-200">
         
-        <div className="flex flex-col items-center border-b border-slate-800 p-8 text-center">
-          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-indigo-500/30 bg-indigo-500/5">
-             <LuMessageSquare className="h-8 w-8 text-indigo-400" />
+        <div className="flex flex-col items-center border-b border-slate-800 p-5 text-center">
+          <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full border border-indigo-500/30 bg-indigo-500/5">
+             <LuMessageSquare className="h-6 w-6 text-indigo-400" />
           </div>
           <h2 className="text-xl font-bold text-white">Veri Talep Onayı</h2>
           <p className="mt-2 text-sm text-slate-400">
@@ -195,7 +195,7 @@ export default function SettingsSection({
           </p>
         </div>
 
-        <div className="bg-slate-900/50 p-6">
+        <div className="bg-slate-900/50 p-4 sm:p-5">
           <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-4">
             <div className="flex gap-3">
               <LuTriangleAlert className="h-5 w-5 shrink-0 text-amber-500" />
@@ -211,7 +211,7 @@ export default function SettingsSection({
             </div>
           )}
 
-          <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <div className="mt-4 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
             <button
               type="button"
               onClick={() => setRequestModalOpen(false)}
@@ -256,9 +256,9 @@ export default function SettingsSection({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 px-4 py-6 backdrop-blur-sm transition-all duration-300">
       <div className="w-full max-w-lg overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl shadow-black/70 animate-in fade-in zoom-in-95 duration-200">
         
-        <div className="flex flex-col items-center border-b border-slate-800 p-8 text-center">
-          <div className={`mb-4 flex h-16 w-16 items-center justify-center rounded-full ${deleteOptionConfig[deleteScope].borderTone}`}>
-             <LuShieldAlert className={`h-8 w-8 ${deleteOptionConfig[deleteScope].iconTone}`} />
+        <div className="flex flex-col items-center border-b border-slate-800 p-5 text-center">
+          <div className={`mb-3 flex h-12 w-12 items-center justify-center rounded-full ${deleteOptionConfig[deleteScope].borderTone}`}>
+             <LuShieldAlert className={`h-6 w-6 ${deleteOptionConfig[deleteScope].iconTone}`} />
           </div>
           <h2 className="text-xl font-bold text-white">Bu işlem geri alınamaz!</h2>
           <p className="mt-2 text-sm text-slate-400">
@@ -266,7 +266,7 @@ export default function SettingsSection({
           </p>
         </div>
 
-        <div className="bg-slate-900/50 p-6">
+        <div className="bg-slate-900/50 p-4 sm:p-5">
           <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-4">
             <div className="flex gap-3">
               <LuTriangleAlert className="h-5 w-5 shrink-0 text-amber-500" />
@@ -282,7 +282,7 @@ export default function SettingsSection({
             </div>
           )}
 
-          <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <div className="mt-4 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
             <button
               type="button"
               onClick={() => setDeleteModalOpen(false)}
@@ -305,13 +305,13 @@ export default function SettingsSection({
   ) : null;
 
   const soundSettingsContent = (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
       <div>
         <h3 className="text-lg font-semibold text-white">Ses Ayarları</h3>
         <p className="mt-1 text-sm text-slate-400">Arka plan müziği ve arayüz ses efektlerini buradan yapılandırın.</p>
       </div>
 
-      <div className="flex flex-col gap-6 rounded-2xl border border-slate-800 bg-slate-900/40 p-6 backdrop-blur-sm">
+      <div className="flex flex-col gap-4 rounded-2xl border border-slate-800 bg-slate-900/40 p-4 backdrop-blur-sm sm:p-5">
         <div className="flex items-center justify-between gap-4">
           <div>
             <p className="font-medium text-white">Müzik Etkinliği</p>
@@ -339,7 +339,7 @@ export default function SettingsSection({
             <span className="text-sm font-medium text-indigo-400">{draftSoundVolume}%</span>
           </div>
           <p className="mt-1 text-sm text-slate-400">Sistem genelindeki müzik ses seviyesini belirleyin.</p>
-          <div className="mt-6 flex items-center gap-4">
+          <div className="mt-4 flex items-center gap-3">
             <LuVolume2 className="h-5 w-5 text-slate-500" />
             <input
               type="range"
@@ -356,13 +356,13 @@ export default function SettingsSection({
   );
 
   const languageSettingsContent = (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
       <div>
         <h3 className="text-lg font-semibold text-white">Bölge & Dil</h3>
         <p className="mt-1 text-sm text-slate-400">Uygulama arayüzünün dilini kişiselleştirin.</p>
       </div>
 
-      <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 backdrop-blur-sm">
+      <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4 backdrop-blur-sm sm:p-5">
         <div className="grid gap-4 sm:grid-cols-2">
           {[
             { id: 'tr', label: 'Türkçe', desc: 'Sistem dilini Türkçe yap' },
@@ -389,7 +389,7 @@ export default function SettingsSection({
   );
 
   const accountSettingsContent = (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
+    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
       <div>
         <h3 className="text-lg font-semibold text-white">Hesap Verileri & Profil</h3>
         <p className="mt-1 text-sm text-slate-400">Hesap bilgilerinizi görüntüleyin ve veri izni yönetimini sağlayın.</p>
@@ -397,16 +397,16 @@ export default function SettingsSection({
 
       {/* Profil Detayları */}
       <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/40 backdrop-blur-sm">
-        <div className="border-b border-slate-800 bg-slate-900/50 px-6 py-4">
+        <div className="border-b border-slate-800 bg-slate-900/50 px-4 py-3 sm:px-5">
           <h4 className="font-medium text-slate-200">Kişisel Bilgiler</h4>
         </div>
         <div className="grid grid-cols-1 divide-y divide-slate-800 sm:grid-cols-2 sm:divide-x sm:divide-y-0">
-          <div className="p-6">
+          <div className="p-4 sm:p-5">
             <p className="text-xs font-medium uppercase tracking-wider text-slate-500">Kullanıcı Adı</p>
             <p className="mt-2 text-lg font-medium text-white">{profile?.username ?? 'Bilinmiyor'}</p>
             <p className="mt-1 text-sm text-slate-500">ID: {profile?.userId ?? '-'}</p>
           </div>
-          <div className="p-6">
+          <div className="p-4 sm:p-5">
             <p className="text-xs font-medium uppercase tracking-wider text-slate-500">Görünür İsim / Roller</p>
             <p className="mt-2 text-lg font-medium text-white">{profile?.displayName ?? profile?.nickname ?? 'Belirtilmedi'}</p>
             <p className="mt-1 text-sm text-slate-500">{profile?.roles?.length ? `${profile.roles.length} role sahip` : 'Rol bulunmuyor'}</p>
@@ -415,9 +415,9 @@ export default function SettingsSection({
       </div>
 
       {/* Sunucu Yönetimi Özeti */}
-      <div className="flex flex-col gap-6 sm:flex-row">
-        <div className="flex-1 rounded-2xl border border-indigo-500/20 bg-indigo-500/5 p-6 backdrop-blur-sm">
-          <div className="flex items-center gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row">
+        <div className="flex-1 rounded-2xl border border-indigo-500/20 bg-indigo-500/5 p-4 backdrop-blur-sm sm:p-5">
+          <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-500/20 text-indigo-400">
               <LuGlobe className="h-6 w-6" />
             </div>
@@ -426,7 +426,7 @@ export default function SettingsSection({
               <p className="text-sm font-medium text-indigo-300">Aktif Sunucu Bağlantısı</p>
             </div>
           </div>
-          <p className="mt-4 text-sm leading-relaxed text-slate-400">
+          <p className="mt-3 text-sm leading-relaxed text-slate-400">
             Kayıtlarınızın aktif olarak bulunduğu sunucu sayısı. Bu sunucularda ekonomi işlemleriniz ve portföyleriniz yer almaktadır.
           </p>
         </div>
@@ -448,13 +448,13 @@ export default function SettingsSection({
 
       {/* Veri Talebi Alanı */}
       <div className="rounded-2xl border border-slate-800 bg-slate-900/40 backdrop-blur-sm">
-        <div className="border-b border-slate-800 bg-slate-900/50 px-6 py-4">
+        <div className="border-b border-slate-800 bg-slate-900/50 px-4 py-3 sm:px-5">
           <div className="flex items-center gap-2">
             <LuDownload className="h-5 w-5 text-indigo-400" />
             <h4 className="font-semibold text-slate-200">Kişisel Veri Talebi (GDPR)</h4>
           </div>
         </div>
-        <div className="flex flex-col items-start justify-between gap-4 p-6 sm:flex-row sm:items-center">
+        <div className="flex flex-col items-start justify-between gap-3 p-4 sm:flex-row sm:items-center sm:p-5">
           <div className="max-w-md">
             <p className="font-medium text-slate-200">Verilerinizi İndirin</p>
             <p className="mt-1 text-sm text-slate-400">Tüm uygulama ve sunucu aktivitelerinizi kapsayan veri dosyanızı (JSON) botumuz aracılığıyla özel mesaj olarak talep edebilirsiniz.</p>
@@ -474,7 +474,7 @@ export default function SettingsSection({
 
       {/* Danger Zone */}
       <div className="rounded-2xl border border-red-500/20 bg-red-950/10 backdrop-blur-sm">
-        <div className="border-b border-red-500/20 px-6 py-4">
+        <div className="border-b border-red-500/20 px-4 py-3 sm:px-5">
           <div className="flex items-center gap-2">
             <LuTriangleAlert className="h-5 w-5 text-red-500" />
             <h4 className="font-semibold text-red-500">Tehlikeli Bölge (Danger Zone)</h4>
@@ -484,7 +484,7 @@ export default function SettingsSection({
           {(['current', 'all'] as const).map((scope) => {
             const option = deleteOptionConfig[scope];
             return (
-              <div key={scope} className="flex flex-col items-start justify-between gap-4 p-6 sm:flex-row sm:items-center">
+              <div key={scope} className="flex flex-col items-start justify-between gap-3 p-4 sm:flex-row sm:items-center sm:p-5">
                 <div className="max-w-md">
                   <p className="font-medium text-slate-200">{option.title}</p>
                   <p className="mt-1 text-sm text-slate-400">{option.description}</p>
@@ -505,7 +505,7 @@ export default function SettingsSection({
   );
 
   const contractsSettingsContent = (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
       <div>
         <h3 className="text-lg font-semibold text-white">Yasal Metinler & Sözleşmeler</h3>
         <p className="mt-1 text-sm text-slate-400">Hizmet standartlarımız ve veri gizliliği yükümlülüklerimiz.</p>
@@ -551,15 +551,15 @@ export default function SettingsSection({
   ] as const;
 
   return (
-    <section className="mx-auto flex w-full max-w-6xl flex-col px-4 py-8 sm:px-6 lg:px-8">
+    <section className="mx-auto flex w-full max-w-6xl flex-col px-4 py-3 sm:px-5 sm:py-4 lg:px-6">
       {/* BAŞLIK & HEADER */}
-      <div className="mb-6">
+      <div className="mb-3">
         <div>
           {onBack && (
             <button
               type="button"
               onClick={onBack}
-              className="group mb-4 inline-flex items-center gap-2 text-sm font-medium text-slate-400 transition-colors hover:text-white"
+              className="group mb-2 inline-flex items-center gap-2 text-sm font-medium text-slate-400 transition-colors hover:text-white"
             >
               <LuArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
               Panoya Dön
@@ -568,16 +568,16 @@ export default function SettingsSection({
           <p className="mb-1 text-sm font-medium text-indigo-400">
             {greeting}{profile?.nickname ? `, ${profile.nickname}` : ''}
           </p>
-          <h1 className="text-3xl font-bold tracking-tight text-white">Ayarlar</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">Ayarlar</h1>
         </div>
       </div>
 
       {/* MASTER-DETAIL LAYOUT */}
-      <div className="grid gap-8 lg:grid-cols-[240px_1fr]">
+      <div className="grid gap-5 lg:grid-cols-[220px_1fr] lg:gap-6">
         
         {/* SOL MENÜ (Master) */}
         <aside>
-          <nav className="sticky top-8 flex flex-col gap-1">
+          <nav className="sticky top-4 flex flex-col gap-0.5">
           {navItems.map((item) => {
             const isActive = activeTab === item.id;
             const Icon = item.icon;
@@ -586,7 +586,7 @@ export default function SettingsSection({
                 key={item.id}
                 type="button"
                 onClick={() => setActiveTab(item.id)}
-                className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 ${isActive ? 'bg-indigo-500/10 text-indigo-400 shadow-sm shadow-indigo-500/5' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}`}
+                className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${isActive ? 'bg-indigo-500/10 text-indigo-400 shadow-sm shadow-indigo-500/5' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}`}
               >
                 <Icon className={`h-5 w-5 ${isActive ? 'text-indigo-400' : 'text-slate-500'}`} />
                 {item.label}
@@ -597,7 +597,7 @@ export default function SettingsSection({
         </aside>
 
         {/* SAĞ İÇERİK (Detail) */}
-        <main className="min-h-[500px] pb-24">
+        <main className="min-h-0 pb-10">
           {activeTab === 'account' && accountSettingsContent}
           {activeTab === 'sound' && soundSettingsContent}
           {activeTab === 'language' && languageSettingsContent}
@@ -608,7 +608,7 @@ export default function SettingsSection({
       
       {/* UNSAVED CHANGES BANNER */}
       {hasUnsavedChanges && (
-        <div className="fixed bottom-0 left-0 z-40 flex w-full justify-center p-4 sm:p-6 animate-in slide-in-from-bottom-5 duration-300">
+        <div className="fixed bottom-0 left-0 z-40 flex w-full justify-center p-3 sm:p-4 animate-in slide-in-from-bottom-5 duration-300">
           <div className="flex w-full max-w-4xl flex-col gap-4 rounded-2xl border border-indigo-500/30 bg-slate-900/95 p-4 px-6 shadow-[0_-8px_30px_-15px_rgba(99,102,241,0.3)] backdrop-blur-md sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-500/10">

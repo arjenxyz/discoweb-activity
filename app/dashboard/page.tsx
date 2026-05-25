@@ -1327,7 +1327,9 @@ export default function DashboardPage() {
         ? isActivityEmbed
           ? 'md:pt-16 pb-28 gap-0 md:pb-0'
           : 'md:pt-16 pb-28 sm:pb-10 gap-0 sm:gap-6 md:pb-0'
-        : 'md:pt-16 pb-20 lg:pb-6 gap-6';
+        : effectiveSection === 'settings'
+          ? 'md:pt-6 pb-12 lg:pb-3 gap-3'
+          : 'md:pt-16 pb-20 lg:pb-6 gap-6';
 
   // Splash — readiness sorgulanmadan önce gösterilir
   if (!splashDone) {
