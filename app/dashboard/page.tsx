@@ -1438,9 +1438,6 @@ export default function DashboardPage() {
             open: settingsOpen,
             onToggle: handleToggleSettings,
             onOpenSettings: handleOpenSettings,
-            onOpenReferral: () => {
-              router.push('/dashboard/referral');
-            },
             onOpenTransfer: handleOpenTransfer,
             onOpenPromotions: openPromotionsModal,
             onOpenDiscounts: openDiscountsModal,

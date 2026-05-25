@@ -15,11 +15,7 @@ const t = (key: string, params?: Record<string, string | number>): string => {
     'devlog_spending': 'Harcama',
     'devlog_to_treasury': 'Hazineye',
     'devlog_burned': 'Yakılan',
-    'devlog_referral_activated': '🔗 Referral Aktive Edildi',
-    'devlog_inviter': 'Davet Eden',
-    'devlog_invited': 'Davet Edilen',
     'devlog_code': 'Kod',
-    'devlog_referral_used': '🔗 Referral Kodu Kullanıldı',
     'devlog_user': 'Kullanan',
     'devlog_economy_app_title': '🔵 Yüksek Ekonomi Başvurusu',
     'devlog_applicant': 'Başvuran',
@@ -124,33 +120,6 @@ export const DevLogEmbeds = {
         { name: t('devlog_spending'), value: `${totalSpent.toLocaleString()} Papel`, inline: true },
         { name: t('devlog_to_treasury'), value: `+${treasuryAmount.toLocaleString()} Papel`, inline: true },
         { name: t('devlog_burned'), value: `🔥 ${burnAmount.toLocaleString()} Papel`, inline: true },
-      ],
-      timestamp: new Date().toISOString(),
-    };
-  },
-
-  referralAktivasyon(guildId: string, referrerId: string, referredId: string, code: string): Embed {
-    return {
-      title: t('devlog_referral_activated'),
-      color: 0x00B0F4,
-      fields: [
-        { name: t('devlog_server'), value: `\`${guildId}\``, inline: true },
-        { name: t('devlog_inviter'), value: `<@${referrerId}>`, inline: true },
-        { name: t('devlog_invited'), value: `<@${referredId}>`, inline: true },
-        { name: t('devlog_code'), value: `\`${code}\``, inline: true },
-      ],
-      timestamp: new Date().toISOString(),
-    };
-  },
-
-  referralKodKullanildi(guildId: string, userId: string, code: string): Embed {
-    return {
-      title: t('devlog_referral_used'),
-      color: 0x5865F2,
-      fields: [
-        { name: t('devlog_server'), value: `\`${guildId}\``, inline: true },
-        { name: t('devlog_user'), value: `<@${userId}>`, inline: true },
-        { name: t('devlog_code'), value: `\`${code}\``, inline: true },
       ],
       timestamp: new Date().toISOString(),
     };

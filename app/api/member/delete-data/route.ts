@@ -37,12 +37,7 @@ const deleteForUser = async (
   ];
 
   // Sadece user_id olan tablolar — yalnızca all scope'da silinir
-  const globalTables = [
-    'referral_milestone_claims',
-    'referral_history',
-    'system_mail_reads',
-    'system_mail_stars',
-  ];
+  const globalTables = ['system_mail_reads', 'system_mail_stars'];
 
   for (const table of perGuildTables) {
     if (scope === 'current' && guildId) {

@@ -3,7 +3,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 
-import { LuHouse, LuMail, LuStore, LuSettings, LuChevronRight, LuSend, LuTag, LuCompass, LuLayoutGrid, LuShieldCheck, LuNewspaper, LuChartBar, LuTrophy } from 'react-icons/lu';
+import { LuHouse, LuMail, LuStore, LuSettings, LuChevronRight, LuSend, LuTag, LuCompass, LuLayoutGrid, LuShieldCheck, LuNewspaper, LuChartBar, LuTrophy, LuUserPlus, LuHeart } from 'react-icons/lu';
+import { openDiscordInviteFriends } from '@/lib/discordInvite';
+import { siteConfig } from '@/config/site';
 import Image from 'next/image';
 import DiscordAgreementButton from '@/components/DiscordAgreementButton';
 import type { Notification, Section } from '../types';
@@ -52,7 +54,6 @@ type DashboardHeaderProps = {
     onOpenTransfer: () => void;
     onOpenPromotions: () => void;
     onOpenDiscounts: () => void;
-    onOpenReferral?: () => void;
     menuRef: RefObject<HTMLDivElement | null>;
   };
   maintenance?: {
@@ -94,6 +95,8 @@ export default function DashboardHeader({
 
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [inviteNotice, setInviteNotice] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [currentGif, setCurrentGif] = useState(getRandomGif);
   const [, setFetchedIcons] = useState<Record<string, string | null>>({});
   const fetchedIconsSeenRef = useRef<Set<string>>(new Set());
@@ -101,9 +104,102 @@ export default function DashboardHeader({
   const toggleProfileOpen = () => {
     if (!isProfileOpen) {
       setCurrentGif(getRandomGif());
+      setInviteNotice(null);
     }
     setIsProfileOpen((prev) => !prev);
   };
+
+  const handleInviteFriends = async () => {
+    setInviteLoading(true);
+    setInviteNotice(null);
+    try {
+      const result = await openDiscordInviteFriends(t('dashboard_invite_share_message'));
+      if (result.ok) {
+        setInviteNotice({ type: 'success', message: t('dashboard_invite_success') });
+      } else if (result.error === 'not_in_discord') {
+        setInviteNotice({ type: 'error', message: t('dashboard_invite_discord_only') });
+      } else if (result.error === 'cancelled') {
+        setInviteNotice({ type: 'error', message: t('dashboard_invite_cancelled') });
+      } else {
+        setInviteNotice({ type: 'error', message: t('dashboard_invite_failed') });
+      }
+    } finally {
+      setInviteLoading(false);
+      window.setTimeout(() => setInviteNotice(null), 4000);
+    }
+  };
+
+  const inviteFriendsButton = (onAfterClick?: () => void) => (
+    <>
+      <button
+        type="button"
+        disabled={inviteLoading}
+        onClick={() => {
+          void handleInviteFriends();
+          onAfterClick?.();
+        }}
+        className="flex w-full items-center justify-between rounded-xl border border-[#5865F2]/25 bg-[#5865F2]/10 px-3 py-2.5 text-white/80 transition hover:border-[#5865F2]/40 hover:bg-[#5865F2]/15 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        <div className="flex items-center gap-3">
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#5865F2]/20">
+            {inviteLoading ? (
+              <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+            ) : (
+              <LuUserPlus className="h-3.5 w-3.5 text-[#5865F2]" />
+            )}
+          </div>
+          <div className="text-left">
+            <span className="text-sm font-medium">{t('dashboard_invite_friends')}</span>
+            <p className="text-[10px] text-white/40">{t('dashboard_invite_friends_hint')}</p>
+          </div>
+        </div>
+        <LuChevronRight className="h-3.5 w-3.5 text-white/30" />
+      </button>
+      {inviteNotice && (
+        <p
+          className={`px-1 text-[11px] font-medium ${inviteNotice.type === 'success' ? 'text-emerald-400' : 'text-rose-400'}`}
+          role="status"
+        >
+          {inviteNotice.message}
+        </p>
+      )}
+    </>
+  );
+
+  const handleVoteDiscoweb = () => {
+    const url = siteConfig.links.topGgVote;
+    if (openLink) {
+      void openLink(url);
+    } else {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+  };
+
+  const voteDiscowebButton = () => (
+    <button
+      type="button"
+      onClick={handleVoteDiscoweb}
+      className="flex w-full items-center justify-between rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-3 py-2.5 text-white/80 transition hover:border-emerald-500/40 hover:bg-emerald-500/15 hover:text-white"
+    >
+      <div className="flex items-center gap-3">
+        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/20">
+          <LuHeart className="h-3.5 w-3.5 text-emerald-400" />
+        </div>
+        <div className="text-left">
+          <span className="text-sm font-medium">{t('dashboard_vote_discoweb')}</span>
+          <p className="text-[10px] text-white/40">{t('dashboard_vote_discoweb_hint')}</p>
+        </div>
+      </div>
+      <LuChevronRight className="h-3.5 w-3.5 text-white/30" />
+    </button>
+  );
+
+  const profilePromoActions = () => (
+    <div className="space-y-1.5">
+      {inviteFriendsButton()}
+      {voteDiscowebButton()}
+    </div>
+  );
 
   useEffect(() => {
     if (!server?.guilds || server.guilds.length === 0) return;
@@ -320,17 +416,7 @@ export default function DashboardHeader({
                       <LuChevronRight className="h-3.5 w-3.5 text-white/30" />
                     </button>
 
-                    <button
-                      type="button"
-                      onClick={settings.onOpenReferral}
-                      className="flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-white/70 transition hover:bg-white/5 hover:text-white"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/8 text-sm">🎁</div>
-                        <span className="text-sm font-medium">{t('dashboard_invite_earn')}</span>
-                      </div>
-                      <LuChevronRight className="h-3.5 w-3.5 text-white/30" />
-                    </button>
+                    {profilePromoActions()}
 
                     <div className="grid gap-1.5 pt-1 grid-cols-3">
                       <button
@@ -547,17 +633,7 @@ export default function DashboardHeader({
                 <LuChevronRight className="h-3.5 w-3.5 text-white/30" />
               </button>
 
-              <button
-                type="button"
-                onClick={() => { setIsProfileOpen(false); settings.onOpenReferral?.(); }}
-                className="flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-white/70 transition hover:bg-white/5 hover:text-white"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/8 text-sm">🎁</div>
-                  <span className="text-sm font-medium">{t('dashboard_invite_earn')}</span>
-                </div>
-                <LuChevronRight className="h-3.5 w-3.5 text-white/30" />
-              </button>
+              {profilePromoActions()}
 
               <div className="grid gap-1.5 pt-1 grid-cols-3">
                 <button type="button" onClick={() => { setIsProfileOpen(false); settings.onOpenTransfer(); }} className="flex flex-col items-center gap-1 rounded-xl border border-white/[0.06] bg-white/[0.03] py-2.5 text-xs text-white/60 transition hover:bg-white/[0.07] hover:text-white">

@@ -77,15 +77,6 @@ export default function SplashScreen({ onEnter }: Props) {
     {
       icon: (
         <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 flex-shrink-0">
-          <path d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
-          <path fillRule="evenodd" d="M8 0a8 8 0 100 16A8 8 0 008 0zM1.5 8a6.5 6.5 0 1113 0 6.5 6.5 0 01-13 0z" />
-        </svg>
-      ),
-      textKey: 'splash_tip_referral_code',
-    },
-    {
-      icon: (
-        <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 flex-shrink-0">
           <path d="M1 2.75C1 1.784 1.784 1 2.75 1h10.5c.966 0 1.75.784 1.75 1.75v7.5A1.75 1.75 0 0113.25 12H9.06l.038.48.016.2c.017.193.035.327.06.45a.75.75 0 01-.605.894l-.01.001a.75.75 0 01-.848-.532c-.067-.228-.107-.483-.131-.724L7.5 12.5H5a.75.75 0 01-.596-.295L3 10.5H2.75A1.75 1.75 0 011 8.75v-6zM2.75 2.5a.25.25 0 00-.25.25v6.25c0 .138.112.25.25.25h.5a.75.75 0 01.596.295l1.404 1.705H7.5a.75.75 0 01.75.75v.059l.013.191H13.25a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25H2.75z" />
         </svg>
       ),

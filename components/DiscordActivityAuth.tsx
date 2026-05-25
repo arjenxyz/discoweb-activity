@@ -294,31 +294,6 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
         addLog('Rich Presence ayarlanamadı (görmezden gelinir)');
       }
 
-      // Handle incoming referral / custom_id from the share link
-      // sdk.referrerId = Discord user ID of whoever shared the link
-      // sdk.customId  = the custom_id we embedded (e.g. "ref:ABCD12")
-      try {
-        const incomingReferrerId: string | null = (sdk as unknown as { referrerId?: string | null }).referrerId ?? null;
-        const incomingCustomId: string | null = (sdk as unknown as { customId?: string | null }).customId ?? null;
-        const currentUserId = result.user?.id ?? null;
-
-        if (incomingCustomId?.startsWith('ref:') && currentUserId) {
-          const refCode = incomingCustomId.slice(4).toUpperCase();
-          addLog(`Incoming referral custom_id: ref:${refCode} — pending confirmation`);
-          // Otomatik uygulamak yerine kullanıcıya göster (ReferralSection okur)
-          import('@/lib/pendingReferral').then(({ setPendingReferral }) => {
-            setPendingReferral({ type: 'by_code', code: refCode });
-          }).catch(() => {});
-        } else if (incomingReferrerId && currentUserId && incomingReferrerId !== currentUserId) {
-          addLog(`Incoming referrerId: ${incomingReferrerId} — pending confirmation`);
-          import('@/lib/pendingReferral').then(({ setPendingReferral }) => {
-            setPendingReferral({ type: 'by_user', referrer_discord_id: incomingReferrerId });
-          }).catch(() => {});
-        }
-      } catch {
-        // referral handling is non-critical
-      }
-
       // ACTIVITY_INSTANCE_PARTICIPANTS_UPDATE — kendi userId'si listeden çıkınca beacon at
       if (result.user?.id) {
         const currentUserId = result.user.id;
@@ -443,26 +418,6 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
                 addLog(`Rich Presence ayarlanamadı (hızlı yol): ${JSON.stringify(e)}`);
               }
             }
-            // Handle incoming referral on fast path — reuse the fastSdk already initialized above
-            // (fastSdk is in scope from the try block above; if that failed, skip silently)
-            try {
-              const urlParams2 = new URLSearchParams(window.location.search);
-              const incomingCustomId: string | null = urlParams2.get('custom_id');
-              const incomingReferrerId: string | null = urlParams2.get('referrer_id');
-              const meData2 = await meRes.clone().json() as { id?: string };
-              const myId = meData2?.id ?? null;
-              if (incomingCustomId?.startsWith('ref:') && myId) {
-                const refCode = incomingCustomId.slice(4).toUpperCase();
-                import('@/lib/pendingReferral').then(({ setPendingReferral }) => {
-                  setPendingReferral({ type: 'by_code', code: refCode });
-                }).catch(() => {});
-              } else if (incomingReferrerId && myId && incomingReferrerId !== myId) {
-                import('@/lib/pendingReferral').then(({ setPendingReferral }) => {
-                  setPendingReferral({ type: 'by_user', referrer_discord_id: incomingReferrerId });
-                }).catch(() => {});
-              }
-            } catch { /* non-critical */ }
-
             // Mevcut session varsa da login logu at (Activity yeniden açıldı)
             try {
               const meData = await meRes.clone().json() as { username?: string; avatar?: string };

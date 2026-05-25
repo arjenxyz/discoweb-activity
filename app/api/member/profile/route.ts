@@ -170,33 +170,6 @@ export async function GET(request: Request) {
     }
 
     if (profile) {
-      // Eğer referral_code sütunu varsa ve kod eksikse, üretip kaydetmeye çalış.
-      const hasReferralColumn = Object.prototype.hasOwnProperty.call(profile, 'referral_code');
-      if (hasReferralColumn && !profile.referral_code) {
-        const newCode = (() => {
-          const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-          let code = '';
-          for (let i = 0; i < 6; i += 1) {
-            const idx = Math.floor(Math.random() * chars.length);
-            code += chars[idx];
-          }
-          return code;
-        })();
-
-        try {
-          await supabase
-            .from('member_profiles')
-            .update({ referral_code: newCode, updated_at: new Date().toISOString() })
-            .eq('guild_id', selectedGuildId)
-            .eq('user_id', userId);
-          profile.referral_code = newCode;
-        } catch (updateError) {
-          // Eğer referral_code sütunu yoksa, burada hata alabiliriz.
-          console.warn('Unable to update referral_code (column missing?)', updateError);
-        }
-      }
-
-      // Gerçek profil bulundu, dön (kullanıcı bilgilerini ekle)
       return NextResponse.json({
         userId,
         username: user?.username ?? profile.username ?? '',
@@ -211,84 +184,26 @@ export async function GET(request: Request) {
         has_tag: profile.has_tag ?? false,
         is_booster: profile.is_booster ?? false,
         booster_since: profile.booster_since ?? null,
-        referral_code: profile.referral_code ?? null,
-        referred_by: profile.referred_by ?? null,
-        total_invites: profile.total_invites ?? 0,
-        referral_reward: await (async () => {
-          try {
-            const { data: srv } = await supabase
-              .from('servers')
-              .select('referral_reward')
-              .eq('discord_id', selectedGuildId)
-              .maybeSingle();
-            return srv?.referral_reward ?? 500;
-          } catch { return 500; }
-        })(),
       });
     }
 
-    // Kullanıcının bu sunucuda bir profili yoksa, oluşturmaya çalış
-    const generateReferralCode = () => {
-      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-      let code = '';
-      for (let i = 0; i < 6; i += 1) {
-        const idx = Math.floor(Math.random() * chars.length);
-        code += chars[idx];
-      }
-      return code;
-    };
+    const now = new Date().toISOString();
+    const { error: insertError } = await supabase.from('member_profiles').upsert(
+      {
+        guild_id: selectedGuildId,
+        user_id: userId,
+        about: null,
+        created_at: now,
+        updated_at: now,
+      },
+      { onConflict: 'guild_id,user_id' },
+    );
 
-    const ensureReferralCode = async (): Promise<string | null> => {
-      for (let attempt = 0; attempt < 5; attempt += 1) {
-        const code = generateReferralCode();
+    if (insertError) {
+      console.warn('member/profile: profile upsert failed', insertError);
+      return NextResponse.json({ error: 'profile_creation_failed' }, { status: 500 });
+    }
 
-        const insertPayload: Record<string, unknown> = {
-          guild_id: selectedGuildId,
-          user_id: userId,
-          about: null,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-        insertPayload['referral_code'] = code;
-
-        const { error: conflict } = await supabase
-          .from('member_profiles')
-          .insert(insertPayload);
-
-        if (!conflict) {
-          return code;
-        }
-
-        // Eğer referral_code sütunu yoksa, retry etmeden çık
-        if (typeof conflict.message === 'string' && conflict.message.includes('column "referral_code"')) {
-          console.warn('Referrals column not present, skipping referral_code insert');
-          return code;
-        }
-
-        // Eğer conflict user_id üzerinde ise, zaten bir profile var demektir.
-        if (conflict.code === '23505' && conflict.details?.includes('(user_id)')) {
-          console.warn('member/profile: existing profile for user_id, using existing profile path');
-          return null;
-        }
-
-        // If conflict is a unique violation on referral_code, try again
-        if (conflict.code === '23505' && conflict.details?.includes('(referral_code)')) {
-          continue;
-        }
-
-        console.warn('member/profile: unexpected insert error', conflict);
-        return null;
-      }
-
-      // If we reach here, we could not find an unused referral_code after multiple tries.
-      // This is non-fatal; proceed without referral_code.
-      console.warn('member/profile: referral code collision, skipping referral_code insertion');
-      return null;
-    };
-
-    const insertedCode = await ensureReferralCode();
-
-    // Yeni profil oluşturuldu — new-user logu at
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
       ?? request.headers.get('x-real-ip') ?? null;
     const ua = request.headers.get('user-agent') ?? null;
@@ -302,31 +217,6 @@ export async function GET(request: Request) {
       userAgent: ua,
     });
 
-    // Eğer referral_code eklenemedi ise, en azından boş bir profil yaratmayı tekrar dene.
-    if (!insertedCode) {
-      try {
-        const insertPayload: Record<string, unknown> = {
-          guild_id: selectedGuildId,
-          user_id: userId,
-          about: null,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-
-        const { error } = await supabase.from('member_profiles').upsert(insertPayload, {
-          onConflict: 'user_id',
-          ignoreDuplicates: false,
-        });
-
-        if (error) {
-          console.warn('member/profile: fallback profile upsert without referral_code failed', error);
-        }
-      } catch (err) {
-        console.warn('member/profile: fallback profile upsert without referral_code threw', err);
-      }
-    }
-
-    // Yeniden çekip dön
     const { data: createdProfile } = await supabase
       .from('member_profiles')
       .select('*')
@@ -335,7 +225,21 @@ export async function GET(request: Request) {
       .maybeSingle();
 
     if (createdProfile) {
-      return NextResponse.json(createdProfile);
+      return NextResponse.json({
+        userId,
+        username: user?.username ?? createdProfile.username ?? '',
+        nickname: createdProfile.nickname ?? null,
+        displayName: createdProfile.displayName ?? null,
+        avatarUrl,
+        about: createdProfile.about ?? null,
+        guildName: createdProfile.guildName ?? null,
+        guildIcon: createdProfile.guildIcon ?? null,
+        roles: roles ?? [],
+        tag_granted_at: createdProfile.tag_granted_at ?? null,
+        has_tag: createdProfile.has_tag ?? false,
+        is_booster: createdProfile.is_booster ?? false,
+        booster_since: createdProfile.booster_since ?? null,
+      });
     }
 
     // Bunlardan hiçbiri olmadıysa (garip durumda) sorunlu prolfile oluşturma hatası

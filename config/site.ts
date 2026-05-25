@@ -14,7 +14,8 @@ export const siteConfig = {
   links: {
     docs: "https://discowebtr.vercel.app/docs",
     support: "https://discord.gg/vxK95JTFPw",
-    github: "https://github.com/arjenxyz"
+    github: "https://github.com/arjenxyz",
+    topGgVote: "https://top.gg/bot/1465696408656023698?s=079b2f63b8632",
   }
 };
 

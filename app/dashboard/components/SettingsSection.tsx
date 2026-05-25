@@ -5,6 +5,7 @@ import { LuVolume2, LuGlobe, LuUser, LuFileCheck, LuCheck, LuTriangleAlert, LuAr
 import { useLocale } from '@/contexts/LocaleContext';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import type { MemberProfile } from '../types';
+import CustomRoleSection from './customRole/CustomRoleSection';
 
 type SettingsSectionProps = {
   onOpenPromotionsModal: () => void;
@@ -431,6 +432,8 @@ export default function SettingsSection({
           </p>
         </div>
       </div>
+
+      <CustomRoleSection profile={profile} />
 
       {deleteMessage && (
         <div className="flex items-center gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-emerald-300">
