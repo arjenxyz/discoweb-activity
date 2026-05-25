@@ -1,6 +1,21 @@
-import { NextResponse } from 'next/server';
+/**
+ * Auth: ?secret=$QUIZ_CRON_SECRET veya Authorization: Bearer $QUIZ_CRON_SECRET
+ */
+import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { deleteGuildRole } from '@/lib/customRoles/discord';
+
+export const dynamic = 'force-dynamic';
+
+function checkSecret(request: NextRequest): boolean {
+  const expected = process.env.CRON_SECRET ?? process.env.QUIZ_CRON_SECRET;
+  if (!expected) return false;
+  const url = new URL(request.url);
+  const fromQuery = url.searchParams.get('secret');
+  const auth = request.headers.get('authorization');
+  const fromHeader = auth?.startsWith('Bearer ') ? auth.slice(7) : null;
+  return fromQuery === expected || fromHeader === expected;
+}
 
 const getSupabase = () => {
   const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -9,10 +24,8 @@ const getSupabase = () => {
   return createClient(url, key, { auth: { persistSession: false } });
 };
 
-export async function GET(request: Request) {
-  const secret = request.headers.get('authorization')?.replace('Bearer ', '');
-  const expected = process.env.CRON_SECRET ?? process.env.QUIZ_CRON_SECRET;
-  if (!expected || secret !== expected) {
+export async function GET(request: NextRequest) {
+  if (!checkSecret(request)) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
 
