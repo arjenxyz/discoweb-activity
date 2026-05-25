@@ -1,3 +1,4 @@
+import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { requireSessionUser } from '@/lib/auth';
 import { getSelectedGuildId } from '@/lib/guild';
@@ -18,7 +19,7 @@ export async function requireGuildAdmin(request: Request) {
   if (!guildId) {
     return {
       ok: false as const,
-      response: Response.json({ error: 'no_guild' }, { status: 400 }),
+      response: NextResponse.json({ error: 'no_guild' }, { status: 400 }),
     };
   }
 
@@ -26,7 +27,7 @@ export async function requireGuildAdmin(request: Request) {
   if (!botToken) {
     return {
       ok: false as const,
-      response: Response.json({ error: 'missing_bot_token' }, { status: 500 }),
+      response: NextResponse.json({ error: 'missing_bot_token' }, { status: 500 }),
     };
   }
 
@@ -45,7 +46,7 @@ export async function requireGuildAdmin(request: Request) {
   if (!supabase) {
     return {
       ok: false as const,
-      response: Response.json({ error: 'missing_service_role' }, { status: 500 }),
+      response: NextResponse.json({ error: 'missing_service_role' }, { status: 500 }),
     };
   }
 
@@ -59,7 +60,7 @@ export async function requireGuildAdmin(request: Request) {
   if (!adminRoleId) {
     return {
       ok: false as const,
-      response: Response.json({ error: 'forbidden' }, { status: 403 }),
+      response: NextResponse.json({ error: 'forbidden' }, { status: 403 }),
     };
   }
 
@@ -70,14 +71,14 @@ export async function requireGuildAdmin(request: Request) {
   if (!memberRes.ok) {
     return {
       ok: false as const,
-      response: Response.json({ error: 'forbidden' }, { status: 403 }),
+      response: NextResponse.json({ error: 'forbidden' }, { status: 403 }),
     };
   }
   const member = (await memberRes.json()) as { roles?: string[] };
   if (!member.roles?.includes(adminRoleId)) {
     return {
       ok: false as const,
-      response: Response.json({ error: 'forbidden' }, { status: 403 }),
+      response: NextResponse.json({ error: 'forbidden' }, { status: 403 }),
     };
   }
 
