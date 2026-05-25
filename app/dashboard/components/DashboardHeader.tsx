@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 
-import { LuHouse, LuMail, LuStore, LuSettings, LuChevronRight, LuSend, LuTag, LuCompass, LuLayoutGrid, LuShieldCheck, LuNewspaper, LuChartBar, LuTrophy, LuUserPlus, LuHeart } from 'react-icons/lu';
+import { LuHouse, LuMail, LuStore, LuSettings, LuChevronRight, LuSend, LuTag, LuCompass, LuLayoutGrid, LuShieldCheck, LuNewspaper, LuChartBar, LuTrophy, LuUserPlus, LuHeart, LuPalette } from 'react-icons/lu';
 import { openDiscordInviteFriends } from '@/lib/discordInvite';
 import { siteConfig } from '@/config/site';
 import Image from 'next/image';
@@ -244,6 +244,7 @@ export default function DashboardHeader({
       label: t('nav_group_account'),
       requiresAuth: true,
       items: [
+        { key: 'custom-role', label: t('nav_custom_role'), icon: <LuPalette className="h-4 w-4" /> },
         { key: 'mail', label: t('nav_messages'), icon: <LuMail className="h-4 w-4" /> },
       ],
     },

@@ -14,6 +14,7 @@ import LeaderboardDrawer from './components/LeaderboardDrawer';
 import ProfileSection from './components/ProfileSection';
 import StoreSection from './components/StoreSection';
 import SettingsSection from './components/SettingsSection';
+import CustomRolePage from './components/customRole/CustomRolePage';
 import MailSection from './components/MailSection';
 import SessionExpiredModal from './components/SessionExpiredModal';
 import DiscoverSection from './components/DiscoverSection';
@@ -1312,7 +1313,7 @@ export default function DashboardPage() {
     await refreshStoreItems(storePage + 1, true);
   };
 
-  const FULL_WIDTH_SECTIONS = ['mail', 'store', 'settings', 'duyuru', 'quiz'];
+  const FULL_WIDTH_SECTIONS = ['mail', 'store', 'settings', 'duyuru', 'quiz', 'custom-role'];
   const mainWrapperClass = FULL_WIDTH_SECTIONS.includes(effectiveSection)
     ? (effectiveSection === 'store' && !isActivityEmbed)
       ? 'w-full max-w-4xl px-0 sm:px-6'
@@ -1329,7 +1330,9 @@ export default function DashboardPage() {
           : 'md:pt-16 pb-28 sm:pb-10 gap-0 sm:gap-6 md:pb-0'
         : effectiveSection === 'settings'
           ? 'md:pt-6 pb-12 lg:pb-3 gap-3'
-          : 'md:pt-16 pb-20 lg:pb-6 gap-6';
+          : effectiveSection === 'custom-role'
+            ? 'md:pt-8 pb-16 lg:pb-8 gap-4 px-4 sm:px-6'
+            : 'md:pt-16 pb-20 lg:pb-6 gap-6';
 
   // Splash — readiness sorgulanmadan önce gösterilir
   if (!splashDone) {
@@ -1566,6 +1569,10 @@ export default function DashboardPage() {
                 profile={profile}
                 serverCount={headerServer.guilds.length}
               />
+            )}
+
+            {effectiveSection === 'custom-role' && !isSiteMaintenance && (
+              <CustomRolePage profile={profile} />
             )}
 
             {effectiveSection === 'tag-badge' && !isSiteMaintenance && (

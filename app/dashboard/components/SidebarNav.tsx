@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { LuChevronRight, LuHouse, LuMail, LuStore, LuMegaphone, LuCompass, LuShieldCheck, LuTrophy } from 'react-icons/lu';
+import { LuChevronRight, LuHouse, LuMail, LuStore, LuMegaphone, LuCompass, LuShieldCheck, LuTrophy, LuPalette } from 'react-icons/lu';
 import type { MemberProfile, Section } from '../types';
 import { useT } from '@/contexts/LocaleContext';
 
@@ -32,6 +32,7 @@ export default function SidebarNav({
     'tag-badge':     '/menu-background/varyant4.jpg',
     mail:            '/menu-background/varyant6.jpg',
     quiz:            '/menu-background/varyant.jpg',
+    'custom-role':   '/menu-background/varyant4.jpg',
   };
 
   const NAV_GROUPS = [
@@ -58,6 +59,7 @@ export default function SidebarNav({
       label: t('nav_group_account'),
       requiresAuth: true,
       items: [
+        { key: 'custom-role' as Section, label: t('nav_custom_role'), icon: LuPalette },
         { key: 'mail' as Section, label: t('nav_messages'), icon: LuMail },
       ],
     },

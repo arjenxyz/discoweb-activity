@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { requireSessionUser } from '@/lib/auth';
 import { getSelectedGuildId } from '@/lib/guild';
 import { CUSTOM_ROLE_NAME_MAX, hexToDiscordColor } from '@/lib/customRoles/types';
+import { validateRoleIconDataUrl } from '@/lib/customRoles/iconValidate';
 
 const getSupabase = () => {
   const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -10,8 +11,6 @@ const getSupabase = () => {
   if (!url || !key) return null;
   return createClient(url, key, { auth: { persistSession: false } });
 };
-
-const EMOJI_RE = /^\p{Extended_Pictographic}$/u;
 
 export async function GET(request: Request) {
   const session = await requireSessionUser(request);
@@ -44,7 +43,7 @@ export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as {
     role_name?: string;
     role_color?: string;
-    role_emoji?: string;
+    role_icon_url?: string;
     hoist?: boolean;
     mentionable?: boolean;
     requester_note?: string;
@@ -55,9 +54,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'invalid_name' }, { status: 400 });
   }
 
-  const emoji = String(body.role_emoji ?? '').trim();
-  if (emoji && !EMOJI_RE.test(emoji)) {
-    return NextResponse.json({ error: 'invalid_emoji' }, { status: 400 });
+  const iconUrl = String(body.role_icon_url ?? '').trim();
+  if (!iconUrl) {
+    return NextResponse.json({ error: 'icon_required' }, { status: 400 });
+  }
+  const iconCheck = validateRoleIconDataUrl(iconUrl);
+  if (!iconCheck.ok) {
+    return NextResponse.json({ error: iconCheck.error }, { status: 400 });
   }
 
   const supabase = getSupabase();
@@ -74,17 +77,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'pending_limit' }, { status: 429 });
   }
 
-  const displayName = emoji ? `${emoji} ${roleName}` : roleName;
-
   const { data, error } = await supabase
     .from('custom_role_requests')
     .insert({
       guild_id: guildId,
       requester_id: session.userId,
       status: 'pending',
-      role_name: displayName.slice(0, CUSTOM_ROLE_NAME_MAX),
+      role_name: roleName.slice(0, CUSTOM_ROLE_NAME_MAX),
       role_color: hexToDiscordColor(String(body.role_color ?? '#5865F2')),
-      role_emoji: emoji || null,
+      role_emoji: null,
+      role_icon_url: iconUrl,
       hoist: Boolean(body.hoist),
       mentionable: Boolean(body.mentionable),
       requester_note: String(body.requester_note ?? '').trim().slice(0, 500) || null,

@@ -114,3 +114,25 @@ export function canBotManageRole(botMaxPosition: number, targetPosition: number)
   if (botMaxPosition < 0) return true;
   return botMaxPosition > targetPosition;
 }
+
+/** Discord rol ikonu (base64, data: öneki olmadan) */
+export async function setGuildRoleIcon(
+  botToken: string,
+  guildId: string,
+  roleId: string,
+  iconBase64: string,
+): Promise<void> {
+  const res = await discordFetch(`https://discord.com/api/guilds/${guildId}/roles/${roleId}`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bot ${botToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ icon: iconBase64 }),
+  });
+  if (!res.ok) {
+    throw new Error(`role_icon_failed:${res.status}`);
+  }
+}
+
+export function dataUrlToIconBase64(dataUrl: string): string | null {
+  const match = dataUrl.match(/^data:image\/[\w+.-]+;base64,(.+)$/);
+  return match ? match[1] : null;
+}

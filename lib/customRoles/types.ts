@@ -15,6 +15,7 @@ export type CustomRoleRequestRow = {
   role_name: string;
   role_color: number;
   role_emoji: string | null;
+  role_icon_url: string | null;
   hoist: boolean;
   mentionable: boolean;
   requester_note: string | null;
@@ -35,11 +36,13 @@ export type CustomRoleRequestRow = {
 export type CustomRoleDraft = {
   role_name: string;
   role_color: string;
-  role_emoji: string;
+  role_icon_url: string | null;
   hoist: boolean;
   mentionable: boolean;
   requester_note: string;
 };
+
+export const CUSTOM_ROLE_ICON_MAX_BYTES = 256 * 1024;
 
 export const CUSTOM_ROLE_NAME_MAX = 100;
 
