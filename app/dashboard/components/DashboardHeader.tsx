@@ -113,7 +113,11 @@ export default function DashboardHeader({
     setInviteLoading(true);
     setInviteNotice(null);
     try {
-      const result = await openDiscordInviteFriends(t('dashboard_invite_share_message'));
+      const result = await openDiscordInviteFriends({
+        message: t('dashboard_invite_share_message'),
+        title: t('referral_share_title'),
+        description: t('referral_share_description'),
+      });
       if (result.ok) {
         setInviteNotice({ type: 'success', message: t('dashboard_invite_success') });
       } else if (result.error === 'not_in_discord') {
