@@ -1,15 +1,16 @@
+import { gameAssetUrl } from '@/lib/gameAssets';
 import { applyThemeToSvg, type FishVisualTheme, type SvgAssetKind } from './fishTheme';
 
 const imageCache = new Map<string, HTMLImageElement>();
 const svgTextCache = new Map<string, string>();
 const objectUrls: string[] = [];
 
-export function fishAssetBase(file: string) {
-  const path = file.startsWith('Vector/') ? file : `Vector/${file.replace(/\.png$/i, '.svg')}`;
-  if (typeof window !== 'undefined' && (window.location.hostname.includes('discordsays.com') || window.location.hostname.includes('discordapp.com'))) {
-    return `/activity/games/fish/${path}`;
-  }
-  return `/games/fish/${path}`;
+export function fishAssetBase(file: string): string {
+  const normalized = file.replace(/^Vector\//, '').replace(/\.png$/i, '.svg');
+  const path = file.startsWith('Vector/') || !file.includes('/')
+    ? `fish/Vector/${normalized}`
+    : `fish/${file.replace(/\.png$/i, '.svg')}`;
+  return gameAssetUrl(path);
 }
 
 export function cacheKey(asset: string, theme: FishVisualTheme) {
@@ -18,9 +19,10 @@ export function cacheKey(asset: string, theme: FishVisualTheme) {
 
 async function fetchSvgText(url: string): Promise<string> {
   if (svgTextCache.has(url)) return svgTextCache.get(url)!;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`svg_fetch_failed:${url}`);
+  const res = await fetch(url, { cache: 'force-cache' });
+  if (!res.ok) throw new Error(`svg_fetch_failed:${url}:${res.status}`);
   const text = await res.text();
+  if (!text.includes('<svg')) throw new Error(`svg_invalid:${url}`);
   svgTextCache.set(url, text);
   return text;
 }
@@ -37,6 +39,13 @@ function svgToImage(svg: string): Promise<HTMLImageElement> {
   });
 }
 
+const PLACEHOLDER_SVG =
+  '<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"><rect width="8" height="8" fill="transparent"/></svg>';
+
+async function loadPlaceholder(): Promise<HTMLImageElement> {
+  return svgToImage(PLACEHOLDER_SVG);
+}
+
 export async function loadThemedSvg(
   asset: string,
   kind: SvgAssetKind,
@@ -46,12 +55,18 @@ export async function loadThemedSvg(
   const cached = imageCache.get(key);
   if (cached) return cached;
 
-  const url = fishAssetBase(asset);
-  const raw = await fetchSvgText(url);
-  const themed = applyThemeToSvg(raw, kind, theme);
-  const img = await svgToImage(themed);
-  imageCache.set(key, img);
-  return img;
+  try {
+    const url = fishAssetBase(asset);
+    const raw = await fetchSvgText(url);
+    const themed = applyThemeToSvg(raw, kind, theme);
+    const img = await svgToImage(themed);
+    imageCache.set(key, img);
+    return img;
+  } catch {
+    const fallback = await loadPlaceholder();
+    imageCache.set(key, fallback);
+    return fallback;
+  }
 }
 
 export async function preloadThemedSprites(
@@ -61,6 +76,7 @@ export async function preloadThemedSprites(
 ): Promise<Record<string, HTMLImageElement>> {
   const images: Record<string, HTMLImageElement> = {};
   let loaded = 0;
+
   await Promise.all(
     entries.map(async ({ asset, kind }) => {
       const img = await loadThemedSvg(asset, kind, theme);
@@ -69,6 +85,7 @@ export async function preloadThemedSprites(
       onProgress?.(loaded, entries.length);
     }),
   );
+
   return images;
 }
 
@@ -76,7 +93,6 @@ export function getCachedImage(asset: string, theme: FishVisualTheme): HTMLImage
   return imageCache.get(cacheKey(asset, theme));
 }
 
-/** Dev hot-reload / tema değişiminde eski blob URL'lerini temizle */
 export function clearSvgImageCache() {
   for (const url of objectUrls.splice(0)) URL.revokeObjectURL(url);
   imageCache.clear();

@@ -41,6 +41,7 @@ type CatchPopup = { id: number; x: number; y: number; tokens: number; born: numb
 type GamePhase = 'loading' | 'countdown' | 'playing' | 'results';
 
 const FLOOR_RATIO = 0.16;
+const EMPTY_MANIFEST: SpawnEntry[] = [];
 
 function drawProp(
   ctx: CanvasRenderingContext2D,
@@ -63,14 +64,22 @@ function drawProp(
   ctx.restore();
 }
 
+function toActiveFish(manifest: SpawnEntry[]): ActiveFish[] {
+  return manifest.map((m) => ({
+    ...m,
+    caught: false,
+    spriteKey: normalizeFishSprite(m.sprite ?? 'fish_blue.svg'),
+  }));
+}
+
 export default function FishingGame({ session, visualTheme, onEnd, onCancel }: Props) {
   const t = useT();
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const wrapRef = useRef<HTMLDivElement>(null);
-  const fishRef = useRef<ActiveFish[]>(
-    session.manifest.map((m) => ({ ...m, caught: false, spriteKey: normalizeFishSprite(m.sprite) })),
+  const manifest = Array.isArray(session.manifest) ? session.manifest : EMPTY_MANIFEST;
+  const fishRef = useRef<ActiveFish[]>(toActiveFish(manifest));
+  const startMsRef = useRef(
+    Number.isFinite(Date.parse(session.startedAt ?? '')) ? Date.parse(session.startedAt) : Date.now(),
   );
-  const startMsRef = useRef(Date.parse(session.startedAt));
   const popupIdRef = useRef(0);
   const endedRef = useRef(false);
   const themeRef = useRef(visualTheme);
@@ -88,15 +97,22 @@ export default function FishingGame({ session, visualTheme, onEnd, onCancel }: P
   const imagesRef = useRef<Record<string, HTMLImageElement>>({});
   const bubblesRef = useRef<SceneBubble[]>([]);
 
-  const accent = PERSONA_META[visualTheme.persona].accent;
-  const ambientLabel = t(PERSONA_META[visualTheme.persona].labelKey);
+  const personaMeta = PERSONA_META[visualTheme?.persona ?? 'ocean'] ?? PERSONA_META.ocean;
+  const accent = personaMeta.accent;
+  const ambientLabel = t(personaMeta.labelKey);
+
+  useEffect(() => {
+    fishRef.current = toActiveFish(
+      Array.isArray(session.manifest) ? session.manifest : EMPTY_MANIFEST,
+    );
+  }, [session.sessionId, session.manifest]);
   const timeLabel = visualTheme.time === 'day' ? t('play_earn_time_day') : t('play_earn_time_night');
 
   useEffect(() => {
     let cancelled = false;
     setPhase('loading');
     clearSvgImageCache();
-    const entries = collectSceneSpriteEntries(session.manifest.map((m) => m.sprite));
+    const entries = collectSceneSpriteEntries(manifest.map((m) => m.sprite).filter(Boolean));
     preloadThemedSprites(entries, visualTheme)
       .then((images) => {
         if (cancelled) return;
@@ -108,7 +124,7 @@ export default function FishingGame({ session, visualTheme, onEnd, onCancel }: P
         if (!cancelled) setPhase('countdown');
       });
     return () => { cancelled = true; };
-  }, [session.manifest, visualTheme]);
+  }, [manifest, session.sessionId, visualTheme]);
 
   useEffect(() => {
     if (phase !== 'countdown') return undefined;
@@ -366,7 +382,7 @@ export default function FishingGame({ session, visualTheme, onEnd, onCancel }: P
   const timerPct = Math.max(0, (timeLeft / session.durationSec) * 100);
 
   return (
-    <div ref={wrapRef} className="fixed inset-0 z-[60] flex flex-col bg-[#020a10]">
+    <div className="fixed inset-0 z-[60] flex flex-col bg-[#020a10]">
       <GameShell
         variant="play"
         title={t('play_earn_title')}

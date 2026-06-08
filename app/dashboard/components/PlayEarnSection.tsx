@@ -11,6 +11,7 @@ import {
   resolveTimeOfDay,
 } from '@/components/play-earn/fishTheme';
 import type { SpawnEntry } from '@/lib/playEarn/types';
+import { gameAssetUrl } from '@/lib/gameAssets';
 import { useT } from '@/contexts/LocaleContext';
 import { LuCoins, LuFish, LuLoader, LuMoon, LuPlay, LuSun, LuWaves } from 'react-icons/lu';
 
@@ -101,11 +102,15 @@ export default function PlayEarnSection({ onWalletRefresh }: Props) {
         }
         return;
       }
+      if (!data?.sessionId || !Array.isArray(data.manifest)) {
+        setError(t('play_earn_start_failed'));
+        return;
+      }
       setSession({
-        sessionId: data.sessionId,
-        startedAt: data.startedAt,
-        durationSec: data.durationSec,
-        manifest: data.manifest,
+        sessionId: String(data.sessionId),
+        startedAt: String(data.startedAt ?? new Date().toISOString()),
+        durationSec: Number(data.durationSec) || 90,
+        manifest: data.manifest as SpawnEntry[],
       });
     } catch {
       setError(t('play_earn_network_error'));
@@ -209,7 +214,7 @@ export default function PlayEarnSection({ onWalletRefresh }: Props) {
                     {['fish_blue', 'fish_green', 'fish_pink', 'fish_orange'].map((fish) => (
                       <img
                         key={fish}
-                        src={`/games/fish/Vector/${fish}.svg`}
+                        src={gameAssetUrl(`fish/Vector/${fish}.svg`)}
                         alt=""
                         className="h-10 w-10 drop-shadow-lg sm:h-12 sm:w-12"
                         style={{ animation: 'bounce 2s infinite' }}

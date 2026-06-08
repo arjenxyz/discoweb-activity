@@ -38,9 +38,10 @@ export function resolveTimeOfDay(): TimeOfDay {
 
 /** Tur başına otomatik persona — sessionId hash'inden türetilir */
 export function resolveSessionPersona(seed: string): PersonaId {
+  const safe = typeof seed === 'string' && seed.length > 0 ? seed : 'default-session';
   let h = 2166136261;
-  for (let i = 0; i < seed.length; i += 1) {
-    h ^= seed.charCodeAt(i);
+  for (let i = 0; i < safe.length; i += 1) {
+    h ^= safe.charCodeAt(i);
     h = Math.imul(h, 16777619);
   }
   return PERSONA_IDS[h % PERSONA_IDS.length];

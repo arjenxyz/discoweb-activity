@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
   ],
   // Allow embedded pages to run inside Discord iframe
   async headers() {
-    const discordCsp = "frame-ancestors 'self' https://discord.com https://*.discordsays.com; connect-src 'self' https://discord.com https://*.discordsays.com https://*.supabase.co wss://*.supabase.co data: blob:; media-src 'self' https://*.supabase.co https: blob:";
+    const discordCsp = "frame-ancestors 'self' https://discord.com https://*.discordsays.com; connect-src 'self' https://discord.com https://*.discordsays.com https://*.supabase.co wss://*.supabase.co data: blob:; img-src 'self' data: blob: https:; media-src 'self' https://*.supabase.co https: blob:";
     const embeddedSources = ['/activity/:path*', '/dashboard/:path*', '/chat/:path*'];
 
     return embeddedSources.map((source) => ({
