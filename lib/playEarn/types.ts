@@ -44,10 +44,10 @@ export const DEFAULT_PLAY_EARN_CONFIG: PlayEarnConfig = {
 };
 
 export const FISH_TYPES: FishTypeDef[] = [
-  { id: 'fish_blue', sprite: 'fish_blue.png', tokens: 1, weight: 45 },
-  { id: 'fish_green', sprite: 'fish_green.png', tokens: 2, weight: 30 },
-  { id: 'fish_pink', sprite: 'fish_pink.png', tokens: 5, weight: 18 },
-  { id: 'fish_orange', sprite: 'fish_orange.png', tokens: 8, weight: 7 },
+  { id: 'fish_blue', sprite: 'fish_blue.svg', tokens: 1, weight: 45 },
+  { id: 'fish_green', sprite: 'fish_green.svg', tokens: 2, weight: 30 },
+  { id: 'fish_pink', sprite: 'fish_pink.svg', tokens: 5, weight: 18 },
+  { id: 'fish_orange', sprite: 'fish_orange.svg', tokens: 8, weight: 7 },
 ];
 
 export const SCREEN_WIDTH_PX = 800;

@@ -1,0 +1,83 @@
+import { applyThemeToSvg, type FishVisualTheme, type SvgAssetKind } from './fishTheme';
+
+const imageCache = new Map<string, HTMLImageElement>();
+const svgTextCache = new Map<string, string>();
+const objectUrls: string[] = [];
+
+export function fishAssetBase(file: string) {
+  const path = file.startsWith('Vector/') ? file : `Vector/${file.replace(/\.png$/i, '.svg')}`;
+  if (typeof window !== 'undefined' && (window.location.hostname.includes('discordsays.com') || window.location.hostname.includes('discordapp.com'))) {
+    return `/activity/games/fish/${path}`;
+  }
+  return `/games/fish/${path}`;
+}
+
+export function cacheKey(asset: string, theme: FishVisualTheme) {
+  return `${asset}|${theme.time}|${theme.persona}`;
+}
+
+async function fetchSvgText(url: string): Promise<string> {
+  if (svgTextCache.has(url)) return svgTextCache.get(url)!;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`svg_fetch_failed:${url}`);
+  const text = await res.text();
+  svgTextCache.set(url, text);
+  return text;
+}
+
+function svgToImage(svg: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    objectUrls.push(url);
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('svg_image_decode_failed'));
+    img.src = url;
+  });
+}
+
+export async function loadThemedSvg(
+  asset: string,
+  kind: SvgAssetKind,
+  theme: FishVisualTheme,
+): Promise<HTMLImageElement> {
+  const key = cacheKey(asset, theme);
+  const cached = imageCache.get(key);
+  if (cached) return cached;
+
+  const url = fishAssetBase(asset);
+  const raw = await fetchSvgText(url);
+  const themed = applyThemeToSvg(raw, kind, theme);
+  const img = await svgToImage(themed);
+  imageCache.set(key, img);
+  return img;
+}
+
+export async function preloadThemedSprites(
+  entries: Array<{ asset: string; kind: SvgAssetKind }>,
+  theme: FishVisualTheme,
+  onProgress?: (loaded: number, total: number) => void,
+): Promise<Record<string, HTMLImageElement>> {
+  const images: Record<string, HTMLImageElement> = {};
+  let loaded = 0;
+  await Promise.all(
+    entries.map(async ({ asset, kind }) => {
+      const img = await loadThemedSvg(asset, kind, theme);
+      images[asset] = img;
+      loaded += 1;
+      onProgress?.(loaded, entries.length);
+    }),
+  );
+  return images;
+}
+
+export function getCachedImage(asset: string, theme: FishVisualTheme): HTMLImageElement | undefined {
+  return imageCache.get(cacheKey(asset, theme));
+}
+
+/** Dev hot-reload / tema değişiminde eski blob URL'lerini temizle */
+export function clearSvgImageCache() {
+  for (const url of objectUrls.splice(0)) URL.revokeObjectURL(url);
+  imageCache.clear();
+}

@@ -1,12 +1,23 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { apiUrl } from '@/lib/api';
 import FishingGame from '@/components/play-earn/FishingGame';
+import {
+  PERSONAS,
+  buildVisualTheme,
+  loadStoredPersona,
+  loadStoredTimeMode,
+  resolveTimeOfDay,
+  storePersona,
+  storeTimeMode,
+  type PersonaId,
+  type TimeMode,
+} from '@/components/play-earn/fishTheme';
 import type { SpawnEntry } from '@/lib/playEarn/types';
 import { useT } from '@/contexts/LocaleContext';
-import { LuCoins, LuFish, LuLoader, LuPlay } from 'react-icons/lu';
+import { LuCoins, LuFish, LuLoader, LuMoon, LuPlay, LuSun } from 'react-icons/lu';
 
 type WalletData = {
   fishTokenBalance: number;
@@ -47,6 +58,19 @@ export default function PlayEarnSection({ onWalletRefresh }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [summary, setSummary] = useState<{ tokensEarned: number; catches: number } | null>(null);
   const [convertAmount, setConvertAmount] = useState('');
+  const [persona, setPersona] = useState<PersonaId>('ocean');
+  const [timeMode, setTimeMode] = useState<TimeMode>('auto');
+  const [clockTick, setClockTick] = useState(0);
+
+  useEffect(() => {
+    setPersona(loadStoredPersona());
+    setTimeMode(loadStoredTimeMode());
+    const id = setInterval(() => setClockTick((n) => n + 1), 60_000);
+    return () => clearInterval(id);
+  }, []);
+
+  const resolvedTime = useMemo(() => resolveTimeOfDay(timeMode), [timeMode, clockTick]);
+  const visualTheme = useMemo(() => buildVisualTheme(persona, resolvedTime), [persona, resolvedTime]);
 
   const refresh = useCallback(async () => {
     try {
@@ -136,6 +160,7 @@ export default function PlayEarnSection({ onWalletRefresh }: Props) {
       <div className="fixed inset-0 z-[60] bg-[#041018]">
         <FishingGame
           session={session}
+          visualTheme={visualTheme}
           onEnd={(s) => {
             setSession(null);
             setSummary(s);
@@ -204,6 +229,62 @@ export default function PlayEarnSection({ onWalletRefresh }: Props) {
           {error && (
             <div className="rounded-xl border border-red-500/25 bg-red-500/10 p-3 text-sm text-red-200">{error}</div>
           )}
+
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-3">
+            <p className="text-sm font-bold text-white">{t('play_earn_theme_title')}</p>
+            <div>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-white/40">{t('play_earn_persona_label')}</p>
+              <div className="flex flex-wrap gap-2">
+                {PERSONAS.map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => {
+                      setPersona(p.id);
+                      storePersona(p.id);
+                    }}
+                    className={`rounded-full border px-3 py-1.5 text-xs font-bold transition ${
+                      persona === p.id
+                        ? 'border-white/40 text-white'
+                        : 'border-white/10 text-white/55 hover:border-white/25'
+                    }`}
+                    style={persona === p.id ? { backgroundColor: `${p.accent}33`, borderColor: `${p.accent}88` } : undefined}
+                  >
+                    {t(p.labelKey)}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-white/40">{t('play_earn_time_label')}</p>
+              <div className="flex flex-wrap gap-2">
+                {(['auto', 'day', 'night'] as TimeMode[]).map((mode) => (
+                  <button
+                    key={mode}
+                    type="button"
+                    onClick={() => {
+                      setTimeMode(mode);
+                      storeTimeMode(mode);
+                    }}
+                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold transition ${
+                      timeMode === mode
+                        ? 'border-cyan-400/50 bg-cyan-500/15 text-cyan-100'
+                        : 'border-white/10 text-white/55 hover:border-white/25'
+                    }`}
+                  >
+                    {mode === 'day' && <LuSun className="h-3.5 w-3.5" />}
+                    {mode === 'night' && <LuMoon className="h-3.5 w-3.5" />}
+                    {t(mode === 'auto' ? 'play_earn_time_auto' : mode === 'day' ? 'play_earn_time_day' : 'play_earn_time_night')}
+                  </button>
+                ))}
+              </div>
+              {timeMode === 'auto' && (
+                <p className="mt-2 text-[11px] text-white/35">
+                  {resolvedTime === 'day' ? t('play_earn_time_active_day') : t('play_earn_time_active_night')}
+                </p>
+              )}
+            </div>
+          </div>
 
           <button
             type="button"
