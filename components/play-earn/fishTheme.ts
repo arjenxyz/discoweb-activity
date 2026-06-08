@@ -1,6 +1,5 @@
 export type PersonaId = 'ocean' | 'coral' | 'emerald' | 'sunset' | 'violet';
 export type TimeOfDay = 'day' | 'night';
-export type TimeMode = 'auto' | TimeOfDay;
 
 export type SvgAssetKind = 'backdrop' | 'water' | 'plant' | 'rock' | 'sand' | 'fish' | 'bubble' | 'hud' | 'neutral';
 
@@ -14,13 +13,15 @@ export type FishVisualTheme = {
   moonGlow?: boolean;
 };
 
-export const PERSONAS: Array<{ id: PersonaId; labelKey: string; accent: string }> = [
-  { id: 'ocean', labelKey: 'play_earn_persona_ocean', accent: '#38bdf8' },
-  { id: 'coral', labelKey: 'play_earn_persona_coral', accent: '#fb7185' },
-  { id: 'emerald', labelKey: 'play_earn_persona_emerald', accent: '#34d399' },
-  { id: 'sunset', labelKey: 'play_earn_persona_sunset', accent: '#fb923c' },
-  { id: 'violet', labelKey: 'play_earn_persona_violet', accent: '#a78bfa' },
-];
+const PERSONA_IDS: PersonaId[] = ['ocean', 'coral', 'emerald', 'sunset', 'violet'];
+
+export const PERSONA_META: Record<PersonaId, { labelKey: string; accent: string }> = {
+  ocean: { labelKey: 'play_earn_ambient_ocean', accent: '#38bdf8' },
+  coral: { labelKey: 'play_earn_ambient_coral', accent: '#fb7185' },
+  emerald: { labelKey: 'play_earn_ambient_emerald', accent: '#34d399' },
+  sunset: { labelKey: 'play_earn_ambient_sunset', accent: '#fb923c' },
+  violet: { labelKey: 'play_earn_ambient_violet', accent: '#a78bfa' },
+};
 
 const PERSONA_HUE: Record<PersonaId, number> = {
   ocean: 198,
@@ -30,41 +31,29 @@ const PERSONA_HUE: Record<PersonaId, number> = {
   violet: 265,
 };
 
-const STORAGE_PERSONA = 'play-earn-persona';
-const STORAGE_TIME_MODE = 'play-earn-time-mode';
+export function resolveTimeOfDay(): TimeOfDay {
+  const hour = new Date().getHours();
+  return hour >= 6 && hour < 19 ? 'day' : 'night';
+}
 
-export function resolveTimeOfDay(mode: TimeMode): TimeOfDay {
-  if (mode === 'auto') {
-    const hour = new Date().getHours();
-    return hour >= 6 && hour < 19 ? 'day' : 'night';
+/** Tur başına otomatik persona — sessionId hash'inden türetilir */
+export function resolveSessionPersona(seed: string): PersonaId {
+  let h = 2166136261;
+  for (let i = 0; i < seed.length; i += 1) {
+    h ^= seed.charCodeAt(i);
+    h = Math.imul(h, 16777619);
   }
-  return mode;
+  return PERSONA_IDS[h % PERSONA_IDS.length];
 }
 
-export function loadStoredPersona(): PersonaId {
-  if (typeof window === 'undefined') return 'ocean';
-  const raw = localStorage.getItem(STORAGE_PERSONA);
-  if (raw && raw in PERSONA_HUE) return raw as PersonaId;
-  return 'ocean';
-}
-
-export function storePersona(persona: PersonaId) {
-  localStorage.setItem(STORAGE_PERSONA, persona);
-}
-
-export function loadStoredTimeMode(): TimeMode {
-  if (typeof window === 'undefined') return 'auto';
-  const raw = localStorage.getItem(STORAGE_TIME_MODE);
-  if (raw === 'day' || raw === 'night' || raw === 'auto') return raw;
-  return 'auto';
-}
-
-export function storeTimeMode(mode: TimeMode) {
-  localStorage.setItem(STORAGE_TIME_MODE, mode);
+export function resolveAutoVisualTheme(sessionSeed: string): FishVisualTheme {
+  const persona = resolveSessionPersona(sessionSeed);
+  const time = resolveTimeOfDay();
+  return buildVisualTheme(persona, time);
 }
 
 export function buildVisualTheme(persona: PersonaId, time: TimeOfDay): FishVisualTheme {
-  const accent = PERSONAS.find((p) => p.id === persona)?.accent ?? '#38bdf8';
+  const accent = PERSONA_META[persona]?.accent ?? '#38bdf8';
 
   if (time === 'day') {
     return {

@@ -4,20 +4,15 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { apiUrl } from '@/lib/api';
 import FishingGame from '@/components/play-earn/FishingGame';
+import GameShell from '@/components/play-earn/GameShell';
 import {
-  PERSONAS,
-  buildVisualTheme,
-  loadStoredPersona,
-  loadStoredTimeMode,
+  PERSONA_META,
+  resolveAutoVisualTheme,
   resolveTimeOfDay,
-  storePersona,
-  storeTimeMode,
-  type PersonaId,
-  type TimeMode,
 } from '@/components/play-earn/fishTheme';
 import type { SpawnEntry } from '@/lib/playEarn/types';
 import { useT } from '@/contexts/LocaleContext';
-import { LuCoins, LuFish, LuLoader, LuMoon, LuPlay, LuSun } from 'react-icons/lu';
+import { LuCoins, LuFish, LuLoader, LuMoon, LuPlay, LuSun, LuWaves } from 'react-icons/lu';
 
 type WalletData = {
   fishTokenBalance: number;
@@ -58,19 +53,14 @@ export default function PlayEarnSection({ onWalletRefresh }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [summary, setSummary] = useState<{ tokensEarned: number; catches: number } | null>(null);
   const [convertAmount, setConvertAmount] = useState('');
-  const [persona, setPersona] = useState<PersonaId>('ocean');
-  const [timeMode, setTimeMode] = useState<TimeMode>('auto');
-  const [clockTick, setClockTick] = useState(0);
 
-  useEffect(() => {
-    setPersona(loadStoredPersona());
-    setTimeMode(loadStoredTimeMode());
-    const id = setInterval(() => setClockTick((n) => n + 1), 60_000);
-    return () => clearInterval(id);
-  }, []);
-
-  const resolvedTime = useMemo(() => resolveTimeOfDay(timeMode), [timeMode, clockTick]);
-  const visualTheme = useMemo(() => buildVisualTheme(persona, resolvedTime), [persona, resolvedTime]);
+  const lobbyTheme = useMemo(() => resolveAutoVisualTheme('lobby-preview'), []);
+  const sessionTheme = useMemo(
+    () => (session ? resolveAutoVisualTheme(session.sessionId) : lobbyTheme),
+    [session, lobbyTheme],
+  );
+  const lobbyAccent = PERSONA_META[lobbyTheme.persona].accent;
+  const isDay = resolveTimeOfDay() === 'day';
 
   const refresh = useCallback(async () => {
     try {
@@ -157,173 +147,179 @@ export default function PlayEarnSection({ onWalletRefresh }: Props) {
 
   if (session) {
     return (
-      <div className="fixed inset-0 z-[60] bg-[#041018]">
-        <FishingGame
-          session={session}
-          visualTheme={visualTheme}
-          onEnd={(s) => {
-            setSession(null);
-            setSummary(s);
-            refresh();
-          }}
-          onCancel={() => {
-            setSession(null);
-            fetchWithCreds(apiUrl('/api/member/play-earn/session/end'), {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ sessionId: session.sessionId }),
-            }).finally(refresh);
-          }}
-        />
-      </div>
+      <FishingGame
+        session={session}
+        visualTheme={sessionTheme}
+        onEnd={(s) => {
+          setSession(null);
+          setSummary(s);
+          refresh();
+        }}
+        onCancel={() => {
+          setSession(null);
+          fetchWithCreds(apiUrl('/api/member/play-earn/session/end'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sessionId: session.sessionId }),
+          }).finally(refresh);
+        }}
+      />
     );
   }
 
   return (
-    <section className="mx-auto w-full max-w-2xl space-y-4 p-4 sm:p-6">
-      <div>
-        <p className="text-xs uppercase tracking-widest text-cyan-400/70">{t('nav_play_earn')}</p>
-        <h1 className="text-2xl font-black text-white">{t('play_earn_title')}</h1>
-        <p className="mt-1 text-sm text-white/45">{t('play_earn_subtitle')}</p>
-      </div>
-
-      {loading ? (
-        <div className="flex h-40 items-center justify-center">
-          <LuLoader className="h-8 w-8 animate-spin text-cyan-400" />
-        </div>
-      ) : (
-        <>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/5 p-4">
-              <div className="flex items-center gap-2 text-cyan-300">
-                <LuFish className="h-4 w-4" />
-                <span className="text-xs font-bold uppercase">{t('play_earn_fish_token')}</span>
-              </div>
-              <p className="mt-2 text-2xl font-black text-white">{wallet?.fishTokenBalance ?? 0}</p>
-            </div>
-            <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4">
-              <div className="flex items-center gap-2 text-amber-300">
-                <LuCoins className="h-4 w-4" />
-                <span className="text-xs font-bold uppercase">Papel</span>
-              </div>
-              <p className="mt-2 text-2xl font-black text-white">{wallet?.papelBalance ?? 0}</p>
-            </div>
+    <section className="mx-auto w-full max-w-2xl p-3 sm:p-4">
+      <GameShell
+        title={t('play_earn_title')}
+        subtitle={t('play_earn_subtitle')}
+        accent={lobbyAccent}
+      >
+        {loading ? (
+          <div className="flex h-56 items-center justify-center">
+            <LuLoader className="h-9 w-9 animate-spin" style={{ color: lobbyAccent }} />
           </div>
+        ) : (
+          <div className="space-y-0">
+            {/* Oyun önizleme alanı */}
+            <div className="relative overflow-hidden border-b border-white/10 px-4 pb-5 pt-4">
+              <div
+                className="relative aspect-[16/7] overflow-hidden rounded-xl border-2 border-white/10"
+                style={{
+                  background: `linear-gradient(180deg, ${lobbyTheme.waterGradient[0]} 0%, ${lobbyTheme.waterGradient[2]} 100%)`,
+                }}
+              >
+                <div className="absolute inset-0 opacity-30">
+                  {[...Array(6)].map((_, i) => (
+                    <LuWaves
+                      key={i}
+                      className="absolute text-white/40"
+                      style={{
+                        left: `${8 + i * 15}%`,
+                        top: `${20 + (i % 3) * 18}%`,
+                        width: 48 + (i % 2) * 16,
+                        height: 48 + (i % 2) * 16,
+                        animation: `pulse ${2 + i * 0.3}s ease-in-out infinite`,
+                      }}
+                    />
+                  ))}
+                </div>
+                <div className="absolute inset-x-0 bottom-0 h-1/4 bg-gradient-to-t from-amber-900/50 to-transparent" />
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-4 text-center">
+                  <div className="flex gap-2">
+                    {['fish_blue', 'fish_green', 'fish_pink', 'fish_orange'].map((fish) => (
+                      <img
+                        key={fish}
+                        src={`/games/fish/Vector/${fish}.svg`}
+                        alt=""
+                        className="h-10 w-10 drop-shadow-lg sm:h-12 sm:w-12"
+                        style={{ animation: 'bounce 2s infinite' }}
+                      />
+                    ))}
+                  </div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/70">
+                    {isDay ? t('play_earn_time_day') : t('play_earn_time_night')} · {t('play_earn_lobby_ready')}
+                  </p>
+                </div>
+              </div>
 
-          {config && (
-            <p className="text-xs text-white/40">
-              {t('play_earn_rules', {
-                jeton: String(config.jetonPerPapel),
-                cap: String(config.dailyPapelCap),
-                sec: String(config.sessionDurationSec),
-              })}
-            </p>
-          )}
-
-          {summary && (
-            <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/10 p-4 text-sm text-emerald-100">
-              {t('play_earn_round_summary', { catches: String(summary.catches), tokens: String(summary.tokensEarned) })}
-            </div>
-          )}
-
-          {error && (
-            <div className="rounded-xl border border-red-500/25 bg-red-500/10 p-3 text-sm text-red-200">{error}</div>
-          )}
-
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-3">
-            <p className="text-sm font-bold text-white">{t('play_earn_theme_title')}</p>
-            <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-white/40">{t('play_earn_persona_label')}</p>
-              <div className="flex flex-wrap gap-2">
-                {PERSONAS.map((p) => (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() => {
-                      setPersona(p.id);
-                      storePersona(p.id);
-                    }}
-                    className={`rounded-full border px-3 py-1.5 text-xs font-bold transition ${
-                      persona === p.id
-                        ? 'border-white/40 text-white'
-                        : 'border-white/10 text-white/55 hover:border-white/25'
-                    }`}
-                    style={persona === p.id ? { backgroundColor: `${p.accent}33`, borderColor: `${p.accent}88` } : undefined}
-                  >
-                    {t(p.labelKey)}
-                  </button>
-                ))}
+              <div className="mt-4 grid grid-cols-3 gap-2">
+                <div className="rounded-lg border border-white/10 bg-black/30 px-2 py-2 text-center">
+                  <p className="text-[9px] font-bold uppercase text-white/40">{t('play_earn_fish_token')}</p>
+                  <p className="font-mono text-lg font-black text-white">{wallet?.fishTokenBalance ?? 0}</p>
+                </div>
+                <div className="rounded-lg border border-white/10 bg-black/30 px-2 py-2 text-center">
+                  <p className="text-[9px] font-bold uppercase text-white/40">Papel</p>
+                  <p className="font-mono text-lg font-black text-amber-300">{wallet?.papelBalance ?? 0}</p>
+                </div>
+                <div className="rounded-lg border border-white/10 bg-black/30 px-2 py-2 text-center">
+                  <p className="text-[9px] font-bold uppercase text-white/40">{t('play_earn_hud_time')}</p>
+                  <p className="font-mono text-lg font-black text-white">{config?.sessionDurationSec ?? 90}s</p>
+                </div>
               </div>
             </div>
-            <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-white/40">{t('play_earn_time_label')}</p>
-              <div className="flex flex-wrap gap-2">
-                {(['auto', 'day', 'night'] as TimeMode[]).map((mode) => (
-                  <button
-                    key={mode}
-                    type="button"
-                    onClick={() => {
-                      setTimeMode(mode);
-                      storeTimeMode(mode);
-                    }}
-                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold transition ${
-                      timeMode === mode
-                        ? 'border-cyan-400/50 bg-cyan-500/15 text-cyan-100'
-                        : 'border-white/10 text-white/55 hover:border-white/25'
-                    }`}
-                  >
-                    {mode === 'day' && <LuSun className="h-3.5 w-3.5" />}
-                    {mode === 'night' && <LuMoon className="h-3.5 w-3.5" />}
-                    {t(mode === 'auto' ? 'play_earn_time_auto' : mode === 'day' ? 'play_earn_time_day' : 'play_earn_time_night')}
-                  </button>
-                ))}
-              </div>
-              {timeMode === 'auto' && (
-                <p className="mt-2 text-[11px] text-white/35">
-                  {resolvedTime === 'day' ? t('play_earn_time_active_day') : t('play_earn_time_active_night')}
+
+            <div className="space-y-3 p-4">
+              {config && (
+                <p className="text-center text-[11px] text-white/35">
+                  {t('play_earn_rules', {
+                    jeton: String(config.jetonPerPapel),
+                    cap: String(config.dailyPapelCap),
+                    sec: String(config.sessionDurationSec),
+                  })}
                 </p>
               )}
-            </div>
-          </div>
 
-          <button
-            type="button"
-            onClick={startGame}
-            disabled={starting || config?.gameEnabled === false}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-600 to-fuchsia-600 py-4 text-sm font-black uppercase tracking-wider text-white disabled:opacity-50"
-          >
-            {starting ? <LuLoader className="h-5 w-5 animate-spin" /> : <LuPlay className="h-5 w-5" />}
-            {t('play_earn_play')}
-          </button>
+              {summary && (
+                <div
+                  className="rounded-xl border p-4 text-center text-sm"
+                  style={{ borderColor: `${lobbyAccent}44`, background: `${lobbyAccent}11`, color: '#d1fae5' }}
+                >
+                  <LuFish className="mx-auto mb-1 h-5 w-5" style={{ color: lobbyAccent }} />
+                  {t('play_earn_round_summary', { catches: String(summary.catches), tokens: String(summary.tokensEarned) })}
+                </div>
+              )}
 
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-            <p className="text-sm font-bold text-white">{t('play_earn_convert_title')}</p>
-            <p className="mt-1 text-xs text-white/40">
-              {t('play_earn_convert_hint', {
-                min: String(wallet?.minConvertJeton ?? 100),
-                remaining: String(wallet?.remainingPapelCap ?? 0),
-              })}
-            </p>
-            <div className="mt-3 flex gap-2">
-              <input
-                type="number"
-                min={1}
-                value={convertAmount}
-                onChange={(e) => setConvertAmount(e.target.value)}
-                placeholder={t('play_earn_convert_placeholder')}
-                className="flex-1 rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-white outline-none focus:border-cyan-500/40"
-              />
+              {error && (
+                <div className="rounded-xl border border-red-500/25 bg-red-500/10 p-3 text-center text-sm text-red-200">{error}</div>
+              )}
+
               <button
                 type="button"
-                onClick={handleConvert}
-                disabled={converting}
-                className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
+                onClick={startGame}
+                disabled={starting || config?.gameEnabled === false}
+                className="group relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-2xl py-5 text-base font-black uppercase tracking-[0.2em] text-white shadow-lg transition active:scale-[0.98] disabled:opacity-50"
+                style={{
+                  background: `linear-gradient(180deg, ${lobbyAccent} 0%, color-mix(in srgb, ${lobbyAccent} 55%, #1e1b4b) 100%)`,
+                  boxShadow: `0 8px 32px ${lobbyAccent}44`,
+                }}
               >
-                {converting ? '...' : t('play_earn_convert_btn')}
+                <span className="absolute inset-0 translate-y-full bg-white/20 transition group-hover:translate-y-0" />
+                <span className="relative flex items-center gap-2">
+                  {starting ? <LuLoader className="h-6 w-6 animate-spin" /> : <LuPlay className="h-6 w-6 fill-current" />}
+                  {t('play_earn_play')}
+                </span>
               </button>
+
+              <p className="flex items-center justify-center gap-1.5 text-[10px] text-white/30">
+                {isDay ? <LuSun className="h-3 w-3" /> : <LuMoon className="h-3 w-3" />}
+                {t('play_earn_auto_ambient_hint')}
+              </p>
             </div>
           </div>
-        </>
+        )}
+      </GameShell>
+
+      {!loading && (
+        <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+          <div className="mb-3 flex items-center gap-2">
+            <LuCoins className="h-4 w-4 text-amber-400" />
+            <p className="text-sm font-bold text-white">{t('play_earn_convert_title')}</p>
+          </div>
+          <p className="text-xs text-white/40">
+            {t('play_earn_convert_hint', {
+              min: String(wallet?.minConvertJeton ?? 100),
+              remaining: String(wallet?.remainingPapelCap ?? 0),
+            })}
+          </p>
+          <div className="mt-3 flex gap-2">
+            <input
+              type="number"
+              min={1}
+              value={convertAmount}
+              onChange={(e) => setConvertAmount(e.target.value)}
+              placeholder={t('play_earn_convert_placeholder')}
+              className="flex-1 rounded-lg border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white outline-none focus:border-cyan-500/40"
+            />
+            <button
+              type="button"
+              onClick={handleConvert}
+              disabled={converting}
+              className="rounded-lg bg-amber-600 px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50"
+            >
+              {converting ? '...' : t('play_earn_convert_btn')}
+            </button>
+          </div>
+        </div>
       )}
     </section>
   );
