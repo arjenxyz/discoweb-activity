@@ -176,9 +176,9 @@ export default function PlayEarnSection({ onWalletRefresh }: Props) {
   }
 
   return (
-    <section className="relative w-full">
+    <section className="relative flex h-full min-h-0 w-full flex-1">
       <div
-        className="relative min-h-[min(72dvh,640px)] w-full overflow-hidden sm:min-h-[min(78dvh,720px)]"
+        className="relative h-full min-h-0 w-full flex-1 overflow-hidden"
         style={{
           background: `linear-gradient(180deg, ${lobbyTheme.waterGradient[0]} 0%, ${lobbyTheme.waterGradient[1]} 45%, ${lobbyTheme.waterGradient[2]} 100%)`,
         }}
@@ -273,7 +273,7 @@ export default function PlayEarnSection({ onWalletRefresh }: Props) {
             </div>
 
             {/* Alt — kurallar, hata, oyna */}
-            <div className="absolute inset-x-0 bottom-0 z-20 flex flex-col items-center gap-3 p-4 pb-6 sm:pb-8">
+            <div className="absolute inset-x-0 bottom-0 z-20 flex flex-col items-center gap-3 p-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pb-8">
               {config && (
                 <p className="max-w-md text-center text-[10px] leading-relaxed text-white/50 sm:text-[11px]">
                   {t('play_earn_rules', {
