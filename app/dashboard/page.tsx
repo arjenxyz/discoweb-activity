@@ -20,6 +20,7 @@ import SessionExpiredModal from './components/SessionExpiredModal';
 import DiscoverSection from './components/DiscoverSection';
 import TagBadgeSection from './components/TagBadgeSection';
 import QuizEventSection from './components/QuizEventSection';
+import PlayEarnSection from './components/PlayEarnSection';
 import NotificationDetailModal from './components/NotificationDetailModal';
 import NotificationsModal from './components/NotificationsModal';
 import TransferModal, { TransferConfirmModal } from './components/TransferModal';
@@ -1313,7 +1314,7 @@ export default function DashboardPage() {
     await refreshStoreItems(storePage + 1, true);
   };
 
-  const FULL_WIDTH_SECTIONS = ['mail', 'store', 'settings', 'duyuru', 'quiz', 'custom-role'];
+  const FULL_WIDTH_SECTIONS = ['mail', 'store', 'settings', 'duyuru', 'quiz', 'custom-role', 'play-earn'];
   const mainWrapperClass = FULL_WIDTH_SECTIONS.includes(effectiveSection)
     ? (effectiveSection === 'store' && !isActivityEmbed)
       ? 'w-full max-w-4xl px-0 sm:px-6'
@@ -1617,6 +1618,10 @@ export default function DashboardPage() {
 
             {effectiveSection === 'quiz' && !isSiteMaintenance && (
               <QuizEventSection onQuizEnded={() => setActiveSection('overview')} />
+            )}
+
+            {effectiveSection === 'play-earn' && !isSiteMaintenance && !unauthorized && (
+              <PlayEarnSection onWalletRefresh={refreshWalletBalance} />
             )}
           </main>
         </div>

@@ -41,6 +41,7 @@ const nextConfig: NextConfig = {
       { source: '/activity/background/:path*', destination: '/background/:path*' },
       { source: '/activity/icon/:path*', destination: '/icon/:path*' },
       { source: '/activity/penguin/:path*', destination: '/penguin/:path*' },
+      { source: '/activity/games/:path*', destination: '/games/:path*' },
       // Supabase storage assets → same-origin (Discord CSP için)
       {
         source: '/cdn/:path*',

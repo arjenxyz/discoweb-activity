@@ -1,0 +1,10 @@
+{
+  "background": "background_terrain.png",
+  "bubble": "bubble_a.png",
+  "fish": [
+    { "id": "fish_blue", "sprite": "fish_blue.png", "tokens": 1 },
+    { "id": "fish_green", "sprite": "fish_green.png", "tokens": 2 },
+    { "id": "fish_pink", "sprite": "fish_pink.png", "tokens": 5 },
+    { "id": "fish_orange", "sprite": "fish_orange.png", "tokens": 8 }
+  ]
+}
