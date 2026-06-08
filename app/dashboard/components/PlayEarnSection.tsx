@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { apiUrl } from '@/lib/api';
 import FishingGame from '@/components/play-earn/FishingGame';
-import GameShell from '@/components/play-earn/GameShell';
 import {
   PERSONA_META,
   resolveAutoVisualTheme,
@@ -13,7 +12,7 @@ import {
 import type { SpawnEntry } from '@/lib/playEarn/types';
 import { gameAssetUrl } from '@/lib/gameAssets';
 import { useT } from '@/contexts/LocaleContext';
-import { LuCoins, LuFish, LuLoader, LuMoon, LuPlay, LuSun, LuWaves } from 'react-icons/lu';
+import { LuFish, LuLoader, LuMoon, LuPlay, LuSun, LuWaves } from 'react-icons/lu';
 
 type WalletData = {
   fishTokenBalance: number;
@@ -43,6 +42,8 @@ type Props = {
   onWalletRefresh?: () => void;
 };
 
+const FISH_PREVIEW = ['fish_blue', 'fish_green', 'fish_pink', 'fish_orange'] as const;
+
 export default function PlayEarnSection({ onWalletRefresh }: Props) {
   const t = useT();
   const [wallet, setWallet] = useState<WalletData | null>(null);
@@ -54,13 +55,14 @@ export default function PlayEarnSection({ onWalletRefresh }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [summary, setSummary] = useState<{ tokensEarned: number; catches: number } | null>(null);
   const [convertAmount, setConvertAmount] = useState('');
+  const [showConvert, setShowConvert] = useState(false);
 
   const lobbyTheme = useMemo(() => resolveAutoVisualTheme('lobby-preview'), []);
   const sessionTheme = useMemo(
     () => (session ? resolveAutoVisualTheme(session.sessionId) : lobbyTheme),
     [session, lobbyTheme],
   );
-  const lobbyAccent = PERSONA_META[lobbyTheme.persona].accent;
+  const accent = PERSONA_META[lobbyTheme.persona].accent;
   const isDay = resolveTimeOfDay() === 'day';
 
   const refresh = useCallback(async () => {
@@ -142,6 +144,7 @@ export default function PlayEarnSection({ onWalletRefresh }: Props) {
         return;
       }
       setConvertAmount('');
+      setShowConvert(false);
       await refresh();
     } catch {
       setError(t('play_earn_convert_error'));
@@ -173,159 +176,176 @@ export default function PlayEarnSection({ onWalletRefresh }: Props) {
   }
 
   return (
-    <section className="mx-auto w-full max-w-2xl p-3 sm:p-4">
-      <GameShell
-        title={t('play_earn_title')}
-        subtitle={t('play_earn_subtitle')}
-        accent={lobbyAccent}
+    <section className="relative w-full">
+      <div
+        className="relative min-h-[min(72dvh,640px)] w-full overflow-hidden sm:min-h-[min(78dvh,720px)]"
+        style={{
+          background: `linear-gradient(180deg, ${lobbyTheme.waterGradient[0]} 0%, ${lobbyTheme.waterGradient[1]} 45%, ${lobbyTheme.waterGradient[2]} 100%)`,
+        }}
       >
+        {/* scanline */}
+        <div
+          className="pointer-events-none absolute inset-0 z-[1] opacity-[0.035]"
+          style={{
+            backgroundImage: 'repeating-linear-gradient(0deg, #fff 0px, #fff 1px, transparent 1px, transparent 3px)',
+          }}
+        />
+
+        {/* dekor dalgalar */}
+        <div className="pointer-events-none absolute inset-0 z-[2] opacity-25">
+          {[
+            { left: '6%', top: '12%', size: 56 },
+            { left: '22%', top: '38%', size: 44 },
+            { left: '48%', top: '8%', size: 64 },
+            { left: '72%', top: '28%', size: 52 },
+            { left: '84%', top: '52%', size: 40 },
+            { left: '38%', top: '62%', size: 48 },
+          ].map((w, i) => (
+            <LuWaves
+              key={i}
+              className="absolute text-white"
+              style={{
+                left: w.left,
+                top: w.top,
+                width: w.size,
+                height: w.size,
+                animation: `pulse ${2.2 + i * 0.25}s ease-in-out infinite`,
+              }}
+            />
+          ))}
+        </div>
+
+        {/* kum / derinlik */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] h-1/3 bg-gradient-to-t from-black/55 via-black/15 to-transparent" />
+
         {loading ? (
-          <div className="flex h-56 items-center justify-center">
-            <LuLoader className="h-9 w-9 animate-spin" style={{ color: lobbyAccent }} />
+          <div className="absolute inset-0 z-20 flex items-center justify-center">
+            <LuLoader className="h-10 w-10 animate-spin text-white/80" />
           </div>
         ) : (
-          <div className="space-y-0">
-            {/* Oyun önizleme alanı */}
-            <div className="relative overflow-hidden border-b border-white/10 px-4 pb-5 pt-4">
-              <div
-                className="relative aspect-[16/7] overflow-hidden rounded-xl border-2 border-white/10"
-                style={{
-                  background: `linear-gradient(180deg, ${lobbyTheme.waterGradient[0]} 0%, ${lobbyTheme.waterGradient[2]} 100%)`,
-                }}
-              >
-                <div className="absolute inset-0 opacity-30">
-                  {[...Array(6)].map((_, i) => (
-                    <LuWaves
-                      key={i}
-                      className="absolute text-white/40"
-                      style={{
-                        left: `${8 + i * 15}%`,
-                        top: `${20 + (i % 3) * 18}%`,
-                        width: 48 + (i % 2) * 16,
-                        height: 48 + (i % 2) * 16,
-                        animation: `pulse ${2 + i * 0.3}s ease-in-out infinite`,
-                      }}
-                    />
-                  ))}
+          <>
+            {/* Üst bilgi şeridi */}
+            <div className="absolute inset-x-0 top-0 z-20 flex flex-wrap items-start justify-between gap-2 p-3 sm:p-4">
+              <div className="flex flex-wrap gap-2">
+                <div className="rounded-xl border border-white/15 bg-black/35 px-3 py-2 backdrop-blur-md">
+                  <p className="text-[9px] font-bold uppercase tracking-wider text-white/45">{t('play_earn_fish_token')}</p>
+                  <p className="font-mono text-xl font-black text-white">{wallet?.fishTokenBalance ?? 0}</p>
                 </div>
-                <div className="absolute inset-x-0 bottom-0 h-1/4 bg-gradient-to-t from-amber-900/50 to-transparent" />
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-4 text-center">
-                  <div className="flex gap-2">
-                    {['fish_blue', 'fish_green', 'fish_pink', 'fish_orange'].map((fish) => (
-                      <img
-                        key={fish}
-                        src={gameAssetUrl(`fish/Vector/${fish}.svg`)}
-                        alt=""
-                        className="h-10 w-10 drop-shadow-lg sm:h-12 sm:w-12"
-                        style={{ animation: 'bounce 2s infinite' }}
-                      />
-                    ))}
-                  </div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/70">
-                    {isDay ? t('play_earn_time_day') : t('play_earn_time_night')} · {t('play_earn_lobby_ready')}
-                  </p>
+                <button
+                  type="button"
+                  onClick={() => setShowConvert((v) => !v)}
+                  className="rounded-xl border border-white/15 bg-black/35 px-3 py-2 text-left backdrop-blur-md transition hover:bg-black/45"
+                >
+                  <p className="text-[9px] font-bold uppercase tracking-wider text-white/45">Papel</p>
+                  <p className="font-mono text-xl font-black text-amber-300">{wallet?.papelBalance ?? 0}</p>
+                </button>
+                <div className="rounded-xl border border-white/15 bg-black/35 px-3 py-2 backdrop-blur-md">
+                  <p className="text-[9px] font-bold uppercase tracking-wider text-white/45">{t('play_earn_hud_time')}</p>
+                  <p className="font-mono text-xl font-black text-white">{config?.sessionDurationSec ?? 90}s</p>
                 </div>
               </div>
-
-              <div className="mt-4 grid grid-cols-3 gap-2">
-                <div className="rounded-lg border border-white/10 bg-black/30 px-2 py-2 text-center">
-                  <p className="text-[9px] font-bold uppercase text-white/40">{t('play_earn_fish_token')}</p>
-                  <p className="font-mono text-lg font-black text-white">{wallet?.fishTokenBalance ?? 0}</p>
-                </div>
-                <div className="rounded-lg border border-white/10 bg-black/30 px-2 py-2 text-center">
-                  <p className="text-[9px] font-bold uppercase text-white/40">Papel</p>
-                  <p className="font-mono text-lg font-black text-amber-300">{wallet?.papelBalance ?? 0}</p>
-                </div>
-                <div className="rounded-lg border border-white/10 bg-black/30 px-2 py-2 text-center">
-                  <p className="text-[9px] font-bold uppercase text-white/40">{t('play_earn_hud_time')}</p>
-                  <p className="font-mono text-lg font-black text-white">{config?.sessionDurationSec ?? 90}s</p>
-                </div>
+              <div className="flex items-center gap-1.5 rounded-full border border-white/15 bg-black/35 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-white/70 backdrop-blur-md">
+                {isDay ? <LuSun className="h-3.5 w-3.5 text-amber-300" /> : <LuMoon className="h-3.5 w-3.5 text-indigo-300" />}
+                {isDay ? t('play_earn_time_day') : t('play_earn_time_night')}
               </div>
             </div>
 
-            <div className="space-y-3 p-4">
+            {/* Orta — balıklar */}
+            <div className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 px-4">
+              <div className="flex items-end gap-3 sm:gap-5">
+                {FISH_PREVIEW.map((fish, i) => (
+                  <img
+                    key={fish}
+                    src={gameAssetUrl(`fish/Vector/${fish}.svg`)}
+                    alt=""
+                    className="drop-shadow-[0_8px_16px_rgba(0,0,0,0.45)]"
+                    style={{
+                      width: 56 + (i % 2) * 12,
+                      height: 56 + (i % 2) * 12,
+                      animation: `bounce ${1.8 + i * 0.15}s ease-in-out infinite`,
+                    }}
+                  />
+                ))}
+              </div>
+              <p className="text-xs font-black uppercase tracking-[0.35em] text-white/75 sm:text-sm">
+                {isDay ? t('play_earn_time_day') : t('play_earn_time_night')} · {t('play_earn_lobby_ready')}
+              </p>
+            </div>
+
+            {/* Alt — kurallar, hata, oyna */}
+            <div className="absolute inset-x-0 bottom-0 z-20 flex flex-col items-center gap-3 p-4 pb-6 sm:pb-8">
               {config && (
-                <p className="text-center text-[11px] text-white/35">
+                <p className="max-w-md text-center text-[10px] leading-relaxed text-white/50 sm:text-[11px]">
                   {t('play_earn_rules', {
                     jeton: String(config.jetonPerPapel),
                     cap: String(config.dailyPapelCap),
                     sec: String(config.sessionDurationSec),
+                  })}
+                  {' · '}
+                  {t('play_earn_convert_hint', {
+                    min: String(wallet?.minConvertJeton ?? 100),
+                    remaining: String(wallet?.remainingPapelCap ?? 0),
                   })}
                 </p>
               )}
 
               {summary && (
                 <div
-                  className="rounded-xl border p-4 text-center text-sm"
-                  style={{ borderColor: `${lobbyAccent}44`, background: `${lobbyAccent}11`, color: '#d1fae5' }}
+                  className="w-full max-w-md rounded-xl border px-4 py-3 text-center text-sm backdrop-blur-md"
+                  style={{ borderColor: `${accent}55`, background: `${accent}22`, color: '#ecfdf5' }}
                 >
-                  <LuFish className="mx-auto mb-1 h-5 w-5" style={{ color: lobbyAccent }} />
+                  <LuFish className="mx-auto mb-1 h-5 w-5" style={{ color: accent }} />
                   {t('play_earn_round_summary', { catches: String(summary.catches), tokens: String(summary.tokensEarned) })}
                 </div>
               )}
 
               {error && (
-                <div className="rounded-xl border border-red-500/25 bg-red-500/10 p-3 text-center text-sm text-red-200">{error}</div>
+                <div className="w-full max-w-md rounded-xl border border-red-400/30 bg-red-950/60 px-4 py-2.5 text-center text-sm text-red-100 backdrop-blur-md">
+                  {error}
+                </div>
+              )}
+
+              {showConvert && (
+                <div className="flex w-full max-w-md gap-2 rounded-xl border border-white/15 bg-black/45 p-2 backdrop-blur-md">
+                  <input
+                    type="number"
+                    min={1}
+                    value={convertAmount}
+                    onChange={(e) => setConvertAmount(e.target.value)}
+                    placeholder={t('play_earn_convert_placeholder')}
+                    className="flex-1 rounded-lg border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white outline-none focus:border-amber-400/40"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleConvert}
+                    disabled={converting}
+                    className="rounded-lg bg-amber-600 px-4 py-2.5 text-sm font-bold text-white disabled:opacity-50"
+                  >
+                    {converting ? '...' : t('play_earn_convert_btn')}
+                  </button>
+                </div>
               )}
 
               <button
                 type="button"
                 onClick={startGame}
                 disabled={starting || config?.gameEnabled === false}
-                className="group relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-2xl py-5 text-base font-black uppercase tracking-[0.2em] text-white shadow-lg transition active:scale-[0.98] disabled:opacity-50"
+                className="group relative flex w-full max-w-md items-center justify-center gap-3 overflow-hidden rounded-2xl py-5 text-lg font-black uppercase tracking-[0.22em] text-white shadow-2xl transition active:scale-[0.98] disabled:opacity-50"
                 style={{
-                  background: `linear-gradient(180deg, ${lobbyAccent} 0%, color-mix(in srgb, ${lobbyAccent} 55%, #1e1b4b) 100%)`,
-                  boxShadow: `0 8px 32px ${lobbyAccent}44`,
+                  background: `linear-gradient(180deg, ${accent} 0%, color-mix(in srgb, ${accent} 50%, #0f172a) 100%)`,
+                  boxShadow: `0 12px 40px ${accent}55, inset 0 1px 0 rgba(255,255,255,0.25)`,
                 }}
               >
-                <span className="absolute inset-0 translate-y-full bg-white/20 transition group-hover:translate-y-0" />
-                <span className="relative flex items-center gap-2">
-                  {starting ? <LuLoader className="h-6 w-6 animate-spin" /> : <LuPlay className="h-6 w-6 fill-current" />}
+                <span className="absolute inset-0 translate-y-full bg-white/15 transition duration-300 group-hover:translate-y-0" />
+                <span className="relative flex items-center gap-2.5">
+                  {starting ? <LuLoader className="h-7 w-7 animate-spin" /> : <LuPlay className="h-7 w-7 fill-current" />}
                   {t('play_earn_play')}
                 </span>
               </button>
-
-              <p className="flex items-center justify-center gap-1.5 text-[10px] text-white/30">
-                {isDay ? <LuSun className="h-3 w-3" /> : <LuMoon className="h-3 w-3" />}
-                {t('play_earn_auto_ambient_hint')}
-              </p>
             </div>
-          </div>
+          </>
         )}
-      </GameShell>
-
-      {!loading && (
-        <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-          <div className="mb-3 flex items-center gap-2">
-            <LuCoins className="h-4 w-4 text-amber-400" />
-            <p className="text-sm font-bold text-white">{t('play_earn_convert_title')}</p>
-          </div>
-          <p className="text-xs text-white/40">
-            {t('play_earn_convert_hint', {
-              min: String(wallet?.minConvertJeton ?? 100),
-              remaining: String(wallet?.remainingPapelCap ?? 0),
-            })}
-          </p>
-          <div className="mt-3 flex gap-2">
-            <input
-              type="number"
-              min={1}
-              value={convertAmount}
-              onChange={(e) => setConvertAmount(e.target.value)}
-              placeholder={t('play_earn_convert_placeholder')}
-              className="flex-1 rounded-lg border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white outline-none focus:border-cyan-500/40"
-            />
-            <button
-              type="button"
-              onClick={handleConvert}
-              disabled={converting}
-              className="rounded-lg bg-amber-600 px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50"
-            >
-              {converting ? '...' : t('play_earn_convert_btn')}
-            </button>
-          </div>
-        </div>
-      )}
+      </div>
     </section>
   );
 }

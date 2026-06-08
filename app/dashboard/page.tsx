@@ -1333,7 +1333,9 @@ export default function DashboardPage() {
           ? 'md:pt-6 pb-12 lg:pb-3 gap-3'
           : effectiveSection === 'custom-role'
             ? 'md:pt-8 pb-16 lg:pb-8 gap-4 px-4 sm:px-6'
-            : 'md:pt-16 pb-20 lg:pb-6 gap-6';
+            : effectiveSection === 'play-earn'
+              ? 'py-0 pb-20 lg:pb-0 gap-0 px-0'
+              : 'md:pt-16 pb-20 lg:pb-6 gap-6';
 
   // Splash — readiness sorgulanmadan önce gösterilir
   if (!splashDone) {
