@@ -19,6 +19,7 @@
   "dashboard_menu_open_aria": "Menüyü Aç",
   "dashboard_server_label": "Sunucu",
   "dashboard_server_active_badge": "Aktif",
+  "dashboard_server_time_label": "Sunucu Zamanı",
   "dashboard_server_fallback": "Veri Merkezi",
   "dashboard_server_selected_none": "Seçilmedi",
   "dashboard_section_general": "Genel",

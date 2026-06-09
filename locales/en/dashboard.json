@@ -19,6 +19,7 @@
   "dashboard_menu_open_aria": "Open Menu",
   "dashboard_server_label": "Server",
   "dashboard_server_active_badge": "Active",
+  "dashboard_server_time_label": "Server Time",
   "dashboard_server_fallback": "Data Center",
   "dashboard_server_selected_none": "Not Selected",
   "dashboard_section_general": "General",

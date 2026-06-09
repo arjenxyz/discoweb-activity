@@ -19,6 +19,7 @@
   "dashboard_menu_open_aria": "Abrir Menu",
   "dashboard_server_label": "Servidor",
   "dashboard_server_active_badge": "Ativo",
+  "dashboard_server_time_label": "Horário do Servidor",
   "dashboard_server_fallback": "Centro de Dados",
   "dashboard_server_selected_none": "Nenhum selecionado",
   "dashboard_section_general": "Geral",
