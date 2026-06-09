@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
   ],
   // Allow embedded pages to run inside Discord iframe
   async headers() {
-    const discordCsp = "frame-ancestors 'self' https://discord.com https://*.discordsays.com; connect-src 'self' https://discord.com https://*.discordsays.com https://*.supabase.co wss://*.supabase.co data: blob:; img-src 'self' data: blob: https:; media-src 'self' https://*.supabase.co https: blob:";
+    const discordCsp = "frame-ancestors 'self' https://discord.com https://*.discordsays.com; connect-src 'self' https://discord.com https://*.discordsays.com https://*.supabase.co wss://*.supabase.co data: blob:; img-src 'self' data: https:; media-src 'self' https://*.supabase.co https: blob:";
     const embeddedSources = ['/activity/:path*', '/dashboard/:path*', '/chat/:path*'];
 
     return embeddedSources.map((source) => ({
@@ -41,7 +41,6 @@ const nextConfig: NextConfig = {
       { source: '/activity/background/:path*', destination: '/background/:path*' },
       { source: '/activity/icon/:path*', destination: '/icon/:path*' },
       { source: '/activity/penguin/:path*', destination: '/penguin/:path*' },
-      { source: '/activity/games/:path*', destination: '/games/:path*' },
       // Supabase storage assets → same-origin (Discord CSP için)
       {
         source: '/cdn/:path*',

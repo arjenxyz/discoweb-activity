@@ -20,7 +20,6 @@ import SessionExpiredModal from './components/SessionExpiredModal';
 import DiscoverSection from './components/DiscoverSection';
 import TagBadgeSection from './components/TagBadgeSection';
 import QuizEventSection from './components/QuizEventSection';
-import PlayEarnSection from './components/PlayEarnSection';
 import NotificationDetailModal from './components/NotificationDetailModal';
 import NotificationsModal from './components/NotificationsModal';
 import TransferModal, { TransferConfirmModal } from './components/TransferModal';
@@ -1314,7 +1313,7 @@ export default function DashboardPage() {
     await refreshStoreItems(storePage + 1, true);
   };
 
-  const FULL_WIDTH_SECTIONS = ['mail', 'store', 'settings', 'duyuru', 'quiz', 'custom-role', 'play-earn'];
+  const FULL_WIDTH_SECTIONS = ['mail', 'store', 'settings', 'duyuru', 'quiz', 'custom-role'];
   const mainWrapperClass = FULL_WIDTH_SECTIONS.includes(effectiveSection)
     ? (effectiveSection === 'store' && !isActivityEmbed)
       ? 'w-full max-w-4xl px-0 sm:px-6'
@@ -1333,9 +1332,7 @@ export default function DashboardPage() {
           ? 'md:pt-6 pb-12 lg:pb-3 gap-3'
           : effectiveSection === 'custom-role'
             ? 'md:pt-8 pb-16 lg:pb-8 gap-4 px-4 sm:px-6'
-            : effectiveSection === 'play-earn'
-              ? 'py-0 pb-0 gap-0 px-0 flex-1 min-h-0 overflow-hidden'
-              : 'md:pt-16 pb-20 lg:pb-6 gap-6';
+            : 'md:pt-16 pb-20 lg:pb-6 gap-6';
 
   // Splash — readiness sorgulanmadan önce gösterilir
   if (!splashDone) {
@@ -1390,7 +1387,7 @@ export default function DashboardPage() {
     <div className="h-screen bg-[#0b0d12] text-white overflow-hidden flex flex-col">
       <div className="flex flex-1 min-h-0">
         {/* Sidebar */}
-        {effectiveSection !== 'mail' && effectiveSection !== 'settings' && effectiveSection !== 'play-earn' && !unauthorized && (
+        {effectiveSection !== 'mail' && effectiveSection !== 'settings' && !unauthorized && (
           <SidebarNav
             effectiveSection={effectiveSection}
             unauthorized={unauthorized}
@@ -1401,7 +1398,7 @@ export default function DashboardPage() {
         )}
 
         {/* Sağ taraf: header + main */}
-        <div className={`flex flex-1 flex-col min-w-0 min-h-0 overflow-hidden ${effectiveSection === 'play-earn' ? 'bg-transparent' : 'bg-[#0e1018]'}`}>
+        <div className="flex flex-1 flex-col min-w-0 min-h-0 overflow-hidden bg-[#0e1018]">
         {effectiveSection !== 'mail' && (
         <DashboardHeader
           isActivityEmbed={isActivityEmbed}
@@ -1452,7 +1449,7 @@ export default function DashboardPage() {
         />
         )}
 
-        <main className={`${mainWrapperClass} flex flex-col flex-1 min-h-0 ${mainSpacingClass} ${effectiveSection === 'play-earn' ? 'overflow-hidden bg-transparent' : 'overflow-y-auto custom-scrollbar bg-[#0e1018]'}`}>
+        <main className={`${mainWrapperClass} flex flex-col flex-1 ${mainSpacingClass} overflow-y-auto custom-scrollbar bg-[#0e1018]`}>
             {!maintenanceLoading && isSiteMaintenance && (
               <section className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-6">
                 <p className="text-sm font-semibold text-amber-200">Site bakÄ±mda</p>
@@ -1622,11 +1619,6 @@ export default function DashboardPage() {
               <QuizEventSection onQuizEnded={() => setActiveSection('overview')} />
             )}
 
-            {effectiveSection === 'play-earn' && !isSiteMaintenance && !unauthorized && (
-              <div className="flex min-h-0 w-full flex-1">
-                <PlayEarnSection onWalletRefresh={refreshWalletBalance} />
-              </div>
-            )}
           </main>
         </div>
       <NotificationsModal
