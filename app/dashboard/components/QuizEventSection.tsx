@@ -19,6 +19,8 @@ import { apiUrl } from '@/lib/api';
 import { QuizShell } from '@/components/quiz/QuizShell';
 import { QuizCountdown } from '@/components/quiz/QuizCountdown';
 import { QuizTimerRing } from '@/components/quiz/QuizTimerRing';
+import { QuizIdleView } from '@/components/quiz/QuizIdleView';
+import { QuizLoadingView } from '@/components/quiz/QuizLoadingView';
 
 type Checkpoint = { position: number; papel_reward: number; label: string | null };
 
@@ -323,44 +325,32 @@ export default function QuizEventSection({
     [activeEvents, selectedId],
   );
 
-  const showArena = !!selected && !loading && !error;
+  const showEventArena = !!selected && !loading && !error;
+  const quizHub = !loading;
 
   useEffect(() => {
-    onImmersiveChange?.(showArena);
+    onImmersiveChange?.(quizHub);
     return () => onImmersiveChange?.(false);
-  }, [showArena, onImmersiveChange]);
+  }, [quizHub, onImmersiveChange]);
 
   return (
     <section
-      className={`flex w-full flex-1 flex-col ${showArena ? 'min-h-0 gap-2 px-0 py-0' : 'gap-3 px-4 py-4 sm:px-5 sm:py-5'}`}
+      className={`flex w-full flex-1 flex-col ${quizHub ? 'min-h-0 gap-2 px-0 py-0' : 'gap-3 px-4 py-4 sm:px-5 sm:py-5'}`}
     >
-      {!showArena && (
-        <div>
-          <p className="mb-0.5 text-xs font-medium text-white/30">Etkinlik</p>
-          <h1 className="text-2xl font-black tracking-tight text-white">Quiz</h1>
-          <p className="mt-1 text-sm text-white/40">Doğru cevapla, ödül havuzundan papel kazan.</p>
-        </div>
-      )}
-
-      {loading && <LoadingRow label="Yükleniyor…" />}
+      {loading && <QuizLoadingView label="Quiz arenası hazırlanıyor…" />}
 
       {error && !loading && (
-        <div className={`${CARD} border-rose-500/20 bg-rose-500/5`}>
-          <p className="text-sm text-rose-300">{error}</p>
-        </div>
-      )}
-
-      {!loading && !error && activeEvents.length === 0 && !hadLiveRef.current && (
-        <div className={`${CARD} py-12 text-center`}>
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-white/[0.08] bg-white/[0.04]">
-            <LuTrophy className="h-5 w-5 text-white/25" strokeWidth={1.5} />
+        <QuizShell variant="eliminated">
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 px-4 text-center">
+            <p className="text-[10px] font-bold uppercase tracking-[0.35em] text-rose-400/80">Bağlantı sorunu</p>
+            <p className="max-w-sm text-sm text-rose-200/90">{error}</p>
           </div>
-          <p className="mt-4 text-sm text-white/50">Yaklaşan veya aktif quiz etkinliği yok.</p>
-          <p className="mt-1 text-xs text-white/30">Yeni etkinlikler duyurulduğunda burada görünecek.</p>
-        </div>
+        </QuizShell>
       )}
 
-      {!loading && activeEvents.length > 1 && !showArena && (
+      {!loading && !error && activeEvents.length === 0 && !hadLiveRef.current && <QuizIdleView />}
+
+      {!loading && activeEvents.length > 1 && !showEventArena && (
         <div className="flex flex-wrap gap-1.5 border-b border-white/[0.08] pb-3">
           {activeEvents.map((e) => (
             <button
@@ -382,7 +372,7 @@ export default function QuizEventSection({
         </div>
       )}
 
-      {!loading && activeEvents.length > 1 && showArena && (
+      {!loading && activeEvents.length > 1 && showEventArena && (
         <div className="flex flex-wrap gap-1 px-1">
           {activeEvents.map((e) => (
             <button
@@ -405,7 +395,7 @@ export default function QuizEventSection({
       )}
 
       {selected && (
-        <div className={showArena ? 'flex min-h-0 flex-1 flex-col' : undefined}>
+        <div className={showEventArena ? 'flex min-h-0 flex-1 flex-col' : undefined}>
           <EventPanel event={selected} onRefresh={refresh} onQuizEnded={onQuizEnded} />
         </div>
       )}

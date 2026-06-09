@@ -482,3 +482,21 @@ html, body {
   animation: quizHeartBreak 0.55s ease-out;
 }
 
+@keyframes quizFloatTrophy {
+  0%, 100% { transform: translateY(0) rotate(-4deg); }
+  50% { transform: translateY(-12px) rotate(4deg); }
+}
+
+@keyframes quizSparkle {
+  0%, 100% { opacity: 0.25; transform: scale(0.85); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+
+.animate-quiz-float-trophy {
+  animation: quizFloatTrophy 3.2s ease-in-out infinite;
+}
+
+.animate-quiz-sparkle {
+  animation: quizSparkle 2.4s ease-in-out infinite;
+}
+
