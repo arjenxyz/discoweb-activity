@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 
-import { LuHouse, LuMail, LuStore, LuSettings, LuChevronRight, LuSend, LuTag, LuCompass, LuLayoutGrid, LuShieldCheck, LuNewspaper, LuChartBar, LuTrophy, LuUserPlus, LuHeart, LuPalette } from 'react-icons/lu';
+import { LuHouse, LuMail, LuStore, LuSettings, LuChevronRight, LuSend, LuTag, LuCompass, LuLayoutGrid, LuShieldCheck, LuNewspaper, LuChartBar, LuTrophy, LuUserPlus, LuHeart, LuPalette, LuArrowLeft } from 'react-icons/lu';
 import { openDiscordInviteFriends } from '@/lib/discordInvite';
 import { siteConfig } from '@/config/site';
 import Image from 'next/image';
@@ -64,6 +64,8 @@ type DashboardHeaderProps = {
   duyuruEveryoneUnreadCount?: number;
   onOpenLeaderboard?: () => void;
   openLink?: (url: string) => Promise<void>;
+  /** Quiz arena: hide logo, wallet, support; keep profile + exit */
+  minimalProfileOnly?: boolean;
 };
 
 const RANDOM_GIFS = [
@@ -89,6 +91,7 @@ export default function DashboardHeader({
   duyuruEveryoneUnreadCount = 0,
   settings,
   openLink,
+  minimalProfileOnly = false,
 }: DashboardHeaderProps) {
   const t = useT();
   const getRandomGif = () => RANDOM_GIFS[Math.floor(Math.random() * RANDOM_GIFS.length)];
@@ -274,6 +277,28 @@ export default function DashboardHeader({
     navigation.onNavigate(key);
   };
 
+  const exitToOverview = () => {
+    setIsProfileOpen(false);
+    setMobileMenuOpen(false);
+    navigation.onNavigate('overview');
+  };
+
+  const profileMenuExit = minimalProfileOnly ? (
+    <button
+      type="button"
+      onClick={exitToOverview}
+      className="flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-white/70 transition hover:bg-white/5 hover:text-white"
+    >
+      <div className="flex items-center gap-3">
+        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/8">
+          <LuHouse className="h-3.5 w-3.5" />
+        </div>
+        <span className="text-sm font-medium">Ana sayfaya dön</span>
+      </div>
+      <LuChevronRight className="h-3.5 w-3.5 text-white/30" />
+    </button>
+  ) : null;
+
   return (
     <>
       {/* Desktop overlay — sadece masaüstü profil dropdown için */}
@@ -286,20 +311,36 @@ export default function DashboardHeader({
       {/* Mobil overlay — menü/profil dropdown için, modalların altında kalır */}
       <div
         onClick={() => { setIsProfileOpen(false); setMobileMenuOpen(false); }}
-        className={`lg:hidden fixed inset-0 z-[35] bg-black/60 backdrop-blur-sm transition-all duration-300 ${
+        className={`lg:hidden fixed inset-0 ${minimalProfileOnly ? 'z-[9990]' : 'z-[35]'} bg-black/60 backdrop-blur-sm transition-all duration-300 ${
           (isProfileOpen || mobileMenuOpen) ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'
         }`}
       />
 
       {/* Header — desktop full / mobile sadece bakiye */}
       <header className={`md:fixed inset-x-0 top-0 flex items-center bg-[#0e1018]/95 backdrop-blur-xl border-b border-white/[0.06] px-4 sm:px-6 transition-all duration-200 relative ${
-        isActivityEmbed ? 'h-auto pt-[env(safe-area-inset-top,0px)] pb-2 min-h-[4rem]' : 'h-16'
+        minimalProfileOnly
+          ? 'h-12 pt-[env(safe-area-inset-top,0px)]'
+          : isActivityEmbed
+            ? 'h-auto pt-[env(safe-area-inset-top,0px)] pb-2 min-h-[4rem]'
+            : 'h-16'
       } ${isProfileOpen ? 'z-[9991]' : 'z-30'}`}>
 
         <style>{`@keyframes titleShine{0%,60%{background-position:100% 0}100%{background-position:-100% 0}}`}</style>
 
+        {minimalProfileOnly && (
+          <button
+            type="button"
+            onClick={exitToOverview}
+            className="mr-2 flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-white/70 transition hover:bg-white/[0.08] hover:text-white"
+            aria-label="Ana sayfaya dön"
+          >
+            <LuArrowLeft className="h-4 w-4" />
+            <span className="hidden sm:inline">Çık</span>
+          </button>
+        )}
+
         {/* Sol — logo (sadece desktop) */}
-        <div className="hidden lg:flex items-center gap-1.5 min-w-fit ml-2">
+        <div className={`${minimalProfileOnly ? 'hidden' : 'hidden lg:flex'} items-center gap-1.5 min-w-fit ml-2`}>
           <div className="flex flex-col gap-0.5">
             <span className="font-black text-xl sm:text-2xl tracking-tight leading-none" style={logoWhiteStyle}>
               Disco<span style={logoBlueStyle}>Web</span>
@@ -308,7 +349,7 @@ export default function DashboardHeader({
         </div>
 
         {/* Mobil orta — logo + DiscoWeb yazısı birlikte */}
-        <div className="lg:hidden absolute left-1/2 -translate-x-1/2 flex items-center gap-1 pointer-events-none">
+        <div className={`${minimalProfileOnly ? 'hidden' : 'lg:hidden absolute left-1/2 -translate-x-1/2'} flex items-center gap-1 pointer-events-none`}>
           <div className="flex flex-col gap-0.5 items-center">
             <span className="font-black text-xl tracking-tight leading-none" style={logoWhiteStyle}>
               Disco<span style={logoBlueStyle}>Web</span>
@@ -321,7 +362,7 @@ export default function DashboardHeader({
 
         {/* Sağ — bakiye + profil */}
         <div className="flex items-center gap-2">
-          {!unauthorized && (
+          {!unauthorized && !minimalProfileOnly && (
             <div className="hidden lg:flex items-end gap-1.5">
               {mariBalance !== undefined && (
                 <div className="flex items-center gap-1.5 rounded-full border border-violet-500/30 bg-violet-500/10 px-3 py-1.5 text-sm">
@@ -343,13 +384,13 @@ export default function DashboardHeader({
             </div>
           )}
 
-          {openLink && (
+          {openLink && !minimalProfileOnly && (
             <SupportMenu openLink={openLink} section={navigation.activeSection} />
           )}
 
-          {/* Profil butonu — sadece desktop */}
+          {/* Profil butonu — desktop; quiz modunda mobilde de üstte */}
           {!unauthorized && (
-            <div className="relative hidden lg:block">
+            <div className={`relative ${minimalProfileOnly ? 'block' : 'hidden lg:block'}`}>
               <button
                 type="button"
                 onClick={toggleProfileOpen}
@@ -375,7 +416,7 @@ export default function DashboardHeader({
               {/* Profil dropdown — desktop */}
               <div
                 onClick={e => e.stopPropagation()}
-                className={`absolute right-0 top-14 w-[320px] transition-all duration-300 origin-top-right ${
+                className={`absolute right-0 ${minimalProfileOnly ? 'top-11' : 'top-14'} w-[min(320px,calc(100vw-2rem))] transition-all duration-300 origin-top-right ${
                   isProfileOpen ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible'
                 }`}
               >
@@ -390,6 +431,7 @@ export default function DashboardHeader({
                   </div>
 
                   <div className="p-3 space-y-1.5">
+                    {profileMenuExit}
                     {/* Aktif sunucu */}
                     {server.data && (
                       <div className="flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.03] px-3 py-2.5">
@@ -470,6 +512,7 @@ export default function DashboardHeader({
       </header>
 
       {/* Mobil bottom bar */}
+      {!minimalProfileOnly && (
       <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-[#0b0d12]/98 backdrop-blur-2xl border-t border-white/[0.08] pb-[env(safe-area-inset-bottom,0px)]">
         <div className="flex items-center gap-2 px-3 py-2">
           {/* Sol — Menüler butonu */}
@@ -608,6 +651,7 @@ export default function DashboardHeader({
             </div>
 
             <div className="p-3 space-y-1.5">
+              {profileMenuExit}
               {server.data && (
                 <div className="flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.03] px-3 py-2.5">
                   {server.data.iconUrl ? (
@@ -655,6 +699,7 @@ export default function DashboardHeader({
           </div>
         )}
       </div>
+      )}
     </>
   );
 }
