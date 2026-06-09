@@ -21,6 +21,7 @@ import { QuizCountdown } from '@/components/quiz/QuizCountdown';
 import { QuizTimerRing } from '@/components/quiz/QuizTimerRing';
 import { QuizIdleView } from '@/components/quiz/QuizIdleView';
 import { QuizLoadingView } from '@/components/quiz/QuizLoadingView';
+import { QuizProfileMenu, type QuizProfileMenuProps } from '@/components/quiz/QuizProfileMenu';
 
 type Checkpoint = { position: number; papel_reward: number; label: string | null };
 
@@ -255,9 +256,11 @@ function LoadingRow({ label }: { label: string }) {
 export default function QuizEventSection({
   onQuizEnded,
   onImmersiveChange,
+  profileMenu,
 }: {
   onQuizEnded?: () => void;
   onImmersiveChange?: (immersive: boolean) => void;
+  profileMenu?: QuizProfileMenuProps | null;
 }) {
   const [events, setEvents] = useState<EventCard[]>([]);
   const [loading, setLoading] = useState(true);
@@ -335,8 +338,16 @@ export default function QuizEventSection({
 
   return (
     <section
-      className={`flex w-full flex-1 flex-col ${quizHub ? 'min-h-0 gap-2 px-0 py-0' : 'gap-3 px-4 py-4 sm:px-5 sm:py-5'}`}
+      className={`relative flex w-full flex-1 flex-col ${quizHub ? 'min-h-0 gap-2 px-0 py-0' : 'gap-3 px-4 py-4 sm:px-5 sm:py-5'}`}
     >
+      {quizHub && profileMenu && (
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-30 flex justify-end p-4 pt-[max(1rem,env(safe-area-inset-top))] sm:p-5">
+          <div className="pointer-events-auto">
+            <QuizProfileMenu {...profileMenu} />
+          </div>
+        </div>
+      )}
+
       {loading && <QuizLoadingView label="Quiz arenası hazırlanıyor…" />}
 
       {error && !loading && (
@@ -373,7 +384,7 @@ export default function QuizEventSection({
       )}
 
       {!loading && activeEvents.length > 1 && showEventArena && (
-        <div className="flex flex-wrap gap-1 px-1">
+        <div className={`flex flex-wrap gap-1 px-1 ${profileMenu ? 'pr-36 pt-14 sm:pt-16' : ''}`}>
           {activeEvents.map((e) => (
             <button
               key={e.id}
@@ -612,7 +623,7 @@ function ScheduledView({
 
   return (
     <QuizShell variant="lobby">
-      <div className="absolute right-4 top-4 z-20 sm:right-6 sm:top-6">
+      <div className="absolute left-4 top-4 z-20 sm:left-6 sm:top-6">
         <InfoButton onClick={() => setShowInfo(true)} />
       </div>
 
@@ -977,21 +988,83 @@ function LivePlayView({
 }
 
 function EliminatedView({ event, me }: { event: EventCard; me: MyState }) {
+  const progressPct = event.total_questions > 0
+    ? Math.min(100, Math.round((me.last_position / event.total_questions) * 100))
+    : 0;
+
   return (
     <QuizShell variant="eliminated">
-      <div className="flex flex-1 flex-col items-center justify-center text-center animate-quiz-fade-in">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-rose-500/30 bg-rose-500/15 shadow-[0_0_40px_rgba(244,63,94,0.2)]">
-          <LuFlag className="h-7 w-7 text-rose-400" />
+      <div className="relative flex min-h-0 flex-1 flex-col items-center justify-center px-2 py-6 text-center animate-quiz-fade-in sm:py-10">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_30%,rgba(244,63,94,0.12)_0%,transparent_55%)]" />
+
+        <div className="relative">
+          <div className="absolute inset-0 m-auto h-28 w-28 rounded-full bg-rose-500/15 blur-3xl" />
+          <div className="relative flex h-20 w-20 items-center justify-center rounded-3xl border border-rose-500/35 bg-rose-500/10 shadow-[0_0_48px_rgba(244,63,94,0.22)] animate-quiz-pop sm:h-24 sm:w-24">
+            <LuFlag className="h-9 w-9 text-rose-400 sm:h-10 sm:w-10" strokeWidth={1.5} />
+          </div>
         </div>
-        <p className="mt-6 text-[10px] font-bold uppercase tracking-[0.4em] text-rose-400/90">Elendin</p>
-        <h2 className="mt-2 text-2xl font-black text-white sm:text-3xl">Tur bitti</h2>
-        <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-white/45">
-          {event.wrong_allowed} yanlış hakkını kullandın. Etkinlik bitince ana sayfaya döneceksin.
+
+        <p className="relative mt-8 text-[11px] font-bold uppercase tracking-[0.45em] text-rose-400">Elendin</p>
+        <h2 className="relative mt-3 text-3xl font-black text-white sm:text-4xl">Tur bitti</h2>
+
+        <div className="relative mt-4 flex items-center justify-center gap-1.5">
+          {Array.from({ length: event.wrong_allowed }).map((_, i) => (
+            <LuHeart
+              key={i}
+              className="h-6 w-6 text-rose-500/25"
+              fill="currentColor"
+            />
+          ))}
+        </div>
+
+        <p className="relative mx-auto mt-4 max-w-md text-sm leading-relaxed text-white/50">
+          {event.wrong_allowed} yanlış hakkını kullandın. Etkinlik bitince otomatik olarak ana sayfaya döneceksin.
         </p>
-        <div className="mt-8 grid w-full max-w-md grid-cols-3 gap-3">
-          <StatCard label="Doğru" value={`${me.total_correct}`} icon={<LuCheck className="h-4 w-4" />} color="text-emerald-400" compact />
-          <StatCard label="Soru" value={`${me.last_position}`} icon={<LuCircleHelp className="h-4 w-4" />} color="text-violet-400" compact />
-          <StatCard label="Papel" value={Number(me.papel_earned).toLocaleString('tr-TR')} icon={<LuCoins className="h-4 w-4" />} color="text-amber-400" highlight compact />
+
+        <div className="relative mt-8 w-full max-w-lg rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5 backdrop-blur-sm">
+          <div className="mb-3 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-white/35">
+            <span>İlerleme</span>
+            <span>
+              Soru {me.last_position} / {event.total_questions}
+            </span>
+          </div>
+          <div className="h-2 overflow-hidden rounded-full bg-white/[0.06]">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-rose-600/80 to-rose-400/50 transition-all duration-700"
+              style={{ width: `${progressPct}%` }}
+            />
+          </div>
+
+          <div className="mt-5 grid grid-cols-3 gap-3">
+            <div className="rounded-xl border border-emerald-500/15 bg-emerald-500/5 px-3 py-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-white/40">Doğru</span>
+                <LuCheck className="h-4 w-4 text-emerald-400" />
+              </div>
+              <p className="mt-2 text-2xl font-black tabular-nums text-emerald-300">{me.total_correct}</p>
+            </div>
+            <div className="rounded-xl border border-violet-500/15 bg-violet-500/5 px-3 py-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-white/40">Soru</span>
+                <LuCircleHelp className="h-4 w-4 text-violet-400" />
+              </div>
+              <p className="mt-2 text-2xl font-black tabular-nums text-violet-200">{me.last_position}</p>
+            </div>
+            <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-white/40">Papel</span>
+                <LuCoins className="h-4 w-4 text-amber-400" />
+              </div>
+              <p className="mt-2 text-2xl font-black tabular-nums text-amber-300">
+                {Number(me.papel_earned).toLocaleString('tr-TR')}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="relative mt-6 inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-black/20 px-4 py-2 text-xs text-white/45">
+          <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
+          Etkinlik devam ediyor — sonuçlar bitince yönlendirileceksin
         </div>
       </div>
     </QuizShell>

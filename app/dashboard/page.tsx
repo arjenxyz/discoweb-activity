@@ -1338,7 +1338,7 @@ export default function DashboardPage() {
           : effectiveSection === 'custom-role'
             ? 'md:pt-8 pb-16 lg:pb-8 gap-4 px-4 sm:px-6'
             : effectiveSection === 'quiz' && quizImmersive
-              ? 'pt-12 pb-0 gap-0 px-0 flex-1 min-h-0 overflow-hidden'
+              ? 'py-0 pb-0 gap-0 px-0 flex-1 min-h-0 overflow-hidden'
               : 'md:pt-16 pb-20 lg:pb-6 gap-6';
 
   // Splash — readiness sorgulanmadan önce gösterilir
@@ -1406,7 +1406,7 @@ export default function DashboardPage() {
 
         {/* Sağ taraf: header + main */}
         <div className="flex flex-1 flex-col min-w-0 min-h-0 overflow-hidden bg-[#0e1018]">
-        {effectiveSection !== 'mail' && (
+        {effectiveSection !== 'mail' && !(effectiveSection === 'quiz' && quizImmersive) && (
         <DashboardHeader
           isActivityEmbed={isActivityEmbed}
           unauthorized={unauthorized}
@@ -1453,7 +1453,6 @@ export default function DashboardPage() {
             onOpenDiscounts: openDiscountsModal,
             menuRef: settingsMenuRef,
           }}
-          minimalProfileOnly={effectiveSection === 'quiz' && quizImmersive}
         />
         )}
 
@@ -1628,6 +1627,18 @@ export default function DashboardPage() {
                 <QuizEventSection
                   onQuizEnded={() => setActiveSection('overview')}
                   onImmersiveChange={setQuizImmersive}
+                  profileMenu={
+                    !unauthorized && profile
+                      ? {
+                          username: profile.username,
+                          avatarUrl: profile.avatarUrl ?? null,
+                          serverName: headerServer.data?.name ?? null,
+                          serverIconUrl: headerServer.data?.iconUrl ?? null,
+                          onExit: () => setActiveSection('overview'),
+                          onOpenSettings: handleOpenSettings,
+                        }
+                      : null
+                  }
                 />
               </div>
             )}
