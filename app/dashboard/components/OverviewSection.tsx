@@ -2,7 +2,6 @@
 
 import Image from 'next/image';
 import { useT } from '@/contexts/LocaleContext';
-import ServerTimeClock from './ServerTimeClock';
 import {
   LuMessageSquare,
   LuMic,
@@ -73,10 +72,6 @@ export default function OverviewSection({
         <p className="mt-1 text-sm text-white/40">
           {t('overview_subtitle')}
         </p>
-      </div>
-
-      <div className="lg:hidden">
-        <ServerTimeClock />
       </div>
 
       {overviewLoading ? (

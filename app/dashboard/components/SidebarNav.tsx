@@ -5,7 +5,6 @@ import Image from 'next/image';
 import { LuChevronRight, LuHouse, LuMail, LuStore, LuMegaphone, LuCompass, LuShieldCheck, LuTrophy, LuPalette } from 'react-icons/lu';
 import type { MemberProfile, Section } from '../types';
 import { useT } from '@/contexts/LocaleContext';
-import ServerTimeClock from './ServerTimeClock';
 
 type SidebarNavProps = {
   effectiveSection: Section;
@@ -113,16 +112,6 @@ export default function SidebarNav({
       </div>
 
       <div className="mx-3 border-t border-white/[0.06]" />
-
-      {!collapsed ? (
-        <div className="px-3 pt-3">
-          <ServerTimeClock />
-        </div>
-      ) : (
-        <div className="flex justify-center px-3 pt-3">
-          <ServerTimeClock compact />
-        </div>
-      )}
 
       {/* Navigasyon */}
       <nav className="mt-4 flex-1 overflow-y-auto px-3 pb-6 space-y-5">

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { LuChevronRight, LuHouse, LuSettings } from 'react-icons/lu';
 import { useT } from '@/contexts/LocaleContext';
+import ServerTimeClock from '@/app/dashboard/components/ServerTimeClock';
 
 export type QuizProfileMenuProps = {
   username: string;
@@ -69,6 +70,7 @@ export function QuizProfileMenu({
             <div className="border-b border-white/[0.06] px-4 py-3">
               <p className="text-sm font-black text-white">{t('dashboard_hello_user', { username })}</p>
               {serverName && <p className="mt-0.5 text-xs text-white/40">{serverName}</p>}
+              <ServerTimeClock className="mt-2" />
             </div>
 
             <div className="space-y-1 p-2">

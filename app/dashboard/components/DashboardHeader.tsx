@@ -12,6 +12,7 @@ import type { Notification, Section } from '../types';
 import type { JSX, RefObject } from 'react';
 import { useT } from '@/contexts/LocaleContext';
 import SupportMenu from './SupportMenu';
+import ServerTimeClock from './ServerTimeClock';
 
 type DashboardHeaderProps = {
   isActivityEmbed?: boolean;
@@ -415,8 +416,9 @@ export default function DashboardHeader({
                   <div className="relative h-24 overflow-hidden bg-[#5865F2]/15">
                     <Image src={currentGif} alt="" fill className="object-contain scale-110 opacity-50" unoptimized />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#0f1116] via-[#0f1116]/40 to-transparent" />
-                    <div className="absolute bottom-3 left-4">
+                    <div className="absolute bottom-3 left-4 right-4">
                       <p className="text-lg font-black text-white">{t('dashboard_hello_user', { username: profile?.username ?? '' })}</p>
+                      <ServerTimeClock className="mt-1.5" />
                     </div>
                   </div>
 
@@ -635,8 +637,9 @@ export default function DashboardHeader({
             <div className="relative h-24 overflow-hidden bg-[#5865F2]/15">
               <Image src={currentGif} alt="" fill className="object-contain scale-110 opacity-50" unoptimized />
               <div className="absolute inset-0 bg-gradient-to-t from-[#0f1116] via-[#0f1116]/40 to-transparent" />
-              <div className="absolute bottom-3 left-4">
+              <div className="absolute bottom-3 left-4 right-4">
                 <p className="text-lg font-black text-white">{t('dashboard_hello_user', { username: profile?.username ?? '' })}</p>
+                <ServerTimeClock className="mt-1.5" />
               </div>
             </div>
 
