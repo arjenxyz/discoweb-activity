@@ -6,6 +6,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { lockEventQuestions } from './lockQuestions';
 import { commitAnswersForPosition } from './commitAnswers';
+import { QUIZ_INTRO_COUNTDOWN_SECONDS } from './constants';
 
 type Event = {
   id: string;
@@ -153,7 +154,8 @@ export async function runQuizTick(
       startedAt = now.getTime();
     }
     if (!startedAt) continue;
-    const tickMs = (ev.seconds_per_question + (ev.reveal_seconds ?? 2)) * 1000;
+    const introGraceMs = ev.current_position === 1 ? QUIZ_INTRO_COUNTDOWN_SECONDS * 1000 : 0;
+    const tickMs = (ev.seconds_per_question + (ev.reveal_seconds ?? 2)) * 1000 + introGraceMs;
     if (now.getTime() - startedAt < tickMs) continue;
 
     const { data: fullEv } = await supabase

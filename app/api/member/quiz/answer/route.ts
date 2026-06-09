@@ -10,6 +10,7 @@ import { createClient } from '@supabase/supabase-js';
 import { requireSessionUser } from '@/lib/auth';
 import { getSelectedGuildId } from '@/lib/guild';
 import { runQuizTick } from '@/lib/quiz/tick';
+import { QUIZ_INTRO_COUNTDOWN_SECONDS } from '@/lib/quiz/constants';
 
 const getSupabase = () => {
   const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -62,8 +63,9 @@ export async function POST(request: Request) {
   const now = Date.now();
   const msElapsed = now - startedAt;
   const revealSeconds = event.reveal_seconds ?? 2;
-  const questionWindowMs = event.seconds_per_question * 1000;
-  const roundMs = (event.seconds_per_question + revealSeconds) * 1000;
+  const introGraceMs = body.position === 1 ? QUIZ_INTRO_COUNTDOWN_SECONDS * 1000 : 0;
+  const questionWindowMs = event.seconds_per_question * 1000 + introGraceMs;
+  const roundMs = (event.seconds_per_question + revealSeconds) * 1000 + introGraceMs;
   if (msElapsed > roundMs) {
     return NextResponse.json({ error: 'question_closed' }, { status: 400 });
   }

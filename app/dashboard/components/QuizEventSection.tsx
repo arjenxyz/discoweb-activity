@@ -22,6 +22,7 @@ import { QuizTimerRing } from '@/components/quiz/QuizTimerRing';
 import { QuizIdleView } from '@/components/quiz/QuizIdleView';
 import { QuizLoadingView } from '@/components/quiz/QuizLoadingView';
 import { QuizProfileMenu, type QuizProfileMenuProps } from '@/components/quiz/QuizProfileMenu';
+import { QUIZ_INTRO_COUNTDOWN_SECONDS } from '@/lib/quiz/constants';
 
 type Checkpoint = { position: number; papel_reward: number; label: string | null };
 
@@ -770,22 +771,40 @@ function LivePlayView({
   useEffect(() => {
     if (!event.current_question_started_at) return;
     const update = () => {
-      const elapsed =
+      const elapsedSec =
         (Date.now() - new Date(event.current_question_started_at!).getTime()) / 1000;
-      setSecondsLeft(Math.max(0, event.seconds_per_question - Math.floor(elapsed)));
+      const isFirstQuestion = q?.position === 1;
+
+      if (isFirstQuestion && roundCountdown) {
+        setSecondsLeft(event.seconds_per_question);
+        return;
+      }
+
+      const graceSec = isFirstQuestion ? QUIZ_INTRO_COUNTDOWN_SECONDS : 0;
+      const adjustedElapsed = Math.max(0, elapsedSec - graceSec);
+      setSecondsLeft(Math.max(0, event.seconds_per_question - Math.floor(adjustedElapsed)));
     };
     update();
     const iv = setInterval(update, 250);
     return () => clearInterval(iv);
-  }, [event.current_question_started_at, event.seconds_per_question]);
+  }, [event.current_question_started_at, event.seconds_per_question, q?.position, roundCountdown]);
 
   useEffect(() => {
     if (!q) return;
-    if (prevPositionRef.current !== q.position) {
-      setRoundCountdown(true);
+    if (q.position !== 1) {
+      prevPositionRef.current = q.position;
+      return;
     }
+    if (prevPositionRef.current === 1) return;
+
+    const startedMs = event.current_question_started_at
+      ? new Date(event.current_question_started_at).getTime()
+      : null;
+    const elapsedSec = startedMs ? (Date.now() - startedMs) / 1000 : 0;
+
+    setRoundCountdown(elapsedSec < QUIZ_INTRO_COUNTDOWN_SECONDS);
     prevPositionRef.current = q.position;
-  }, [q?.position]);
+  }, [q?.position, event.current_question_started_at]);
 
   useEffect(() => {
     const wrong = me?.wrong_count ?? 0;
@@ -833,7 +852,7 @@ function LivePlayView({
   const alreadyAnswered = hasAnswered;
   const heartsLeft = event.wrong_allowed - (me?.wrong_count ?? 0);
   const progressPct = Math.round((q.position / event.total_questions) * 100);
-  const urgent = secondsLeft <= 5 && !showResult;
+  const urgent = secondsLeft <= 5 && !showResult && !roundCountdown;
 
   return (
     <QuizShell variant="live">
