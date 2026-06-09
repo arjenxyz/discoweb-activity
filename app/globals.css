@@ -400,3 +400,85 @@ html, body {
   animation: slideUp 0.3s ease-out;
 }
 
+/* Quiz arena */
+@keyframes quizFadeIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes quizShake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+@keyframes quizPop {
+  0% { transform: scale(0.92); opacity: 0.6; }
+  50% { transform: scale(1.04); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes quizPulseUrgent {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.08); opacity: 0.85; }
+}
+
+@keyframes quizGlowCorrect {
+  0% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.55); }
+  70% { box-shadow: 0 0 0 12px rgba(52, 211, 153, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
+}
+
+@keyframes quizFloatOrb {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(12px, -18px) scale(1.05); }
+  66% { transform: translate(-8px, 10px) scale(0.95); }
+}
+
+@keyframes quizCountdownPop {
+  0% { transform: scale(0.3); opacity: 0; }
+  40% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes quizHeartBreak {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.25); }
+  60% { transform: scale(0.85); opacity: 0.5; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-quiz-fade-in {
+  animation: quizFadeIn 0.35s ease-out both;
+}
+
+.animate-quiz-shake {
+  animation: quizShake 0.45s ease-in-out;
+}
+
+.animate-quiz-pop {
+  animation: quizPop 0.4s ease-out both;
+}
+
+.animate-quiz-pulse-urgent {
+  animation: quizPulseUrgent 0.8s ease-in-out infinite;
+}
+
+.animate-quiz-glow-correct {
+  animation: quizGlowCorrect 0.7s ease-out;
+}
+
+.animate-quiz-float-orb {
+  animation: quizFloatOrb 8s ease-in-out infinite;
+}
+
+.animate-quiz-countdown-pop {
+  animation: quizCountdownPop 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-quiz-heart-break {
+  animation: quizHeartBreak 0.55s ease-out;
+}
+
