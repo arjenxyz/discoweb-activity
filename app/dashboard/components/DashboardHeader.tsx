@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 
-import { LuHouse, LuMail, LuStore, LuSettings, LuChevronRight, LuSend, LuTag, LuCompass, LuLayoutGrid, LuShieldCheck, LuNewspaper, LuChartBar, LuTrophy, LuUserPlus, LuHeart, LuPalette, LuArrowLeft } from 'react-icons/lu';
+import { LuHouse, LuMail, LuStore, LuSettings, LuChevronRight, LuSend, LuTag, LuCompass, LuLayoutGrid, LuShieldCheck, LuNewspaper, LuChartBar, LuTrophy, LuUserPlus, LuHeart, LuPalette } from 'react-icons/lu';
 import { openDiscordInviteFriends } from '@/lib/discordInvite';
 import { siteConfig } from '@/config/site';
 import Image from 'next/image';
@@ -317,7 +317,9 @@ export default function DashboardHeader({
       />
 
       {/* Header — desktop full / mobile sadece bakiye */}
-      <header className={`md:fixed inset-x-0 top-0 flex items-center bg-[#0e1018]/95 backdrop-blur-xl border-b border-white/[0.06] px-4 sm:px-6 transition-all duration-200 relative ${
+      <header className={`md:fixed inset-x-0 top-0 flex items-center bg-[#0e1018]/95 backdrop-blur-xl px-4 sm:px-6 transition-all duration-200 relative ${
+        minimalProfileOnly ? '' : 'border-b border-white/[0.06]'
+      } ${
         minimalProfileOnly
           ? 'h-12 pt-[env(safe-area-inset-top,0px)]'
           : isActivityEmbed
@@ -326,18 +328,6 @@ export default function DashboardHeader({
       } ${isProfileOpen ? 'z-[9991]' : 'z-30'}`}>
 
         <style>{`@keyframes titleShine{0%,60%{background-position:100% 0}100%{background-position:-100% 0}}`}</style>
-
-        {minimalProfileOnly && (
-          <button
-            type="button"
-            onClick={exitToOverview}
-            className="mr-2 flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-white/70 transition hover:bg-white/[0.08] hover:text-white"
-            aria-label="Ana sayfaya dön"
-          >
-            <LuArrowLeft className="h-4 w-4" />
-            <span className="hidden sm:inline">Çık</span>
-          </button>
-        )}
 
         {/* Sol — logo (sadece desktop) */}
         <div className={`${minimalProfileOnly ? 'hidden' : 'hidden lg:flex'} items-center gap-1.5 min-w-fit ml-2`}>

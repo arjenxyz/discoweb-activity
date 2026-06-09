@@ -25,7 +25,7 @@ export function QuizShell({
 
   return (
     <div
-      className={`relative flex h-full min-h-[min(68dvh,640px)] w-full flex-1 flex-col overflow-hidden rounded-none border border-white/[0.06] bg-[#0e1018] sm:min-h-[72dvh] sm:rounded-2xl ${className}`}
+      className={`relative flex h-full min-h-[min(68dvh,640px)] w-full flex-1 flex-col overflow-hidden rounded-none border-0 bg-[#0e1018] sm:min-h-[72dvh] sm:rounded-2xl sm:border sm:border-white/[0.06] ${className}`}
     >
       {tint && <div className={`pointer-events-none absolute inset-0 ${tint}`} />}
       <div className="relative z-10 flex min-h-0 flex-1 flex-col p-4 sm:p-6">{children}</div>
