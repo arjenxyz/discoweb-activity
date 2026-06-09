@@ -3,9 +3,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 
-import { LuHouse, LuMail, LuStore, LuSettings, LuChevronRight, LuSend, LuTag, LuCompass, LuLayoutGrid, LuShieldCheck, LuNewspaper, LuChartBar, LuTrophy, LuUserPlus, LuHeart, LuPalette } from 'react-icons/lu';
+import { LuHouse, LuMail, LuStore, LuSettings, LuChevronRight, LuSend, LuTag, LuCompass, LuLayoutGrid, LuShieldCheck, LuNewspaper, LuChartBar, LuTrophy, LuUserPlus, LuPalette } from 'react-icons/lu';
 import { openDiscordInviteFriends } from '@/lib/discordInvite';
-import { siteConfig } from '@/config/site';
 import Image from 'next/image';
 import DiscordAgreementButton from '@/components/DiscordAgreementButton';
 import type { Notification, Section } from '../types';
@@ -174,38 +173,9 @@ export default function DashboardHeader({
     </>
   );
 
-  const handleVoteDiscoweb = () => {
-    const url = siteConfig.links.topGgVote;
-    if (openLink) {
-      void openLink(url);
-    } else {
-      window.open(url, '_blank', 'noopener,noreferrer');
-    }
-  };
-
-  const voteDiscowebButton = () => (
-    <button
-      type="button"
-      onClick={handleVoteDiscoweb}
-      className="flex w-full items-center justify-between rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-3 py-2.5 text-white/80 transition hover:border-emerald-500/40 hover:bg-emerald-500/15 hover:text-white"
-    >
-      <div className="flex items-center gap-3">
-        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/20">
-          <LuHeart className="h-3.5 w-3.5 text-emerald-400" />
-        </div>
-        <div className="text-left">
-          <span className="text-sm font-medium">{t('dashboard_vote_discoweb')}</span>
-          <p className="text-[10px] text-white/40">{t('dashboard_vote_discoweb_hint')}</p>
-        </div>
-      </div>
-      <LuChevronRight className="h-3.5 w-3.5 text-white/30" />
-    </button>
-  );
-
   const profilePromoActions = () => (
     <div className="space-y-1.5">
       {inviteFriendsButton()}
-      {voteDiscowebButton()}
     </div>
   );
 

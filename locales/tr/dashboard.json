@@ -36,8 +36,6 @@
   "dashboard_invite_cancelled": "Paylaşım iptal edildi.",
   "dashboard_invite_failed": "Davet açılamadı. Tekrar dene.",
   "dashboard_invite_discord_only": "Bu özellik Discord Activity içinde çalışır.",
-  "dashboard_vote_discoweb": "Vote DiscoWeb",
-  "dashboard_vote_discoweb_hint": "top.gg üzerinde oy ver, bizi destekle",
   "dashboard_papel_transfer": "Papel Transfer",
   "dashboard_promotions": "Promosyonlar",
   "dashboard_earnings_info": "Kazanç Bilgileri",

@@ -36,8 +36,6 @@
   "dashboard_invite_cancelled": "Share cancelled.",
   "dashboard_invite_failed": "Could not open invite. Try again.",
   "dashboard_invite_discord_only": "This works inside Discord Activity.",
-  "dashboard_vote_discoweb": "Vote DiscoWeb",
-  "dashboard_vote_discoweb_hint": "Vote on top.gg and support us",
   "dashboard_papel_transfer": "Papel Transfer",
   "dashboard_promotions": "Promotions",
   "dashboard_earnings_info": "Earnings Info",
