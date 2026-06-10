@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { LuChevronRight, LuHouse, LuMail, LuStore, LuMegaphone, LuCompass, LuShieldCheck, LuTrophy, LuPalette } from 'react-icons/lu';
+import { LuChevronRight, LuHouse, LuMail, LuStore, LuMegaphone, LuCompass, LuShieldCheck, LuTrophy, LuPalette, LuMonitorPlay } from 'react-icons/lu';
 import type { MemberProfile, Section } from '../types';
 import { useT } from '@/contexts/LocaleContext';
 
@@ -33,6 +33,7 @@ export default function SidebarNav({
     mail:            '/menu-background/varyant6.jpg',
     quiz:            '/menu-background/varyant.jpg',
     'custom-role':   '/menu-background/varyant4.jpg',
+    'watch-earn':    '/menu-background/varyant3.jpg',
   };
 
   const NAV_GROUPS = [
@@ -42,6 +43,7 @@ export default function SidebarNav({
       requiresAuth: true,
       items: [
         { key: 'duyuru' as Section, label: t('nav_duyuru'), icon: LuMegaphone },
+        { key: 'watch-earn' as Section, label: t('nav_watch_earn'), icon: LuMonitorPlay },
       ],
     },
 

@@ -20,6 +20,7 @@ import SessionExpiredModal from './components/SessionExpiredModal';
 import DiscoverSection from './components/DiscoverSection';
 import TagBadgeSection from './components/TagBadgeSection';
 import QuizEventSection from './components/QuizEventSection';
+import WatchEarnSection from './components/WatchEarnSection';
 import NotificationDetailModal from './components/NotificationDetailModal';
 import NotificationsModal from './components/NotificationsModal';
 import TransferModal, { TransferConfirmModal } from './components/TransferModal';
@@ -1641,6 +1642,10 @@ export default function DashboardPage() {
                   }
                 />
               </div>
+            )}
+
+            {effectiveSection === 'watch-earn' && !isSiteMaintenance && (
+              <WatchEarnSection />
             )}
 
           </main>

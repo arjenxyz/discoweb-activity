@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 
-import { LuHouse, LuMail, LuStore, LuSettings, LuChevronRight, LuSend, LuTag, LuCompass, LuLayoutGrid, LuShieldCheck, LuNewspaper, LuChartBar, LuTrophy, LuUserPlus, LuPalette } from 'react-icons/lu';
+import { LuHouse, LuMail, LuStore, LuSettings, LuChevronRight, LuSend, LuTag, LuCompass, LuLayoutGrid, LuShieldCheck, LuNewspaper, LuChartBar, LuTrophy, LuUserPlus, LuPalette, LuMonitorPlay } from 'react-icons/lu';
 import { openDiscordInviteFriends } from '@/lib/discordInvite';
 import Image from 'next/image';
 import DiscordAgreementButton from '@/components/DiscordAgreementButton';
@@ -202,6 +202,7 @@ export default function DashboardHeader({
       label: t('nav_group_discoweb'),
       items: [
         { key: 'duyuru', label: t('nav_duyuru'), icon: <LuNewspaper className="h-4 w-4" /> },
+        { key: 'watch-earn', label: t('nav_watch_earn'), icon: <LuMonitorPlay className="h-4 w-4" /> },
       ],
     },
     {
