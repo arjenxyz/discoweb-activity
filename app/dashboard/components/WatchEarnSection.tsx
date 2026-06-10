@@ -2,8 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
-import { LuCheckCircle2, LuPlay, LuPause, LuX, LuGift } from 'react-icons/lu';
-import { toast } from 'react-hot-toast';
+import { LuCircleCheck, LuPlay, LuPause, LuX, LuGift } from 'react-icons/lu';
 
 const TASKS = [
   {
@@ -49,6 +48,15 @@ export default function WatchEarnSection() {
   const [isPlaying, setIsPlaying] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  const [toast, setToast] = useState<{ open: boolean; message: string; type?: 'success' | 'error' }>({ open: false, message: '' });
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setToast({ open: true, message, type });
+    toastTimerRef.current = setTimeout(() => setToast({ open: false, message: '', type }), 3500);
+  };
+
   useEffect(() => {
     if (activeVideo && videoRef.current) {
       videoRef.current.play().catch(() => setIsPlaying(false));
@@ -60,10 +68,7 @@ export default function WatchEarnSection() {
     if (activeVideo) {
       setWatchedTasks(prev => ({ ...prev, [activeVideo]: true }));
       setActiveVideo(null);
-      toast.success('Görevi tamamladın! Şimdi ödülünü alabilirsin.', {
-        icon: '🎉',
-        style: { background: '#22c55e', color: '#fff' },
-      });
+      showToast('Görevi tamamladın! Şimdi ödülünü alabilirsin.', 'success');
     }
   };
 
@@ -80,10 +85,7 @@ export default function WatchEarnSection() {
 
   const handleClaim = (id: string) => {
     setClaimedTasks(prev => ({ ...prev, [id]: true }));
-    toast.success('Ödül başarıyla hesabınıza eklendi!', {
-      icon: '💎',
-      style: { background: '#8b5cf6', color: '#fff' },
-    });
+    showToast('Ödül başarıyla hesabınıza eklendi!', 'success');
   };
 
   return (
@@ -114,7 +116,7 @@ export default function WatchEarnSection() {
                     </h3>
                     <div className="flex items-center gap-2 text-xs font-medium text-white/70">
                       <span>Tarafından sunuluyor</span>
-                      <LuCheckCircle2 className="h-4 w-4 text-emerald-400" />
+                      <LuCircleCheck className="h-4 w-4 text-emerald-400" />
                       <span className="font-bold text-white">{task.sponsor}</span>
                     </div>
                   </div>
@@ -203,7 +205,7 @@ export default function WatchEarnSection() {
               <button 
                 onClick={() => {
                   setActiveVideo(null);
-                  toast.error('Videoyu kapattığın için ödül kazanamadın.', { style: { background: '#333', color: '#fff'} });
+                  showToast('Videoyu kapattığın için ödül kazanamadın.', 'error');
                 }}
                 className="h-10 w-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors"
               >
@@ -237,6 +239,18 @@ export default function WatchEarnSection() {
             <div className="bg-[#1e1f25] p-4 text-center">
               <p className="text-sm text-white/50">Video oynatıcısında ileri saramazsınız. Ödülü kazanmak için videonun bitmesini bekleyin.</p>
             </div>
+          </div>
+        </div>
+      )}
+      {/* Toast */}
+      {toast.open && (
+        <div className="fixed bottom-6 right-6 z-[60] animate-in fade-in slide-in-from-bottom-5">
+          <div className={`flex items-center gap-3 rounded-2xl px-5 py-4 shadow-2xl border ${
+            toast.type === 'success'
+              ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+              : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
+          }`}>
+            <span className="text-sm font-semibold">{toast.message}</span>
           </div>
         </div>
       )}
