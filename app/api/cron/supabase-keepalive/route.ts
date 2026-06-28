@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
     const result = { ok: false, supabase_latency_ms: 0, error: 'missing_supabase_config' };
     const discord = await notifyKeepaliveDiscord(result);
     return NextResponse.json(
-      { ok: false, ...result, elapsed_ms: Date.now() - t0, discord },
+      { ...result, elapsed_ms: Date.now() - t0, discord },
       { status: 500 },
     );
   }
