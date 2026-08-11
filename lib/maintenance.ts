@@ -163,6 +163,26 @@ const resolveCallerUserId = async (request?: Request): Promise<string | null> =>
   }
 };
 
+/** Soft-read active emergency stop (no hard fail if table missing). */
+const getActiveIncidentMessage = async (): Promise<string | null> => {
+  const supabase = getSupabase();
+  if (!supabase) return null;
+
+  const { data, error } = await supabase
+    .from('system_incident')
+    .select('public_message')
+    .eq('status', 'active')
+    .order('started_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return (
+    (typeof data.public_message === 'string' && data.public_message.trim()) ||
+    'Şu anda büyük bir sorunu çözmek için çalışıyoruz, lütfen sabırlı olun.'
+  );
+};
+
 export const checkMaintenance = async (
   keys: MaintenanceKey[],
   guildIdOrRequest?: string | Request,
@@ -182,6 +202,12 @@ export const checkMaintenance = async (
     }
   } catch {
     /* non-session callers still subject to flags */
+  }
+
+  // Incident freeze is independent of maintenance panel toggles.
+  const incidentMessage = await getActiveIncidentMessage();
+  if (incidentMessage) {
+    return { blocked: true as const, key: 'site' as MaintenanceKey, reason: incidentMessage };
   }
 
   const data = await getMaintenanceFlags(guildId);
