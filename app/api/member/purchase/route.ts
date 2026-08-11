@@ -491,8 +491,18 @@ export async function POST(request: Request) {
       category: 'order',
       status: 'published',
       created_at: new Date().toISOString(),
-      author_name: userInfo?.username ?? null,
+      author_name: 'DiscoWeb',
       author_avatar_url: userInfo?.avatar ?? null,
+      metadata: {
+        kind: 'order',
+        i18nKey: 'order',
+        order_id: order?.id,
+        items: [{ title: item.title, qty: 1, price: item.price, total: finalPrice }],
+        subtotal: Number(item.price),
+        discount: Number(discountAmount ?? 0),
+        total: Number(finalPrice),
+        purchase_date: order?.created_at ?? new Date().toISOString(),
+      },
     });
     if (mailError) {
       mailInsertError = String(mailError.message ?? JSON.stringify(mailError));

@@ -44,12 +44,15 @@ type DiscountMeta = {
   perUserLimit: number | null;
   expiresAt: string | null;
   note: string | null;
+  noteKey: string | null;
 };
 
 export type ParsedTxn =
   | { kind: 'transfer'; data: TransferMeta }
   | { kind: 'promotion'; data: PromoMeta }
   | { kind: 'discount'; data: DiscountMeta };
+
+type Translate = (key: string, vars?: Record<string, string | number>) => string;
 
 const num = (v: unknown): number | null => {
   if (typeof v === 'number' && Number.isFinite(v)) return v;
@@ -230,6 +233,7 @@ export function parseMailTransaction(mail: MailItem): ParsedTxn | null {
         perUserLimit: perUserLimit ?? 1,
         expiresAt: str(meta.expiresAt) ?? str(meta.expires_at) ?? expiresFromBody,
         note: str(meta.note) ?? noteFromBody,
+        noteKey: str(meta.noteKey) ?? str(meta.note_key),
       },
     };
   }
@@ -263,10 +267,10 @@ export function parseMailTransaction(mail: MailItem): ParsedTxn | null {
 type Props = {
   mail: MailItem;
   txn: ParsedTxn;
-  t: (key: string) => string;
+  t: Translate;
 };
 
-function CopyIdButton({ value, t }: { value: string; t: (key: string) => string }) {
+function CopyIdButton({ value, t }: { value: string; t: Translate }) {
   const [copied, setCopied] = useState(false);
 
   const onCopy = async () => {
@@ -394,7 +398,7 @@ function NoteBlock({
   accent = 'amber',
 }: {
   note: string;
-  t: (key: string) => string;
+  t: Translate;
   accent?: 'amber' | 'emerald' | 'sky';
 }) {
   const bar =
@@ -453,7 +457,7 @@ function PersonHeader({
   name: string;
   avatarUrl: string | null;
   userId: string | null;
-  t: (key: string) => string;
+  t: Translate;
   fallbackIcon?: ReactNode;
 }) {
   return (
@@ -522,7 +526,13 @@ export default function MailTransactionReceipt({ mail, txn, t }: Props) {
   }
 
   if (txn.kind === 'discount') {
-    const { code, percent, minSpend, maxUses, perUserLimit, expiresAt, note } = txn.data;
+    const { code, percent, minSpend, maxUses, perUserLimit, expiresAt, note, noteKey } = txn.data;
+    const resolvedNote =
+      noteKey && t(noteKey) !== noteKey
+        ? t(noteKey)
+        : note && /sepette görünmesi|appear in your cart|carrinho/i.test(note)
+          ? t('mail_discount_note_cart_delay')
+          : note;
     const expiresLabel = (() => {
       if (!expiresAt) return t('mail_txn_discount_no_expiry');
       if (/yok|none|—|-/i.test(expiresAt) && !/\d/.test(expiresAt)) {
@@ -592,7 +602,7 @@ export default function MailTransactionReceipt({ mail, txn, t }: Props) {
                 {expiresLabel}
               </MetaRow>
             </div>
-            {note ? <NoteBlock note={note} t={t} accent="sky" /> : null}
+            {resolvedNote ? <NoteBlock note={resolvedNote} t={t} accent="sky" /> : null}
           </ReceiptSection>
         </ReceiptCard>
       </div>

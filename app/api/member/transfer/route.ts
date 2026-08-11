@@ -185,6 +185,7 @@ const notifyTransferReceived = async (
       author_avatar_url: senderAvatarUrl,
       metadata: {
         kind: 'transfer',
+        i18nKey: 'transfer',
         amount,
         note,
         senderId,

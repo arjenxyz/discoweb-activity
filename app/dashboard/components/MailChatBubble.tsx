@@ -8,6 +8,7 @@ import {
   SENDER_NAME_KEYS,
   previewText,
 } from './mailShared';
+import { resolveMailPreview, resolveMailTitle } from '@/lib/mailI18n';
 
 type Props = {
   mail: MailItem;
@@ -49,10 +50,10 @@ export default function MailChatBubble({ mail, dateLabel, onClick }: Props) {
         </div>
 
         <h4 className={`mt-1.5 line-clamp-1 text-[13px] leading-snug ${unread ? 'font-bold text-white' : 'font-semibold text-white/75'}`}>
-          {mail.title}
+          {resolveMailTitle(mail, t)}
         </h4>
         <p className="mt-1 min-h-0 flex-1 line-clamp-2 text-[12px] leading-relaxed text-white/40">
-          {previewText(mail.body, 120)}
+          {resolveMailPreview(mail, t, 120) || previewText(mail.body, 120)}
         </p>
 
         <div className="mt-auto flex items-center justify-between gap-2 pt-1">

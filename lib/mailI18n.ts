@@ -1,0 +1,153 @@
+export type MailLike = {
+  title?: string | null;
+  body?: string | null;
+  metadata?: unknown;
+};
+
+export type MailT = (key: string, vars?: Record<string, string | number>) => string;
+
+const asRecord = (raw: unknown): Record<string, unknown> => {
+  if (!raw) return {};
+  if (typeof raw === 'string') {
+    try {
+      const parsed = JSON.parse(raw) as unknown;
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        return parsed as Record<string, unknown>;
+      }
+    } catch {
+      return {};
+    }
+    return {};
+  }
+  if (typeof raw === 'object' && !Array.isArray(raw)) {
+    return raw as Record<string, unknown>;
+  }
+  return {};
+};
+
+const str = (v: unknown): string | null => {
+  if (typeof v !== 'string') return null;
+  const t = v.trim();
+  return t || null;
+};
+
+/** Resolve stable template id from metadata / legacy titles. */
+export function resolveMailTemplateId(mail: MailLike): string | null {
+  const meta = asRecord(mail.metadata);
+  const explicit = str(meta.i18nKey) ?? str(meta.template) ?? str(meta.kind);
+  if (explicit) {
+    if (explicit === 'transfer') return 'transfer';
+    if (explicit === 'promotion' || explicit === 'promo') return 'promotion';
+    if (explicit === 'discount') return 'discount';
+    if (explicit === 'order' || explicit === 'order_receipt') return 'order';
+    if (explicit === 'earn_claim' || explicit === 'earn' || explicit === 'claim') return 'earn_claim';
+    if (explicit.startsWith('mail_title_')) return explicit.replace(/^mail_title_/, '');
+  }
+
+  const title = mail.title ?? '';
+  if (/papel\s*transfer/i.test(title)) return 'transfer';
+  if (/promosyon\s*kodu\s*kullanıldı/i.test(title) || /promo(tion)?\s*code\s*(used|redeemed)/i.test(title)) {
+    return 'promotion';
+  }
+  if (/yeni\s+indirim/i.test(title) || /özel\s+promosyon\s*kodu/i.test(title) || /discount\s*code/i.test(title)) {
+    return 'discount';
+  }
+  if (/sipari[sş]\s*onay/i.test(title) || /order\s*confirm/i.test(title)) return 'order';
+  if (/kazançlar[iı]n[iı]z/i.test(title) || /earnings?\s*(credited|claimed)/i.test(title)) {
+    return 'earn_claim';
+  }
+
+  // Structured metadata without kind
+  if (meta.order_id || meta.orderId || Array.isArray(meta.items)) return 'order';
+  if (meta.message_total != null || meta.voice_total != null || meta.messageTotal != null) {
+    return 'earn_claim';
+  }
+  if (typeof meta.percent === 'number' && str(meta.code)) return 'discount';
+
+  return null;
+}
+
+const TITLE_KEYS: Record<string, string> = {
+  transfer: 'mail_title_transfer_received',
+  promotion: 'mail_title_promo_redeemed',
+  discount: 'mail_title_discount_new',
+  order: 'mail_title_order_confirmed',
+  earn_claim: 'mail_title_earn_claimed',
+};
+
+const PREVIEW_KEYS: Record<string, string> = {
+  transfer: 'mail_preview_transfer',
+  promotion: 'mail_preview_promo',
+  discount: 'mail_preview_discount',
+  order: 'mail_preview_order',
+  earn_claim: 'mail_preview_earn_claim',
+};
+
+export function resolveMailTitle(mail: MailLike, t: MailT): string {
+  const template = resolveMailTemplateId(mail);
+  if (!template) return mail.title ?? '';
+
+  const key = TITLE_KEYS[template];
+  if (!key) return mail.title ?? '';
+
+  const translated = t(key);
+  return translated === key ? (mail.title ?? '') : translated;
+}
+
+export function resolveMailPreview(mail: MailLike, t: MailT, maxLen = 120): string {
+  const template = resolveMailTemplateId(mail);
+  const meta = asRecord(mail.metadata);
+
+  if (template === 'transfer') {
+    const amount = meta.amount ?? '';
+    const sender = str(meta.senderUsername) ?? str(meta.sender_username) ?? '';
+    return t('mail_preview_transfer', {
+      amount: String(amount),
+      sender: sender || t('mail_detail_sender_label'),
+    });
+  }
+
+  if (template === 'promotion') {
+    return t('mail_preview_promo', {
+      amount: String(meta.amount ?? ''),
+      code: String(str(meta.code) ?? ''),
+    });
+  }
+
+  if (template === 'discount') {
+    return t('mail_preview_discount', {
+      percent: String(meta.percent ?? ''),
+      code: String(str(meta.code) ?? ''),
+    });
+  }
+
+  if (template === 'order') {
+    return t('mail_preview_order', {
+      total: String(meta.total ?? ''),
+      orderId: String(meta.order_id ?? meta.orderId ?? ''),
+    });
+  }
+
+  if (template === 'earn_claim') {
+    const total = meta.total ?? meta.totalTransferred ?? '';
+    return t('mail_preview_earn_claim', { amount: String(total) });
+  }
+
+  if (template && PREVIEW_KEYS[template]) {
+    const translated = t(PREVIEW_KEYS[template]);
+    if (translated !== PREVIEW_KEYS[template]) return translated.slice(0, maxLen);
+  }
+
+  // Fallback: strip HTML from body
+  const body = (mail.body ?? '')
+    .replace(/<br\s*\/?>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (body.length <= maxLen) return body;
+  return `${body.slice(0, maxLen - 1)}…`;
+}
+
+export function getMailMeta(mail: MailLike): Record<string, unknown> {
+  return asRecord(mail.metadata);
+}

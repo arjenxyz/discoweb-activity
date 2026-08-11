@@ -19,6 +19,7 @@ import { useT } from '@/contexts/LocaleContext';
 import type { MailItem } from '../types';
 import type { MailNavItem } from './mailShared';
 import { CATEGORY_CONFIG, previewText } from './mailShared';
+import { resolveMailPreview, resolveMailTitle } from '@/lib/mailI18n';
 import MailDetailModal from './MailDetailModal';
 
 type Props = {
@@ -400,9 +401,11 @@ export default function MailDesktopView({
 
                     <div className="min-w-0 flex-1">
                       <h4 className={`truncate text-sm ${mail.is_read ? 'font-medium text-white/60' : 'font-bold text-white'}`}>
-                        {mail.title}
+                        {resolveMailTitle(mail, t)}
                       </h4>
-                      <p className="mt-0.5 line-clamp-1 text-xs text-white/30">{previewText(mail.body, 80)}</p>
+                      <p className="mt-0.5 line-clamp-1 text-xs text-white/30">
+                        {resolveMailPreview(mail, t, 80) || previewText(mail.body, 80)}
+                      </p>
                     </div>
 
                     <span className="shrink-0 whitespace-nowrap text-[10px] font-medium text-white/30">

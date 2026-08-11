@@ -280,32 +280,23 @@ export async function POST(request: Request) {
         guild_id: mailGuildId,
         user_id: userId,
         title: 'Kazançlarınız Hesabınıza Tanımlandı',
-        body: `<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #374151; line-height: 1.6; font-size: 14px; max-width: 600px;">
-  <div style="margin-bottom: 24px; border-bottom: 1px solid #e5e7eb; padding-bottom: 16px;">
-    <div style="display: flex; align-items: center; gap: 12px;">
-      <span style="font-size: 20px;">💰</span>
-      <h1 style="margin: 0; font-size: 18px; font-weight: 600; color: #111827;">Kazançlarınız Hesabınıza Tanımlandı</h1>
-    </div>
-  </div>
-  <div style="margin-bottom: 24px;">
-    <p style="margin: 0 0 16px 0; color: #111827; font-weight: 500;">Merhaba,</p>
-    <p style="margin: 0 0 16px 0;">Biriken kazançlarınız talebiniz üzerine hesabınıza başarıyla aktarılmıştır.</p>
-    <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 20px; margin: 20px 0;">
-      <h3 style="margin: 0 0 12px 0; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #92400e;">💰 Kazanç Özeti</h3>
-      <div style="color: #78350f; font-size: 14px;">
-        <p style="margin: 0 0 8px 0;"><strong>Toplam:</strong> ${total} papel</p>
-        <p style="margin: 0 0 4px 0;">💬 Mesaj kazancı: ${msgTotal} papel</p>
-        <p style="margin: 0 0 4px 0;">🎙️ Ses kazancı: ${voiceTotal} papel</p>
-        <p style="margin: 8px 0 0 0; font-size: 12px; color: #a16207;">${rows.length} kazanç kaydı işlendi</p>
-      </div>
-    </div>
-    <p style="margin: 0; color: #4b5563;">Kazancınız cüzdanınıza yansımıştır. Mağazadan dilediğiniz ürünleri satın alabilirsiniz.</p>
-  </div>
-  <div style="margin-top: 32px; padding-top: 16px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #9ca3af;">Bu bildirim otomatik sistem protokolleri tarafından oluşturulmuştur.</div>
-</div>`,
+        body: [
+          `Toplam: ${total} Papel`,
+          `Mesaj: ${msgTotal} Papel`,
+          `Ses: ${voiceTotal} Papel`,
+          `Kayıt: ${rows.length}`,
+        ].join('\n'),
         category: 'system',
         status: 'published',
-        author_name: 'Sistem',
+        author_name: 'DiscoWeb',
+        metadata: {
+          kind: 'earn_claim',
+          i18nKey: 'earn_claim',
+          total,
+          messageTotal: msgTotal,
+          voiceTotal,
+          rowCount: rows.length,
+        },
       });
     } catch (mailErr) {
       console.error('[load-accrued] mail send failed', mailErr);

@@ -18,6 +18,8 @@ import {
   LuLoader,
 } from 'react-icons/lu';
 import MailTransactionReceipt, { parseMailTransaction } from './MailTransactionReceipt';
+import MailLocalizedBody from './MailLocalizedBody';
+import { resolveMailTemplateId, resolveMailTitle } from '@/lib/mailI18n';
 
 /* ─── Kategori → Gönderici Bilgisi ─── */
 type SenderConfig = { nameKey: string; avatar: string; verified: boolean };
@@ -133,6 +135,8 @@ export default function MailDetailModal({
   const categoryLabelKey = CATEGORY_LABEL_KEYS[mail.category];
   const categoryLabel = categoryLabelKey ? t(categoryLabelKey) : mail.category;
   const txn = parseMailTransaction(mail);
+  const mailTemplate = resolveMailTemplateId(mail);
+  const displayTitle = resolveMailTitle(mail, t);
 
   const formatDate = (date: string) => {
     const d = new Date(date);
@@ -249,18 +253,32 @@ export default function MailDetailModal({
                 </div>
               ) : (
                 <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-[#5865F2]/15 text-lg">
-                  {txn?.kind === 'promotion' ? '🎁' : txn?.kind === 'discount' ? '🏷️' : senderCfg.avatar}
+                  {txn?.kind === 'promotion'
+                    ? '🎁'
+                    : txn?.kind === 'discount' || mailTemplate === 'discount'
+                      ? '🏷️'
+                      : mailTemplate === 'order'
+                        ? '📦'
+                        : mailTemplate === 'earn_claim'
+                          ? '💰'
+                          : senderCfg.avatar}
                 </div>
               )}
               <div>
                 <div className="flex items-center gap-1.5">
                   <span className="text-sm font-semibold text-white">
-                    {txn?.kind === 'promotion' || txn?.kind === 'discount'
+                    {txn?.kind === 'promotion' ||
+                    txn?.kind === 'discount' ||
+                    mailTemplate === 'discount' ||
+                    mailTemplate === 'order' ||
+                    mailTemplate === 'earn_claim'
                       ? 'DiscoWeb'
                       : transferSenderName}
                   </span>
                   {(txn?.kind === 'promotion' ||
                     txn?.kind === 'discount' ||
+                    mailTemplate === 'order' ||
+                    mailTemplate === 'earn_claim' ||
                     senderCfg.verified) && (
                     <LuShield className="h-3.5 w-3.5 text-[#5865F2]" title={t('mail_detail_verified_tooltip')} />
                   )}
@@ -271,7 +289,7 @@ export default function MailDetailModal({
           </div>
 
           <h1 className="mb-5 text-xl font-bold leading-tight text-white sm:text-2xl">
-            {mail.title}
+            {displayTitle}
           </h1>
 
           {mail.image_url && (
@@ -298,6 +316,12 @@ export default function MailDetailModal({
           <div className="mb-6 min-w-0 overflow-hidden">
             {txn ? (
               <MailTransactionReceipt mail={mail} txn={txn} t={t} />
+            ) : mailTemplate === 'order' || mailTemplate === 'earn_claim' ? (
+              <MailLocalizedBody
+                mail={mail}
+                template={mailTemplate}
+                t={t}
+              />
             ) : (
               renderEmailBody(mail.body ?? '')
             )}

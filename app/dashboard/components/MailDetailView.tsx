@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import type { MailItem } from '../types';
 import { LuUser, LuCalendar, LuTag, LuExternalLink, LuChevronLeft } from 'react-icons/lu';
+import { resolveMailTitle } from '@/lib/mailI18n';
 
 const CATEGORY_LABEL_KEYS: Record<string, string> = {
   announcement: 'mail_detail_category_announcement',
@@ -54,7 +55,9 @@ export default function MailDetailView({ mail, onClose, renderBody, t }: Props) 
               <div className="h-6 w-px bg-white/10 hidden sm:block" />
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-300">{t('mail_detail_back_to_mail')}</p>
-                <h1 className="text-lg font-bold text-white leading-tight max-w-2xl truncate">{mail.title}</h1>
+                <h1 className="text-lg font-bold text-white leading-tight max-w-2xl truncate">
+                  {resolveMailTitle(mail, t)}
+                </h1>
               </div>
             </div>
             <div className="flex items-center gap-3">

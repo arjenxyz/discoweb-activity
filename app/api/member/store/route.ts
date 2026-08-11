@@ -546,6 +546,8 @@ export async function POST(request: Request) {
     const receiptBody = lines.join('\n');
 
     const metadata = {
+      kind: 'order',
+      i18nKey: 'order',
       order_id: updatedOrder.id,
       items: orderItems.map(it => ({ title: it.title, qty: it.qty, price: it.price, total: it.total })),
       subtotal: Number(subtotal),
@@ -563,7 +565,7 @@ export async function POST(request: Request) {
       category: 'order',
       status: 'published',
       created_at: new Date().toISOString(),
-      author_name: userInfo?.username ?? null,
+      author_name: 'DiscoWeb',
       author_avatar_url: userInfo?.avatar ?? null,
     });
     if (mailErr) {

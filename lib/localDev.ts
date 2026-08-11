@@ -576,6 +576,7 @@ export const localDevMailsSeed = [
     is_starred: false,
     metadata: {
       kind: 'transfer',
+      i18nKey: 'transfer',
       amount: 250,
       note: 'Anlam evrensel değil. Aynı veri, farklı zihinlerde başka şeyler ifade eder. Bu yüzden uzun notlar da kutunun içinde satır kırarak kalmalı; taşmamalı ve layoutu bozmamalı.',
       senderId: '139725308086878208',
@@ -600,6 +601,7 @@ export const localDevMailsSeed = [
     is_starred: false,
     metadata: {
       kind: 'promotion',
+      i18nKey: 'promotion',
       code: 'WELCOME50',
       amount: 50,
       balanceAfter: 1250,
@@ -628,13 +630,14 @@ export const localDevMailsSeed = [
     is_starred: false,
     metadata: {
       kind: 'discount',
+      i18nKey: 'discount',
       code: 'SAVE20',
       percent: 20,
       minSpend: 100,
       maxUses: 50,
       perUserLimit: 1,
       expiresAt: null,
-      note: 'Sepette görünmesi birkaç saniye alabilir; görünmüyorsa sayfayı yenileyin.',
+      noteKey: 'mail_discount_note_cart_delay',
       is_special: true,
       max_uses: 50,
       per_user_limit: 1,

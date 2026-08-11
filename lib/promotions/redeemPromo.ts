@@ -207,6 +207,7 @@ export async function redeemPromoCode(params: {
       author_name: 'DiscoWeb',
       metadata: {
         kind: 'promotion',
+        i18nKey: 'promotion',
         promoId: promotion.id,
         code: promotion.code,
         amount: packageAmount,
