@@ -62,36 +62,70 @@ const str = (v: unknown): string | null => {
   return t || null;
 };
 
+const normalizeMeta = (raw: unknown): Record<string, unknown> => {
+  if (!raw) return {};
+  if (typeof raw === 'string') {
+    try {
+      const parsed = JSON.parse(raw) as unknown;
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        return parsed as Record<string, unknown>;
+      }
+    } catch {
+      return {};
+    }
+    return {};
+  }
+  if (typeof raw === 'object' && !Array.isArray(raw)) {
+    return raw as Record<string, unknown>;
+  }
+  return {};
+};
+
+const stripHtml = (input: string): string =>
+  input
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/(p|div|li|tr|h[1-6])>/gi, '\n')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/\s+\n/g, '\n')
+    .replace(/[ \t]+/g, ' ')
+    .trim();
+
 /** metadata + body fallback — eski mailler için de çalışır */
 export function parseMailTransaction(mail: MailItem): ParsedTxn | null {
-  const meta = (mail.metadata && typeof mail.metadata === 'object' ? mail.metadata : {}) as Record<
-    string,
-    unknown
-  >;
+  const meta = normalizeMeta(mail.metadata);
   const kind = str(meta.kind);
-  const body = mail.body ?? '';
+  const bodyRaw = mail.body ?? '';
+  const body = stripHtml(bodyRaw);
   const title = mail.title ?? '';
+
+  const hasDiscountMeta =
+    num(meta.percent) != null && Boolean(str(meta.code) ?? str(meta.discount_code));
 
   const isTransfer =
     kind === 'transfer' ||
     /papel\s*transferi/i.test(title) ||
     /papel\s*transfer/i.test(title);
 
-  const isPromo =
-    kind === 'promotion' ||
-    /promosyon\s*kodu\s*kullanıldı/i.test(title) ||
-    (/promosyon\s*kodu/i.test(title) && kind !== 'discount') ||
-    /promo(tion)?\s*code/i.test(title);
-
   const isDiscount =
     kind === 'discount' ||
+    hasDiscountMeta ||
     /yeni\s+indirim\s*kodu/i.test(title) ||
     /özel\s+promosyon\s*kodu/i.test(title) ||
+    /yeni\s+özel\s+promosyon/i.test(title) ||
     /discount\s*code/i.test(title) ||
-    (kind !== 'promotion' &&
-      kind !== 'transfer' &&
-      num(meta.percent) != null &&
-      Boolean(str(meta.code)));
+    (/indirim\s*oran/i.test(body) && /minimum\s*sepet/i.test(body));
+
+  const isPromo =
+    !isDiscount &&
+    (kind === 'promotion' ||
+      /promosyon\s*kodu\s*kullanıldı/i.test(title) ||
+      /promosyon\s*kodu/i.test(title) ||
+      /promo(tion)?\s*code/i.test(title));
 
   if (isTransfer) {
     const amountFromBody =
@@ -131,47 +165,68 @@ export function parseMailTransaction(mail: MailItem): ParsedTxn | null {
 
   if (isDiscount) {
     const percentFromBody =
-      body.match(/(?:İndirim|Discount)\s*:\s*%?\s*([\d.,]+)/i)?.[1] ??
+      body.match(/(?:İndirim(?:\s*Oranı)?|Discount(?:\s*rate)?)\s*:\s*%?\s*([\d.,]+)/i)?.[1] ??
       body.match(/%\s*([\d.,]+)/)?.[1];
     const percent =
       num(meta.percent) ??
       (percentFromBody ? Number(String(percentFromBody).replace(',', '.')) : null) ??
       0;
+
+    const codeFromTitle =
+      title.match(/:\s*([A-Z0-9_-]{3,})/i)?.[1]?.toUpperCase() ??
+      title.match(/\b([A-Z0-9_-]{4,})\s*$/i)?.[1]?.toUpperCase() ??
+      null;
     const codeFromBody =
       body.match(/^([A-Z0-9_-]+)\s+indirim/im)?.[1] ??
-      body.match(/kodu:\s*([A-Z0-9_-]+)/i)?.[1] ??
+      body.match(/(?:kodu|code)\s*:\s*([A-Z0-9_-]+)/i)?.[1] ??
       null;
-    const minFromBody = body.match(/(?:Minimum sepet|Min(?:imum)?\s*spend)\s*:\s*([\d.,]+)/i)?.[1];
-    const maxFromBody = body.match(/(?:Kullanım limiti|Max(?:imum)?\s*uses)\s*:\s*(\S+)/i)?.[1];
-    const perUserFromBody = body.match(/(?:Kullanıcı başına|Per[- ]?user)\s*:\s*([\d.,]+)/i)?.[1];
+
+    const minFromBody =
+      body.match(/(?:Minimum\s*Sepet|Min(?:imum)?\s*(?:spend|cart))\s*:?\s*([\d.,]+)/i)?.[1] ??
+      null;
+    const maxFromBody =
+      body.match(
+        /(?:Kullanım(?:\s*limiti)?|Max(?:imum)?\s*uses|Kupon\s*kullanım(?:\s*limiti)?)\s*:?\s*(\S+)/i,
+      )?.[1] ?? null;
+    const perUserFromBody =
+      body.match(
+        /(?:Kullanıcı\s*başına(?:\s*limit)?|Per[- ]?user(?:\s*limit)?|Kişi\s*başı(?:\s*limit)?)\s*:?\s*([\d.,]+)/i,
+      )?.[1] ?? null;
     const expiresFromBody =
-      body.match(/(?:Son kullanma|Expires?(?:\s*at)?)\s*:\s*(.+)$/im)?.[1]?.trim() ?? null;
+      body.match(/(?:Son\s*Kullanma|Expires?(?:\s*at)?|Bitiş(?:\s*tarihi)?)\s*:?\s*(.+?)(?:\n|$)/i)?.[1]
+        ?.trim() ?? null;
     const noteFromBody = body.match(/(?:Not|Note)\s*:\s*(.+)/is)?.[1]?.trim() ?? null;
 
-    const maxUsesRaw = meta.maxUses ?? meta.max_uses;
-    let maxUses = num(maxUsesRaw);
-    if (maxUses == null && maxFromBody) {
+    let maxUses: number | null = null;
+    if ('maxUses' in meta || 'max_uses' in meta) {
+      const raw = meta.maxUses ?? meta.max_uses;
+      maxUses = raw === null || raw === undefined ? null : num(raw);
+    } else if (maxFromBody) {
       maxUses = /sınırsız|unlimited|∞/i.test(maxFromBody)
         ? null
         : Number(String(maxFromBody).replace(',', '.'));
       if (maxUses != null && !Number.isFinite(maxUses)) maxUses = null;
     }
 
+    const perUserLimit =
+      num(meta.perUserLimit) ??
+      num(meta.per_user_limit) ??
+      (perUserFromBody ? Number(String(perUserFromBody).replace(',', '.')) : null);
+
+    const minSpend =
+      num(meta.minSpend) ??
+      num(meta.min_spend) ??
+      (minFromBody ? Number(String(minFromBody).replace(',', '.')) : null);
+
     return {
       kind: 'discount',
       data: {
         kind: 'discount',
-        code: str(meta.code) ?? codeFromBody,
+        code: str(meta.code) ?? str(meta.discount_code) ?? codeFromBody ?? codeFromTitle,
         percent,
-        minSpend:
-          num(meta.minSpend) ??
-          num(meta.min_spend) ??
-          (minFromBody ? Number(String(minFromBody).replace(',', '.')) : null),
+        minSpend: minSpend ?? 0,
         maxUses,
-        perUserLimit:
-          num(meta.perUserLimit) ??
-          num(meta.per_user_limit) ??
-          (perUserFromBody ? Number(String(perUserFromBody).replace(',', '.')) : null),
+        perUserLimit: perUserLimit ?? 1,
         expiresAt: str(meta.expiresAt) ?? str(meta.expires_at) ?? expiresFromBody,
         note: str(meta.note) ?? noteFromBody,
       },
@@ -504,28 +559,29 @@ export default function MailTransactionReceipt({ mail, txn, t }: Props) {
           <ReceiptSection>
             <PercentInline percent={percent} label={t('mail_txn_discount_rate')} />
             <div className="mt-3 min-w-0 divide-y divide-white/[0.06] rounded-xl border border-white/[0.06] bg-black/20 px-3 py-1">
-              {minSpend != null ? (
-                <MetaRow
-                  icon={<LuShoppingBag className="h-3.5 w-3.5" />}
-                  label={t('mail_txn_discount_min_spend')}
-                >
-                  <span className="inline-flex flex-wrap items-center justify-end gap-1.5">
-                    <Image src="/papel.gif" alt="" width={14} height={14} className="h-3.5 w-3.5" unoptimized />
-                    {minSpend.toLocaleString('tr-TR', { maximumFractionDigits: 2 })}
-                    <span className="text-xs font-semibold text-amber-400">Papel</span>
-                  </span>
-                </MetaRow>
-              ) : null}
               <MetaRow
-                icon={<LuUsers className="h-3.5 w-3.5" />}
-                label={t('mail_txn_discount_usage')}
+                icon={<LuShoppingBag className="h-3.5 w-3.5" />}
+                label={t('mail_txn_discount_min_spend')}
+              >
+                <span className="inline-flex flex-wrap items-center justify-end gap-1.5">
+                  <Image src="/papel.gif" alt="" width={14} height={14} className="h-3.5 w-3.5" unoptimized />
+                  {(minSpend ?? 0).toLocaleString('tr-TR', { maximumFractionDigits: 2 })}
+                  <span className="text-xs font-semibold text-amber-400">Papel</span>
+                </span>
+              </MetaRow>
+              <MetaRow
+                icon={<LuTicket className="h-3.5 w-3.5" />}
+                label={t('mail_txn_discount_coupon_limit')}
               >
                 {maxUses == null
                   ? t('mail_txn_discount_unlimited')
-                  : t('mail_txn_discount_max_uses').replace('{count}', String(maxUses))}
-                {perUserLimit != null
-                  ? ` · ${t('mail_txn_discount_per_user').replace('{count}', String(perUserLimit))}`
-                  : ''}
+                  : String(maxUses)}
+              </MetaRow>
+              <MetaRow
+                icon={<LuUsers className="h-3.5 w-3.5" />}
+                label={t('mail_txn_discount_per_user_limit')}
+              >
+                {String(perUserLimit ?? 1)}
               </MetaRow>
               <MetaRow
                 icon={<LuTimer className="h-3.5 w-3.5" />}
