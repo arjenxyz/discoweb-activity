@@ -44,6 +44,7 @@ type Props = {
   onSelectAll: () => void;
   onMarkAllRead: () => void;
   onClaimAll: () => void;
+  onClaimReward?: (id: string) => void | Promise<void>;
   onBulkDelete: () => void;
   onBulkMarkRead: () => void;
   onDeleteMail: (id: string) => void;
@@ -74,6 +75,7 @@ export default function MailDesktopView({
   onSelectAll,
   onMarkAllRead,
   onClaimAll,
+  onClaimReward,
   onBulkDelete,
   onBulkMarkRead,
   onDeleteMail,
@@ -409,7 +411,7 @@ export default function MailDesktopView({
             })}
           </div>
 
-          <div className="flex shrink-0 items-center justify-end gap-3 border-t border-white/[0.06] bg-[#0b0d12]/30 px-4 py-3">
+          <div className="hidden shrink-0 items-center justify-end gap-3 border-t border-white/[0.06] bg-[#0b0d12]/30 px-4 py-3">
             <button
               type="button"
               onClick={onMarkAllRead}
@@ -437,6 +439,7 @@ export default function MailDesktopView({
           onClose={onCloseMail}
           onDelete={onDeleteMail}
           onStar={onStarMail}
+          onClaim={onClaimReward}
         />
       )}
     </div>

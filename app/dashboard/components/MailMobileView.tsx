@@ -38,6 +38,7 @@ type Props = {
   onBack?: () => void;
   onMarkAllRead: () => void;
   onClaimAll: () => void;
+  onClaimReward?: (id: string) => void | Promise<void>;
   formatDate: (date: string) => string;
 };
 
@@ -61,6 +62,7 @@ export default function MailMobileView({
   onBack,
   onMarkAllRead,
   onClaimAll,
+  onClaimReward,
   formatDate,
 }: Props) {
   const t = useT();
@@ -279,6 +281,7 @@ export default function MailMobileView({
           onClose={onCloseMail}
           onDelete={onDeleteMail}
           onStar={onStarMail}
+          onClaim={onClaimReward}
         />
       )}
     </div>

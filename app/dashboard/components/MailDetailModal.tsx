@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import type { MailItem } from '../types';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { apiUrl } from '@/lib/api';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { sanitizeHtml } from '@/lib/sanitizeHtml';
@@ -14,6 +14,8 @@ import {
   LuShield,
   LuExternalLink,
   LuX,
+  LuGift,
+  LuLoader,
 } from 'react-icons/lu';
 
 /* ─── Kategori → Gönderici Bilgisi ─── */
@@ -57,6 +59,7 @@ type MailDetailModalProps = {
   onClose: () => void;
   onDelete?: (id: string) => void;
   onStar?: (id: string) => void;
+  onClaim?: (id: string) => void | Promise<void>;
   renderBody?: (body: string) => React.ReactNode;
   /** modal = centered overlay (default), inline = fill parent panel, fullscreen = mobile slide-in */
   variant?: 'modal' | 'inline' | 'fullscreen';
@@ -71,12 +74,18 @@ export default function MailDetailModal({
   onClose,
   onDelete,
   onStar,
+  onClaim,
   variant = 'modal',
 }: MailDetailModalProps) {
   const t = useT();
   const modalRef = useRef<HTMLDivElement>(null);
+  const [claiming, setClaiming] = useState(false);
   const isInline = variant === 'inline';
   const isFullscreen = variant === 'fullscreen';
+
+  useEffect(() => {
+    setClaiming(false);
+  }, [mail?.id]);
 
   // ESC ile kapat (inline panel'de de çalışır)
   useEffect(() => {
@@ -274,6 +283,39 @@ export default function MailDetailModal({
           <div className="mb-6">
             {renderEmailBody(mail.body ?? '')}
           </div>
+
+          {mail.category === 'reward' && onClaim && (
+            <div className="mb-6">
+              {mail.is_read ? (
+                <div className="inline-flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-5 py-2.5 text-sm font-semibold text-emerald-400">
+                  <LuGift className="h-4 w-4" />
+                  {t('mail_reward_claimed')}
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  disabled={claiming}
+                  onClick={async () => {
+                    if (claiming) return;
+                    setClaiming(true);
+                    try {
+                      await onClaim(mail.id);
+                    } finally {
+                      setClaiming(false);
+                    }
+                  }}
+                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-emerald-500/20 transition hover:shadow-emerald-500/40 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {claiming ? (
+                    <LuLoader className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <LuGift className="h-4 w-4" />
+                  )}
+                  {claiming ? t('mail_claiming') : t('mail_claim_reward')}
+                </button>
+              )}
+            </div>
+          )}
 
           {mail.details_url && (
             <a

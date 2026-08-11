@@ -223,6 +223,38 @@ export default function MailSection({
     }
   };
 
+  const handleClaimReward = async (id: string) => {
+    try {
+      const res = await fetchWithCreds(apiUrl('/api/mail/claim-rewards'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: [id] }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        showToast(
+          data.error === 'already_claimed' ? t('mail_rewards_already_claimed') : t('mail_claim_failed'),
+          'error',
+        );
+        return;
+      }
+      const claimed = data.claimed ?? 0;
+      showToast(
+        claimed > 0
+          ? t('mail_rewards_claimed_toast', { amount: claimed.toFixed(2) })
+          : t('mail_rewards_claimed_generic'),
+        'success',
+      );
+      setSelectedMail((prev) =>
+        prev && String(prev.id) === String(id) ? { ...prev, is_read: true } : prev,
+      );
+      window.dispatchEvent(new CustomEvent('mail:refresh'));
+      window.dispatchEvent(new CustomEvent('wallet:refresh'));
+    } catch {
+      showToast(t('mail_claim_failed'), 'error');
+    }
+  };
+
   const openMail = (mail: MailItem) => {
     setSelectedMail(mail);
     if (onOpenMail) void onOpenMail(mail);
@@ -342,6 +374,7 @@ export default function MailSection({
         onBack={onBack}
         onMarkAllRead={handleMarkAllRead}
         onClaimAll={handleClaimAll}
+        onClaimReward={handleClaimReward}
         formatDate={formatDate}
       />
 
@@ -368,6 +401,7 @@ export default function MailSection({
         onSelectAll={selectAll}
         onMarkAllRead={handleMarkAllRead}
         onClaimAll={handleClaimAll}
+        onClaimReward={handleClaimReward}
         onBulkDelete={handleBulkDelete}
         onBulkMarkRead={handleBulkMarkRead}
         onDeleteMail={handleDeleteMail}
