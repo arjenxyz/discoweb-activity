@@ -233,31 +233,43 @@ export default function OverviewSection({
               },
               {
                 label: t('overview_stat_tag_label'),
-                value: hasTag ? (currentBadge?.name ?? t('overview_stat_active')) : t('overview_stat_none'),
-                sub: hasTag && nextBadge
-                  ? t('badge_next_badge', { name: nextBadge.name })
-                  : t('overview_stat_tag_sub'),
+                value: !hasTag
+                  ? t('overview_stat_none')
+                  : activityStatIndex === 0
+                    ? (currentBadge?.name ?? t('overview_stat_active'))
+                    : t('overview_stat_active'),
+                sub: !hasTag
+                  ? t('overview_stat_tag_sub')
+                  : activityStatIndex === 0 && nextBadge
+                    ? t('badge_next_badge', { name: nextBadge.name })
+                    : t('overview_stat_tag_sub'),
                 icon: <LuTag className="h-4 w-4" />,
                 color: hasTag ? 'text-indigo-400' : 'text-white/20',
                 active: hasTag,
-                progress: hasTag && nextBadge ? tagProgressPct : null,
+                progress: hasTag && activityStatIndex === 0 && nextBadge ? tagProgressPct : null,
                 accent: currentBadge?.color ?? '#818cf8',
                 onClick: onNavigateToPrivileges,
-                rotateKey: 'tag',
+                rotateKey: `tag-${hasTag ? activityStatIndex : 'off'}`,
               },
               {
                 label: t('overview_stat_boost_label'),
-                value: isBooster ? (currentBoosterBadge?.name ?? t('overview_stat_active')) : t('overview_stat_none'),
-                sub: isBooster && nextBoosterBadge
-                  ? t('badge_next_badge', { name: nextBoosterBadge.name })
-                  : t('overview_stat_boost_sub'),
+                value: !isBooster
+                  ? t('overview_stat_none')
+                  : activityStatIndex === 0
+                    ? (currentBoosterBadge?.name ?? t('overview_stat_active'))
+                    : t('overview_stat_active'),
+                sub: !isBooster
+                  ? t('overview_stat_boost_sub')
+                  : activityStatIndex === 0 && nextBoosterBadge
+                    ? t('badge_next_badge', { name: nextBoosterBadge.name })
+                    : t('overview_stat_boost_sub'),
                 icon: <LuZap className="h-4 w-4" />,
                 color: isBooster ? 'text-pink-400' : 'text-white/20',
                 active: isBooster,
-                progress: isBooster && nextBoosterBadge ? boostProgressPct : null,
+                progress: isBooster && activityStatIndex === 0 && nextBoosterBadge ? boostProgressPct : null,
                 accent: currentBoosterBadge?.color ?? '#f472b6',
                 onClick: onNavigateToPrivileges,
-                rotateKey: 'boost',
+                rotateKey: `boost-${isBooster ? activityStatIndex : 'off'}`,
               },
             ].map(({ label, value, sub, icon, color, active, progress, accent, onClick, rotateKey }) => {
               const Wrapper = onClick ? 'button' : 'div';
