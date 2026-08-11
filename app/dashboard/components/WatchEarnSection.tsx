@@ -109,9 +109,11 @@ export default function WatchEarnSection() {
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [portalReady, setPortalReady] = useState(false);
+  const [controlsVisible, setControlsVisible] = useState(true);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const playerShellRef = useRef<HTMLDivElement>(null);
+  const controlsHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [toast, setToast] = useState<{ open: boolean; message: string; type?: 'success' | 'error' }>({
     open: false,
@@ -174,6 +176,11 @@ export default function WatchEarnSection() {
       setCurrentTime(0);
       setIsPlaying(true);
       setIsFullscreen(false);
+      setControlsVisible(true);
+      if (controlsHideTimerRef.current) {
+        clearTimeout(controlsHideTimerRef.current);
+        controlsHideTimerRef.current = null;
+      }
       return;
     }
 
@@ -196,6 +203,46 @@ export default function WatchEarnSection() {
       if (video) video.pause();
     };
   }, [activeVideo]);
+
+  const revealControls = useCallback(() => {
+    setControlsVisible(true);
+    if (controlsHideTimerRef.current) {
+      clearTimeout(controlsHideTimerRef.current);
+      controlsHideTimerRef.current = null;
+    }
+    // Duraklatılmışken kontroller kalsın; oynarken kısa süre sonra gizle
+    const video = videoRef.current;
+    const playing = video ? !video.paused : isPlaying;
+    if (!playing) return;
+    controlsHideTimerRef.current = setTimeout(() => {
+      setControlsVisible(false);
+      controlsHideTimerRef.current = null;
+    }, 2500);
+  }, [isPlaying]);
+
+  useEffect(() => {
+    if (!activeVideo) return;
+    revealControls();
+    return () => {
+      if (controlsHideTimerRef.current) {
+        clearTimeout(controlsHideTimerRef.current);
+        controlsHideTimerRef.current = null;
+      }
+    };
+  }, [activeVideo, revealControls]);
+
+  useEffect(() => {
+    if (!activeVideo) return;
+    if (!isPlaying) {
+      setControlsVisible(true);
+      if (controlsHideTimerRef.current) {
+        clearTimeout(controlsHideTimerRef.current);
+        controlsHideTimerRef.current = null;
+      }
+      return;
+    }
+    revealControls();
+  }, [activeVideo, isPlaying, revealControls]);
 
   useEffect(() => {
     const onFsChange = () => {
@@ -315,10 +362,21 @@ export default function WatchEarnSection() {
     if (videoRef.current) {
       if (isPlaying) {
         videoRef.current.pause();
+        setIsPlaying(false);
+        setControlsVisible(true);
+        if (controlsHideTimerRef.current) {
+          clearTimeout(controlsHideTimerRef.current);
+          controlsHideTimerRef.current = null;
+        }
       } else {
-        void videoRef.current.play();
+        void videoRef.current.play().then(
+          () => {
+            setIsPlaying(true);
+            revealControls();
+          },
+          () => setIsPlaying(false),
+        );
       }
-      setIsPlaying(!isPlaying);
     }
   };
 
@@ -392,44 +450,12 @@ export default function WatchEarnSection() {
       ? createPortal(
           <div
             ref={playerShellRef}
-            className="fixed inset-0 z-[99999] flex w-full flex-col overflow-hidden bg-black"
+            className="fixed inset-0 z-[99999] overflow-hidden bg-black"
             style={{ top: 0, right: 0, bottom: 0, left: 0 }}
+            onPointerMove={revealControls}
+            onTouchStart={revealControls}
           >
-            <div className="flex shrink-0 items-center gap-3 border-b border-white/10 bg-[#12141c] px-3 py-2.5 sm:px-4">
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-xs font-semibold text-white/80 sm:text-sm">{activeTask.logoText}</p>
-              </div>
-              <div className="rounded-xl border border-white/10 bg-black/40 px-3 py-1.5 text-center">
-                <p className="text-[9px] font-medium uppercase tracking-wider text-white/35">Kalan</p>
-                <p className="font-mono text-sm font-bold tabular-nums text-white sm:text-base">
-                  {duration > 0 ? formatRemaining(remaining) : '—:—'}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  void toggleFullscreen();
-                }}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
-                aria-label={isFullscreen ? 'Tam ekrandan çık' : 'Tam ekran'}
-              >
-                {isFullscreen ? <LuMinimize className="h-5 w-5" /> : <LuMaximize className="h-5 w-5" />}
-              </button>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  void closePlayer();
-                }}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
-                aria-label="Kapat"
-              >
-                <LuX className="h-5 w-5" />
-              </button>
-            </div>
-
-            <div className="relative min-h-0 w-full flex-1 cursor-pointer bg-black" onClick={togglePlay}>
+            <div className="absolute inset-0 cursor-pointer bg-black" onClick={togglePlay}>
               <video
                 key={activeTask.id}
                 ref={videoRef}
@@ -441,7 +467,6 @@ export default function WatchEarnSection() {
                   setCurrentTime(e.currentTarget.currentTime || 0);
                 }}
                 onLoadedData={(e) => {
-                  // Mount sonrası güvenli autoplay (play() race'ini azaltır)
                   const video = e.currentTarget;
                   void video.play().then(
                     () => setIsPlaying(true),
@@ -479,14 +504,67 @@ export default function WatchEarnSection() {
               )}
             </div>
 
-            <div className="shrink-0 border-t border-white/10 bg-[#12141c] px-3 py-2.5 sm:px-4">
-              <div className="mb-1.5 h-1.5 overflow-hidden rounded-full bg-white/10">
+            <div
+              className={`pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center gap-3 bg-gradient-to-b from-black/80 via-black/40 to-transparent px-3 py-3 transition-opacity duration-300 sm:px-4 sm:py-4 ${
+                controlsVisible ? 'opacity-100' : 'opacity-0'
+              }`}
+            >
+              <div className="pointer-events-none min-w-0 flex-1">
+                <p className="truncate text-xs font-semibold text-white/90 sm:text-sm">{activeTask.logoText}</p>
+              </div>
+              <div
+                className={`rounded-xl border border-white/10 bg-black/50 px-3 py-1.5 text-center backdrop-blur-sm transition-opacity ${
+                  controlsVisible ? 'pointer-events-auto' : 'pointer-events-none'
+                }`}
+              >
+                <p className="text-[9px] font-medium uppercase tracking-wider text-white/40">Kalan</p>
+                <p className="font-mono text-sm font-bold tabular-nums text-white sm:text-base">
+                  {duration > 0 ? formatRemaining(remaining) : '—:—'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  revealControls();
+                  void toggleFullscreen();
+                }}
+                className={`flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-sm transition hover:bg-white/25 ${
+                  controlsVisible ? 'pointer-events-auto' : 'pointer-events-none'
+                }`}
+                aria-label={isFullscreen ? 'Tam ekrandan çık' : 'Tam ekran'}
+                tabIndex={controlsVisible ? 0 : -1}
+              >
+                {isFullscreen ? <LuMinimize className="h-5 w-5" /> : <LuMaximize className="h-5 w-5" />}
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  void closePlayer();
+                }}
+                className={`flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-sm transition hover:bg-white/25 ${
+                  controlsVisible ? 'pointer-events-auto' : 'pointer-events-none'
+                }`}
+                aria-label="Kapat"
+                tabIndex={controlsVisible ? 0 : -1}
+              >
+                <LuX className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div
+              className={`pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-3 py-3 transition-opacity duration-300 sm:px-4 sm:py-4 ${
+                controlsVisible ? 'opacity-100' : 'opacity-0'
+              }`}
+            >
+              <div className="mb-1.5 h-1.5 overflow-hidden rounded-full bg-white/15">
                 <div
                   className="h-full rounded-full bg-[#5865F2] transition-[width] duration-200"
                   style={{ width: `${progress}%` }}
                 />
               </div>
-              <div className="flex items-center justify-between text-[11px] text-white/40">
+              <div className="flex items-center justify-between text-[11px] text-white/50">
                 <span className="font-mono tabular-nums">{formatRemaining(currentTime)}</span>
                 <span>İleri saramazsın</span>
                 <span className="font-mono tabular-nums">{duration > 0 ? formatRemaining(duration) : '—:—'}</span>
