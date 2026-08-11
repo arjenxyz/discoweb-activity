@@ -128,16 +128,6 @@ export default function WatchEarnSection() {
 
               {/* Content Area */}
               <div className="p-5 flex flex-col md:flex-row items-start md:items-center gap-5">
-                {/* Large Icon */}
-                <div className="flex-shrink-0 relative group">
-                  <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-[#4ade80] to-[#2dd4bf] opacity-30 blur-md group-hover:opacity-50 transition-opacity" />
-                  <div className="relative h-20 w-20 rounded-full border-4 border-[#2dd4bf] bg-[#0b0d12] flex items-center justify-center overflow-hidden">
-                    <div className="absolute inset-0 flex items-center justify-center">
-                       <Image src="/papel.gif" alt="Papel" width={48} height={48} className="drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]" unoptimized />
-                    </div>
-                  </div>
-                </div>
-
                 {/* Details */}
                 <div className="flex-1 space-y-2">
                   <h4 className="text-lg font-bold text-white uppercase tracking-wide">{task.title}</h4>
