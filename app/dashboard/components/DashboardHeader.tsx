@@ -512,28 +512,24 @@ export default function DashboardHeader({
           {!unauthorized && !minimalProfileOnly && (
             <div className={`hidden lg:flex items-center gap-1.5 ${profileChromeHidden}`}>
               {mariBalance !== undefined && (
-                <div
-                  title="Mari"
-                  className="flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] px-2.5 py-1.5 text-sm"
-                >
+                <div className="flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] px-2.5 py-1.5 text-sm">
                   <Image src="/Mari.gif" alt="Mari" width={16} height={16} className="h-4 w-4 shrink-0" unoptimized />
                   <span className="font-bold text-white tabular-nums">
                     {walletLoading
                       ? '—'
                       : mariBalance.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                   </span>
+                  <span className="text-[11px] font-semibold text-[#a5b4ff]/75">Mari</span>
                 </div>
               )}
-              <div
-                title="Papel"
-                className="flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] px-2.5 py-1.5 text-sm"
-              >
+              <div className="flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] px-2.5 py-1.5 text-sm">
                 <Image src="/papel.gif" alt="Papel" width={16} height={16} className="h-4 w-4 shrink-0" />
                 <span className="font-bold text-white tabular-nums">
                   {walletLoading
                     ? '—'
                     : walletBalance.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                 </span>
+                <span className="text-[11px] font-semibold text-white/55">Papel</span>
               </div>
             </div>
           )}
