@@ -16,6 +16,7 @@ import {
   LuInfo,
 } from 'react-icons/lu';
 import type { BadgeInfo, MemberProfile, OverviewStats, OrderStats, OverviewStatsExpanded } from '../types';
+import DiscordProfileCard from './DiscordProfileCard';
 import { computeProgressPct } from './privileges/tierUtils';
 
 type OverviewSectionProps = {
@@ -120,7 +121,8 @@ export default function OverviewSection({
           <span className="text-sm">{t('overview_loading')}</span>
         </div>
       ) : (
-        <>
+        <div className="flex flex-col lg:flex-row gap-4 lg:gap-5 items-start">
+          <div className="w-full lg:flex-1 min-w-0 flex flex-col gap-3 order-2 lg:order-1">
           {/* PROFİL KARTI */}
           <div className={`${card} relative overflow-hidden`}>
             <div className="absolute top-0 right-0 h-48 w-48 rounded-full bg-indigo-500/8 blur-[60px] pointer-events-none" />
@@ -422,8 +424,17 @@ export default function OverviewSection({
               </div>
             </div>
           )}
+          </div>
 
-        </>
+          <aside className="w-full lg:w-[300px] xl:w-[320px] shrink-0 order-1 lg:order-2 lg:sticky lg:top-6">
+            <DiscordProfileCard
+              profile={unauthorized ? null : profile}
+              loading={profileLoading}
+              joinedAt={overviewStats?.joinedAt ?? null}
+              formatRoleColor={formatRoleColor}
+            />
+          </aside>
+        </div>
       )}
 
     </section>
