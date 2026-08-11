@@ -295,9 +295,7 @@ export default function DashboardHeader({
     </button>
   ) : null;
 
-  const profileChromeHidden = isProfileOpen
-    ? 'pointer-events-none opacity-0 invisible transition-all duration-200'
-    : 'opacity-100 visible transition-all duration-200';
+  const profileChromeHidden = '';
 
   if (mailFabOverlayRight) {
     const displayName = profile?.name || profile?.username || t('dashboard_user_fallback');
@@ -426,14 +424,15 @@ export default function DashboardHeader({
 
   return (
     <>
-      {/* Desktop overlay — sadece masaüstü profil dropdown için */}
+      {/* Desktop: profil açıkken tam ekran karartma yok — sadece dışarı tıklamayı yakala */}
       <div
         onClick={() => setIsProfileOpen(false)}
-        className={`hidden lg:block fixed inset-0 z-[9990] bg-black/50 backdrop-blur-sm transition-all duration-300 ${
-          isProfileOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'
+        aria-hidden={!isProfileOpen}
+        className={`hidden lg:block fixed inset-0 z-[9990] ${
+          isProfileOpen ? 'visible' : 'invisible pointer-events-none'
         }`}
       />
-      {/* Mobil overlay — menü/profil dropdown için, modalların altında kalır */}
+      {/* Mobil overlay — menü/profil dropdown için */}
       <div
         onClick={() => { setIsProfileOpen(false); setMobileMenuOpen(false); }}
         className={`lg:hidden fixed inset-0 ${minimalProfileOnly ? 'z-[9990]' : 'z-[35]'} bg-black/60 backdrop-blur-sm transition-all duration-300 ${
