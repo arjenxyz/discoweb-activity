@@ -1,4 +1,7 @@
-﻿import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+﻿import { headers } from 'next/headers';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { getSessionUserId, getSessionUserIdFromRequest } from '@/lib/auth';
+import { isLocalDev } from '@/lib/localDev';
 
 /** Global (platform-wide) maintenance modules — not per Discord server. */
 export const MAINTENANCE_KEYS = [
@@ -25,6 +28,9 @@ export type MaintenanceFlag = {
 
 export type MaintenanceMap = Record<MaintenanceKey, MaintenanceFlag>;
 
+const DEFAULT_DEVELOPER_GUILD_ID = '1465698764453838882';
+const DEFAULT_DEVELOPER_ROLE_ID = '1467580199481639013';
+
 const getSupabase = (): SupabaseClient | null => {
   const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -34,6 +40,40 @@ const getSupabase = (): SupabaseClient | null => {
   }
 
   return createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
+};
+
+const isDeveloperUser = async (userId: string): Promise<boolean> => {
+  const configuredUserId = process.env.DEVELOPER_DISCORD_USER_ID;
+  if (configuredUserId && userId === configuredUserId) {
+    return true;
+  }
+
+  const botToken = process.env.DISCORD_BOT_TOKEN;
+  const roleId = process.env.DEVELOPER_ROLE_ID ?? DEFAULT_DEVELOPER_ROLE_ID;
+  const guildId =
+    process.env.DEVELOPER_GUILD_ID ?? process.env.DISCORD_GUILD_ID ?? DEFAULT_DEVELOPER_GUILD_ID;
+
+  if (!botToken || !roleId || !guildId) {
+    return false;
+  }
+
+  const controller = new AbortController();
+  const timeout = Number(process.env.DISCORD_API_TIMEOUT_MS ?? 10000);
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+  try {
+    const response = await fetch(`https://discord.com/api/guilds/${guildId}/members/${userId}`, {
+      headers: { Authorization: `Bot ${botToken}` },
+      signal: controller.signal,
+    });
+    if (!response.ok) return false;
+    const member = (await response.json()) as { roles?: string[] };
+    return Boolean(member.roles?.includes(roleId));
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 };
 
 export const createDefaultFlags = (): MaintenanceMap =>
@@ -95,7 +135,55 @@ export const checkGlobalFreeze = async (): Promise<{ frozen: boolean; readOnly: 
   };
 };
 
-export const checkMaintenance = async (keys: MaintenanceKey[], guildId?: string) => {
+/** Resolve caller userId from cookie session or Activity Bearer header. */
+const resolveCallerUserId = async (request?: Request): Promise<string | null> => {
+  if (request) {
+    const fromRequest = getSessionUserIdFromRequest(request);
+    if (fromRequest) return fromRequest;
+  }
+
+  const fromCookie = await getSessionUserId();
+  if (fromCookie) return fromCookie;
+
+  // App Router: Authorization may be present even when Request wasn't passed through.
+  try {
+    const h = await headers();
+    const synthetic = new Request('http://localhost', {
+      headers: {
+        authorization: h.get('authorization') ?? '',
+        cookie: h.get('cookie') ?? '',
+        'x-access-token': h.get('x-access-token') ?? '',
+        'x-authorization': h.get('x-authorization') ?? '',
+        'x-discord-session': h.get('x-discord-session') ?? '',
+      },
+    });
+    return getSessionUserIdFromRequest(synthetic);
+  } catch {
+    return null;
+  }
+};
+
+export const checkMaintenance = async (
+  keys: MaintenanceKey[],
+  guildIdOrRequest?: string | Request,
+) => {
+  const request = guildIdOrRequest instanceof Request ? guildIdOrRequest : undefined;
+  const guildId = typeof guildIdOrRequest === 'string' ? guildIdOrRequest : undefined;
+
+  // Developers (and local-dev) bypass maintenance at API level — same as web.
+  if (await isLocalDev()) {
+    return { blocked: false as const, key: null, reason: null };
+  }
+
+  try {
+    const userId = await resolveCallerUserId(request);
+    if (userId && (await isDeveloperUser(userId))) {
+      return { blocked: false as const, key: null, reason: null };
+    }
+  } catch {
+    /* non-session callers still subject to flags */
+  }
+
   const data = await getMaintenanceFlags(guildId);
   if (!data) {
     return { blocked: false as const, key: null, reason: null };
