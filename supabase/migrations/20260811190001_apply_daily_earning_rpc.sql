@@ -1,6 +1,8 @@
 -- Atomic daily earning apply: avoids lost updates / double-reopen races.
 -- If row is settled (claimed), start fresh with p_amount.
 -- If unsettled, add p_amount to existing amount.
+--
+-- Run this ENTIRE script in one go in the Supabase SQL editor.
 
 CREATE OR REPLACE FUNCTION public.apply_daily_earning(
   p_guild_id text,
@@ -11,7 +13,7 @@ CREATE OR REPLACE FUNCTION public.apply_daily_earning(
 )
 RETURNS numeric
 LANGUAGE plpgsql
-AS $$
+AS $body$
 DECLARE
   v_amount numeric;
 BEGIN
@@ -35,7 +37,7 @@ BEGIN
     p_earning_date,
     p_amount,
     NULL,
-    now()
+    CURRENT_TIMESTAMP
   )
   ON CONFLICT (guild_id, user_id, source, earning_date)
   DO UPDATE SET
@@ -44,9 +46,9 @@ BEGIN
       ELSE COALESCE(de.amount, 0) + EXCLUDED.amount
     END,
     settled_at = NULL,
-    updated_at = now()
-  RETURNING de.amount INTO v_amount;
+    updated_at = CURRENT_TIMESTAMP
+  RETURNING amount INTO v_amount;
 
   RETURN COALESCE(v_amount, 0);
 END;
-$$;
+$body$;
