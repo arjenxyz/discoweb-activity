@@ -532,8 +532,8 @@ export default function DashboardHeader({
 
         {(minimalProfileOnly || unauthorized) && <div className="flex-1" />}
 
-        {/* Sağ — bakiye + profil (masaüstü) */}
-        <div className="hidden shrink-0 items-center gap-2 lg:flex">
+        {/* Sağ — bakiye + profil (masaüstü; quiz minimal'de mobilde de) */}
+        <div className={`shrink-0 items-center gap-2 ${minimalProfileOnly ? 'flex' : 'hidden lg:flex'}`}>
           {!unauthorized && !minimalProfileOnly && (
             <div className={`flex items-center gap-1.5 ${profileChromeHidden}`}>
               {mariBalance !== undefined && (
@@ -688,7 +688,7 @@ export default function DashboardHeader({
 
       {/* Mobil bottom bar */}
       {!minimalProfileOnly && (
-      <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-[#0b0d12]/98 backdrop-blur-2xl border-t border-white/[0.08] pb-[env(safe-area-inset-bottom,0px)]">
+      <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-transparent pb-[env(safe-area-inset-bottom,0px)]">
         <div className="flex items-center gap-2 px-3 py-2">
           {/* Sol — Menüler butonu */}
           <button
