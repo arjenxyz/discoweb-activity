@@ -141,21 +141,24 @@ export default function MailMobileView({
             key={mail.id}
             mail={mail}
             dateLabel={formatDate(mail.created_at)}
-            onClick={() => onOpenMail(mail)}
+            onClick={() => {
+              setFoldersOpen(false);
+              onOpenMail(mail);
+            }}
           />
         ))}
       </div>
 
-      {/* Bottom bar — homepage style, folders only (no profile) */}
+      {/* Bottom bar — stays visible above mail detail */}
       {foldersOpen && (
         <div
-          className="fixed inset-0 z-[35] bg-black/60 backdrop-blur-sm md:hidden"
+          className="fixed inset-0 z-[115] bg-black/60 backdrop-blur-sm md:hidden"
           onClick={() => setFoldersOpen(false)}
           aria-hidden
         />
       )}
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-white/[0.08] bg-[#0b0d12]/98 backdrop-blur-2xl pb-[env(safe-area-inset-bottom,0px)] md:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-[120] border-t border-white/[0.08] bg-[#0b0d12]/98 backdrop-blur-2xl pb-[env(safe-area-inset-bottom,0px)] md:hidden">
         <div className="flex items-center gap-2 px-3 py-2">
           <button
             type="button"
@@ -176,7 +179,9 @@ export default function MailMobileView({
             </div>
             <div className="flex flex-col items-start leading-none">
               <span className="text-[10px] font-medium text-white/35">Şu an</span>
-              <span className="text-sm font-bold text-white">{activeLabel}</span>
+              <span className="text-sm font-bold text-white">
+                {selectedMail ? t('nav_messages') : activeLabel}
+              </span>
             </div>
             {totalUnread > 0 && (
               <span className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white">
@@ -187,7 +192,7 @@ export default function MailMobileView({
         </div>
 
         {foldersOpen && (
-          <div className="absolute bottom-full left-0 right-0 z-50 mx-2 mb-1 max-h-[70vh] overflow-hidden overflow-y-auto rounded-2xl border border-white/10 bg-[#0f1116]/98 shadow-2xl backdrop-blur-2xl">
+          <div className="absolute bottom-full left-0 right-0 z-[121] mx-2 mb-1 max-h-[70vh] overflow-hidden overflow-y-auto rounded-2xl border border-white/10 bg-[#0f1116]/98 shadow-2xl backdrop-blur-2xl">
             <div className="space-y-0.5 px-2 py-2">
               <p className="px-3 pb-1 pt-1 text-[9px] font-semibold uppercase tracking-[0.3em] text-white/25">
                 {t('mail_folders_label')}
@@ -202,6 +207,7 @@ export default function MailMobileView({
                     onClick={() => {
                       onCategoryChange(item.key);
                       setFoldersOpen(false);
+                      if (selectedMail) onCloseMail();
                     }}
                     className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
                       isActive ? 'bg-white/10 text-white' : 'text-white/60 hover:bg-white/5 hover:text-white'

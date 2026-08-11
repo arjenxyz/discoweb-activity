@@ -394,7 +394,7 @@ export default function MailDetailModal({
       {isInline ? (
         panelInner
       ) : isFullscreen ? (
-        <div className="mail-fullscreen-enter fixed inset-0 z-[100] flex flex-col bg-[#0c0e12] pt-[env(safe-area-inset-top,0px)]">
+        <div className="mail-fullscreen-enter fixed inset-x-0 top-0 z-[100] flex flex-col bg-[#0c0e12] pt-[env(safe-area-inset-top,0px)] bottom-[calc(3.75rem+env(safe-area-inset-bottom,0px))] md:inset-0 md:bottom-0">
           {panelInner}
         </div>
       ) : (
