@@ -269,7 +269,9 @@ export default function MailDetailModal({
                                 ? '🏆'
                                 : mailTemplate === 'quiz_motivation'
                                   ? '🎯'
-                                  : senderCfg.avatar}
+                                  : mailTemplate === 'earn_settings'
+                                    ? '⚙️'
+                                    : senderCfg.avatar}
                 </div>
               )}
               <div>
@@ -284,7 +286,8 @@ export default function MailDetailModal({
                     mailTemplate === 'earn_claim' ||
                     mailTemplate === 'earn_rejected' ||
                     mailTemplate === 'quiz_reward' ||
-                    mailTemplate === 'quiz_motivation'
+                    mailTemplate === 'quiz_motivation' ||
+                    mailTemplate === 'earn_settings'
                       ? 'DiscoWeb'
                       : transferSenderName}
                   </span>
@@ -297,6 +300,7 @@ export default function MailDetailModal({
                     mailTemplate === 'earn_rejected' ||
                     mailTemplate === 'quiz_reward' ||
                     mailTemplate === 'quiz_motivation' ||
+                    mailTemplate === 'earn_settings' ||
                     senderCfg.verified) && (
                     <LuShield className="h-3.5 w-3.5 text-[#5865F2]" title={t('mail_detail_verified_tooltip')} />
                   )}
@@ -340,7 +344,8 @@ export default function MailDetailModal({
               mailTemplate === 'earn_claim' ||
               mailTemplate === 'earn_rejected' ||
               mailTemplate === 'quiz_reward' ||
-              mailTemplate === 'quiz_motivation' ? (
+              mailTemplate === 'quiz_motivation' ||
+              mailTemplate === 'earn_settings' ? (
               <MailLocalizedBody
                 mail={mail}
                 template={
@@ -352,7 +357,8 @@ export default function MailDetailModal({
                         | 'earn_claim'
                         | 'earn_rejected'
                         | 'quiz_reward'
-                        | 'quiz_motivation')
+                        | 'quiz_motivation'
+                        | 'earn_settings')
                 }
                 t={t}
               />

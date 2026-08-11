@@ -47,6 +47,7 @@ export function resolveMailTemplateId(mail: MailLike): string | null {
     if (explicit === 'earn_claim' || explicit === 'earn' || explicit === 'claim') return 'earn_claim';
     if (explicit === 'quiz_reward') return 'quiz_reward';
     if (explicit === 'quiz_motivation') return 'quiz_motivation';
+    if (explicit === 'earn_settings' || explicit === 'economy_update') return 'earn_settings';
     if (explicit.startsWith('mail_title_')) return explicit.replace(/^mail_title_/, '');
   }
 
@@ -101,6 +102,12 @@ export function resolveMailTemplateId(mail: MailLike): string | null {
     const earned = typeof meta.total_earned === 'number' ? meta.total_earned : Number(meta.total_earned ?? 0);
     return earned > 0 ? 'quiz_reward' : 'quiz_motivation';
   }
+  if (meta.groups && typeof meta.groups === 'object') {
+    return 'earn_settings';
+  }
+  if (Array.isArray(meta.summaryLines) && meta.summaryLines.length > 0) {
+    return 'earn_settings';
+  }
 
   return null;
 }
@@ -116,6 +123,7 @@ const TITLE_KEYS: Record<string, string> = {
   earn_rejected: 'mail_title_earn_rejected',
   quiz_reward: 'mail_title_quiz_reward',
   quiz_motivation: 'mail_title_quiz_motivation',
+  earn_settings: 'mail_title_earn_settings',
 };
 
 const PREVIEW_KEYS: Record<string, string> = {
@@ -129,6 +137,7 @@ const PREVIEW_KEYS: Record<string, string> = {
   earn_rejected: 'mail_preview_earn_rejected',
   quiz_reward: 'mail_preview_quiz_reward',
   quiz_motivation: 'mail_preview_quiz_motivation',
+  earn_settings: 'mail_preview_earn_settings',
 };
 
 export function resolveMailTitle(mail: MailLike, t: MailT): string {
@@ -221,6 +230,10 @@ export function resolveMailPreview(mail: MailLike, t: MailT, maxLen = 120): stri
     return t('mail_preview_quiz_motivation', {
       title: String(str(meta.quiz_title) ?? ''),
     });
+  }
+
+  if (template === 'earn_settings') {
+    return t('mail_preview_earn_settings');
   }
 
   if (template && PREVIEW_KEYS[template]) {

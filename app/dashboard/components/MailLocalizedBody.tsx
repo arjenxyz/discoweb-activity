@@ -6,11 +6,14 @@ import { copyTextToClipboard } from '@/lib/clipboard';
 import { getMailMeta, type MailT } from '@/lib/mailI18n';
 import { useState } from 'react';
 import {
+  LuArrowDown,
+  LuArrowUp,
   LuCheck,
   LuCircleX,
   LuCopy,
   LuGift,
   LuPackage,
+  LuSettings2,
   LuShoppingBag,
   LuTrophy,
   LuTriangleAlert,
@@ -26,7 +29,8 @@ type Props = {
     | 'earn_claim'
     | 'earn_rejected'
     | 'quiz_reward'
-    | 'quiz_motivation';
+    | 'quiz_motivation'
+    | 'earn_settings';
   t: MailT;
 };
 
@@ -87,6 +91,18 @@ function earnReasonLabel(reason: string | null, t: MailT): string {
   return translated === key ? reason : translated;
 }
 
+function earnSettingLabel(key: string, t: MailT): string {
+  const i18nKey = `mail_earn_setting_${key}`;
+  const translated = t(i18nKey);
+  return translated === i18nKey ? key : translated;
+}
+
+function earnGroupLabel(group: string, t: MailT): string {
+  const i18nKey = `mail_earn_group_${group}`;
+  const translated = t(i18nKey);
+  return translated === i18nKey ? group : translated;
+}
+
 export default function MailLocalizedBody({ mail, template, t }: Props) {
   const meta = getMailMeta(mail);
   const isEarnReject = template === 'earn_rejected';
@@ -95,6 +111,196 @@ export default function MailLocalizedBody({ mail, template, t }: Props) {
   const isQuiz = template === 'quiz_reward' || isQuizMotivation;
   const isOrderReject = template === 'order_rejected';
   const isOrder = template === 'order' || template === 'order_confirmed' || isOrderReject;
+
+  if (template === 'earn_settings') {
+    const groupsRaw = meta.groups && typeof meta.groups === 'object' && !Array.isArray(meta.groups)
+      ? (meta.groups as Record<string, unknown>)
+      : {};
+    const groupOrder = ['general', 'tag', 'boost'];
+    const groupEntries = [
+      ...groupOrder.filter((k) => Array.isArray(groupsRaw[k]) && (groupsRaw[k] as unknown[]).length > 0),
+      ...Object.keys(groupsRaw).filter(
+        (k) => !groupOrder.includes(k) && Array.isArray(groupsRaw[k]) && (groupsRaw[k] as unknown[]).length > 0,
+      ),
+    ];
+    const summaryLines = Array.isArray(meta.summaryLines)
+      ? meta.summaryLines.filter((l): l is string => typeof l === 'string' && l.trim().length > 0)
+      : [];
+    const effectiveDate = typeof meta.effectiveDate === 'string' ? meta.effectiveDate : null;
+    const reason = typeof meta.reason === 'string' && meta.reason.trim() ? meta.reason.trim() : null;
+    const targetAudience =
+      typeof meta.targetAudience === 'string' && meta.targetAudience.trim()
+        ? meta.targetAudience.trim()
+        : null;
+    const impactEstimate =
+      typeof meta.impactEstimate === 'string' && meta.impactEstimate.trim()
+        ? meta.impactEstimate.trim()
+        : null;
+    const supportLink =
+      typeof meta.supportLink === 'string' && meta.supportLink.trim() ? meta.supportLink.trim() : null;
+
+    return (
+      <div className="w-full min-w-0 overflow-hidden rounded-2xl border border-sky-500/25 bg-white/[0.03]">
+        <div className="min-w-0 px-4 py-4">
+          <p className="mb-2.5 text-[10px] font-bold uppercase tracking-[0.18em] text-white/30">
+            {t('mail_earn_settings_status')}
+          </p>
+          <div className="flex min-w-0 items-start gap-3">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-sky-500/25 bg-sky-500/10 text-sky-300">
+              <LuSettings2 className="h-5 w-5" />
+            </div>
+            <div className="min-w-0 flex-1 space-y-1">
+              <p className="text-base font-semibold text-white">DiscoWeb</p>
+              {effectiveDate ? (
+                <p className="text-[11px] text-white/40">
+                  {t('mail_earn_settings_effective')}: {effectiveDate}
+                </p>
+              ) : null}
+            </div>
+          </div>
+        </div>
+
+        <div className="mx-4 border-t border-white/[0.07]" />
+
+        <div className="min-w-0 space-y-3 px-4 py-4">
+          {groupEntries.map((groupKey) => {
+            const items = groupsRaw[groupKey] as unknown[];
+            return (
+              <div
+                key={groupKey}
+                className="min-w-0 rounded-xl border border-white/[0.06] bg-black/20 p-3"
+              >
+                <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-white/30">
+                  {earnGroupLabel(groupKey, t)}
+                </p>
+                <ul className="min-w-0 space-y-2">
+                  {items.map((raw, idx) => {
+                    const item = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
+                    const type = String(item.type ?? '');
+                    const key = String(item.key ?? '');
+                    if (type === 'toggle') {
+                      const enabled = Boolean(item.enabled);
+                      return (
+                        <li
+                          key={`${key}-toggle-${idx}`}
+                          className="flex min-w-0 items-center justify-between gap-3 text-sm"
+                        >
+                          <span className="min-w-0 break-words text-white/80">
+                            {earnSettingLabel(key, t)}
+                          </span>
+                          <span
+                            className={`shrink-0 text-[11px] font-bold uppercase tracking-wide ${
+                              enabled ? 'text-emerald-400' : 'text-rose-400'
+                            }`}
+                          >
+                            {enabled ? t('mail_earn_settings_on') : t('mail_earn_settings_off')}
+                          </span>
+                        </li>
+                      );
+                    }
+                    if (type === 'value') {
+                      const from = num(item.from);
+                      const to = num(item.to);
+                      const dir = item.dir === 'up' || item.dir === 'down' ? item.dir : to >= from ? 'up' : 'down';
+                      return (
+                        <li
+                          key={`${key}-value-${idx}`}
+                          className="flex min-w-0 items-start justify-between gap-3 text-sm"
+                        >
+                          <span className="min-w-0 break-words text-white/80">
+                            {earnSettingLabel(key, t)}
+                          </span>
+                          <span className="inline-flex shrink-0 items-center gap-1.5 tabular-nums">
+                            <span className="text-white/35 line-through">
+                              {from.toLocaleString('tr-TR', { maximumFractionDigits: 2 })}
+                            </span>
+                            <span className="text-white/25">→</span>
+                            <span
+                              className={`inline-flex items-center gap-1 font-semibold ${
+                                dir === 'up' ? 'text-emerald-300' : 'text-rose-300'
+                              }`}
+                            >
+                              {dir === 'up' ? (
+                                <LuArrowUp className="h-3.5 w-3.5" />
+                              ) : (
+                                <LuArrowDown className="h-3.5 w-3.5" />
+                              )}
+                              {to.toLocaleString('tr-TR', { maximumFractionDigits: 2 })}
+                            </span>
+                          </span>
+                        </li>
+                      );
+                    }
+                    return null;
+                  })}
+                </ul>
+              </div>
+            );
+          })}
+
+          {summaryLines.length > 0 ? (
+            <div className="min-w-0 rounded-xl border border-white/[0.06] bg-black/20 p-3">
+              <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-white/30">
+                {t('mail_earn_settings_changes')}
+              </p>
+              <ul className="min-w-0 space-y-1.5">
+                {summaryLines.map((line, idx) => (
+                  <li
+                    key={`sum-${idx}`}
+                    className="break-words text-sm text-white/80 [overflow-wrap:anywhere]"
+                  >
+                    {line}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
+          {(reason || targetAudience || impactEstimate || supportLink) && (
+            <div className="min-w-0 space-y-2 rounded-xl border border-white/[0.06] bg-black/20 px-3 py-3 text-sm">
+              {reason ? (
+                <div className="flex justify-between gap-3">
+                  <span className="text-xs text-white/40">{t('mail_earn_settings_reason')}</span>
+                  <span className="min-w-0 break-words text-right text-white/80 [overflow-wrap:anywhere]">
+                    {reason}
+                  </span>
+                </div>
+              ) : null}
+              {targetAudience ? (
+                <div className="flex justify-between gap-3">
+                  <span className="text-xs text-white/40">{t('mail_earn_settings_audience')}</span>
+                  <span className="min-w-0 break-words text-right text-white/80 [overflow-wrap:anywhere]">
+                    {targetAudience}
+                  </span>
+                </div>
+              ) : null}
+              {impactEstimate ? (
+                <div className="flex justify-between gap-3">
+                  <span className="text-xs text-white/40">{t('mail_earn_settings_impact')}</span>
+                  <span className="min-w-0 break-words text-right text-white/80 [overflow-wrap:anywhere]">
+                    {impactEstimate}
+                  </span>
+                </div>
+              ) : null}
+              {supportLink ? (
+                <div className="flex justify-between gap-3">
+                  <span className="text-xs text-white/40">{t('mail_earn_settings_support')}</span>
+                  <a
+                    href={supportLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="min-w-0 break-all text-right text-sky-300 underline-offset-2 hover:underline"
+                  >
+                    {supportLink}
+                  </a>
+                </div>
+              ) : null}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   if (isQuiz) {
     const eventTitle = String(meta.quiz_title ?? meta.event_title ?? 'Quiz');

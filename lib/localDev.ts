@@ -804,6 +804,33 @@ export const localDevMailsSeed = [
     },
   },
   {
+    id: 'mail-earn-settings-1',
+    title: 'Ekonomi Güncellemesi',
+    body: 'Ekonomi güncellemesi\n[general]\nMesaj Kazancı: 1 -> 0.25 Papel\nSes Kazancı: aktif',
+    category: 'update',
+    status: 'published' as const,
+    created_at: new Date(Date.now() - 135_000_000).toISOString(),
+    author_name: 'DiscoWeb',
+    author_avatar_url: LOCAL_DEV_AVATAR,
+    is_read: false,
+    is_starred: false,
+    metadata: {
+      kind: 'earn_settings',
+      i18nKey: 'earn_settings',
+      groups: {
+        general: [
+          { type: 'value', key: 'per_message', from: 1, to: 0.25, dir: 'down' },
+          { type: 'toggle', key: 'voice_earn', enabled: true },
+        ],
+        tag: [{ type: 'value', key: 'tag_bonus_message', from: 0.1, to: 0.2, dir: 'up' }],
+        boost: [],
+      },
+      summaryLines: [],
+      effectiveDate: null,
+      reason: null,
+    },
+  },
+  {
     id: 'mail-maintenance-1',
     title: 'Planlı bakım (örnek)',
     body: 'Yarın 03:00–04:00 arasında kısa bir bakım yapılacak. Bu bir bakım maili örneğidir.',
