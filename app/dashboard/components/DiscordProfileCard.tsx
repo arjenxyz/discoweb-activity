@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { LuTag, LuZap } from 'react-icons/lu';
 import { useLocale, useT } from '@/contexts/LocaleContext';
 import type { MemberProfile } from '../types';
 
@@ -9,6 +10,8 @@ type DiscordProfileCardProps = {
   loading?: boolean;
   joinedAt?: string | null;
   formatRoleColor: (color: number) => string;
+  hasTag?: boolean;
+  isBooster?: boolean;
 };
 
 function discordCreatedAt(userId?: string): Date | null {
@@ -54,6 +57,8 @@ export default function DiscordProfileCard({
   loading,
   joinedAt,
   formatRoleColor,
+  hasTag = false,
+  isBooster = false,
 }: DiscordProfileCardProps) {
   const t = useT();
   const { locale } = useLocale();
@@ -133,6 +138,20 @@ export default function DiscordProfileCard({
             {displayName}
           </p>
           <p className="mt-0.5 text-[13px] text-[#b5bac1] truncate">{username}</p>
+          {(hasTag || isBooster) && (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {hasTag && (
+                <span className="inline-flex items-center gap-1 rounded-full border border-indigo-500/25 bg-indigo-500/10 px-2 py-0.5 text-[10px] font-semibold text-indigo-300">
+                  <LuTag className="h-2.5 w-2.5" /> {t('overview_badge_tag')}
+                </span>
+              )}
+              {isBooster && (
+                <span className="inline-flex items-center gap-1 rounded-full border border-pink-500/25 bg-pink-500/10 px-2 py-0.5 text-[10px] font-semibold text-pink-300">
+                  <LuZap className="h-2.5 w-2.5" /> {t('overview_badge_booster')}
+                </span>
+              )}
+            </div>
+          )}
 
           {(discordSince || serverSince) && (
             <div className="mt-3.5">

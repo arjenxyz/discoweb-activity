@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { useT } from '@/contexts/LocaleContext';
 import {
@@ -123,85 +122,6 @@ export default function OverviewSection({
       ) : (
         <div className="flex flex-col lg:flex-row gap-4 lg:gap-5 items-start">
           <div className="w-full lg:flex-1 min-w-0 flex flex-col gap-3 order-2 lg:order-1">
-          {/* PROFİL KARTI */}
-          <div className={`${card} relative overflow-hidden`}>
-            <div className="absolute top-0 right-0 h-48 w-48 rounded-full bg-indigo-500/8 blur-[60px] pointer-events-none" />
-
-            {profileLoading ? (
-              <div className="flex items-center gap-3 py-4 text-white/30">
-                <div className="h-3 w-3 animate-spin rounded-full border-2 border-white/10 border-t-white/40" />
-                <span className="text-sm">{t('profile_loading')}</span>
-              </div>
-            ) : profileError ? (
-              <p className="text-sm text-rose-300">{profileError}</p>
-            ) : unauthorized ? (
-              <p className="text-sm text-white/40">{t('profile_login_required')}</p>
-            ) : (
-              <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                {/* Avatar + isim */}
-                <div className="flex items-center gap-4">
-                  <div className="relative shrink-0">
-                    <div className="h-16 w-16 sm:h-20 sm:w-20 overflow-hidden rounded-2xl border border-white/10">
-                      {profile?.avatarUrl ? (
-                        <Image src={profile.avatarUrl} alt="avatar" width={80} height={80} unoptimized className="h-full w-full object-cover" />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center text-white/20 text-2xl font-bold">
-                          {profile?.username?.charAt(0)?.toUpperCase()}
-                        </div>
-                      )}
-                    </div>
-                    <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-emerald-400 border-2 border-[#0b0d12]" />
-                  </div>
-                  <div>
-                    <p className="text-xl sm:text-2xl font-black text-white leading-tight tracking-tight">
-                      {profile?.nickname ?? profile?.displayName ?? profile?.username ?? '—'}
-                    </p>
-                    <p className="text-sm text-white/35 mt-0.5">@{profile?.username}</p>
-                    <div className="mt-2 flex flex-wrap gap-1.5">
-                      {hasTag && (
-                        <span className="flex items-center gap-1 rounded-full border border-indigo-500/25 bg-indigo-500/10 px-2 py-0.5 text-[10px] font-semibold text-indigo-300">
-                          <LuTag className="h-2.5 w-2.5" /> {t('overview_badge_tag')}
-                        </span>
-                      )}
-                      {isBooster && (
-                        <span className="flex items-center gap-1 rounded-full border border-pink-500/25 bg-pink-500/10 px-2 py-0.5 text-[10px] font-semibold text-pink-300">
-                          <LuZap className="h-2.5 w-2.5" /> {t('overview_badge_booster')}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Roller */}
-                <div className="flex flex-wrap gap-2 sm:max-w-[50%] sm:justify-end">
-                  {profile?.roles?.length ? (
-                    profile.roles.map((role: { id: string; name: string; color: number }) => {
-                      const roleColor = formatRoleColor(role.color);
-                      return (
-                        <div
-                          key={role.id}
-                          className="inline-flex items-center gap-2 rounded-full border px-3 py-2 text-[11px] font-semibold text-white/90 shadow-sm transition hover:bg-white/10"
-                          style={{
-                            borderColor: `${roleColor}33`,
-                            backgroundColor: `${roleColor}14`,
-                          }}
-                        >
-                          <span
-                            className="h-2.5 w-2.5 rounded-full shadow-[0_0_0_1px_rgba(255,255,255,0.08)]"
-                            style={{ backgroundColor: roleColor }}
-                          />
-                          <span className="whitespace-nowrap">{role.name}</span>
-                        </div>
-                      );
-                    })
-                  ) : (
-                    <span className="text-xs text-white/25">{t('overview_no_roles')}</span>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-
           {/* İSTATİSTİK KARTLARI */}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {[
@@ -432,6 +352,8 @@ export default function OverviewSection({
               loading={profileLoading}
               joinedAt={overviewStats?.joinedAt ?? null}
               formatRoleColor={formatRoleColor}
+              hasTag={hasTag}
+              isBooster={isBooster}
             />
           </aside>
         </div>
