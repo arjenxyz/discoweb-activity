@@ -378,102 +378,91 @@ export default function WatchEarnSection() {
   const playerOverlay =
     activeTask && portalReady
       ? createPortal(
-          <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/95 p-3 sm:p-4">
-            <div
-              ref={playerShellRef}
-              className={`relative flex w-full flex-col overflow-hidden border border-white/10 bg-black shadow-2xl ${
-                isFullscreen
-                  ? 'h-full max-h-none max-w-none rounded-none'
-                  : 'max-w-4xl rounded-2xl'
-              }`}
-            >
-              <div className="flex shrink-0 items-center gap-3 border-b border-white/10 bg-[#12141c] px-3 py-2.5 sm:px-4">
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-xs font-semibold text-white/80 sm:text-sm">{activeTask.logoText}</p>
-                </div>
-                <div className="rounded-xl border border-white/10 bg-black/40 px-3 py-1.5 text-center">
-                  <p className="text-[9px] font-medium uppercase tracking-wider text-white/35">Kalan</p>
-                  <p className="font-mono text-sm font-bold tabular-nums text-white sm:text-base">
-                    {duration > 0 ? formatRemaining(remaining) : '—:—'}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    void toggleFullscreen();
-                  }}
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
-                  aria-label={isFullscreen ? 'Tam ekrandan çık' : 'Tam ekran'}
-                >
-                  {isFullscreen ? <LuMinimize className="h-5 w-5" /> : <LuMaximize className="h-5 w-5" />}
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    void closePlayer();
-                  }}
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
-                  aria-label="Kapat"
-                >
-                  <LuX className="h-5 w-5" />
-                </button>
+          <div
+            ref={playerShellRef}
+            className="fixed inset-0 z-[10000] flex h-[100dvh] w-full flex-col overflow-hidden bg-black"
+          >
+            <div className="flex shrink-0 items-center gap-3 border-b border-white/10 bg-[#12141c] px-3 py-2.5 sm:px-4">
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-xs font-semibold text-white/80 sm:text-sm">{activeTask.logoText}</p>
               </div>
-
-              <div
-                className={`relative w-full cursor-pointer bg-black ${
-                  isFullscreen ? 'min-h-0 flex-1' : 'aspect-video'
-                }`}
-                onClick={togglePlay}
+              <div className="rounded-xl border border-white/10 bg-black/40 px-3 py-1.5 text-center">
+                <p className="text-[9px] font-medium uppercase tracking-wider text-white/35">Kalan</p>
+                <p className="font-mono text-sm font-bold tabular-nums text-white sm:text-base">
+                  {duration > 0 ? formatRemaining(remaining) : '—:—'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  void toggleFullscreen();
+                }}
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
+                aria-label={isFullscreen ? 'Tam ekrandan çık' : 'Tam ekran'}
               >
-                <video
-                  ref={videoRef}
-                  src={toActivityMediaUrl(activeTask.videoUrl)}
-                  className="h-full w-full bg-black object-contain"
-                  onEnded={() => void handleVideoEnded()}
-                  onLoadedMetadata={(e) => {
-                    setDuration(e.currentTarget.duration || 0);
-                    setCurrentTime(e.currentTarget.currentTime || 0);
-                  }}
-                  onTimeUpdate={(e) => {
-                    setCurrentTime(e.currentTarget.currentTime || 0);
-                    if (!duration && e.currentTarget.duration) {
-                      setDuration(e.currentTarget.duration);
-                    }
-                  }}
-                  onError={() => {
-                    setIsPlaying(false);
-                    showToast('Video yüklenemedi. MP4 /cdn linkini kontrol et.', 'error');
-                  }}
-                  playsInline
-                  preload="auto"
-                  disablePictureInPicture
-                  controlsList="nodownload noplaybackrate noremoteplayback"
-                  onContextMenu={(e) => e.preventDefault()}
-                />
+                {isFullscreen ? <LuMinimize className="h-5 w-5" /> : <LuMaximize className="h-5 w-5" />}
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  void closePlayer();
+                }}
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
+                aria-label="Kapat"
+              >
+                <LuX className="h-5 w-5" />
+              </button>
+            </div>
 
-                {!isPlaying && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 transition-opacity">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#5865F2] pl-1 text-white shadow-2xl shadow-[#5865F2]/40 sm:h-20 sm:w-20 sm:pl-1.5">
-                      <LuPlay className="h-8 w-8 sm:h-10 sm:w-10" />
-                    </div>
+            <div className="relative min-h-0 w-full flex-1 cursor-pointer bg-black" onClick={togglePlay}>
+              <video
+                ref={videoRef}
+                src={toActivityMediaUrl(activeTask.videoUrl)}
+                className="h-full w-full bg-black object-contain"
+                onEnded={() => void handleVideoEnded()}
+                onLoadedMetadata={(e) => {
+                  setDuration(e.currentTarget.duration || 0);
+                  setCurrentTime(e.currentTarget.currentTime || 0);
+                }}
+                onTimeUpdate={(e) => {
+                  setCurrentTime(e.currentTarget.currentTime || 0);
+                  if (!duration && e.currentTarget.duration) {
+                    setDuration(e.currentTarget.duration);
+                  }
+                }}
+                onError={() => {
+                  setIsPlaying(false);
+                  showToast('Video yüklenemedi. MP4 /cdn linkini kontrol et.', 'error');
+                }}
+                playsInline
+                preload="auto"
+                disablePictureInPicture
+                controlsList="nodownload noplaybackrate noremoteplayback"
+                onContextMenu={(e) => e.preventDefault()}
+              />
+
+              {!isPlaying && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/40 transition-opacity">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#5865F2] pl-1 text-white shadow-2xl shadow-[#5865F2]/40 sm:h-20 sm:w-20 sm:pl-1.5">
+                    <LuPlay className="h-8 w-8 sm:h-10 sm:w-10" />
                   </div>
-                )}
-              </div>
+                </div>
+              )}
+            </div>
 
-              <div className="shrink-0 border-t border-white/10 bg-[#12141c] px-3 py-2.5 sm:px-4">
-                <div className="mb-1.5 h-1.5 overflow-hidden rounded-full bg-white/10">
-                  <div
-                    className="h-full rounded-full bg-[#5865F2] transition-[width] duration-200"
-                    style={{ width: `${progress}%` }}
-                  />
-                </div>
-                <div className="flex items-center justify-between text-[11px] text-white/40">
-                  <span className="font-mono tabular-nums">{formatRemaining(currentTime)}</span>
-                  <span>İleri saramazsın</span>
-                  <span className="font-mono tabular-nums">{duration > 0 ? formatRemaining(duration) : '—:—'}</span>
-                </div>
+            <div className="shrink-0 border-t border-white/10 bg-[#12141c] px-3 py-2.5 sm:px-4">
+              <div className="mb-1.5 h-1.5 overflow-hidden rounded-full bg-white/10">
+                <div
+                  className="h-full rounded-full bg-[#5865F2] transition-[width] duration-200"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+              <div className="flex items-center justify-between text-[11px] text-white/40">
+                <span className="font-mono tabular-nums">{formatRemaining(currentTime)}</span>
+                <span>İleri saramazsın</span>
+                <span className="font-mono tabular-nums">{duration > 0 ? formatRemaining(duration) : '—:—'}</span>
               </div>
             </div>
           </div>,
