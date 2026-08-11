@@ -459,75 +459,82 @@ export default function DashboardHeader({
           </span>
         </div>
 
-        {/* Orta — PC navigasyon (eski sidebar) */}
+        {/* Orta — kompakt ikon navigasyon (aktif olan etiketi gösterir) */}
         {!minimalProfileOnly && !unauthorized && (
           <nav
-            className={`ml-4 mr-2 hidden min-w-0 flex-1 items-center justify-center gap-0.5 lg:flex ${profileChromeHidden}`}
+            className={`mx-3 hidden min-w-0 flex-1 items-center justify-center lg:flex ${profileChromeHidden}`}
             aria-label="Main"
           >
-            {NAV_GROUPS.filter((g) => !g.requiresAuth || !unauthorized)
-              .flatMap((g) => g.items)
-              .map((item) => {
-                const active = navigation.activeSection === item.key;
-                const unread =
-                  item.key === 'duyuru'
-                    ? duyuruEveryoneUnreadCount
-                    : item.key === 'mail'
-                      ? mailUnreadCount
-                      : 0;
-                return (
-                  <button
-                    key={item.key}
-                    type="button"
-                    onClick={() => handleNavClick(item.key)}
-                    className={`relative inline-flex max-w-full items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-[12px] font-semibold transition-colors ${
-                      active
-                        ? 'bg-white/[0.1] text-white'
-                        : 'text-white/45 hover:bg-white/[0.05] hover:text-white/85'
-                    }`}
-                  >
-                    <span
-                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg ${
-                        active ? 'bg-[#5865F2]/20 text-[#a5b4fc]' : 'text-white/40'
+            <div className="inline-flex max-w-full items-center gap-0.5 overflow-x-auto rounded-2xl border border-white/[0.06] bg-black/25 p-1 custom-scrollbar">
+              {NAV_GROUPS.filter((g) => !g.requiresAuth || !unauthorized)
+                .flatMap((g) => g.items)
+                .map((item) => {
+                  const active = navigation.activeSection === item.key;
+                  const unread =
+                    item.key === 'duyuru'
+                      ? duyuruEveryoneUnreadCount
+                      : item.key === 'mail'
+                        ? mailUnreadCount
+                        : 0;
+                  return (
+                    <button
+                      key={item.key}
+                      type="button"
+                      title={item.label}
+                      aria-label={item.label}
+                      aria-current={active ? 'page' : undefined}
+                      onClick={() => handleNavClick(item.key)}
+                      className={`relative inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl px-2.5 text-[12px] font-semibold transition-all ${
+                        active
+                          ? 'bg-[#5865F2]/20 text-white shadow-[inset_0_0_0_1px_rgba(88,101,242,0.35)]'
+                          : 'text-white/45 hover:bg-white/[0.06] hover:text-white/90'
                       }`}
                     >
-                      {item.icon}
-                    </span>
-                    <span className="hidden truncate xl:inline">{item.label}</span>
-                    {unread > 0 ? (
-                      <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white">
-                        {unread > 9 ? '9+' : unread}
+                      <span className={`flex h-5 w-5 items-center justify-center ${active ? 'text-[#c7d2fe]' : ''}`}>
+                        {item.icon}
                       </span>
-                    ) : active ? (
-                      <span className="absolute bottom-0.5 left-1/2 h-0.5 w-3 -translate-x-1/2 rounded-full bg-[#5865F2] xl:hidden" />
-                    ) : null}
-                  </button>
-                );
-              })}
+                      {active && <span className="max-w-[7.5rem] truncate pr-0.5">{item.label}</span>}
+                      {unread > 0 && (
+                        <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white ring-2 ring-[#0c0e12]">
+                          {unread > 9 ? '9+' : unread}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+            </div>
           </nav>
         )}
 
         {(minimalProfileOnly || unauthorized) && <div className="flex-1" />}
 
         {/* Sağ — bakiye + profil */}
-        <div className="flex shrink-0 items-center gap-2.5">
+        <div className="flex shrink-0 items-center gap-2">
           {!unauthorized && !minimalProfileOnly && (
-            <div className={`hidden lg:flex items-center gap-2 ${profileChromeHidden}`}>
+            <div className={`hidden lg:flex items-center gap-1.5 ${profileChromeHidden}`}>
               {mariBalance !== undefined && (
-                <div className="flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] px-3 py-1.5 text-sm">
+                <div
+                  title="Mari"
+                  className="flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] px-2.5 py-1.5 text-sm"
+                >
                   <Image src="/Mari.gif" alt="Mari" width={16} height={16} className="h-4 w-4 shrink-0" unoptimized />
                   <span className="font-bold text-white tabular-nums">
-                    {walletLoading ? '—' : mariBalance.toLocaleString('tr-TR', { minimumFractionDigits: 3, maximumFractionDigits: 3 })}
+                    {walletLoading
+                      ? '—'
+                      : mariBalance.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                   </span>
-                  <span className="text-[11px] font-semibold text-[#a5b4ff]/75">Mari</span>
                 </div>
               )}
-              <div className="flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] px-3 py-1.5 text-sm">
+              <div
+                title="Papel"
+                className="flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] px-2.5 py-1.5 text-sm"
+              >
                 <Image src="/papel.gif" alt="Papel" width={16} height={16} className="h-4 w-4 shrink-0" />
                 <span className="font-bold text-white tabular-nums">
-                  {walletLoading ? '—' : walletBalance.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {walletLoading
+                    ? '—'
+                    : walletBalance.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                 </span>
-                <span className="text-[11px] font-semibold text-white/55">Papel</span>
               </div>
             </div>
           )}
@@ -545,6 +552,7 @@ export default function DashboardHeader({
                 type="button"
                 onClick={toggleProfileOpen}
                 className="flex items-center gap-2 rounded-full bg-transparent p-0 transition-opacity hover:opacity-90"
+                title={profile?.name || t('dashboard_user_fallback')}
               >
                 <div
                   className={`h-9 w-9 overflow-hidden rounded-full border transition ${
@@ -559,11 +567,11 @@ export default function DashboardHeader({
                     className="h-full w-full object-cover"
                   />
                 </div>
-                <div className="hidden text-left md:block">
-                  <p className="max-w-[120px] truncate text-sm font-semibold leading-tight text-white">
+                <div className="hidden text-left 2xl:block">
+                  <p className="max-w-[100px] truncate text-sm font-semibold leading-tight text-white">
                     {profile?.name || t('dashboard_user_fallback')}
                   </p>
-                  <p className="max-w-[140px] truncate text-[10px] leading-tight text-[#a5b4ff]/70">
+                  <p className="max-w-[120px] truncate text-[10px] leading-tight text-[#a5b4ff]/70">
                     {server.data?.name || '—'}
                   </p>
                 </div>
