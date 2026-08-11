@@ -51,6 +51,7 @@
   "mail_search_placeholder": "Mesajlarda ara...",
   "mail_storage_label": "Depolama",
   "mail_unread_count": "{total} mesajdan {unread} okunmadı",
+  "mail_header_caught_up": "Hepsi okundu · {total} mesaj",
   "mail_count_badge": "{total} Mesaj",
   "mail_unread_badge": "{count} Okunmamış",
   "mail_select_prompt": "Bir mesaj seçin",

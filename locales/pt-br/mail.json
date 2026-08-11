@@ -48,6 +48,7 @@
   "mail_search_placeholder": "Pesquisar mensagens...",
   "mail_storage_label": "Armazenamento",
   "mail_unread_count": "{unread} não lidas de {total} mensagens",
+  "mail_header_caught_up": "Tudo lido · {total} mensagens",
   "mail_count_badge": "{total} Mensagens",
   "mail_unread_badge": "{count} Não Lidas",
   "mail_select_prompt": "Selecione uma mensagem",

@@ -82,50 +82,74 @@ export default function MailDesktopView({
 }: Props) {
   const t = useT();
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const totalCount = countsTotal.all ?? 0;
+  const unreadCount = countsUnread.all ?? 0;
 
   return (
     <div className="relative hidden h-full min-h-0 w-full flex-col overflow-hidden md:flex">
       {/* Top header */}
-      <div className="relative z-10 flex flex-shrink-0 items-center justify-between gap-4 border-b border-white/[0.06] bg-[#0b0d12]/95 px-6 py-3 backdrop-blur-xl">
-        <div className="flex min-w-0 items-center gap-3">
+      <div className="relative z-10 flex flex-shrink-0 items-center justify-between gap-3 border-b border-white/[0.06] bg-[#0b0d12]/90 px-5 py-3.5 backdrop-blur-xl sm:px-6">
+        <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
           {onBack && (
             <button
               type="button"
               onClick={onBack}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.04] text-white/60 transition hover:border-white/[0.14] hover:bg-white/[0.08] hover:text-white"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white/45 transition hover:bg-white/[0.06] hover:text-white"
               aria-label={t('mail_back_button')}
             >
               <LuChevronLeft className="h-5 w-5" />
             </button>
           )}
+
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-[#5865F2]/25 bg-[#5865F2]/10">
-              <LuMail className="h-[18px] w-[18px] text-[#5865F2]" />
+            <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#5865F2]/12 ring-1 ring-inset ring-[#5865F2]/20">
+              <LuMail className="h-4 w-4 text-[#8ea1ff]" />
+              {!loading && unreadCount > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-[#5865F2] ring-2 ring-[#0b0d12]" />
+              )}
             </div>
+
             <div className="min-w-0">
-              <h2 className="truncate text-base font-bold leading-tight text-white">{t('mail_box_title')}</h2>
-              <p className="mt-0.5 truncate text-xs text-white/40">
+              <div className="flex min-w-0 items-center gap-2">
+                <h2 className="truncate text-[15px] font-semibold tracking-tight text-white">
+                  {t('mail_box_title')}
+                </h2>
+                {!loading && unreadCount > 0 && (
+                  <span className="hidden shrink-0 items-center rounded-md bg-[#5865F2]/15 px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-[#a5b4fc] sm:inline-flex">
+                    {unreadCount}
+                  </span>
+                )}
+              </div>
+              <p className="mt-0.5 truncate text-[11px] leading-none text-white/35">
                 {loading
                   ? t('mail_loading')
-                  : t('mail_unread_count', { total: countsTotal.all ?? 0, unread: countsUnread.all ?? 0 })}
+                  : unreadCount > 0
+                    ? t('mail_unread_count', { total: totalCount, unread: unreadCount })
+                    : t('mail_header_caught_up', { total: totalCount })}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="flex shrink-0 items-center gap-2">
-          {!loading && (countsUnread.all ?? 0) > 0 && (
-            <span className="rounded-full border border-[#5865F2]/30 bg-[#5865F2]/12 px-2.5 py-1 text-[11px] font-semibold text-[#a5b4fc]">
-              {t('mail_unread_badge', { count: countsUnread.all ?? 0 })}
-            </span>
+        <div className="flex shrink-0 items-center gap-1.5">
+          {!loading && unreadCount > 0 && (
+            <button
+              type="button"
+              onClick={onMarkAllRead}
+              className="inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-[11px] font-semibold text-[#a5b4fc] transition hover:bg-[#5865F2]/12 hover:text-white"
+            >
+              <LuCheckCheck className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">{t('mail_mark_all_read')}</span>
+              <span className="sm:hidden">{t('mail_mark_all_read_short')}</span>
+            </button>
           )}
           <button
             type="button"
             onClick={onRefresh}
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.04] text-white/50 transition hover:border-white/[0.14] hover:bg-white/[0.08] hover:text-white"
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-white/40 transition hover:bg-white/[0.06] hover:text-white"
             aria-label={t('mail_refresh_title')}
           >
-            <LuRefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            <LuRefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
           </button>
         </div>
       </div>

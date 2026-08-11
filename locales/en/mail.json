@@ -51,6 +51,7 @@
   "mail_search_placeholder": "Search messages...",
   "mail_storage_label": "Storage",
   "mail_unread_count": "{unread} unread of {total} messages",
+  "mail_header_caught_up": "All caught up · {total} messages",
   "mail_count_badge": "{total} Messages",
   "mail_unread_badge": "{count} Unread",
   "mail_select_prompt": "Select a message",
