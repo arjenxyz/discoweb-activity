@@ -694,8 +694,10 @@ export default function DashboardHeader({
           <button
             type="button"
             onClick={() => { setMobileMenuOpen(o => !o); setIsProfileOpen(false); }}
-            className={`flex flex-1 items-center gap-2.5 rounded-2xl px-3 py-2 transition-all ${
-              mobileMenuOpen ? 'bg-white/10 border border-white/15' : 'bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.08]'
+            className={`flex flex-1 items-center gap-2.5 rounded-2xl border px-3 py-2 backdrop-blur-md transition-all ${
+              mobileMenuOpen
+                ? 'border-white/20 bg-[#0b0d12]/95'
+                : 'border-white/10 bg-[#0b0d12]/90 hover:bg-[#0b0d12]/95'
             }`}
           >
             <div className={`flex h-7 w-7 items-center justify-center rounded-xl transition-colors ${mobileMenuOpen ? 'bg-white/15' : 'bg-white/8'}`}>
@@ -719,8 +721,10 @@ export default function DashboardHeader({
             <button
               type="button"
               onClick={() => { toggleProfileOpen(); setMobileMenuOpen(false); }}
-              className={`flex items-center gap-2 rounded-2xl border px-3 py-2 transition-all ${
-                isProfileOpen ? 'border-white/20 bg-white/10' : 'border-white/[0.06] bg-white/[0.04] hover:bg-white/[0.08]'
+              className={`flex items-center gap-2 rounded-2xl border px-3 py-2 backdrop-blur-md transition-all ${
+                isProfileOpen
+                  ? 'border-white/20 bg-[#0b0d12]/95'
+                  : 'border-white/10 bg-[#0b0d12]/90 hover:bg-[#0b0d12]/95'
               }`}
             >
               <div className="h-7 w-7 overflow-hidden rounded-xl border border-white/15 flex-shrink-0">
