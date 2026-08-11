@@ -1,21 +1,12 @@
 'use client';
 
-import { useEffect, useCallback, useMemo } from 'react';
+import { useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocale, useT } from '@/contexts/LocaleContext';
 import { SUPPORTED_LANGUAGES, type LanguageCode } from '@/lib/languages';
 import LanguageFlag, { LANGUAGE_BG_LABELS } from './LanguageFlags';
 
 type Props = { onClose: () => void };
-
-const FALL_COLUMNS = [
-  { left: '2%', duration: '32s', delay: '0s', size: 'text-base', offset: 0 },
-  { left: '18%', duration: '38s', delay: '-6s', size: 'text-sm', offset: 3 },
-  { left: '34%', duration: '28s', delay: '-12s', size: 'text-lg', offset: 6 },
-  { left: '52%', duration: '36s', delay: '-4s', size: 'text-sm', offset: 1 },
-  { left: '68%', duration: '30s', delay: '-16s', size: 'text-base', offset: 4 },
-  { left: '84%', duration: '40s', delay: '-9s', size: 'text-sm', offset: 8 },
-] as const;
 
 export default function LanguageModal({ onClose }: Props) {
   const t = useT();
@@ -39,8 +30,6 @@ export default function LanguageModal({ onClose }: Props) {
     onClose();
   };
 
-  const labelTexts = useMemo(() => LANGUAGE_BG_LABELS.map((item) => item.text), []);
-
   const content = (
     <div
       className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
@@ -48,36 +37,22 @@ export default function LanguageModal({ onClose }: Props) {
     >
       <div className="absolute inset-0 bg-[#050608]/70 backdrop-blur-2xl" />
 
-      {/* Multilingual falling labels */}
+      {/* One falling label per language */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
-        {FALL_COLUMNS.map((col) => {
-          const rotated = [
-            ...labelTexts.slice(col.offset),
-            ...labelTexts.slice(0, col.offset),
-          ];
-          const loop = [...rotated, ...rotated];
-          return (
-            <div
-              key={col.left}
-              className="lang-fall-column absolute top-0 flex flex-col items-start gap-12 will-change-transform"
-              style={{
-                left: col.left,
-                animationDuration: col.duration,
-                animationDelay: col.delay,
-              }}
-            >
-              {loop.map((text, i) => (
-                <span
-                  key={`${col.left}-${i}`}
-                  className={`select-none whitespace-nowrap font-semibold tracking-wide text-white/30 drop-shadow-[0_2px_12px_rgba(0,0,0,0.45)] ${col.size}`}
-                  style={{ transform: `rotate(${((i % 5) - 2) * 5}deg)` }}
-                >
-                  {text}
-                </span>
-              ))}
-            </div>
-          );
-        })}
+        {LANGUAGE_BG_LABELS.map((item) => (
+          <span
+            key={item.code}
+            className={`lang-drip-label absolute top-0 select-none whitespace-nowrap font-semibold tracking-wide text-white/28 drop-shadow-[0_2px_12px_rgba(0,0,0,0.45)] ${item.size}`}
+            style={{
+              left: item.left,
+              ['--lang-rotate' as string]: `${item.rotate}deg`,
+              animationDuration: item.duration,
+              animationDelay: item.delay,
+            }}
+          >
+            {item.text}
+          </span>
+        ))}
       </div>
 
       <div className="relative flex w-full max-w-[340px] flex-col items-stretch">
