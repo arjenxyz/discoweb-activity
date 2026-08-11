@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import type { PurchaseFeedback, StoreItem } from '../types';
 import {
-  LuStore, LuClock, LuShield, LuInfo,
+  LuStore, LuClock, LuInfo,
   LuSparkles, LuLoader, LuShoppingCart, LuChevronDown, LuChevronUp, LuBadgeCheck
 } from 'react-icons/lu';
 import Image from 'next/image';
@@ -213,13 +213,6 @@ export default function StoreSection({
                             {formatDuration(item.duration_days ?? 0)}
                           </span>
 
-                          {item.role_id && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide bg-violet-500/10 text-violet-400 border border-violet-500/20 backdrop-blur-sm">
-                              <LuShield className="w-3 h-3" />
-                              {t('store_product_role_label')}
-                            </span>
-                          )}
-
                           {item.role_id && ownedRoleIds.includes(item.role_id) && (item.duration_days ?? 0) === 0 && (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide bg-teal-500/20 text-teal-300 border border-teal-500/30 backdrop-blur-sm">
                               <LuBadgeCheck className="w-3 h-3" />
@@ -348,12 +341,6 @@ export default function StoreSection({
                                 <LuClock className="w-2.5 h-2.5" />
                                 {formatDuration(item.duration_days ?? 0)}
                               </span>
-                              {item.role_id && (
-                                <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-violet-400">
-                                  <LuShield className="w-2.5 h-2.5" />
-                                  {t('store_product_role_label')}
-                                </span>
-                              )}
                             </div>
                           </div>
 
