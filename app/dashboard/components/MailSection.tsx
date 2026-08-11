@@ -193,7 +193,7 @@ export default function MailSection({
   };
 
   const handleClaimAll = async () => {
-    const ids = filtered.filter((m) => m.category === 'reward' && !m.is_read).map((m) => m.id);
+    const ids = items.filter((m) => m.category === 'reward' && !m.is_read).map((m) => m.id);
     if (ids.length === 0) return showToast(t('mail_rewards_no_target'), 'error');
     try {
       const res = await fetchWithCreds(apiUrl('/api/mail/claim-rewards'), {
