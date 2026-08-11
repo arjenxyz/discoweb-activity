@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { getSessionUserId, requireSessionUser } from '@/lib/auth';
 import { getSelectedGuildId } from '@/lib/guild';
-import { isLocalDevRequest, getLocalDevMails, markLocalDevMailsRead, deleteLocalDevMails } from '@/lib/localDev';
+import { isLocalDevRequest, getLocalDevMails, markLocalDevMailsRead, deleteLocalDevMails, resetLocalDevMails } from '@/lib/localDev';
 
 type Database = {
   public: {
@@ -96,6 +96,10 @@ const getSupabase = (): SupabaseClient<Database> | null => {
 
 export async function GET(request: NextRequest) {
   if (isLocalDevRequest(request)) {
+    const url = new URL(request.url);
+    if (url.searchParams.get('reset') === '1') {
+      return NextResponse.json(resetLocalDevMails());
+    }
     return NextResponse.json(getLocalDevMails());
   }
 

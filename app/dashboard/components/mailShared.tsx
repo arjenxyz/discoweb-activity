@@ -60,7 +60,16 @@ export const CATEGORY_CONFIG: Record<string, { labelKey: string; icon: React.Rea
   },
 };
 
-export const FIXED_CATEGORIES = ['announcement', 'system', 'update', 'reward', 'order'] as const;
+export const FIXED_CATEGORIES = [
+  'announcement',
+  'system',
+  'update',
+  'reward',
+  'order',
+  'maintenance',
+  'sponsor',
+  'lottery',
+] as const;
 
 export type MailNavItem = {
   key: string;

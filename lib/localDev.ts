@@ -419,9 +419,9 @@ export const localDevNotifications = [
 
 export const localDevMailsSeed = [
   {
-    id: 'mail-1',
+    id: 'mail-system-1',
     title: 'Hoş geldin (örnek)',
-    body: 'Localhost geliştirme ortamına hoş geldin. Discord girişi gerekmez.',
+    body: 'Localhost geliştirme ortamına hoş geldin. Discord girişi gerekmez. Bu bir sistem maili örneğidir.',
     category: 'system',
     status: 'published' as const,
     created_at: nowIso(),
@@ -431,22 +431,9 @@ export const localDevMailsSeed = [
     is_starred: false,
   },
   {
-    id: 'mail-2',
-    title: '50 Papel ödülü (örnek)',
-    body: 'Bu ödül maili localhost UI testleri içindir. Hepsini Al ile talep edebilirsin.',
-    category: 'reward',
-    status: 'published' as const,
-    created_at: new Date(Date.now() - 86_400_000).toISOString(),
-    author_name: 'Bot',
-    author_avatar_url: LOCAL_DEV_AVATAR,
-    is_read: false,
-    is_starred: true,
-    metadata: { reward_amount: 50 },
-  },
-  {
-    id: 'mail-3',
-    title: 'Yeni özellik duyurusu',
-    body: 'Dashboard güncellendi — menü ve modallar yenilendi.',
+    id: 'mail-announcement-1',
+    title: 'Yeni özellik duyurusu (örnek)',
+    body: 'Dashboard güncellendi — menü ve modallar yenilendi. Bu bir duyuru maili örneğidir.',
     category: 'announcement',
     status: 'published' as const,
     created_at: new Date(Date.now() - 3_600_000).toISOString(),
@@ -454,6 +441,94 @@ export const localDevMailsSeed = [
     author_avatar_url: LOCAL_DEV_AVATAR,
     is_read: false,
     is_starred: false,
+  },
+  {
+    id: 'mail-update-1',
+    title: 'Ürün güncellemesi v2.4 (örnek)',
+    body: 'Performans iyileştirmeleri ve hata düzeltmeleri yayınlandı. Bu bir update maili örneğidir.',
+    category: 'update',
+    status: 'published' as const,
+    created_at: new Date(Date.now() - 7_200_000).toISOString(),
+    author_name: 'Ürün Ekibi',
+    author_avatar_url: LOCAL_DEV_AVATAR,
+    is_read: false,
+    is_starred: false,
+  },
+  {
+    id: 'mail-reward-1',
+    title: '50 Papel ödülü (örnek)',
+    body: 'Bu ödül maili localhost UI testleri içindir. Hepsini Al ile talep edebilirsin.',
+    category: 'reward',
+    status: 'published' as const,
+    created_at: new Date(Date.now() - 86_400_000).toISOString(),
+    author_name: 'Ödül Merkezi',
+    author_avatar_url: LOCAL_DEV_AVATAR,
+    is_read: false,
+    is_starred: true,
+    metadata: { reward_amount: 50 },
+  },
+  {
+    id: 'mail-reward-2',
+    title: '100 Papel bonus (örnek)',
+    body: 'İkinci ödül maili — birden fazla claim test etmek için.',
+    category: 'reward',
+    status: 'published' as const,
+    created_at: new Date(Date.now() - 90_000_000).toISOString(),
+    author_name: 'Ödül Merkezi',
+    author_avatar_url: LOCAL_DEV_AVATAR,
+    is_read: false,
+    is_starred: false,
+    metadata: { reward_amount: 100 },
+  },
+  {
+    id: 'mail-order-1',
+    title: 'Sipariş onaylandı (örnek)',
+    body: 'VIP Rolü satın alımın tamamlandı. Sipariş no: #DW-1042. Bu bir sipariş maili örneğidir.',
+    category: 'order',
+    status: 'published' as const,
+    created_at: new Date(Date.now() - 172_800_000).toISOString(),
+    author_name: 'Sipariş Yönetimi',
+    author_avatar_url: LOCAL_DEV_AVATAR,
+    is_read: true,
+    is_starred: false,
+    details_url: 'https://example.com/orders/DW-1042',
+  },
+  {
+    id: 'mail-maintenance-1',
+    title: 'Planlı bakım (örnek)',
+    body: 'Yarın 03:00–04:00 arasında kısa bir bakım yapılacak. Bu bir bakım maili örneğidir.',
+    category: 'maintenance',
+    status: 'published' as const,
+    created_at: new Date(Date.now() - 10_800_000).toISOString(),
+    author_name: 'Bakım Ekibi',
+    author_avatar_url: LOCAL_DEV_AVATAR,
+    is_read: false,
+    is_starred: false,
+  },
+  {
+    id: 'mail-sponsor-1',
+    title: 'Sponsor teklifi (örnek)',
+    body: 'Yeni bir iş ortaklığı duyurusu. Bu bir sponsor maili örneğidir.',
+    category: 'sponsor',
+    status: 'published' as const,
+    created_at: new Date(Date.now() - 14_400_000).toISOString(),
+    author_name: 'İş Ortaklıkları',
+    author_avatar_url: LOCAL_DEV_AVATAR,
+    is_read: false,
+    is_starred: false,
+  },
+  {
+    id: 'mail-lottery-1',
+    title: 'Çekiliş sonucu (örnek)',
+    body: 'Haftalık çekilişte 25 Papel kazandın! Bu bir lottery maili örneğidir.',
+    category: 'lottery',
+    status: 'published' as const,
+    created_at: new Date(Date.now() - 50_400_000).toISOString(),
+    author_name: 'Kampanya Yönetimi',
+    author_avatar_url: LOCAL_DEV_AVATAR,
+    is_read: false,
+    is_starred: false,
+    metadata: { reward_amount: 25 },
   },
 ] as const;
 
@@ -469,12 +544,40 @@ type LocalDevMail = {
   is_read: boolean;
   is_starred: boolean;
   metadata?: { reward_amount?: number };
+  details_url?: string | null;
+  image_url?: string | null;
 };
 
-let localDevMailStore: LocalDevMail[] = localDevMailsSeed.map((m) => ({ ...m }));
+const cloneMailSeed = (): LocalDevMail[] =>
+  localDevMailsSeed.map((m) => ({
+    ...m,
+    metadata: 'metadata' in m && (m as { metadata?: { reward_amount?: number } }).metadata
+      ? { ...(m as { metadata: { reward_amount?: number } }).metadata }
+      : undefined,
+    details_url: 'details_url' in m ? ((m as { details_url?: string }).details_url ?? null) : null,
+  }));
+
+let localDevMailStore: LocalDevMail[] = cloneMailSeed();
+
+export function resetLocalDevMails() {
+  localDevMailStore = cloneMailSeed();
+  return getLocalDevMails();
+}
 
 export function getLocalDevMails(): LocalDevMail[] {
-  return localDevMailStore.map((m) => ({ ...m, metadata: m.metadata ? { ...m.metadata } : undefined }));
+  if (localDevMailStore.length === 0) {
+    localDevMailStore = cloneMailSeed();
+  } else {
+    // Yeni eklenen seed örneklerini mevcut store'a ekle (silinenler geri gelmez)
+    const existing = new Set(localDevMailStore.map((m) => m.id));
+    for (const seed of cloneMailSeed()) {
+      if (!existing.has(seed.id)) localDevMailStore.push(seed);
+    }
+  }
+  return localDevMailStore.map((m) => ({
+    ...m,
+    metadata: m.metadata ? { ...m.metadata } : undefined,
+  }));
 }
 
 export function markLocalDevMailsRead(ids: string[]) {
