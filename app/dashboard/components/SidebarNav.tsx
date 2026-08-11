@@ -2,9 +2,10 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { LuChevronRight, LuHouse, LuMail, LuStore, LuMegaphone, LuCompass, LuShieldCheck, LuTrophy, LuPalette, LuMonitorPlay } from 'react-icons/lu';
+import { LuChevronRight, LuHouse, LuMail, LuStore, LuMegaphone, LuShieldCheck, LuTrophy, LuMonitorPlay } from 'react-icons/lu';
 import type { MemberProfile, Section } from '../types';
 import { useT } from '@/contexts/LocaleContext';
+import { ENABLE_TAG_BADGE_SECTION } from '../featureFlags';
 
 type SidebarNavProps = {
   effectiveSection: Section;
@@ -28,11 +29,9 @@ export default function SidebarNav({
     duyuru:         '/menu-background/varyant6.jpg',
     overview:        '/menu-background/varyant.jpg',
     store:           '/menu-background/varyant2.jpg',
-    discover:        '/menu-background/varyant3.jpg',
     'tag-badge':     '/menu-background/varyant4.jpg',
     mail:            '/menu-background/varyant6.jpg',
     quiz:            '/menu-background/varyant.jpg',
-    'custom-role':   '/menu-background/varyant4.jpg',
     'watch-earn':    '/menu-background/varyant3.jpg',
   };
 
@@ -52,16 +51,16 @@ export default function SidebarNav({
       items: [
         { key: 'overview' as Section, label: t('nav_home'), icon: LuHouse },
         { key: 'store' as Section, label: t('nav_store'), icon: LuStore },
-        { key: 'tag-badge' as Section, label: t('nav_tag_badge'), icon: LuShieldCheck },
+        ...(ENABLE_TAG_BADGE_SECTION
+          ? [{ key: 'tag-badge' as Section, label: t('nav_tag_badge'), icon: LuShieldCheck }]
+          : []),
         { key: 'quiz' as Section, label: t('nav_quiz'), icon: LuTrophy },
-        { key: 'discover' as Section, label: t('nav_community'), icon: LuCompass },
       ],
     },
     {
       label: t('nav_group_account'),
       requiresAuth: true,
       items: [
-        { key: 'custom-role' as Section, label: t('nav_custom_role'), icon: LuPalette },
         { key: 'mail' as Section, label: t('nav_messages'), icon: LuMail },
       ],
     },

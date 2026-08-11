@@ -32,6 +32,7 @@ import { useRealtimeDashboard } from '@/lib/utils/useRealtimeDashboard';
 import { useT } from '@/contexts/LocaleContext';
 import { getDiscordSdk } from '@/lib/discordSdk';
 import DuyuruPage from './duyuru/page';
+import { ENABLE_TAG_BADGE_SECTION } from './featureFlags';
 import type {
   MemberProfile,
   Notification,
@@ -306,7 +307,9 @@ export default function DashboardPage() {
 
   const effectiveSection = unauthorized && activeSection !== 'store'
     ? 'overview'
-    : activeSection;
+    : !ENABLE_TAG_BADGE_SECTION && activeSection === 'tag-badge'
+      ? 'overview'
+      : activeSection;
 
   useEffect(() => {
     if (effectiveSection !== 'quiz') setQuizImmersive(false);
@@ -1495,7 +1498,7 @@ export default function DashboardPage() {
                   claimResult={claimResult}
                   onClaim={claimEarnings}
                   badgeInfo={badgeInfo}
-                  onNavigateToPrivileges={() => setActiveSection('tag-badge')}
+                  onNavigateToPrivileges={ENABLE_TAG_BADGE_SECTION ? () => setActiveSection('tag-badge') : undefined}
                 />
                 
               </>
@@ -1580,7 +1583,7 @@ export default function DashboardPage() {
               />
             )}
 
-            {effectiveSection === 'tag-badge' && !isSiteMaintenance && (
+            {ENABLE_TAG_BADGE_SECTION && effectiveSection === 'tag-badge' && !isSiteMaintenance && (
               <TagBadgeSection
                 badgeInfo={badgeInfo}
                 loading={!badgeInfo && !unauthorized}

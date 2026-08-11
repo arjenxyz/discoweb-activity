@@ -10,6 +10,7 @@ import DiscordAgreementButton from '@/components/DiscordAgreementButton';
 import type { Notification, Section } from '../types';
 import type { JSX, RefObject } from 'react';
 import { useT } from '@/contexts/LocaleContext';
+import { ENABLE_TAG_BADGE_SECTION } from '../featureFlags';
 import SupportMenu from './SupportMenu';
 import ServerTimeClock from './ServerTimeClock';
 
@@ -233,7 +234,9 @@ export default function DashboardHeader({
       items: [
         { key: 'overview', label: t('nav_home'), icon: <LuHouse className="h-4 w-4" /> },
         { key: 'store', label: t('nav_store'), icon: <LuStore className="h-4 w-4" /> },
-        { key: 'tag-badge', label: t('nav_tag_badge'), icon: <LuShieldCheck className="h-4 w-4" /> },
+        ...(ENABLE_TAG_BADGE_SECTION
+          ? [{ key: 'tag-badge' as Section, label: t('nav_tag_badge'), icon: <LuShieldCheck className="h-4 w-4" /> }]
+          : []),
         { key: 'quiz', label: t('nav_quiz'), icon: <LuTrophy className="h-4 w-4" /> },
       ],
     },
