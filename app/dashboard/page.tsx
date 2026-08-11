@@ -1341,12 +1341,10 @@ export default function DashboardPage() {
     await refreshStoreItems(storePage + 1, true);
   };
 
-  const FULL_WIDTH_SECTIONS = ['mail', 'store', 'settings', 'duyuru', 'quiz'];
-  const mainWrapperClass = FULL_WIDTH_SECTIONS.includes(effectiveSection)
-    ? (effectiveSection === 'store' && !isActivityEmbed)
-      ? 'w-full max-w-4xl px-0 sm:px-6'
-      : 'mx-0 w-full max-w-full px-0'
-    : 'w-full max-w-4xl px-4 sm:px-6';
+  const mainWrapperClass =
+    effectiveSection === 'mail' || (effectiveSection === 'quiz' && quizImmersive)
+      ? 'mx-0 w-full max-w-full px-0'
+      : 'w-full max-w-full px-4 sm:px-6';
   // Mail is full-screen on mobile (no bottom nav); avoid extra bottom padding gap.
   const mainSpacingClass = effectiveSection === 'mail'
     ? 'py-0 gap-0 pb-0'
