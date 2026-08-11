@@ -109,17 +109,61 @@ const addLedger = async (
   });
 };
 
-const insertNotification = async (supabase: SupabaseClient, userId: string, guildId: string, title: string, body: string) => {
-  await (supabase.from('notifications') as unknown as {
-    insert: (values: Record<string, unknown>) => Promise<unknown>;
-  }).insert({
-    guild_id: guildId,
-    title,
-    body,
-    type: 'mail',
-    status: 'published',
-    target_user_id: userId,
-  });
+const MAX_NOTE_LENGTH = 200;
+
+const sanitizeNote = (raw: unknown): string | null => {
+  if (typeof raw !== 'string') return null;
+  const trimmed = raw.trim().replace(/\s+/g, ' ');
+  if (!trimmed) return null;
+  return trimmed.slice(0, MAX_NOTE_LENGTH);
+};
+
+/** Mail kutusu system_mails okur; notifications yalnızca zil için. */
+const notifyTransferReceived = async (
+  supabase: SupabaseClient,
+  params: {
+    recipientId: string;
+    guildId: string;
+    amount: number;
+    senderLabel: string;
+    note: string | null;
+  },
+) => {
+  const { recipientId, guildId, amount, senderLabel, note } = params;
+  const title = 'Papel transferi aldınız';
+  const lines = [
+    `Size ${amount} Papel gönderildi.`,
+    `Gönderen: ${senderLabel}`,
+  ];
+  if (note) {
+    lines.push('', `Açıklama: ${note}`);
+  }
+  const body = lines.join('\n');
+
+  await Promise.all([
+    supabase.from('system_mails').insert({
+      guild_id: guildId,
+      user_id: recipientId,
+      title,
+      body,
+      category: 'system',
+      status: 'published',
+      author_name: senderLabel,
+      metadata: {
+        kind: 'transfer',
+        amount,
+        note,
+      },
+    }),
+    supabase.from('notifications').insert({
+      guild_id: guildId,
+      title,
+      body,
+      type: 'mail',
+      status: 'published',
+      target_user_id: recipientId,
+    }),
+  ]);
 };
 
 export async function POST(request: Request) {
@@ -144,7 +188,7 @@ export async function POST(request: Request) {
 
   const selectedGuildId = await getSelectedGuildId();
 
-  const payload = (await request.json()) as { recipientId?: string; amount?: number };
+  const payload = (await request.json()) as { recipientId?: string; amount?: number; note?: string };
   if (!payload.recipientId || typeof payload.amount !== 'number') {
     return NextResponse.json({ error: 'invalid_payload' }, { status: 400 });
   }
@@ -152,6 +196,8 @@ export async function POST(request: Request) {
   if (payload.amount <= 0) {
     return NextResponse.json({ error: 'invalid_amount' }, { status: 400 });
   }
+
+  const note = sanitizeNote(payload.note);
 
   if (payload.recipientId === userId) {
     return NextResponse.json({ error: 'self_transfer' }, { status: 400 });
@@ -223,10 +269,14 @@ export async function POST(request: Request) {
   const newSenderBalance = Number((senderBalance.balance - totalDebit).toFixed(2));
   const newReceiverBalance = Number((receiverBalance.balance + payload.amount).toFixed(2));
 
+  const mailGuildId = selectedGuildId ?? senderBalance.guildId;
+  const senderLabel = await getSenderLabel(userId, mailGuildId);
+
   await setPapelBalance(supabase, userId, senderBalance.guildId, newSenderBalance);
   await addLedger(supabase, userId, senderBalance.guildId, payload.amount, 'transfer_out', newSenderBalance, {
     recipientId: payload.recipientId,
     tax: taxAmount,
+    note,
   });
   if (taxAmount > 0) {
     await addLedger(supabase, userId, senderBalance.guildId, taxAmount, 'transfer_tax', newSenderBalance, {
@@ -237,15 +287,16 @@ export async function POST(request: Request) {
   await setPapelBalance(supabase, payload.recipientId, receiverBalance.guildId, newReceiverBalance);
   await addLedger(supabase, payload.recipientId, receiverBalance.guildId, payload.amount, 'transfer_in', newReceiverBalance, {
     senderId: userId,
+    note,
   });
 
-  await insertNotification(
-    supabase,
-    payload.recipientId,
-    selectedGuildId ?? server.id,
-    'Papel transferi aldınız',
-    `Size ${payload.amount} papel gönderildi. Gönderen: ${await getSenderLabel(userId, selectedGuildId ?? '')}`,
-  );
+  await notifyTransferReceived(supabase, {
+    recipientId: payload.recipientId,
+    guildId: mailGuildId,
+    amount: payload.amount,
+    senderLabel,
+    note,
+  });
 
   return NextResponse.json({
     status: 'ok',

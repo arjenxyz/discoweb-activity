@@ -189,6 +189,39 @@ export async function redeemPromoCode(params: {
     metadata: { promoId: promotion.id, code: promotion.code },
   });
 
+  const promoTitle = 'Promosyon kodu kullanıldı';
+  const promoBody = [
+    `${promotion.code} kodu başarıyla kullanıldı.`,
+    `${packageAmount} Papel hesabınıza eklendi.`,
+    `Yeni bakiye: ${newBalance} Papel`,
+  ].join('\n');
+
+  await Promise.all([
+    supabase.from('system_mails').insert({
+      guild_id: guildId,
+      user_id: userId,
+      title: promoTitle,
+      body: promoBody,
+      category: 'system',
+      status: 'published',
+      author_name: 'DiscoWeb',
+      metadata: {
+        kind: 'promotion',
+        promoId: promotion.id,
+        code: promotion.code,
+        amount: packageAmount,
+      },
+    }),
+    supabase.from('notifications').insert({
+      guild_id: guildId,
+      title: promoTitle,
+      body: promoBody,
+      type: 'mail',
+      status: 'published',
+      target_user_id: userId,
+    }),
+  ]);
+
   if (request) {
     await logWebEvent(request, {
       event: 'promo_redeem',

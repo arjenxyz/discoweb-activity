@@ -184,6 +184,7 @@ export default function DashboardPage() {
   const [transferModalOpen, setTransferModalOpen] = useState(false);
   const [transferRecipientId, setTransferRecipientId] = useState('');
   const [transferAmount, setTransferAmount] = useState('');
+  const [transferNote, setTransferNote] = useState('');
   const [transferLoading, setTransferLoading] = useState(false);
   const [transferError, setTransferError] = useState<string | null>(null);
   const [transferSuccess, setTransferSuccess] = useState<string | null>(null);
@@ -1033,7 +1034,11 @@ export default function DashboardPage() {
     const response = await fetchWithCreds('/api/member/transfer', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ recipientId: trimmedRecipient, amount: amountValue }),
+      body: JSON.stringify({
+        recipientId: trimmedRecipient,
+        amount: amountValue,
+        note: transferNote.trim() || undefined,
+      }),
     });
     const data = (await response.json().catch(() => ({}))) as {
       error?: string;
@@ -1071,6 +1076,7 @@ export default function DashboardPage() {
     setTransferSuccess(t('transfer_success', { amount: Number(data.taxAmount ?? 0).toFixed(2) }));
     setTransferRecipientId('');
     setTransferAmount('');
+    setTransferNote('');
     setTransferLoading(false);
     setTransferConfirmOpen(false);
     // Bakiye güncellemesi için yeniden yükle
@@ -1173,6 +1179,7 @@ export default function DashboardPage() {
     setTransferConfirmOpen(false);
     setTransferRecipientProfile(null);
     setTransferRecipientStatus('idle');
+    setTransferNote('');
   }, []);
 
   const handleCloseNotificationsModal = useCallback(() => {
@@ -1680,6 +1687,7 @@ export default function DashboardPage() {
         open={transferModalOpen}
         recipientId={transferRecipientId}
         amount={transferAmount}
+        note={transferNote}
         loading={transferLoading}
         error={transferError}
         success={transferSuccess}
@@ -1688,6 +1696,7 @@ export default function DashboardPage() {
         recipientStatus={transferRecipientStatus}
         onRecipientChange={setTransferRecipientId}
         onAmountChange={setTransferAmount}
+        onNoteChange={setTransferNote}
         onClose={handleCloseTransferModal}
         onSubmit={handleTransfer}
       />
@@ -1700,6 +1709,7 @@ export default function DashboardPage() {
           amount={moneyFormatter.format(Number(transferAmount || 0))}
           taxAmount={moneyFormatter.format(Number((Number(transferAmount || 0) * transferTaxRate).toFixed(2)))}
           totalDebit={moneyFormatter.format(Number((Number(transferAmount || 0) * (1 + transferTaxRate)).toFixed(2)))}
+          note={transferNote}
           onClose={() => setTransferConfirmOpen(false)}
           onConfirm={handleConfirmTransfer}
         />

@@ -16,6 +16,7 @@ type TransferModalProps = {
   open: boolean;
   recipientId: string;
   amount: string;
+  note: string;
   loading: boolean;
   error: string | null;
   success: string | null;
@@ -24,6 +25,7 @@ type TransferModalProps = {
   recipientStatus?: 'idle' | 'loading' | 'ready' | 'not_found' | 'error';
   onRecipientChange: (value: string) => void;
   onAmountChange: (value: string) => void;
+  onNoteChange: (value: string) => void;
   onClose: () => void;
   onSubmit: () => void;
 };
@@ -36,6 +38,7 @@ type TransferConfirmModalProps = {
   amount: string;
   taxAmount: string;
   totalDebit: string;
+  note: string;
   onClose: () => void;
   onConfirm: () => void;
 };
@@ -91,6 +94,7 @@ export default function TransferModal({
   open,
   recipientId,
   amount,
+  note,
   loading,
   error,
   success,
@@ -99,6 +103,7 @@ export default function TransferModal({
   recipientStatus = 'idle',
   onRecipientChange,
   onAmountChange,
+  onNoteChange,
   onClose,
   onSubmit,
 }: TransferModalProps) {
@@ -112,6 +117,8 @@ export default function TransferModal({
   const taxAmount = hasAmount ? Number((amountValue * taxRate).toFixed(2)) : 0;
   const totalDebit = hasAmount ? Number((amountValue + taxAmount).toFixed(2)) : 0;
   const taxPercent = Number((taxRate * 100).toFixed(2));
+  const noteLen = note.length;
+  const noteMax = 200;
 
   return createPortal(
     <div className={OVERLAY_CLASS} aria-hidden={!open}>
@@ -170,6 +177,24 @@ export default function TransferModal({
             />
           </div>
 
+          <div>
+            <label htmlFor="transfer-note" className={LABEL_CLASS}>
+              {t('transfer_note_label')}
+            </label>
+            <textarea
+              id="transfer-note"
+              value={note}
+              onChange={(event) => onNoteChange(event.target.value.slice(0, noteMax))}
+              placeholder={t('transfer_note_placeholder')}
+              rows={2}
+              maxLength={noteMax}
+              className={`${INPUT_CLASS} resize-none`}
+            />
+            <p className="mt-1 text-[10px] text-white/30">
+              {t('transfer_note_hint', { count: noteLen, max: noteMax })}
+            </p>
+          </div>
+
           {taxRate > 0 ? (
             <p className="text-xs text-white/45">
               {hasAmount
@@ -219,6 +244,7 @@ export function TransferConfirmModal({
   amount,
   taxAmount,
   totalDebit,
+  note,
   onClose,
   onConfirm,
 }: TransferConfirmModalProps) {
@@ -226,6 +252,8 @@ export function TransferConfirmModal({
   useModalEffects(open, onClose);
 
   if (!open) return null;
+
+  const trimmedNote = note.trim();
 
   return createPortal(
     <div className={OVERLAY_CLASS} aria-hidden={!open}>
@@ -251,6 +279,9 @@ export function TransferConfirmModal({
             <p>{t('transfer_confirm_amount', { amount })}</p>
             <p>{t('transfer_confirm_tax', { amount: taxAmount })}</p>
             <p className="font-medium text-white">{t('transfer_confirm_total_debit', { amount: totalDebit })}</p>
+            {trimmedNote ? (
+              <p className="pt-1 text-white/60">{t('transfer_confirm_note', { note: trimmedNote })}</p>
+            ) : null}
           </div>
 
           {error && <p className="text-xs text-rose-300">{error}</p>}
