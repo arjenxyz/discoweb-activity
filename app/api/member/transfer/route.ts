@@ -21,10 +21,21 @@ const getSupabase = (): SupabaseClient | null => {
   return createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
 };
 
-const getSenderLabel = async (userId: string, guildId: string) => {
+const defaultAvatarUrl = (userId: string) => {
+  const n = Number(userId.replace(/\D/g, '').slice(-2) || '0');
+  return `https://cdn.discordapp.com/embed/avatars/${n % 5}.png`;
+};
+
+const getSenderProfile = async (userId: string, guildId: string) => {
+  const fallback = {
+    label: userId,
+    username: userId,
+    avatarUrl: defaultAvatarUrl(userId),
+  };
+
   const botToken = process.env.DISCORD_BOT_TOKEN;
   if (!botToken) {
-    return userId;
+    return fallback;
   }
 
   const response = await fetch(`https://discord.com/api/guilds/${guildId}/members/${userId}`, {
@@ -32,11 +43,21 @@ const getSenderLabel = async (userId: string, guildId: string) => {
   });
 
   if (!response.ok) {
-    return userId;
+    return fallback;
   }
 
-  const member = (await response.json()) as { nick?: string; user?: { username?: string } };
-  return member.nick ?? member.user?.username ?? userId;
+  const member = (await response.json()) as {
+    nick?: string | null;
+    user?: { id?: string; username?: string; avatar?: string | null; global_name?: string | null };
+  };
+  const username = member.user?.username ?? userId;
+  const label = member.nick ?? member.user?.global_name ?? username;
+  const avatarHash = member.user?.avatar;
+  const avatarUrl = avatarHash
+    ? `https://cdn.discordapp.com/avatars/${userId}/${avatarHash}.png?size=128`
+    : defaultAvatarUrl(userId);
+
+  return { label, username, avatarUrl };
 };
 
 const ensureRecipientInGuild = async (guildId: string | null, userId: string) => {
@@ -125,11 +146,23 @@ const notifyTransferReceived = async (
     recipientId: string;
     guildId: string;
     amount: number;
+    senderId: string;
     senderLabel: string;
+    senderUsername: string;
+    senderAvatarUrl: string;
     note: string | null;
   },
 ) => {
-  const { recipientId, guildId, amount, senderLabel, note } = params;
+  const {
+    recipientId,
+    guildId,
+    amount,
+    senderId,
+    senderLabel,
+    senderUsername,
+    senderAvatarUrl,
+    note,
+  } = params;
   const title = 'Papel transferi aldınız';
   const lines = [
     `Size ${amount} Papel gönderildi.`,
@@ -149,10 +182,14 @@ const notifyTransferReceived = async (
       category: 'system',
       status: 'published',
       author_name: senderLabel,
+      author_avatar_url: senderAvatarUrl,
       metadata: {
         kind: 'transfer',
         amount,
         note,
+        senderId,
+        senderUsername,
+        senderAvatarUrl,
       },
     }),
     supabase.from('notifications').insert({
@@ -270,7 +307,7 @@ export async function POST(request: Request) {
   const newReceiverBalance = Number((receiverBalance.balance + payload.amount).toFixed(2));
 
   const mailGuildId = selectedGuildId ?? senderBalance.guildId;
-  const senderLabel = await getSenderLabel(userId, mailGuildId);
+  const senderProfile = await getSenderProfile(userId, mailGuildId);
 
   await setPapelBalance(supabase, userId, senderBalance.guildId, newSenderBalance);
   await addLedger(supabase, userId, senderBalance.guildId, payload.amount, 'transfer_out', newSenderBalance, {
@@ -294,7 +331,10 @@ export async function POST(request: Request) {
     recipientId: payload.recipientId,
     guildId: mailGuildId,
     amount: payload.amount,
-    senderLabel,
+    senderId: userId,
+    senderLabel: senderProfile.label,
+    senderUsername: senderProfile.username,
+    senderAvatarUrl: senderProfile.avatarUrl,
     note,
   });
 

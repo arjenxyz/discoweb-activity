@@ -210,6 +210,7 @@ export async function redeemPromoCode(params: {
         promoId: promotion.id,
         code: promotion.code,
         amount: packageAmount,
+        balanceAfter: newBalance,
       },
     }),
     supabase.from('notifications').insert({

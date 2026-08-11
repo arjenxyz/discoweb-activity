@@ -17,6 +17,7 @@ import {
   LuGift,
   LuLoader,
 } from 'react-icons/lu';
+import MailTransactionReceipt, { parseMailTransaction } from './MailTransactionReceipt';
 
 /* ─── Kategori → Gönderici Bilgisi ─── */
 type SenderConfig = { nameKey: string; avatar: string; verified: boolean };
@@ -131,6 +132,7 @@ export default function MailDetailModal({
   const categoryColor = CATEGORY_COLORS[mail.category] ?? CATEGORY_COLORS.system;
   const categoryLabelKey = CATEGORY_LABEL_KEYS[mail.category];
   const categoryLabel = categoryLabelKey ? t(categoryLabelKey) : mail.category;
+  const txn = parseMailTransaction(mail);
 
   const formatDate = (date: string) => {
     const d = new Date(date);
@@ -157,6 +159,15 @@ export default function MailDetailModal({
       </div>
     );
   };
+
+  const transferSenderAvatar =
+    txn?.kind === 'transfer'
+      ? txn.data.senderAvatarUrl ?? mail.author_avatar_url
+      : mail.author_avatar_url;
+  const transferSenderName =
+    txn?.kind === 'transfer'
+      ? txn.data.senderUsername ?? mail.author_name ?? senderName
+      : mail.author_name ?? senderName;
 
   const panelInner = (
     <div
@@ -225,10 +236,10 @@ export default function MailDetailModal({
         <div className="px-5 py-6 sm:px-8">
           <div className="mb-5 flex items-start justify-between gap-3">
             <div className="flex items-center gap-3">
-              {mail.author_avatar_url ? (
-                <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-xl bg-white/[0.06]">
+              {transferSenderAvatar ? (
+                <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-full border border-white/10 bg-white/[0.06]">
                   <Image
-                    src={mail.author_avatar_url}
+                    src={transferSenderAvatar}
                     alt="avatar"
                     width={40}
                     height={40}
@@ -238,15 +249,15 @@ export default function MailDetailModal({
                 </div>
               ) : (
                 <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-[#5865F2]/15 text-lg">
-                  {senderCfg.avatar}
+                  {txn?.kind === 'promotion' ? '🎁' : senderCfg.avatar}
                 </div>
               )}
               <div>
                 <div className="flex items-center gap-1.5">
                   <span className="text-sm font-semibold text-white">
-                    {mail.author_name ?? senderName}
+                    {txn?.kind === 'promotion' ? 'DiscoWeb' : transferSenderName}
                   </span>
-                  {senderCfg.verified && (
+                  {(txn?.kind === 'promotion' || senderCfg.verified) && (
                     <LuShield className="h-3.5 w-3.5 text-[#5865F2]" title={t('mail_detail_verified_tooltip')} />
                   )}
                 </div>
@@ -281,7 +292,11 @@ export default function MailDetailModal({
           )}
 
           <div className="mb-6">
-            {renderEmailBody(mail.body ?? '')}
+            {txn ? (
+              <MailTransactionReceipt mail={mail} txn={txn} t={t} />
+            ) : (
+              renderEmailBody(mail.body ?? '')
+            )}
           </div>
 
           {mail.category === 'reward' && onClaim && (
