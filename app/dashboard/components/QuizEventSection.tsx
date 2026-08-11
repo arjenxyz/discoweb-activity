@@ -342,7 +342,7 @@ export default function QuizEventSection({
       className={`relative flex w-full flex-1 flex-col ${quizHub ? 'min-h-0 gap-2 px-0 py-0' : 'gap-3 px-4 py-4 sm:px-5 sm:py-5'}`}
     >
       {quizHub && profileMenu && (
-        <div className="pointer-events-none absolute inset-x-0 top-0 z-30 flex justify-end p-4 pt-[max(1rem,env(safe-area-inset-top))] sm:p-5">
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-30 flex justify-end p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:p-5">
           <div className="pointer-events-auto">
             <QuizProfileMenu {...profileMenu} />
           </div>

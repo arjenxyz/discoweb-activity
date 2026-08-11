@@ -62,7 +62,7 @@ export function QuizProfileMenu({
 
         <div
           onClick={(e) => e.stopPropagation()}
-          className={`absolute right-0 top-11 w-[min(300px,calc(100vw-2rem))] origin-top-right transition-all duration-300 ${
+          className={`absolute bottom-11 right-0 w-[min(300px,calc(100vw-2rem))] origin-bottom-right transition-all duration-300 ${
             open ? 'visible scale-100 opacity-100' : 'invisible scale-95 opacity-0'
           }`}
         >
