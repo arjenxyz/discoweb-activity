@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { requireSessionUser } from '@/lib/auth';
 import { getSelectedGuildId } from '@/lib/guild';
+import { checkMaintenance } from '@/lib/maintenance';
 
 const getSupabase = () => {
   const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -14,6 +15,14 @@ const getSupabase = () => {
 
 export async function POST(request: Request) {
   try {
+    const maintenance = await checkMaintenance(['site', 'discounts', 'store']);
+    if (maintenance.blocked) {
+      return NextResponse.json(
+        { error: 'maintenance', key: maintenance.key, reason: maintenance.reason },
+        { status: 503 },
+      );
+    }
+
     const session = await requireSessionUser(request);
     if (!session.ok) {
       return session.response;

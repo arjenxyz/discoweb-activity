@@ -1,5 +1,6 @@
 ﻿import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
+/** Global (platform-wide) maintenance modules — not per Discord server. */
 export const MAINTENANCE_KEYS = [
   'site',
   'store',
@@ -10,12 +11,11 @@ export const MAINTENANCE_KEYS = [
   'transfers',
   'bot',
   'activity',
-  'borsa',
 ] as const;
 
 export type MaintenanceKey = (typeof MAINTENANCE_KEYS)[number];
 
-type MaintenanceFlag = {
+export type MaintenanceFlag = {
   key: MaintenanceKey;
   is_active: boolean;
   reason: string | null;
@@ -23,7 +23,7 @@ type MaintenanceFlag = {
   updated_at: string | null;
 };
 
-type MaintenanceMap = Record<MaintenanceKey, MaintenanceFlag>;
+export type MaintenanceMap = Record<MaintenanceKey, MaintenanceFlag>;
 
 const getSupabase = (): SupabaseClient | null => {
   const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -42,28 +42,21 @@ export const createDefaultFlags = (): MaintenanceMap =>
     return acc;
   }, {} as MaintenanceMap);
 
-export const getMaintenanceFlags = async (guildId?: string) => {
+/** Global flags for the whole platform. `guildId` is ignored (kept for call-site compat). */
+export const getMaintenanceFlags = async (_guildId?: string) => {
   const supabase = getSupabase();
   if (!supabase) {
     return null;
   }
 
-  const targetGuildId = guildId || process.env.DISCORD_GUILD_ID || '1465698764453838882';
+  const { data, error } = await supabase
+    .from('global_maintenance_flags')
+    .select('key,is_active,reason,updated_by,updated_at');
 
-  const { data: server } = await supabase
-    .from('servers')
-    .select('id')
-    .eq('discord_id', targetGuildId)
-    .maybeSingle();
-
-  if (!server) {
+  if (error) {
+    console.error('[maintenance] getMaintenanceFlags', error.message);
     return null;
   }
-
-  const { data } = await supabase
-    .from('maintenance_flags')
-    .select('key,is_active,reason,updated_by,updated_at')
-    .eq('server_id', server.id);
 
   const flags = createDefaultFlags();
 
@@ -79,10 +72,9 @@ export const getMaintenanceFlags = async (guildId?: string) => {
     }
   });
 
-  return { flags, serverId: server.id };
+  return { flags, serverId: null as string | null };
 };
 
-// Global freeze / read-only kontrolü (app_config tablosundan)
 export const checkGlobalFreeze = async (): Promise<{ frozen: boolean; readOnly: boolean }> => {
   const supabase = getSupabase();
   if (!supabase) return { frozen: false, readOnly: false };
@@ -93,7 +85,9 @@ export const checkGlobalFreeze = async (): Promise<{ frozen: boolean; readOnly: 
     .in('key', ['global_freeze', 'read_only_mode']);
 
   const map: Record<string, string> = {};
-  (data ?? []).forEach((row) => { map[row.key] = row.value; });
+  (data ?? []).forEach((row) => {
+    map[row.key] = row.value;
+  });
 
   return {
     frozen: map['global_freeze'] === 'true',

@@ -1301,6 +1301,7 @@ export default function DashboardPage() {
           already_used: t('promo_error_already_used'),
           profile_not_found: t('promo_error_profile_not_found'),
           wallet_update_failed: t('promo_error_wallet_failed'),
+          maintenance: t('purchase_error_maintenance'),
         };
         setPromoError(errorMap[data.error ?? ''] ?? t('promo_error_generic'));
       } else {
@@ -1766,6 +1767,14 @@ export default function DashboardPage() {
         loading={promoLoading}
         error={promoError}
         success={promoSuccess}
+        maintenance={
+          maintenanceFlags?.promotions?.is_active || isSiteMaintenance
+            ? {
+                is_active: true,
+                reason: maintenanceFlags?.promotions?.reason ?? siteReason ?? null,
+              }
+            : null
+        }
       />
 
       <DiscountsModal
@@ -1783,6 +1792,9 @@ export default function DashboardPage() {
             });
             const data = await res.json() as { success?: boolean; error?: string };
             if (!res.ok) {
+              if (data.error === 'maintenance') {
+                setDiscountError(t('purchase_error_maintenance'));
+              } else {
               const errorMap: Record<string, string> = {
                 wrong_server: t('discount_error_wrong_server'),
                 invalid_code: t('discount_error_invalid_code'),
@@ -1791,6 +1803,7 @@ export default function DashboardPage() {
                 item_not_found: t('discount_error_item_not_found'),
               };
               setDiscountError(errorMap[data.error ?? ''] ?? t('discount_error_generic'));
+              }
             } else {
               setDiscountSuccess(t('coupon_applied_success'));
               setTimeout(() => { setDiscountSuccess(null); setDiscountsModalOpen(false); }, 2000);
@@ -1803,6 +1816,14 @@ export default function DashboardPage() {
         loading={discountLoading}
         error={discountError}
         success={discountSuccess}
+        maintenance={
+          maintenanceFlags?.discounts?.is_active || isSiteMaintenance
+            ? {
+                is_active: true,
+                reason: maintenanceFlags?.discounts?.reason ?? siteReason ?? null,
+              }
+            : null
+        }
       />
       </div>
     </div>

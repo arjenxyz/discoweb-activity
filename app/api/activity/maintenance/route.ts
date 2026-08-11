@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseServiceClient } from '@/lib/supabaseServiceClient';
 import { requireSessionUser } from '@/lib/auth';
+import { getMaintenanceFlags } from '@/lib/maintenance';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,40 +17,32 @@ async function isDeveloper(userId: string): Promise<boolean> {
       headers: { Authorization: `Bot ${botToken}` },
     });
     if (!res.ok) return false;
-    const member = await res.json() as { roles?: string[] };
+    const member = (await res.json()) as { roles?: string[] };
     return Array.isArray(member.roles) && member.roles.includes(DEV_ROLE_ID);
   } catch {
     return false;
   }
 }
 
-// server_id: web projesindeki servers tablosundan DEV_GUILD_ID'ye karşılık gelen id
-// Basit çözüm: servers tablosundan discord_id ile çek
-async function getServerId(supabase: ReturnType<typeof getSupabaseServiceClient>): Promise<string | null> {
-  if (!supabase || !DEV_GUILD_ID) return null;
-  const { data } = await supabase
-    .from('servers')
-    .select('id')
-    .eq('discord_id', DEV_GUILD_ID)
-    .single();
-  return data?.id ?? null;
-}
-
+/** Global activity + bot maintenance status for Discord bot / Activity clients. */
 export async function GET() {
-  const supabase = getSupabaseServiceClient();
-  if (!supabase) return NextResponse.json({ maintenance: false });
+  const data = await getMaintenanceFlags();
+  const activity = Boolean(data?.flags.activity?.is_active);
+  const bot = Boolean(data?.flags.bot?.is_active);
+  const site = Boolean(data?.flags.site?.is_active);
 
-  const serverId = await getServerId(supabase);
-  if (!serverId) return NextResponse.json({ maintenance: false });
-
-  const { data } = await supabase
-    .from('maintenance_flags')
-    .select('is_active')
-    .eq('server_id', serverId)
-    .eq('key', 'activity')
-    .single();
-
-  return NextResponse.json({ maintenance: data?.is_active === true });
+  return NextResponse.json({
+    scope: 'global',
+    maintenance: activity || site,
+    activity,
+    bot,
+    site,
+    reason:
+      data?.flags.activity?.reason ??
+      data?.flags.bot?.reason ??
+      data?.flags.site?.reason ??
+      null,
+  });
 }
 
 export async function PATCH(request: Request) {
@@ -59,19 +52,25 @@ export async function PATCH(request: Request) {
   const dev = await isDeveloper(auth.userId);
   if (!dev) return NextResponse.json({ error: 'forbidden' }, { status: 403 });
 
-  const { enabled } = (await request.json()) as { enabled: boolean };
+  const body = (await request.json()) as { enabled?: boolean; key?: 'activity' | 'bot' };
+  const key = body.key === 'bot' ? 'bot' : 'activity';
+  const enabled = Boolean(body.enabled);
 
   const supabase = getSupabaseServiceClient();
   if (!supabase) return NextResponse.json({ error: 'db_unavailable' }, { status: 500 });
 
-  const serverId = await getServerId(supabase);
-  if (!serverId) return NextResponse.json({ error: 'server_not_found' }, { status: 500 });
-
-  const { error } = await supabase
-    .from('maintenance_flags')
-    .upsert({ server_id: serverId, key: 'activity', is_active: enabled, reason: null }, { onConflict: 'server_id,key' });
+  const { error } = await supabase.from('global_maintenance_flags').upsert(
+    {
+      key,
+      is_active: enabled,
+      reason: null,
+      updated_by: auth.userId,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: 'key' },
+  );
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  return NextResponse.json({ maintenance: enabled });
+  return NextResponse.json({ maintenance: enabled, key, scope: 'global' });
 }
