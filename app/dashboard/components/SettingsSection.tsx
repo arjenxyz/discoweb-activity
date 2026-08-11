@@ -564,6 +564,22 @@ export default function SettingsSection({
     { id: 'contracts', label: 'Sözleşmeler', icon: LuFileCheck },
   ] as const;
 
+  if (accountDeletedExit) {
+    return (
+      <div className="fixed inset-0 z-[100] flex min-h-screen items-center justify-center bg-[#0b0d12] px-6 text-white">
+        <div className="max-w-md text-center">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-emerald-500/30 bg-emerald-500/10">
+            <LuCheck className="h-7 w-7 text-emerald-400" />
+          </div>
+          <h2 className="text-2xl font-bold tracking-tight">Verilerin silindi</h2>
+          <p className="mt-3 text-sm leading-relaxed text-white/60">
+            DiscoWeb Activity verilerin kalıcı olarak kaldırıldı. Bu pencereyi kapatabilirsin.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <section className="mx-auto flex w-full max-w-6xl flex-col px-4 py-3 sm:px-5 sm:py-4 lg:px-6">
       {/* BAŞLIK & HEADER */}
