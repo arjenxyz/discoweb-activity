@@ -15,12 +15,80 @@ const getSupabase = () => {
   return createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
 };
 
+type DiscordUser = {
+  id?: string;
+  username?: string;
+  global_name?: string | null;
+  avatar?: string | null;
+  banner?: string | null;
+  accent_color?: number | null;
+};
+
+type DiscordMember = {
+  nick?: string | null;
+  avatar?: string | null;
+  roles?: string[];
+  joined_at?: string;
+  user?: DiscordUser;
+};
+
+type GuildRole = {
+  id: string;
+  name: string;
+  color: number;
+  position?: number;
+};
+
+function colorToHex(color: number | null | undefined): string | null {
+  if (color == null || color <= 0) return null;
+  return `#${color.toString(16).padStart(6, '0')}`;
+}
+
+function buildAvatarUrl(userId: string, avatar: string | null | undefined, size = 128): string {
+  if (avatar) {
+    if (avatar.startsWith('http')) return avatar;
+    const ext = avatar.startsWith('a_') ? 'gif' : 'png';
+    return `https://cdn.discordapp.com/avatars/${userId}/${avatar}.${ext}?size=${size}`;
+  }
+  const fallback = Number.isFinite(Number(userId)) ? Number(BigInt(userId) % 5n) : 0;
+  return `https://cdn.discordapp.com/embed/avatars/${fallback}.png`;
+}
+
+function buildBannerUrl(userId: string, banner: string | null | undefined): string | null {
+  if (!banner) return null;
+  if (banner.startsWith('http')) return banner;
+  const ext = banner.startsWith('a_') ? 'gif' : 'png';
+  return `https://cdn.discordapp.com/banners/${userId}/${banner}.${ext}?size=480`;
+}
+
+function buildGuildIconUrl(guildId: string, icon: string | null | undefined): string | null {
+  if (!icon) return null;
+  if (icon.startsWith('http')) return icon;
+  const ext = icon.startsWith('a_') ? 'gif' : 'png';
+  return `https://cdn.discordapp.com/icons/${guildId}/${icon}.${ext}?size=64`;
+}
+
+async function fetchDiscordJson<T>(url: string, botToken: string, timeoutMs = 10000): Promise<T | null> {
+  try {
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), timeoutMs);
+    const res = await fetch(url, {
+      headers: { Authorization: `Bot ${botToken}` },
+      signal: ctrl.signal,
+    });
+    clearTimeout(tid);
+    if (!res.ok) return null;
+    return (await res.json()) as T;
+  } catch {
+    return null;
+  }
+}
+
 export async function GET(request: Request) {
   if (isLocalDevRequest(request)) {
     return NextResponse.json(localDevProfile);
   }
 
-  // Allow auth via bearer token (for embedded activity where cookies may be blocked)
   const session = await requireSessionUser(request);
   if (!session.ok) {
     if (process.env.NODE_ENV === 'development') {
@@ -50,8 +118,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    // Önce Supabase'den kullanıcıyı dene
-    let profile = null;
+    let profile: Record<string, any> | null = null;
     try {
       const { data, error } = await supabase
         .from('member_profiles')
@@ -66,21 +133,20 @@ export async function GET(request: Request) {
 
       profile = data;
 
-      // Eğer guild scoped profile bulunamazsa, global user_id eşleşmesine bak
       if (!profile) {
-        const { data: globalProfile, error: globalError } = await supabase
+        const { data: anyProfile, error: anyError } = await supabase
           .from('member_profiles')
           .select('*')
           .eq('user_id', userId)
           .maybeSingle();
 
-        if (globalError && globalError.code !== 'PGRST116') {
-          throw globalError;
+        if (anyError && anyError.code !== 'PGRST116') {
+          throw anyError;
         }
 
-        if (globalProfile) {
-          console.warn('member/profile: no server-specific profile, using global user profile', globalProfile);
-          profile = globalProfile;
+        if (anyProfile) {
+          console.warn('member/profile: no server-specific profile, using global user profile', anyProfile);
+          profile = anyProfile;
         }
       }
     } catch (fetchError) {
@@ -88,108 +154,106 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'profile_query_failed' }, { status: 500 });
     }
 
-    // Fetch Discord profile data from users table (username/avatar)
-    // If not present, fall back to Discord API via bot token
-    let user: { discord_id?: string; username?: string; avatar?: string } | null = null;
+    // DB fallback for username/avatar if Discord is unavailable
+    let dbUser: { discord_id?: string; username?: string; avatar?: string } | null = null;
     try {
       const { data } = await supabase
         .from('users')
         .select('discord_id, username, avatar')
         .eq('discord_id', userId)
         .maybeSingle();
-      user = data;
+      dbUser = data;
     } catch (userError) {
       console.warn('member/profile: unable to fetch discord user data from supabase', userError);
-      user = null;
     }
 
-    // If we couldn't fetch from Supabase, try Discord API (bot token) for avatar/username
-    if (!user && process.env.DISCORD_BOT_TOKEN && selectedGuildId) {
-      try {
-        const ctrl = new AbortController();
-        const tid = setTimeout(() => ctrl.abort(), 10000);
-        const userRes = await fetch(`https://discord.com/api/users/${userId}`, {
-          headers: { Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN}` },
-          signal: ctrl.signal,
-        });
-        clearTimeout(tid);
-        if (userRes.ok) {
-          user = await userRes.json();
-        }
-      } catch (err) {
-        console.warn('member/profile: discord api user fetch failed', err);
-      }
-    }
+    const botToken = process.env.DISCORD_BOT_TOKEN;
+    let discordUser: DiscordUser | null = null;
+    let discordMember: DiscordMember | null = null;
+    let roles: Array<{ id: string; name: string; color: number }> = [];
+    let guildName: string | null = profile?.guildName ?? null;
+    let guildIcon: string | null = profile?.guildIcon ?? null;
+    let joinedAt: string | null = null;
 
-    const avatarUrl = user?.avatar
-      ? user.avatar.startsWith('http')
-        ? user.avatar
-        : `https://cdn.discordapp.com/avatars/${userId}/${user.avatar}.png?size=96`
-      : `https://cdn.discordapp.com/embed/avatars/${Number(userId) % 5}.png`;
-
-    let roles: Array<{ id: string; name: string; color: number }> | null = null;
-
-    // Discord API üzerinden roller alınmaya çalışsın (bot token gerektirir)
-    if (process.env.DISCORD_BOT_TOKEN && selectedGuildId) {
-      try {
-        const memberCtrl = new AbortController();
-        const memberTid = setTimeout(() => memberCtrl.abort(), 10000);
-        const memberRes = await fetch(
+    if (botToken) {
+      const [member, user, guild, guildRoles] = await Promise.all([
+        fetchDiscordJson<DiscordMember>(
           `https://discord.com/api/guilds/${selectedGuildId}/members/${userId}`,
-          {
-            headers: { Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN}` },
-            signal: memberCtrl.signal,
-          },
-        );
-        clearTimeout(memberTid);
+          botToken,
+        ),
+        fetchDiscordJson<DiscordUser>(`https://discord.com/api/users/${userId}`, botToken),
+        fetchDiscordJson<{ name?: string; icon?: string | null }>(
+          `https://discord.com/api/guilds/${selectedGuildId}`,
+          botToken,
+        ),
+        fetchDiscordJson<GuildRole[]>(`https://discord.com/api/guilds/${selectedGuildId}/roles`, botToken),
+      ]);
 
-        if (memberRes.ok) {
-          const memberData = (await memberRes.json()) as { roles?: string[] };
-          const roleIds = memberData.roles || [];
+      discordMember = member;
+      discordUser = user ?? member?.user ?? null;
+      joinedAt = member?.joined_at ?? null;
 
-          if (roleIds.length > 0) {
-            const rolesCtrl = new AbortController();
-            const rolesTid = setTimeout(() => rolesCtrl.abort(), 10000);
-            const rolesRes = await fetch(
-              `https://discord.com/api/guilds/${selectedGuildId}/roles`,
-              {
-                headers: { Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN}` },
-                signal: rolesCtrl.signal,
-              },
-            );
-            clearTimeout(rolesTid);
+      if (guild?.name) guildName = guild.name;
+      if (guild?.icon) guildIcon = buildGuildIconUrl(selectedGuildId, guild.icon);
 
-            if (rolesRes.ok) {
-              const rolesData = (await rolesRes.json()) as Array<{
-                id: string;
-                name: string;
-                color: number;
-              }>;
-              roles = rolesData.filter((r) => roleIds.includes(r.id));
-            }
-          }
-        }
-      } catch (roleErr) {
-        console.warn('member/profile: role fetch failed', roleErr);
+      const roleIds = new Set(member?.roles ?? []);
+      if (guildRoles && roleIds.size > 0) {
+        roles = guildRoles
+          .filter((r) => roleIds.has(r.id) && r.name !== '@everyone')
+          .sort((a, b) => (b.position ?? 0) - (a.position ?? 0))
+          .map((r) => ({ id: r.id, name: r.name, color: r.color }));
       }
     }
+
+    const username =
+      discordUser?.username ??
+      dbUser?.username ??
+      profile?.username ??
+      '';
+    const displayName =
+      discordUser?.global_name ??
+      profile?.displayName ??
+      username ??
+      null;
+    const nickname =
+      discordMember?.nick ??
+      profile?.nickname ??
+      null;
+
+    const avatarHash = discordMember?.avatar
+      ? discordMember.avatar
+      : discordUser?.avatar ?? dbUser?.avatar ?? null;
+    // Guild-specific avatar uses a different CDN path
+    const avatarUrl = discordMember?.avatar
+      ? `https://cdn.discordapp.com/guilds/${selectedGuildId}/users/${userId}/avatars/${discordMember.avatar}.${
+          discordMember.avatar.startsWith('a_') ? 'gif' : 'png'
+        }?size=128`
+      : buildAvatarUrl(userId, avatarHash, 128);
+
+    const bannerUrl = buildBannerUrl(userId, discordUser?.banner ?? null);
+    const bannerColor = colorToHex(discordUser?.accent_color) ?? colorToHex(roles.find((r) => r.color > 0)?.color);
+
+    const payload = {
+      userId,
+      username,
+      nickname,
+      displayName,
+      avatarUrl,
+      bannerUrl,
+      bannerColor,
+      about: profile?.about ?? null,
+      guildName,
+      guildIcon,
+      joinedAt,
+      roles,
+      tag_granted_at: profile?.tag_granted_at ?? null,
+      has_tag: profile?.has_tag ?? false,
+      is_booster: profile?.is_booster ?? false,
+      booster_since: profile?.booster_since ?? null,
+    };
 
     if (profile) {
-      return NextResponse.json({
-        userId,
-        username: user?.username ?? profile.username ?? '',
-        nickname: profile.nickname ?? null,
-        displayName: profile.displayName ?? null,
-        avatarUrl,
-        about: profile.about ?? null,
-        guildName: profile.guildName ?? null,
-        guildIcon: profile.guildIcon ?? null,
-        roles: roles ?? [],
-        tag_granted_at: profile.tag_granted_at ?? null,
-        has_tag: profile.has_tag ?? false,
-        is_booster: profile.is_booster ?? false,
-        booster_since: profile.booster_since ?? null,
-      });
+      return NextResponse.json(payload);
     }
 
     const now = new Date().toISOString();
@@ -214,42 +278,15 @@ export async function GET(request: Request) {
     const ua = request.headers.get('user-agent') ?? null;
     await logNewUser({
       userId,
-      username: user?.username ?? 'bilinmiyor',
-      avatar: user?.avatar ?? null,
+      username: username || 'bilinmiyor',
+      avatar: discordUser?.avatar ?? dbUser?.avatar ?? null,
       guildId: selectedGuildId,
-      guildName: null,
+      guildName,
       ip,
       userAgent: ua,
     });
 
-    const { data: createdProfile } = await supabase
-      .from('member_profiles')
-      .select('*')
-      .eq('guild_id', selectedGuildId)
-      .eq('user_id', userId)
-      .maybeSingle();
-
-    if (createdProfile) {
-      return NextResponse.json({
-        userId,
-        username: user?.username ?? createdProfile.username ?? '',
-        nickname: createdProfile.nickname ?? null,
-        displayName: createdProfile.displayName ?? null,
-        avatarUrl,
-        about: createdProfile.about ?? null,
-        guildName: createdProfile.guildName ?? null,
-        guildIcon: createdProfile.guildIcon ?? null,
-        roles: roles ?? [],
-        tag_granted_at: createdProfile.tag_granted_at ?? null,
-        has_tag: createdProfile.has_tag ?? false,
-        is_booster: createdProfile.is_booster ?? false,
-        booster_since: createdProfile.booster_since ?? null,
-      });
-    }
-
-    // Bunlardan hiçbiri olmadıysa (garip durumda) sorunlu prolfile oluşturma hatası
-    return NextResponse.json({ error: 'profile_creation_failed' }, { status: 500 });
-
+    return NextResponse.json(payload);
   } catch (error) {
     console.error('Profile fetch error:', error);
     return NextResponse.json({ error: 'fetch_failed' }, { status: 500 });
@@ -258,16 +295,11 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-  const botToken = process.env.DISCORD_BOT_TOKEN;
-  if (!botToken) {
-    return NextResponse.json({ error: 'missing_bot_token' }, { status: 500 });
-  }
-
-  const session = await requireSessionUser(request);
-  if (!session.ok) {
-    return session.response;
-  }
-  const userId = session.userId;
+    const session = await requireSessionUser(request);
+    if (!session.ok) {
+      return session.response;
+    }
+    const userId = session.userId;
 
     const payload = (await request.json()) as { about?: string | null };
     const aboutValue = payload.about?.trim() ?? '';

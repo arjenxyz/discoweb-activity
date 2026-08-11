@@ -36,6 +36,9 @@ export type MemberProfile = {
   nickname: string | null;
   displayName: string | null;
   avatarUrl: string;
+  bannerUrl?: string | null;
+  bannerColor?: string | null;
+  joinedAt?: string | null;
   roles: Array<{ id: string; name: string; color: number }>;
   about: string | null;
   guildName?: string | null;

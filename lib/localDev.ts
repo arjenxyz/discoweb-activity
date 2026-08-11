@@ -4,9 +4,10 @@
  * Never enables on public hosts (even with next dev).
  */
 
-export const LOCAL_DEV_USER_ID = 'dev-user-12345';
-export const LOCAL_DEV_GUILD_ID = 'dev-guild';
-export const LOCAL_DEV_USERNAME = 'Local Dev';
+/** Valid-looking snowflake so Discord "member since" derives correctly in local preview */
+export const LOCAL_DEV_USER_ID = '123456789012345678';
+export const LOCAL_DEV_GUILD_ID = '987654321098765432';
+export const LOCAL_DEV_USERNAME = 'kysopea';
 export const LOCAL_DEV_AVATAR = '/gif/cat.gif';
 
 export function isLocalDevHost(host: string | null | undefined): boolean {
@@ -60,16 +61,19 @@ export const localDevServerInfo = {
 export const localDevProfile = {
   userId: LOCAL_DEV_USER_ID,
   username: LOCAL_DEV_USERNAME,
-  nickname: 'Dev',
-  displayName: LOCAL_DEV_USERNAME,
+  nickname: null,
+  displayName: 'kysopea',
   avatarUrl: LOCAL_DEV_AVATAR,
-  about: 'Localhost development profile — Discord OAuth gerekmez.',
+  bannerUrl: null as string | null,
+  bannerColor: '#d1ba95',
+  joinedAt: new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString(),
+  about: null as string | null,
   guildName: localDevServerInfo.name,
   guildIcon: LOCAL_DEV_AVATAR,
   roles: [
-    { id: 'role-admin', name: 'Admin', color: 0xe74c3c },
-    { id: 'role-vip', name: 'VIP', color: 0xf1c40f },
-    { id: 'role-member', name: 'Üye', color: 0x3498db },
+    { id: 'role-admin', name: 'DiscoWeb', color: 0xffffff },
+    { id: 'role-vip', name: 'Captain', color: 0xe74c3c },
+    { id: 'role-member', name: 'Check-in', color: 0x95a5a6 },
   ],
   tag_granted_at: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString(),
   has_tag: true,

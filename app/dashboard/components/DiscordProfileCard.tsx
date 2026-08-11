@@ -42,10 +42,11 @@ function DiscordMark({ className }: { className?: string }) {
   );
 }
 
-function pickBannerColor(roles: MemberProfile['roles'], formatRoleColor: (c: number) => string): string {
-  const colored = roles?.find((r) => r.color > 0);
+function pickBannerColor(profile: MemberProfile, formatRoleColor: (c: number) => string): string {
+  if (profile.bannerColor) return profile.bannerColor;
+  const colored = profile.roles?.find((r) => r.color > 0);
   if (colored) return formatRoleColor(colored.color);
-  return '#c9b08a';
+  return '#5865F2';
 }
 
 export default function DiscordProfileCard({
@@ -76,9 +77,10 @@ export default function DiscordProfileCard({
 
   const displayName = profile.nickname ?? profile.displayName ?? profile.username ?? '—';
   const username = profile.username || '—';
-  const bannerColor = pickBannerColor(profile.roles ?? [], formatRoleColor);
+  const bannerColor = pickBannerColor(profile, formatRoleColor);
   const discordSince = formatMemberDate(discordCreatedAt(profile.userId), dateLocale);
-  const serverSince = formatMemberDate(joinedAt ? new Date(joinedAt) : null, dateLocale);
+  const serverJoin = profile.joinedAt ?? joinedAt ?? null;
+  const serverSince = formatMemberDate(serverJoin ? new Date(serverJoin) : null, dateLocale);
   const roles = (profile.roles ?? []).filter((r) => r.name !== '@everyone');
   const note = profile.about?.trim() || null;
 
@@ -86,7 +88,16 @@ export default function DiscordProfileCard({
     <div className="overflow-hidden rounded-2xl border border-white/[0.08] bg-[#111214] shadow-[0_8px_24px_rgba(0,0,0,0.35)]">
       {/* Banner */}
       <div className="relative h-[72px]" style={{ backgroundColor: bannerColor }}>
-        <div className="absolute inset-0 bg-gradient-to-b from-black/0 to-black/20" />
+        {profile.bannerUrl ? (
+          <Image
+            src={profile.bannerUrl}
+            alt=""
+            fill
+            unoptimized
+            className="object-cover"
+          />
+        ) : null}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/0 to-black/25" />
       </div>
 
       <div className="relative px-4 pb-4">
