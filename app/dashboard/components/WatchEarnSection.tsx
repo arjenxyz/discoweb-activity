@@ -364,7 +364,6 @@ export default function WatchEarnSection() {
             <div className="flex shrink-0 items-center gap-3 border-b border-white/10 bg-[#12141c] px-3 py-2.5 sm:px-4">
               <div className="min-w-0 flex-1">
                 <p className="truncate text-xs font-semibold text-white/80 sm:text-sm">{activeTask.logoText}</p>
-                <p className="truncate text-[11px] text-white/40">Sonuna kadar izle · ileri sarılamaz</p>
               </div>
               <div className="rounded-xl border border-white/10 bg-black/40 px-3 py-1.5 text-center">
                 <p className="text-[9px] font-medium uppercase tracking-wider text-white/35">Kalan</p>
