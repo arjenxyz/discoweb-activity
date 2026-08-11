@@ -1351,16 +1351,16 @@ export default function DashboardPage() {
   const mainSpacingClass = effectiveSection === 'mail'
     ? 'py-0 gap-0 pb-0'
     : effectiveSection === 'duyuru'
-      ? 'md:pt-20 pb-20 lg:pb-0 gap-0'
+      ? 'lg:pt-24 pb-20 lg:pb-0 gap-0'
       : effectiveSection === 'store'
         ? isActivityEmbed
-          ? 'md:pt-20 pb-28 gap-0 md:pb-0'
-          : 'md:pt-20 pb-28 sm:pb-10 gap-0 sm:gap-6 md:pb-0'
+          ? 'lg:pt-24 pb-28 gap-0 md:pb-0'
+          : 'lg:pt-24 pb-28 sm:pb-10 gap-0 sm:gap-6 md:pb-0'
         : effectiveSection === 'settings'
           ? 'md:pt-6 pb-12 lg:pb-3 gap-3'
           : effectiveSection === 'quiz' && quizImmersive
               ? 'py-0 pb-0 gap-0 px-0 flex-1 min-h-0 overflow-hidden'
-              : 'md:pt-20 pb-20 lg:pb-6 gap-6';
+              : 'lg:pt-24 pb-20 lg:pb-6 gap-6';
 
   // Splash — readiness sorgulanmadan önce gösterilir
   if (!splashDone) {
