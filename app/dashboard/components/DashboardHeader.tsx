@@ -442,7 +442,7 @@ export default function DashboardHeader({
       />
 
       {/* Header — yüzen kavisli üst bar */}
-      <header className={`relative mx-3 mt-2.5 mb-1 flex items-center rounded-2xl border border-white/[0.1] bg-[#12141c]/92 shadow-[0_10px_36px_rgba(0,0,0,0.45)] backdrop-blur-xl px-4 sm:px-5 transition-all duration-200 md:fixed md:left-4 md:right-4 md:top-3 md:mx-0 md:mb-0 ${
+      <header className={`relative mx-3 mt-5 mb-1 flex items-center rounded-2xl border border-white/[0.1] bg-[#12141c]/92 shadow-[0_10px_36px_rgba(0,0,0,0.45)] backdrop-blur-xl px-4 sm:px-5 transition-all duration-200 md:fixed md:left-4 md:right-4 md:top-5 md:mx-0 md:mb-0 ${
         minimalProfileOnly
           ? 'h-12 pt-[env(safe-area-inset-top,0px)]'
           : isActivityEmbed
