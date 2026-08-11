@@ -754,18 +754,18 @@ export default function DashboardHeader({
 
         {/* Nav menüsü — yukarı açılır */}
         {mobileMenuOpen && (
-          <div className="absolute bottom-full left-0 right-0 mb-1 mx-2 z-50 rounded-2xl border border-white/10 bg-white/[0.08] backdrop-blur-xl shadow-2xl overflow-hidden max-h-[70vh] overflow-y-auto">
+          <div className="absolute bottom-full left-0 right-0 mb-1 mx-2 z-50 max-h-[70vh] overflow-hidden overflow-y-auto rounded-2xl border border-white/15 bg-white/[0.10] shadow-2xl backdrop-blur-xl">
             {/* Bakiye satırı */}
             {!unauthorized && (
               <div className="flex items-center gap-2 px-3 pt-3 pb-2">
                 {mariBalance !== undefined && (
-                  <div className="flex flex-1 items-center gap-1.5 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2 text-sm">
+                  <div className="flex flex-1 items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.08] px-3 py-2 text-sm">
                     <Image src="/Mari.gif" alt="Mari" width={16} height={16} className="h-4 w-4 shrink-0" unoptimized />
                     <span className="font-bold text-white tabular-nums">{walletLoading ? '—' : mariBalance.toLocaleString('tr-TR', { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</span>
                     <span className="ml-auto text-[10px] font-semibold text-[#a5b4ff]/75">Mari</span>
                   </div>
                 )}
-                <div className="flex flex-1 items-center gap-1.5 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2 text-sm">
+                <div className="flex flex-1 items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.08] px-3 py-2 text-sm">
                   <Image src="/papel.gif" alt="Papel" width={16} height={16} className="h-4 w-4 shrink-0" />
                   <span className="font-bold text-white tabular-nums">{walletLoading ? '—' : walletBalance.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                   <span className="ml-auto text-[10px] font-semibold text-amber-400">Papel</span>
@@ -818,7 +818,7 @@ export default function DashboardHeader({
         {isProfileOpen && !unauthorized && (
           <div
             onClick={e => e.stopPropagation()}
-            className="absolute bottom-full right-2 left-2 mb-1 z-50 rounded-2xl border border-white/10 bg-[#0f1116] shadow-2xl overflow-hidden"
+            className="absolute bottom-full right-2 left-2 mb-1 z-50 overflow-hidden rounded-2xl border border-white/15 bg-white/[0.10] shadow-2xl backdrop-blur-xl"
           >
             <ProfileMenuHeader
               background={profileHeaderBg}

@@ -190,7 +190,7 @@ export default function MailMobileView({
         </div>
 
         {foldersOpen && (
-          <div className="absolute bottom-full left-0 right-0 z-[121] mx-2 mb-1 max-h-[70vh] overflow-hidden overflow-y-auto rounded-2xl border border-white/10 bg-white/[0.08] shadow-2xl backdrop-blur-xl">
+          <div className="absolute bottom-full left-0 right-0 z-[121] mx-2 mb-1 max-h-[70vh] overflow-hidden overflow-y-auto rounded-2xl border border-white/15 bg-white/[0.10] shadow-2xl backdrop-blur-xl">
             <div className="space-y-0.5 px-2 py-2">
               <p className="px-3 pb-1 pt-1 text-[9px] font-semibold uppercase tracking-[0.3em] text-white/25">
                 {t('mail_folders_label')}
