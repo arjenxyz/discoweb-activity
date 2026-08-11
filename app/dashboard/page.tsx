@@ -147,6 +147,11 @@ export default function DashboardPage() {
         if (host.endsWith('.discordsays.com') || host.endsWith('.discordapp.com')) {
           setIsActivityEmbed(true);
         }
+
+        document.documentElement.dataset.reduceMotion =
+          window.localStorage.getItem('dashboard_reduce_motion') === 'true' ? 'true' : 'false';
+        document.documentElement.dataset.uiDensity =
+          window.localStorage.getItem('dashboard_ui_density') === 'compact' ? 'compact' : 'normal';
       }
     } catch {}
   }, []);

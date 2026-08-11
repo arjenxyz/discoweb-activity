@@ -23,6 +23,7 @@ import {
   LuPause,
   LuX,
   LuFileJson,
+  LuShieldCheck,
 } from 'react-icons/lu';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { closeDiscordActivity, isDiscordActivityClient } from '@/lib/discordSdk';
@@ -33,6 +34,7 @@ type SettingsSectionProps = {
   onOpenDiscountsModal: () => void;
   profile?: MemberProfile | null;
   serverCount?: number;
+  serverName?: string | null;
   onBack?: () => void;
 };
 
@@ -174,6 +176,7 @@ function Slider({
 export default function SettingsSection({
   profile,
   serverCount,
+  serverName,
   onBack,
 }: SettingsSectionProps) {
   const displayName =
@@ -385,22 +388,28 @@ export default function SettingsSection({
         'Portföy, istatistik ve Activity kayıtları',
         'Sunucu bağlantıları ve yerel tercihler',
       ],
+      kept: [] as string[],
     },
     current: {
       title: 'Bu sunucu verilerini sil',
-      description: 'Yalnızca bulunduğun sunucuya ait kayıtlar temizlenir.',
-      button: 'Sunucu verilerini sil',
+      description: 'Yalnızca seçili sunucuya ait Activity kayıtları temizlenir; diğer sunucular etkilenmez.',
+      button: 'Bu sunucuyu temizle',
       tone: 'bg-amber-600 hover:bg-amber-500 shadow-[0_0_24px_rgba(245,158,11,0.22)]',
       badge: 'border-amber-500/30 bg-amber-500/10 text-amber-300',
       iconTone: 'text-amber-400',
-      severity: 'Uyarı',
+      severity: 'Sınırlı silme',
       severityTone: 'border-amber-500/40 bg-amber-500/15 text-amber-300',
       ref: 'DEL-SRV',
       scopeLabel: 'Yalnızca mevcut sunucu',
       items: [
-        'Bu sunucuya ait ekonomi ve istatistikler',
-        'Sunucu özel Activity kayıtları',
-        'Hesap genelinde diğer sunucular korunur',
+        'Bu sunucudaki ekonomi ve istatistik kayıtları',
+        'Sunucuya özel Activity geçmişi',
+        'Sunucu bağlı portföy / ilerleme verileri',
+      ],
+      kept: [
+        'Diğer sunuculardaki kayıtların',
+        'Discord hesabın ve genel oturumun',
+        'Platform genelindeki profil kimliğin',
       ],
     },
   };
@@ -960,10 +969,7 @@ export default function SettingsSection({
                 >
                   <button
                     type="button"
-                    onClick={() => {
-                      setRequestError(null);
-                      setRequestModalOpen(true);
-                    }}
+                    onClick={openRequestModal}
                     className="rounded-lg bg-[#5865F2] px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-[#4752C4]"
                   >
                     DM gönder
