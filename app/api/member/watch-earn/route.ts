@@ -76,21 +76,36 @@ export async function GET(request: Request) {
     }
   }
 
-  const mapped = tasks.map((task) => ({
-    id: task.id,
-    title: task.title,
-    logoText: task.logo_text,
-    sponsor: task.sponsor,
-    reward: Number(task.reward_papel),
-    multiplier: task.multiplier_label,
-    banner: task.banner_url,
-    videoUrl: task.video_url,
-    startsAt: task.starts_at,
-    endsAt: task.ends_at,
-    claimed: claimedIds.has(task.id),
-    claimedAt: claimedAtMap.get(task.id) ?? null,
-    createdAt: task.created_at,
-  }));
+  const mapped = tasks.map((task) => {
+    const banner = task.banner_url.startsWith('http')
+      ? task.banner_url.replace(
+          /^https?:\/\/(?:[a-z0-9-]+\.)?supabase\.co\/storage\/v1\/object\/public\//i,
+          '/cdn/',
+        )
+      : task.banner_url;
+    const videoUrl = task.video_url.startsWith('http')
+      ? task.video_url.replace(
+          /^https?:\/\/(?:[a-z0-9-]+\.)?supabase\.co\/storage\/v1\/object\/public\//i,
+          '/cdn/',
+        )
+      : task.video_url;
+
+    return {
+      id: task.id,
+      title: task.title,
+      logoText: task.logo_text,
+      sponsor: task.sponsor,
+      reward: Number(task.reward_papel),
+      multiplier: task.multiplier_label,
+      banner,
+      videoUrl,
+      startsAt: task.starts_at,
+      endsAt: task.ends_at,
+      claimed: claimedIds.has(task.id),
+      claimedAt: claimedAtMap.get(task.id) ?? null,
+      createdAt: task.created_at,
+    };
+  });
 
   // Yeni görevler üstte; alınmış olanlar alta
   mapped.sort((a, b) => {

@@ -46,6 +46,10 @@ const nextConfig: NextConfig = {
         source: '/cdn/:path*',
         destination: 'https://dotmvirtfyepdpcvgucc.supabase.co/storage/v1/object/public/:path*',
       },
+      {
+        source: '/activity/cdn/:path*',
+        destination: 'https://dotmvirtfyepdpcvgucc.supabase.co/storage/v1/object/public/:path*',
+      },
     ];
   },
   serverExternalPackages: [

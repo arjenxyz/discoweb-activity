@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { LuCircleCheck, LuPlay, LuX, LuGift } from 'react-icons/lu';
 import fetchWithCreds from '@/lib/fetchWithCreds';
+import { toActivityMediaUrl } from '@/lib/watchEarnMedia';
 
 type WatchEarnTask = {
   id: string;
@@ -61,7 +62,14 @@ export default function WatchEarnSection() {
       const res = await fetchWithCreds('/api/member/watch-earn');
       const data = await res.json().catch(() => null);
       if (!res.ok) throw new Error(data?.error ?? 'load_failed');
-      setTasks((data?.tasks ?? []) as WatchEarnTask[]);
+      const incoming = (data?.tasks ?? []) as WatchEarnTask[];
+      setTasks(
+        incoming.map((task) => ({
+          ...task,
+          banner: toActivityMediaUrl(task.banner),
+          videoUrl: toActivityMediaUrl(task.videoUrl),
+        })),
+      );
     } catch {
       setTasks([]);
       showToast('Görevler yüklenemedi.', 'error');
@@ -255,10 +263,15 @@ export default function WatchEarnSection() {
             <div className="relative aspect-video w-full group cursor-pointer" onClick={togglePlay}>
               <video
                 ref={videoRef}
-                src={activeTask.videoUrl}
-                className="h-full w-full object-contain"
+                src={toActivityMediaUrl(activeTask.videoUrl)}
+                className="h-full w-full object-contain bg-black"
                 onEnded={handleVideoEnded}
+                onError={() => {
+                  setIsPlaying(false);
+                  showToast('Video yüklenemedi. MP4 /cdn linkini kontrol et.', 'error');
+                }}
                 playsInline
+                preload="auto"
                 disablePictureInPicture
                 controlsList="nodownload noplaybackrate"
                 onContextMenu={(e) => e.preventDefault()}
