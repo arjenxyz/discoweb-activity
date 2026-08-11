@@ -823,7 +823,17 @@ export default function DashboardPage() {
   const handleSelectServer = useCallback(async (guildId: string) => {
     if (unauthorizedRef.current || isActivityEmbed) return;
 
+    try {
+      window.localStorage.setItem('selectedGuildId', guildId);
+    } catch {
+      // ignore
+    }
     document.cookie = `selected_guild_id=${guildId}; path=/; max-age=31536000`;
+    try {
+      window.dispatchEvent(new Event('dw:guild-changed'));
+    } catch {
+      // ignore
+    }
     setHeaderServer(prev => ({ ...prev, loading: true }));
 
     try {
