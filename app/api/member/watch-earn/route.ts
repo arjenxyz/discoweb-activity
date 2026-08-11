@@ -7,6 +7,7 @@ import {
   isLocalDevRequest,
   getLocalDevWatchEarnTasks,
   claimLocalDevWatchEarn,
+  completeLocalDevWatchEarn,
 } from '@/lib/localDev';
 
 export const dynamic = 'force-dynamic';
@@ -31,6 +32,14 @@ const getSupabase = () => {
   if (!url || !key) return null;
   return createClient(url, key, { auth: { persistSession: false } });
 };
+
+const rewritePublicUrl = (url: string) =>
+  url.startsWith('http')
+    ? url.replace(
+        /^https?:\/\/(?:[a-z0-9-]+\.)?supabase\.co\/storage\/v1\/object\/public\//i,
+        '/cdn/',
+      )
+    : url;
 
 export async function GET(request: Request) {
   const maintenance = await checkMaintenance(['site']);
@@ -69,8 +78,10 @@ export async function GET(request: Request) {
   const tasks = (data ?? []) as WatchEarnTaskRow[];
   const taskIds = tasks.map((t) => t.id);
 
-  let claimedIds = new Set<string>();
-  let claimedAtMap = new Map<string, string>();
+  const claimedIds = new Set<string>();
+  const claimedAtMap = new Map<string, string>();
+  const watchedIds = new Set<string>();
+  const watchedAtMap = new Map<string, string>();
 
   if (taskIds.length > 0) {
     const { data: claims } = await supabase
@@ -83,22 +94,24 @@ export async function GET(request: Request) {
       claimedIds.add(claim.task_id as string);
       claimedAtMap.set(claim.task_id as string, claim.claimed_at as string);
     }
+
+    const { data: completions, error: completionsError } = await supabase
+      .from('watch_earn_completions')
+      .select('task_id,watched_at')
+      .eq('user_id', session.userId)
+      .in('task_id', taskIds);
+
+    if (!completionsError) {
+      for (const row of completions ?? []) {
+        watchedIds.add(row.task_id as string);
+        watchedAtMap.set(row.task_id as string, row.watched_at as string);
+      }
+    }
   }
 
   const mapped = tasks.map((task) => {
-    const banner = task.banner_url.startsWith('http')
-      ? task.banner_url.replace(
-          /^https?:\/\/(?:[a-z0-9-]+\.)?supabase\.co\/storage\/v1\/object\/public\//i,
-          '/cdn/',
-        )
-      : task.banner_url;
-    const videoUrl = task.video_url.startsWith('http')
-      ? task.video_url.replace(
-          /^https?:\/\/(?:[a-z0-9-]+\.)?supabase\.co\/storage\/v1\/object\/public\//i,
-          '/cdn/',
-        )
-      : task.video_url;
-
+    const claimed = claimedIds.has(task.id);
+    const watched = claimed || watchedIds.has(task.id);
     return {
       id: task.id,
       title: task.title,
@@ -106,23 +119,83 @@ export async function GET(request: Request) {
       sponsor: task.sponsor,
       reward: Number(task.reward_papel),
       multiplier: task.multiplier_label,
-      banner,
-      videoUrl,
+      banner: rewritePublicUrl(task.banner_url),
+      videoUrl: rewritePublicUrl(task.video_url),
       startsAt: task.starts_at,
       endsAt: task.ends_at,
-      claimed: claimedIds.has(task.id),
+      claimed,
       claimedAt: claimedAtMap.get(task.id) ?? null,
+      watched,
+      watchedAt: claimed
+        ? (claimedAtMap.get(task.id) ?? null)
+        : (watchedAtMap.get(task.id) ?? null),
       createdAt: task.created_at,
     };
   });
 
-  // Yeni görevler üstte; alınmış olanlar alta
   mapped.sort((a, b) => {
     if (a.claimed !== b.claimed) return a.claimed ? 1 : -1;
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
 
   return NextResponse.json({ tasks: mapped });
+}
+
+type WatchEarnPostPayload = {
+  taskId?: string;
+  action?: 'claim' | 'complete';
+};
+
+async function markWatchComplete(
+  request: Request,
+  taskId: string,
+  userId: string,
+) {
+  if (isLocalDevRequest(request)) {
+    const result = completeLocalDevWatchEarn(taskId);
+    if (!result.ok) {
+      return NextResponse.json({ error: result.error }, { status: 404 });
+    }
+    return NextResponse.json({ ok: true, watched: true, watched_at: result.watchedAt });
+  }
+
+  const supabase = getSupabase();
+  if (!supabase) return NextResponse.json({ error: 'missing_service_role' }, { status: 500 });
+
+  const selectedGuildId = await getSelectedGuildId(request);
+  const nowIso = new Date().toISOString();
+  const { data: task } = await supabase
+    .from('watch_earn_tasks')
+    .select('id,active,starts_at,ends_at')
+    .eq('id', taskId)
+    .maybeSingle();
+
+  if (
+    !task ||
+    !task.active ||
+    new Date(task.starts_at as string) > new Date(nowIso) ||
+    new Date(task.ends_at as string) < new Date(nowIso)
+  ) {
+    return NextResponse.json({ error: 'task_not_found' }, { status: 404 });
+  }
+
+  const { error } = await supabase.from('watch_earn_completions').upsert(
+    {
+      task_id: task.id,
+      user_id: userId,
+      guild_id: selectedGuildId,
+      watched_at: nowIso,
+    },
+    { onConflict: 'task_id,user_id' },
+  );
+
+  if (error) {
+    // Migration henüz uygulanmadıysa UI localStorage ile devam edebilsin
+    console.warn('[watch-earn] completion upsert failed:', error.message);
+    return NextResponse.json({ ok: true, watched: true, persisted: false });
+  }
+
+  return NextResponse.json({ ok: true, watched: true, watched_at: nowIso, persisted: true });
 }
 
 export async function POST(request: Request) {
@@ -138,15 +211,25 @@ export async function POST(request: Request) {
   if (!session.ok) return session.response;
   const userId = session.userId;
 
-  const payload = (await request.json().catch(() => ({}))) as { taskId?: string };
+  const payload = (await request.json().catch(() => ({}))) as WatchEarnPostPayload;
   if (!payload.taskId) {
     return NextResponse.json({ error: 'invalid_payload' }, { status: 400 });
+  }
+
+  const action = payload.action === 'complete' ? 'complete' : 'claim';
+  if (action === 'complete') {
+    return markWatchComplete(request, payload.taskId, userId);
   }
 
   if (isLocalDevRequest(request)) {
     const result = claimLocalDevWatchEarn(payload.taskId);
     if (!result.ok) {
-      const status = result.error === 'already_claimed' ? 409 : 404;
+      const status =
+        result.error === 'already_claimed'
+          ? 409
+          : result.error === 'not_watched'
+            ? 400
+            : 404;
       return NextResponse.json({ error: result.error }, { status });
     }
     return NextResponse.json({
@@ -192,6 +275,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'already_claimed' }, { status: 409 });
   }
 
+  // İzleme tamamlanmadan claim yok (tablo yoksa kontrolü atla — migration öncesi kırılmaz)
+  const { data: completion, error: completionError } = await supabase
+    .from('watch_earn_completions')
+    .select('id')
+    .eq('task_id', task.id)
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (!completionError && !completion) {
+    return NextResponse.json({ error: 'not_watched' }, { status: 400 });
+  }
+
   const reward = Number(task.reward_papel ?? 0);
   if (!Number.isFinite(reward) || reward < 0) {
     return NextResponse.json({ error: 'invalid_reward' }, { status: 400 });
@@ -233,7 +328,6 @@ export async function POST(request: Request) {
     );
 
     if (walletError) {
-      // Claim kaydı yazıldı ama bakiye güncellenemedi — kullanıcıyı yanıltma
       return NextResponse.json({ error: 'wallet_update_failed' }, { status: 500 });
     }
 

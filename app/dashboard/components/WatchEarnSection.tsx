@@ -24,6 +24,48 @@ type WatchEarnTask = {
   endsAt: string;
   claimed: boolean;
   claimedAt: string | null;
+  watched?: boolean;
+  watchedAt?: string | null;
+};
+
+const WATCHED_STORAGE_KEY = 'dw:watch-earn:watched';
+
+const readWatchedStorage = (): Record<string, boolean> => {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = window.localStorage.getItem(WATCHED_STORAGE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    const out: Record<string, boolean> = {};
+    for (const [id, value] of Object.entries(parsed)) {
+      if (value) out[id] = true;
+    }
+    return out;
+  } catch {
+    return {};
+  }
+};
+
+const writeWatchedStorage = (map: Record<string, boolean>) => {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(WATCHED_STORAGE_KEY, JSON.stringify(map));
+  } catch {
+    /* ignore quota / private mode */
+  }
+};
+
+const markWatchedLocal = (taskId: string) => {
+  const next = { ...readWatchedStorage(), [taskId]: true };
+  writeWatchedStorage(next);
+  return next;
+};
+
+const clearWatchedLocal = (taskId: string) => {
+  const next = { ...readWatchedStorage() };
+  delete next[taskId];
+  writeWatchedStorage(next);
+  return next;
 };
 
 const formatEndDate = (iso: string) => {
@@ -90,6 +132,14 @@ export default function WatchEarnSection() {
       const data = await res.json().catch(() => null);
       if (!res.ok) throw new Error(data?.error ?? 'load_failed');
       const incoming = (data?.tasks ?? []) as WatchEarnTask[];
+      const localWatched = readWatchedStorage();
+      const nextWatched: Record<string, boolean> = {};
+      for (const task of incoming) {
+        if (task.claimed) continue;
+        if (task.watched || localWatched[task.id]) nextWatched[task.id] = true;
+      }
+      writeWatchedStorage(nextWatched);
+      setWatchedTasks(nextWatched);
       setTasks(
         incoming.map((task) => ({
           ...task,
@@ -103,6 +153,11 @@ export default function WatchEarnSection() {
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    // Remount sonrası localStorage'dan hemen claim-ready göster
+    setWatchedTasks(readWatchedStorage());
   }, []);
 
   useEffect(() => {
@@ -225,8 +280,19 @@ export default function WatchEarnSection() {
   }, [exitFullscreenSafe]);
 
   const handleVideoEnded = async () => {
-    if (activeVideo) {
-      setWatchedTasks((prev) => ({ ...prev, [activeVideo]: true }));
+    const taskId = activeVideo;
+    if (taskId) {
+      const next = markWatchedLocal(taskId);
+      setWatchedTasks(next);
+      try {
+        await fetchWithCreds('/api/member/watch-earn', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ taskId, action: 'complete' }),
+        });
+      } catch {
+        // localStorage yeterli — sunucu yazılamasa bile claim-ready kalır
+      }
     }
     await exitFullscreenSafe();
     setActiveVideo(null);
@@ -248,20 +314,44 @@ export default function WatchEarnSection() {
     if (claimingId) return;
     setClaimingId(id);
     try {
+      // Claim öncesi izleme kaydını sunucuya yaz (sayfa değişiminde kaybolmuş olabilir)
+      if (watchedTasks[id]) {
+        try {
+          await fetchWithCreds('/api/member/watch-earn', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ taskId: id, action: 'complete' }),
+          });
+        } catch {
+          /* claim yine denenecek */
+        }
+      }
+
       const res = await fetchWithCreds('/api/member/watch-earn', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ taskId: id }),
+        body: JSON.stringify({ taskId: id, action: 'claim' }),
       });
       const data = await res.json().catch(() => null);
       if (!res.ok) {
         if (data?.error === 'already_claimed') {
           showToast('Bu ödülü zaten aldın.', 'error');
+          clearWatchedLocal(id);
           await loadTasks();
+          return;
+        }
+        if (data?.error === 'not_watched') {
+          showToast('Önce videoyu sonuna kadar izlemen gerekiyor.', 'error');
           return;
         }
         throw new Error(data?.error ?? 'claim_failed');
       }
+      clearWatchedLocal(id);
+      setWatchedTasks((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
       showToast(
         typeof data?.reward === 'number'
           ? `+${data.reward} Papel hesabına eklendi!`
@@ -407,7 +497,7 @@ export default function WatchEarnSection() {
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5 xl:grid-cols-3">
           {tasks.map((task) => {
-            const isWatched = watchedTasks[task.id] || task.claimed;
+            const isWatched = Boolean(watchedTasks[task.id] || task.watched || task.claimed);
             const isClaimed = task.claimed;
 
             return (

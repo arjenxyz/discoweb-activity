@@ -89,6 +89,7 @@ type LocalDevGlobal = typeof globalThis & {
     transferCountPeriod: 'day' | 'week' | 'month' | null;
   };
   __dwLocalDevWatchEarnClaims?: Set<string>;
+  __dwLocalDevWatchEarnWatched?: Set<string>;
 };
 
 const localDevGlobal = globalThis as LocalDevGlobal;
@@ -110,6 +111,13 @@ function getLocalDevWatchEarnClaims(): Set<string> {
     localDevGlobal.__dwLocalDevWatchEarnClaims = new Set();
   }
   return localDevGlobal.__dwLocalDevWatchEarnClaims;
+}
+
+function getLocalDevWatchEarnWatched(): Set<string> {
+  if (!localDevGlobal.__dwLocalDevWatchEarnWatched) {
+    localDevGlobal.__dwLocalDevWatchEarnWatched = new Set();
+  }
+  return localDevGlobal.__dwLocalDevWatchEarnWatched;
 }
 
 const nowIso = () => new Date().toISOString();
@@ -686,10 +694,15 @@ type LocalDevWatchEarnTask = {
   endsAt: string;
   claimed: boolean;
   claimedAt: string | null;
+  watched: boolean;
+  watchedAt: string | null;
   createdAt: string;
 };
 
-const localDevWatchEarnSeed: Omit<LocalDevWatchEarnTask, 'claimed' | 'claimedAt'>[] = [
+const localDevWatchEarnSeed: Omit<
+  LocalDevWatchEarnTask,
+  'claimed' | 'claimedAt' | 'watched' | 'watchedAt'
+>[] = [
   {
     id: 'watch-earn-invincible-1',
     title: 'INVINCIBLE GAMEPLAY GÖREVİ (ÖRNEK)',
@@ -734,16 +747,32 @@ const localDevWatchEarnSeed: Omit<LocalDevWatchEarnTask, 'claimed' | 'claimedAt'
 
 export function getLocalDevWatchEarnTasks(): LocalDevWatchEarnTask[] {
   const claims = getLocalDevWatchEarnClaims();
-  const tasks = localDevWatchEarnSeed.map((task) => ({
-    ...task,
-    claimed: claims.has(task.id),
-    claimedAt: claims.has(task.id) ? nowIso() : null,
-  }));
+  const watched = getLocalDevWatchEarnWatched();
+  const tasks = localDevWatchEarnSeed.map((task) => {
+    const isClaimed = claims.has(task.id);
+    const isWatched = isClaimed || watched.has(task.id);
+    return {
+      ...task,
+      claimed: isClaimed,
+      claimedAt: isClaimed ? nowIso() : null,
+      watched: isWatched,
+      watchedAt: isWatched ? nowIso() : null,
+    };
+  });
   tasks.sort((a, b) => {
     if (a.claimed !== b.claimed) return a.claimed ? 1 : -1;
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
   return tasks;
+}
+
+export function completeLocalDevWatchEarn(
+  taskId: string,
+): { ok: true; watchedAt: string } | { ok: false; error: string } {
+  const task = localDevWatchEarnSeed.find((t) => t.id === taskId);
+  if (!task) return { ok: false, error: 'task_not_found' };
+  getLocalDevWatchEarnWatched().add(taskId);
+  return { ok: true, watchedAt: nowIso() };
 }
 
 export function claimLocalDevWatchEarn(
@@ -753,6 +782,11 @@ export function claimLocalDevWatchEarn(
   if (!task) return { ok: false, error: 'task_not_found' };
   const claims = getLocalDevWatchEarnClaims();
   if (claims.has(taskId)) return { ok: false, error: 'already_claimed' };
+  const watched = getLocalDevWatchEarnWatched();
+  if (!watched.has(taskId)) {
+    // Claim öncesi izleme zorunlu — localDev de aynı kural
+    return { ok: false, error: 'not_watched' };
+  }
   claims.add(taskId);
   localDevWallet.balance = Number((localDevWallet.balance + task.reward).toFixed(2));
   return { ok: true, reward: task.reward, balance: localDevWallet.balance };
