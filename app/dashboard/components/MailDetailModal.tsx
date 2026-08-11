@@ -263,7 +263,9 @@ export default function MailDetailModal({
                           ? '❌'
                           : mailTemplate === 'earn_claim'
                             ? '💰'
-                            : senderCfg.avatar}
+                            : mailTemplate === 'earn_rejected'
+                              ? '❌'
+                              : senderCfg.avatar}
                 </div>
               )}
               <div>
@@ -275,7 +277,8 @@ export default function MailDetailModal({
                     mailTemplate === 'order' ||
                     mailTemplate === 'order_confirmed' ||
                     mailTemplate === 'order_rejected' ||
-                    mailTemplate === 'earn_claim'
+                    mailTemplate === 'earn_claim' ||
+                    mailTemplate === 'earn_rejected'
                       ? 'DiscoWeb'
                       : transferSenderName}
                   </span>
@@ -285,6 +288,7 @@ export default function MailDetailModal({
                     mailTemplate === 'order_confirmed' ||
                     mailTemplate === 'order_rejected' ||
                     mailTemplate === 'earn_claim' ||
+                    mailTemplate === 'earn_rejected' ||
                     senderCfg.verified) && (
                     <LuShield className="h-3.5 w-3.5 text-[#5865F2]" title={t('mail_detail_verified_tooltip')} />
                   )}
@@ -325,13 +329,18 @@ export default function MailDetailModal({
             ) : mailTemplate === 'order_confirmed' ||
               mailTemplate === 'order_rejected' ||
               mailTemplate === 'order' ||
-              mailTemplate === 'earn_claim' ? (
+              mailTemplate === 'earn_claim' ||
+              mailTemplate === 'earn_rejected' ? (
               <MailLocalizedBody
                 mail={mail}
                 template={
                   mailTemplate === 'order'
                     ? 'order_confirmed'
-                    : (mailTemplate as 'order_confirmed' | 'order_rejected' | 'earn_claim')
+                    : (mailTemplate as
+                        | 'order_confirmed'
+                        | 'order_rejected'
+                        | 'earn_claim'
+                        | 'earn_rejected')
                 }
                 t={t}
               />

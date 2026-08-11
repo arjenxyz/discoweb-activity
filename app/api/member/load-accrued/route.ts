@@ -4,6 +4,7 @@ import { checkMaintenance } from '@/lib/maintenance';
 import { requireSessionUser } from '@/lib/auth';
 import { getSelectedGuildId } from '@/lib/guild';
 import { isLocalDevRequest, localDevLoadAccrued } from '@/lib/localDev';
+import { insertEarnMail } from '@/lib/earnMail';
 
 const getSupabase = (): SupabaseClient | null => {
   const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -221,6 +222,29 @@ export async function POST(request: Request) {
     }
 
     const walletGuildId = selectedGuildId;
+    const msgTotal = Number(
+      rows.filter((r) => r.source === 'message').reduce((s: number, r) => s + safeAmount(r.amount), 0).toFixed(2),
+    );
+    const voiceTotal = Number(
+      rows.filter((r) => r.source === 'voice').reduce((s: number, r) => s + safeAmount(r.amount), 0).toFixed(2),
+    );
+
+    const sendRejectMail = async (reason: 'claim_failed' | 'wallet_failed' | 'settle_failed') => {
+      try {
+        await insertEarnMail(supabase, {
+          guildId: selectedGuildId,
+          userId,
+          kind: 'earn_rejected',
+          total,
+          messageTotal: msgTotal,
+          voiceTotal,
+          rowCount: rows.length,
+          reason,
+        });
+      } catch (mailErr) {
+        console.error('[load-accrued] reject mail send failed', mailErr);
+      }
+    };
 
     // Upsert new balance (final) — Papel only; Mari kişisel cüzdanda (lib/mariWallet)
     const finalBalance = Number((currentBalance + total).toFixed(2));
@@ -240,11 +264,14 @@ export async function POST(request: Request) {
         .eq('guild_id', walletRowServer.guild_id)
         .eq('user_id', userId);
     }
-    assertNoError('wallet_upsert', (walletUpsertRes as { error?: { message?: string; code?: string } }).error ?? null);
+    try {
+      assertNoError('wallet_upsert', (walletUpsertRes as { error?: { message?: string; code?: string } }).error ?? null);
+    } catch (err) {
+      await sendRejectMail('wallet_failed');
+      throw err;
+    }
 
     // Insert single ledger entry with a stable/known type.
-    const msgTotal = Number(rows.filter(r => r.source === 'message').reduce((s: number, r) => s + safeAmount(r.amount), 0).toFixed(2));
-    const voiceTotal = Number(rows.filter(r => r.source === 'voice').reduce((s: number, r) => s + safeAmount(r.amount), 0).toFixed(2));
     const ledgerInsertRes = await (supabase.from('wallet_ledger') as unknown as {
       insert: (values: Record<string, unknown>) => Promise<unknown>;
     }).insert({
@@ -260,7 +287,12 @@ export async function POST(request: Request) {
         voice_total: voiceTotal,
       },
     });
-    assertNoError('wallet_ledger_insert', (ledgerInsertRes as { error?: { message?: string; code?: string } }).error ?? null);
+    try {
+      assertNoError('wallet_ledger_insert', (ledgerInsertRes as { error?: { message?: string; code?: string } }).error ?? null);
+    } catch (err) {
+      await sendRejectMail('wallet_failed');
+      throw err;
+    }
 
     // Mark daily_earnings as settled to avoid re-loading
     const ids = rows.map(r => r.id);
@@ -268,35 +300,23 @@ export async function POST(request: Request) {
       .from('daily_earnings')
       .update({ settled_at: new Date().toISOString() })
       .in('id', ids);
-    assertNoError('daily_earnings_settle', settleRes.error ?? null);
+    try {
+      assertNoError('daily_earnings_settle', settleRes.error ?? null);
+    } catch (err) {
+      await sendRejectMail('settle_failed');
+      throw err;
+    }
 
     // Send claim mail
     try {
-      const msgTotal = Number(rows.filter(r => r.source === 'message').reduce((s: number, r) => s + safeAmount(r.amount), 0).toFixed(2));
-      const voiceTotal = Number(rows.filter(r => r.source === 'voice').reduce((s: number, r) => s + safeAmount(r.amount), 0).toFixed(2));
-      // Use the guild ID that bot writes with (selectedGuildId = Discord guild ID)
-      const mailGuildId = selectedGuildId;
-      await supabase.from('system_mails').insert({
-        guild_id: mailGuildId,
-        user_id: userId,
-        title: 'Kazançlarınız Hesabınıza Tanımlandı',
-        body: [
-          `Toplam: ${total} Papel`,
-          `Mesaj: ${msgTotal} Papel`,
-          `Ses: ${voiceTotal} Papel`,
-          `Kayıt: ${rows.length}`,
-        ].join('\n'),
-        category: 'system',
-        status: 'published',
-        author_name: 'DiscoWeb',
-        metadata: {
-          kind: 'earn_claim',
-          i18nKey: 'earn_claim',
-          total,
-          messageTotal: msgTotal,
-          voiceTotal,
-          rowCount: rows.length,
-        },
+      await insertEarnMail(supabase, {
+        guildId: selectedGuildId,
+        userId,
+        kind: 'earn_claim',
+        total,
+        messageTotal: msgTotal,
+        voiceTotal,
+        rowCount: rows.length,
       });
     } catch (mailErr) {
       console.error('[load-accrued] mail send failed', mailErr);

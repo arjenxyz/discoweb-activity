@@ -13,11 +13,17 @@ import {
   LuPackage,
   LuShoppingBag,
   LuTriangleAlert,
+  LuWallet,
 } from 'react-icons/lu';
 
 type Props = {
   mail: MailItem;
-  template: 'order' | 'order_confirmed' | 'order_rejected' | 'earn_claim';
+  template:
+    | 'order'
+    | 'order_confirmed'
+    | 'order_rejected'
+    | 'earn_claim'
+    | 'earn_rejected';
   t: MailT;
 };
 
@@ -64,65 +70,92 @@ function PapelAmount({ amount, className = '' }: { amount: number; className?: s
   );
 }
 
-function reasonLabel(reason: string | null, t: MailT): string {
+function orderReasonLabel(reason: string | null, t: MailT): string {
   if (!reason) return t('mail_order_reason_unknown');
   const key = `mail_order_reason_${reason}`;
   const translated = t(key);
   return translated === key ? reason : translated;
 }
 
+function earnReasonLabel(reason: string | null, t: MailT): string {
+  if (!reason) return t('mail_earn_reason_unknown');
+  const key = `mail_earn_reason_${reason}`;
+  const translated = t(key);
+  return translated === key ? reason : translated;
+}
+
 export default function MailLocalizedBody({ mail, template, t }: Props) {
   const meta = getMailMeta(mail);
-  const isReject = template === 'order_rejected';
-  const isOrder = template === 'order' || template === 'order_confirmed' || isReject;
+  const isEarnReject = template === 'earn_rejected';
+  const isEarn = template === 'earn_claim' || isEarnReject;
+  const isOrderReject = template === 'order_rejected';
+  const isOrder = template === 'order' || template === 'order_confirmed' || isOrderReject;
 
-  if (template === 'earn_claim') {
+  if (isEarn) {
     const total = num(meta.total ?? meta.totalTransferred);
     const messageTotal = num(meta.messageTotal ?? meta.message_total);
     const voiceTotal = num(meta.voiceTotal ?? meta.voice_total);
-    const rowCount = num(meta.rowCount ?? meta.row_count);
+    const reason = typeof meta.reason === 'string' ? meta.reason : null;
+    const accentBorder = isEarnReject ? 'border-rose-500/25' : 'border-emerald-500/25';
+    const accentIcon = isEarnReject
+      ? 'border-rose-500/25 bg-rose-500/10 text-rose-300'
+      : 'border-emerald-500/25 bg-emerald-500/10 text-emerald-300';
 
     return (
-      <div className="w-full min-w-0 overflow-hidden rounded-2xl border border-amber-400/20 bg-white/[0.03]">
+      <div className={`w-full min-w-0 overflow-hidden rounded-2xl border ${accentBorder} bg-white/[0.03]`}>
         <div className="min-w-0 px-4 py-4">
-          <div className="mb-3 flex items-start gap-3">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-amber-400/25 bg-amber-500/10 text-amber-300">
-              <LuGift className="h-5 w-5" />
+          <p className="mb-2.5 text-[10px] font-bold uppercase tracking-[0.18em] text-white/30">
+            {isEarnReject ? t('mail_earn_status_rejected') : t('mail_earn_status_credited')}
+          </p>
+          <div className="flex min-w-0 items-start gap-3">
+            <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full border ${accentIcon}`}>
+              {isEarnReject ? <LuCircleX className="h-5 w-5" /> : <LuWallet className="h-5 w-5" />}
             </div>
-            <div className="min-w-0">
-              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/30">
-                {t('mail_earn_summary')}
-              </p>
-              <p className="mt-1 text-base font-semibold text-white">DiscoWeb</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-base font-semibold text-white">DiscoWeb</p>
             </div>
           </div>
-          <div className="mx-4 border-t border-white/[0.07]" />
-          <div className="pt-4">
-            <p className="mb-3 break-words text-sm leading-relaxed text-white/70">{t('mail_earn_body')}</p>
-            <div className="mb-3">
+        </div>
+
+        <div className="mx-4 border-t border-white/[0.07]" />
+
+        <div className="min-w-0 space-y-3 px-4 py-4">
+          {total > 0 || !isEarnReject ? (
+            <div>
               <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-white/30">
                 {t('mail_earn_total')}
               </p>
-              <PapelAmount amount={total} className="text-3xl text-amber-300" />
+              <PapelAmount
+                amount={total}
+                className={`text-3xl ${isEarnReject ? 'text-rose-300' : 'text-emerald-300'}`}
+              />
             </div>
+          ) : null}
+
+          {isEarnReject ? (
+            <div className="min-w-0 rounded-xl border border-rose-500/15 bg-rose-500/5 p-3">
+              <div className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.18em] text-rose-200/70">
+                <LuTriangleAlert className="h-3.5 w-3.5" />
+                {t('mail_earn_reject_reason')}
+              </div>
+              <p className="break-words text-sm leading-relaxed text-white/80 [overflow-wrap:anywhere]">
+                {earnReasonLabel(reason, t)}
+              </p>
+            </div>
+          ) : null}
+
+          {(messageTotal > 0 || voiceTotal > 0 || !isEarnReject) && (
             <div className="min-w-0 space-y-2 rounded-xl border border-white/[0.06] bg-black/20 px-3 py-3">
               <div className="flex items-center justify-between gap-3">
                 <span className="text-xs text-white/40">{t('mail_earn_message')}</span>
-                <span className="text-sm font-semibold text-white">
-                  {messageTotal.toLocaleString('tr-TR', { maximumFractionDigits: 2 })}
-                </span>
+                <PapelAmount amount={messageTotal} className="text-sm text-white" />
               </div>
               <div className="flex items-center justify-between gap-3">
                 <span className="text-xs text-white/40">{t('mail_earn_voice')}</span>
-                <span className="text-sm font-semibold text-white">
-                  {voiceTotal.toLocaleString('tr-TR', { maximumFractionDigits: 2 })}
-                </span>
+                <PapelAmount amount={voiceTotal} className="text-sm text-white" />
               </div>
-              {rowCount > 0 ? (
-                <p className="pt-1 text-[11px] text-white/35">{t('mail_earn_rows', { count: rowCount })}</p>
-              ) : null}
             </div>
-          </div>
+          )}
         </div>
       </div>
     );
@@ -138,8 +171,8 @@ export default function MailLocalizedBody({ mail, template, t }: Props) {
   const required = num(meta.required);
   const available = num(meta.available);
   const reason = typeof meta.reason === 'string' ? meta.reason : null;
-  const accentBorder = isReject ? 'border-rose-500/25' : 'border-emerald-500/25';
-  const accentIcon = isReject
+  const accentBorder = isOrderReject ? 'border-rose-500/25' : 'border-emerald-500/25';
+  const accentIcon = isOrderReject
     ? 'border-rose-500/25 bg-rose-500/10 text-rose-300'
     : 'border-emerald-500/25 bg-emerald-500/10 text-emerald-300';
 
@@ -147,11 +180,11 @@ export default function MailLocalizedBody({ mail, template, t }: Props) {
     <div className={`w-full min-w-0 overflow-hidden rounded-2xl border ${accentBorder} bg-white/[0.03]`}>
       <div className="min-w-0 px-4 py-4">
         <p className="mb-2.5 text-[10px] font-bold uppercase tracking-[0.18em] text-white/30">
-          {isReject ? t('mail_order_status_rejected') : t('mail_order_status_confirmed')}
+          {isOrderReject ? t('mail_order_status_rejected') : t('mail_order_status_confirmed')}
         </p>
         <div className="flex min-w-0 items-start gap-3">
           <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full border ${accentIcon}`}>
-            {isReject ? <LuCircleX className="h-5 w-5" /> : <LuPackage className="h-5 w-5" />}
+            {isOrderReject ? <LuCircleX className="h-5 w-5" /> : <LuPackage className="h-5 w-5" />}
           </div>
           <div className="min-w-0 flex-1 space-y-1.5">
             <p className="text-base font-semibold text-white">DiscoWeb</p>
@@ -168,26 +201,26 @@ export default function MailLocalizedBody({ mail, template, t }: Props) {
       <div className="mx-4 border-t border-white/[0.07]" />
 
       <div className="min-w-0 space-y-3 px-4 py-4">
-        {total > 0 || (!isReject && subtotal > 0) ? (
+        {total > 0 || (!isOrderReject && subtotal > 0) ? (
           <div>
             <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-white/30">
-              {isReject ? t('mail_order_amount') : t('mail_order_total')}
+              {isOrderReject ? t('mail_order_amount') : t('mail_order_total')}
             </p>
             <PapelAmount
               amount={total || subtotal}
-              className={`text-3xl ${isReject ? 'text-rose-300' : 'text-emerald-300'}`}
+              className={`text-3xl ${isOrderReject ? 'text-rose-300' : 'text-emerald-300'}`}
             />
           </div>
         ) : null}
 
-        {isReject ? (
+        {isOrderReject ? (
           <div className="min-w-0 rounded-xl border border-rose-500/15 bg-rose-500/5 p-3">
             <div className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.18em] text-rose-200/70">
               <LuTriangleAlert className="h-3.5 w-3.5" />
               {t('mail_order_reject_reason')}
             </div>
             <p className="break-words text-sm leading-relaxed text-white/80 [overflow-wrap:anywhere]">
-              {reasonLabel(reason, t)}
+              {orderReasonLabel(reason, t)}
             </p>
             {reason === 'insufficient_funds' && (required > 0 || available >= 0) ? (
               <div className="mt-3 space-y-1.5 border-t border-white/[0.06] pt-3 text-xs text-white/55">
@@ -234,7 +267,7 @@ export default function MailLocalizedBody({ mail, template, t }: Props) {
           </div>
         ) : null}
 
-        {!isReject ? (
+        {!isOrderReject ? (
           <div className="min-w-0 divide-y divide-white/[0.06] rounded-xl border border-white/[0.06] bg-black/20 px-3 py-1">
             <div className="flex items-center justify-between gap-3 py-2">
               <span className="inline-flex items-center gap-2 text-xs text-white/40">
@@ -252,10 +285,6 @@ export default function MailLocalizedBody({ mail, template, t }: Props) {
             </div>
           </div>
         ) : null}
-
-        <p className="break-words text-sm leading-relaxed text-white/55 [overflow-wrap:anywhere]">
-          {isReject ? t('mail_order_reject_footer') : t('mail_order_thanks')}
-        </p>
       </div>
     </div>
   );

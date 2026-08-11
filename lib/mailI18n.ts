@@ -43,6 +43,7 @@ export function resolveMailTemplateId(mail: MailLike): string | null {
       return 'order_confirmed';
     }
     if (explicit === 'order_rejected' || explicit === 'order_failed') return 'order_rejected';
+    if (explicit === 'earn_rejected' || explicit === 'earn_failed') return 'earn_rejected';
     if (explicit === 'earn_claim' || explicit === 'earn' || explicit === 'claim') return 'earn_claim';
     if (explicit.startsWith('mail_title_')) return explicit.replace(/^mail_title_/, '');
   }
@@ -65,12 +66,26 @@ export function resolveMailTemplateId(mail: MailLike): string | null {
     return 'order_rejected';
   }
   if (/sipari[sş]\s*onay/i.test(title) || /order\s*confirm/i.test(title)) return 'order_confirmed';
-  if (/kazançlar[iı]n[iı]z/i.test(title) || /earnings?\s*(credited|claimed)/i.test(title)) {
+  if (
+    /kazançlar[iı]n[iı]z.*tan[iı]mlanmad[iı]/i.test(title) ||
+    /earnings?\s*(not\s*credited|failed|rejected)/i.test(title)
+  ) {
+    return 'earn_rejected';
+  }
+  if (
+    /kazançlar[iı]n[iı]z.*tan[iı]mland[iı]/i.test(title) ||
+    /earnings?\s*(credited|claimed)/i.test(title)
+  ) {
     return 'earn_claim';
   }
 
   // Structured metadata without kind
-  if (meta.status === 'rejected' || meta.status === 'failed') return 'order_rejected';
+  if (meta.status === 'rejected' || meta.status === 'failed') {
+    if (meta.message_total != null || meta.voice_total != null || meta.messageTotal != null) {
+      return 'earn_rejected';
+    }
+    return 'order_rejected';
+  }
   if (meta.order_id || meta.orderId || Array.isArray(meta.items)) return 'order_confirmed';
   if (meta.message_total != null || meta.voice_total != null || meta.messageTotal != null) {
     return 'earn_claim';
@@ -88,6 +103,7 @@ const TITLE_KEYS: Record<string, string> = {
   order_confirmed: 'mail_title_order_confirmed',
   order_rejected: 'mail_title_order_rejected',
   earn_claim: 'mail_title_earn_claimed',
+  earn_rejected: 'mail_title_earn_rejected',
 };
 
 const PREVIEW_KEYS: Record<string, string> = {
@@ -98,6 +114,7 @@ const PREVIEW_KEYS: Record<string, string> = {
   order_confirmed: 'mail_preview_order',
   order_rejected: 'mail_preview_order_rejected',
   earn_claim: 'mail_preview_earn_claim',
+  earn_rejected: 'mail_preview_earn_rejected',
 };
 
 export function resolveMailTitle(mail: MailLike, t: MailT): string {
@@ -154,6 +171,10 @@ export function resolveMailPreview(mail: MailLike, t: MailT, maxLen = 120): stri
   if (template === 'earn_claim') {
     const total = meta.total ?? meta.totalTransferred ?? '';
     return t('mail_preview_earn_claim', { amount: String(total) });
+  }
+
+  if (template === 'earn_rejected') {
+    return t('mail_preview_earn_rejected');
   }
 
   if (template && PREVIEW_KEYS[template]) {
