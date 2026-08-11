@@ -1147,7 +1147,7 @@ export default function DashboardPage() {
     <span className="inline-flex items-center gap-2">
       <Image src="/papel.gif" alt="papel" width={18} height={18} className="h-4 w-4" />
       <span className="text-white">{moneyFormatter.format(value)}</span>
-      <span className="text-xs text-white/40">papel</span>
+      <span className="text-xs font-semibold text-amber-400">papel</span>
     </span>
   );
 
