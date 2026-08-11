@@ -456,20 +456,23 @@ export default function DashboardHeader({
       />
 
       {/* Header — yüzen kavisli üst bar */}
-      <header className={`relative mx-3 mt-5 mb-1 flex items-center rounded-2xl border border-white/20 bg-white/[0.08] shadow-[0_10px_36px_rgba(0,0,0,0.35)] backdrop-blur-2xl px-4 sm:px-5 transition-all duration-200 lg:absolute lg:left-4 lg:right-4 lg:top-2 lg:mx-0 lg:mb-0 ${
+      <header className={`relative mx-2 mt-[max(0.5rem,env(safe-area-inset-top,0px))] mb-1 flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.07] shadow-[0_10px_36px_rgba(0,0,0,0.35)] backdrop-blur-2xl px-2.5 sm:mx-3 sm:px-4 sm:px-5 transition-all duration-200 lg:absolute lg:left-4 lg:right-4 lg:top-2 lg:mx-0 lg:mb-0 lg:mt-0 ${
         minimalProfileOnly
-          ? 'h-12 pt-[env(safe-area-inset-top,0px)]'
+          ? 'h-12'
           : isActivityEmbed
-            ? 'h-auto pt-[env(safe-area-inset-top,0px)] pb-2 min-h-[4rem]'
-            : 'h-14 sm:h-16'
+            ? 'h-12 sm:h-14'
+            : 'h-12 sm:h-16'
       } ${isProfileOpen ? 'z-[9991]' : 'z-30'}`}>
 
         <style>{`@keyframes titleShine{0%,60%{background-position:100% 0}100%{background-position:-100% 0}}`}</style>
 
         {/* Sol — logo */}
         <div className={`${minimalProfileOnly ? 'hidden' : 'flex'} min-w-0 shrink-0 items-center ${profileChromeHidden}`}>
-          <span className="font-black text-xl tracking-tight leading-none" style={logoWhiteStyle}>
+          <span className="hidden font-black text-xl tracking-tight leading-none sm:inline" style={logoWhiteStyle}>
             Disco<span style={logoBlueStyle}>Web</span>
+          </span>
+          <span className="truncate font-black text-[15px] tracking-tight leading-none text-white sm:hidden">
+            Disco<span className="text-[#5865F2]">Web</span>
           </span>
         </div>
 
@@ -520,12 +523,38 @@ export default function DashboardHeader({
           </nav>
         )}
 
-        {(minimalProfileOnly || unauthorized) && <div className="flex-1" />}
+        <div className="min-w-0 flex-1 lg:hidden" />
+
+        {(minimalProfileOnly || unauthorized) && <div className="hidden flex-1 lg:block" />}
 
         {/* Sağ — bakiye + profil */}
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           {!unauthorized && !minimalProfileOnly && (
-            <div className={`hidden lg:flex items-center gap-1.5 ${profileChromeHidden}`}>
+            <>
+              {/* Mobil kompakt bakiyeler */}
+              <div className={`flex items-center gap-1 lg:hidden ${profileChromeHidden}`}>
+                {mariBalance !== undefined && (
+                  <div className="flex items-center gap-1 rounded-full border border-white/[0.08] bg-black/25 px-1.5 py-1 text-[11px]">
+                    <Image src="/Mari.gif" alt="" width={14} height={14} className="h-3.5 w-3.5 shrink-0" unoptimized />
+                    <span className="font-bold tabular-nums text-white">
+                      {walletLoading
+                        ? '—'
+                        : mariBalance.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
+                    </span>
+                  </div>
+                )}
+                <div className="flex items-center gap-1 rounded-full border border-white/[0.08] bg-black/25 px-1.5 py-1 text-[11px]">
+                  <Image src="/papel.gif" alt="" width={14} height={14} className="h-3.5 w-3.5 shrink-0" unoptimized />
+                  <span className="font-bold tabular-nums text-white">
+                    {walletLoading
+                      ? '—'
+                      : walletBalance.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
+                  </span>
+                </div>
+              </div>
+
+              {/* Desktop bakiyeler */}
+              <div className={`hidden lg:flex items-center gap-1.5 ${profileChromeHidden}`}>
               {mariBalance !== undefined && (
                 <div className="flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] px-2.5 py-1.5 text-sm">
                   <Image src="/Mari.gif" alt="Mari" width={16} height={16} className="h-4 w-4 shrink-0" unoptimized />
@@ -546,7 +575,8 @@ export default function DashboardHeader({
                 </span>
                 <span className="text-[11px] font-semibold text-amber-400">Papel</span>
               </div>
-            </div>
+              </div>
+            </>
           )}
 
           {/* Profil butonu — desktop; quiz modunda mobilde de üstte */}
