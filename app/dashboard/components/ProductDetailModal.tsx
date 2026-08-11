@@ -135,7 +135,7 @@ export default function ProductDetailModal({
                     {t('store_product_gained_role')}
                   </p>
                   <p className="truncate text-sm font-bold text-white">
-                    {(item as StoreItem & { role_name?: string }).role_name || t('store_product_role_label')}
+                    {item.role_name?.trim() || item.title}
                   </p>
                 </div>
               </div>

@@ -103,11 +103,44 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'fetch_failed' }, { status: 500 });
   }
 
-  const items = itemsRes.data;
-  const hasMore = (items?.length ?? 0) >= limit;
+  const items = itemsRes.data ?? [];
+  const hasMore = items.length >= limit;
   const ownedRoleIds = (ownedOrdersRes.data ?? []).map((o: { role_id: string | null }) => o.role_id).filter((id): id is string => !!id);
 
-  return NextResponse.json({ promotions: promotionsRes.data ?? [], items: items ?? [], hasMore, page, limit, ownedRoleIds });
+  // Discord rol adlarını ürünlere ekle (ProductDetailModal "Role You'll Gain")
+  const roleIds = [...new Set(items.map((it) => it.role_id).filter((id): id is string => !!id))];
+  const roleNameById = new Map<string, string>();
+  const botToken = process.env.DISCORD_BOT_TOKEN;
+  if (botToken && selectedGuildId && roleIds.length > 0) {
+    try {
+      const rolesRes = await discordFetch(`https://discord.com/api/guilds/${selectedGuildId}/roles`, {
+        headers: { Authorization: `Bot ${botToken}` },
+        cache: 'no-store',
+      });
+      if (rolesRes.ok) {
+        const roles = (await rolesRes.json()) as Array<{ id: string; name?: string }>;
+        for (const role of roles) {
+          if (role.id && role.name) roleNameById.set(role.id, role.name);
+        }
+      }
+    } catch (err) {
+      console.warn('[store] failed to fetch guild roles for names', err);
+    }
+  }
+
+  const itemsWithRoles = items.map((item) => ({
+    ...item,
+    role_name: item.role_id ? (roleNameById.get(item.role_id) ?? null) : null,
+  }));
+
+  return NextResponse.json({
+    promotions: promotionsRes.data ?? [],
+    items: itemsWithRoles,
+    hasMore,
+    page,
+    limit,
+    ownedRoleIds,
+  });
 }
 
 export async function POST(request: Request) {

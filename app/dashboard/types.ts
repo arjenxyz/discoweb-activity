@@ -51,6 +51,7 @@ export type StoreItem = {
   image_url?: string | null;
   status: 'active' | 'inactive';
   role_id: string | null;
+  role_name?: string | null;
   duration_days: number;
   created_at: string;
 };
