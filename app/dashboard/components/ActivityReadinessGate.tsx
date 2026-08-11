@@ -284,25 +284,13 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry, onB
 
   const copyToClipboard = async (text: string) => {
     try {
-      // Discord Activity'de clipboard API Ã§alÄ±ÅŸmaz, execCommand fallback
-      const el = document.createElement('textarea');
-      el.value = text;
-      el.style.cssText = 'position:fixed;opacity:0;pointer-events:none';
-      document.body.appendChild(el);
-      el.focus();
-      el.select();
-      document.execCommand('copy');
-      document.body.removeChild(el);
+      const { copyTextToClipboard } = await import('@/lib/clipboard');
+      const ok = await copyTextToClipboard(text);
+      if (!ok) return;
       setCopied(true);
       setTimeout(() => setCopied(false), 1600);
     } catch {
-      try {
-        await navigator.clipboard.writeText(text);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 1600);
-      } catch {
-        setCopied(false);
-      }
+      setCopied(false);
     }
   };
 

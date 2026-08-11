@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ComponentType, type ReactNode } from 'react';
 import Image from 'next/image';
+import { copyTextToClipboard } from '@/lib/clipboard';
 import {
   LuVolume2,
   LuVolumeX,
@@ -237,13 +238,10 @@ export default function SettingsSection({
 
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const copyText = async (label: string, value: string) => {
-    try {
-      await navigator.clipboard.writeText(value);
-      setCopiedField(label);
-      window.setTimeout(() => setCopiedField(null), 1600);
-    } catch {
-      /* ignore */
-    }
+    const ok = await copyTextToClipboard(value);
+    if (!ok) return;
+    setCopiedField(label);
+    window.setTimeout(() => setCopiedField(null), 1600);
   };
 
   const oauthScopes = [

@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { useState, type ReactNode } from 'react';
 import type { MailItem } from '../types';
+import { copyTextToClipboard } from '@/lib/clipboard';
 import {
   LuCheck,
   LuCopy,
@@ -269,19 +270,20 @@ function CopyIdButton({ value, t }: { value: string; t: (key: string) => string 
   const [copied, setCopied] = useState(false);
 
   const onCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(value);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 1600);
-    } catch {
-      /* ignore */
-    }
+    const ok = await copyTextToClipboard(value);
+    if (!ok) return;
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1600);
   };
 
   return (
     <button
       type="button"
-      onClick={() => void onCopy()}
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        void onCopy();
+      }}
       className="group inline-flex max-w-full items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-2 py-1 text-left transition hover:border-white/20 hover:bg-white/[0.06]"
       title={t('mail_txn_copy_id')}
     >
