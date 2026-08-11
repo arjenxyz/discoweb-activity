@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useT } from '@/contexts/LocaleContext';
 import {
   LuMessageSquare,
@@ -74,6 +74,15 @@ export default function OverviewSection({
   const claimStatus = claimResult?.kind ?? 'idle';
   const totalsSince = (overviewStats as OverviewStatsExpanded)?.totalsSinceVerified;
   const verifiedSince = (overviewStats as OverviewStatsExpanded)?.verifiedSince;
+  const expandedStats = overviewStats as OverviewStatsExpanded | null;
+  const [activityStatIndex, setActivityStatIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setActivityStatIndex((prev) => (prev + 1) % 2);
+    }, 5000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     if (!claimResult || claimResult.kind === 'idle' || !onClearClaimResult) return;
@@ -196,19 +205,31 @@ export default function OverviewSection({
             {[
               {
                 label: t('overview_stat_message_label'),
-                value: overviewStats?.userMessages?.toLocaleString() ?? '0',
-                sub: t('overview_stat_message_sub'),
+                value: (activityStatIndex === 0
+                  ? overviewStats?.userMessages
+                  : expandedStats?.messagesLast24h
+                )?.toLocaleString('tr-TR') ?? '0',
+                sub: activityStatIndex === 0
+                  ? t('overview_stat_message_sub')
+                  : t('overview_stat_message_today_sub'),
                 icon: <LuMessageSquare className="h-4 w-4" />,
                 color: 'text-indigo-400',
                 active: true,
+                rotateKey: `msg-${activityStatIndex}`,
               },
               {
                 label: t('overview_stat_voice_label'),
-                value: overviewStats?.userVoiceMinutes?.toLocaleString() ?? '0',
-                sub: t('overview_stat_voice_sub'),
+                value: (activityStatIndex === 0
+                  ? overviewStats?.userVoiceMinutes
+                  : expandedStats?.voiceMinutesLast24h
+                )?.toLocaleString('tr-TR') ?? '0',
+                sub: activityStatIndex === 0
+                  ? t('overview_stat_voice_sub')
+                  : t('overview_stat_voice_today_sub'),
                 icon: <LuMic className="h-4 w-4" />,
                 color: 'text-violet-400',
                 active: true,
+                rotateKey: `voice-${activityStatIndex}`,
               },
               {
                 label: t('overview_stat_tag_label'),
@@ -222,6 +243,7 @@ export default function OverviewSection({
                 progress: hasTag && nextBadge ? tagProgressPct : null,
                 accent: currentBadge?.color ?? '#818cf8',
                 onClick: onNavigateToPrivileges,
+                rotateKey: 'tag',
               },
               {
                 label: t('overview_stat_boost_label'),
@@ -235,8 +257,9 @@ export default function OverviewSection({
                 progress: isBooster && nextBoosterBadge ? boostProgressPct : null,
                 accent: currentBoosterBadge?.color ?? '#f472b6',
                 onClick: onNavigateToPrivileges,
+                rotateKey: 'boost',
               },
-            ].map(({ label, value, sub, icon, color, active, progress, accent, onClick }) => {
+            ].map(({ label, value, sub, icon, color, active, progress, accent, onClick, rotateKey }) => {
               const Wrapper = onClick ? 'button' : 'div';
               return (
               <Wrapper
@@ -249,8 +272,10 @@ export default function OverviewSection({
                   <span className="text-[10px] font-semibold text-white/40 uppercase tracking-wider">{label}</span>
                   <span className={color}>{icon}</span>
                 </div>
-                <p className={`text-xl sm:text-2xl font-black tabular-nums truncate ${active ? 'text-white' : 'text-white/20'}`}>{value}</p>
-                <p className="mt-0.5 text-[10px] text-white/30">{sub}</p>
+                <div key={rotateKey} className="animate-in fade-in duration-300">
+                  <p className={`text-xl sm:text-2xl font-black tabular-nums truncate ${active ? 'text-white' : 'text-white/20'}`}>{value}</p>
+                  <p className="mt-0.5 text-[10px] text-white/30">{sub}</p>
+                </div>
                 {progress != null && (
                   <div className="mt-2.5 h-1 overflow-hidden rounded-full bg-white/[0.06]">
                     <div
