@@ -85,17 +85,28 @@ const pickProfileMenuBackground = () =>
 
 function ProfileMenuHeader({
   background,
+  openLink,
+  section,
 }: {
   background: string;
+  openLink?: (url: string) => Promise<void>;
+  section?: string;
 }) {
   return (
-    <div className="relative h-[88px] overflow-hidden bg-[#0b0d12]">
-      <Image src={background} alt="" fill className="object-cover opacity-70" unoptimized />
-      <div className="absolute inset-0 bg-gradient-to-t from-[#0f1116] via-[#0f1116]/80 to-black/25" />
-      <div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-[#0f1116] to-transparent" />
-      <div className="absolute bottom-3 left-4 right-4">
+    <div className="relative h-[88px] bg-[#0b0d12]">
+      <div className="absolute inset-0 overflow-hidden">
+        <Image src={background} alt="" fill className="object-cover opacity-70" unoptimized />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0f1116] via-[#0f1116]/80 to-black/25" />
+        <div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-[#0f1116] to-transparent" />
+      </div>
+      <div className="absolute bottom-3 left-4 right-14">
         <ServerTimeClock variant="banner" />
       </div>
+      {openLink ? (
+        <div className="absolute right-2.5 top-2.5 z-20">
+          <SupportMenu openLink={openLink} section={section} />
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -354,7 +365,11 @@ export default function DashboardHeader({
               onClick={(e) => e.stopPropagation()}
               className="fixed right-4 top-[calc(env(safe-area-inset-top,0px)+3.75rem)] z-[10030] w-[min(320px,calc(100vw-2rem))] rounded-2xl border border-white/10 bg-[#0f1116] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
             >
-              <ProfileMenuHeader background={profileHeaderBg} />
+              <ProfileMenuHeader
+                background={profileHeaderBg}
+                openLink={!minimalProfileOnly ? openLink : undefined}
+                section={navigation.activeSection}
+              />
               <div className="p-3 space-y-1.5">
                 <div className="flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.03] px-3 py-2.5">
                   <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full border border-white/15">
@@ -534,12 +549,6 @@ export default function DashboardHeader({
             </div>
           )}
 
-          {openLink && !minimalProfileOnly && (
-            <div className={profileChromeHidden}>
-              <SupportMenu openLink={openLink} section={navigation.activeSection} />
-            </div>
-          )}
-
           {/* Profil butonu — desktop; quiz modunda mobilde de üstte */}
           {!unauthorized && (
             <div className={`relative ${minimalProfileOnly ? 'block' : 'hidden lg:block'}`}>
@@ -580,7 +589,11 @@ export default function DashboardHeader({
                 }`}
               >
                 <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#0f1116] shadow-2xl">
-                  <ProfileMenuHeader background={profileHeaderBg} />
+                  <ProfileMenuHeader
+                    background={profileHeaderBg}
+                    openLink={!minimalProfileOnly ? openLink : undefined}
+                    section={navigation.activeSection}
+                  />
 
                   <div className="p-3 space-y-1.5">
                     {profileMenuExit}
@@ -793,7 +806,11 @@ export default function DashboardHeader({
             onClick={e => e.stopPropagation()}
             className="absolute bottom-full right-2 left-2 mb-1 z-50 rounded-2xl border border-white/10 bg-[#0f1116] shadow-2xl overflow-hidden"
           >
-            <ProfileMenuHeader background={profileHeaderBg} />
+            <ProfileMenuHeader
+              background={profileHeaderBg}
+              openLink={!minimalProfileOnly ? openLink : undefined}
+              section={navigation.activeSection}
+            />
 
             <div className="p-3 space-y-1.5">
               {profileMenuExit}
