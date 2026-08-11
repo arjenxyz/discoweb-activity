@@ -19,8 +19,6 @@ type TransferModalProps = {
   loading: boolean;
   error: string | null;
   success: string | null;
-  mariBalance?: number;
-  mariFee?: number;
   recipientProfile?: RecipientProfile | null;
   recipientStatus?: 'idle' | 'loading' | 'ready' | 'not_found' | 'error';
   onRecipientChange: (value: string) => void;
@@ -37,7 +35,6 @@ type TransferConfirmModalProps = {
   amount: string;
   taxAmount: string;
   totalDebit: string;
-  mariFee: number;
   onClose: () => void;
   onConfirm: () => void;
 };
@@ -96,8 +93,6 @@ export default function TransferModal({
   loading,
   error,
   success,
-  mariBalance,
-  mariFee,
   recipientProfile,
   recipientStatus = 'idle',
   onRecipientChange,
@@ -167,17 +162,6 @@ export default function TransferModal({
             />
           </div>
 
-          {typeof mariFee === 'number' && (
-            <p className="text-xs text-white/45">
-              {t('transfer_mari_fee', { amount: mariFee })}
-              {typeof mariBalance === 'number' && (
-                <span className="ml-2 text-white/30">
-                  {t('transfer_mari_balance', { amount: mariBalance.toFixed(3) })}
-                </span>
-              )}
-            </p>
-          )}
-
           {error && <p className="text-xs text-rose-300">{error}</p>}
           {success && <p className="text-xs text-emerald-300">{success}</p>}
         </div>
@@ -213,7 +197,6 @@ export function TransferConfirmModal({
   amount,
   taxAmount,
   totalDebit,
-  mariFee,
   onClose,
   onConfirm,
 }: TransferConfirmModalProps) {
@@ -246,7 +229,6 @@ export function TransferConfirmModal({
             <p>{t('transfer_confirm_amount', { amount })}</p>
             <p>{t('transfer_confirm_tax', { amount: taxAmount })}</p>
             <p className="font-medium text-white">{t('transfer_confirm_total_debit', { amount: totalDebit })}</p>
-            <p className="text-xs text-white/45">{t('transfer_confirm_mari_fee', { amount: String(mariFee) })}</p>
           </div>
 
           {error && <p className="text-xs text-rose-300">{error}</p>}

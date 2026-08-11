@@ -938,7 +938,6 @@ export default function DashboardPage() {
     () => new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }),
     [],
   );
-  const transferMariFee = 1;
 
   useEffect(() => {
     if (!transferRecipientId.trim()) {
@@ -1039,8 +1038,6 @@ export default function DashboardPage() {
     const data = (await response.json().catch(() => ({}))) as {
       error?: string;
       senderBalance?: number;
-      senderMariBalance?: number;
-      mariFee?: number;
       taxAmount?: number;
     };
 
@@ -1055,8 +1052,6 @@ export default function DashboardPage() {
         setTransferError(t('transfer_error_insufficient'));
       } else if (data.error === 'daily_limit_exceeded') {
         setTransferError(t('transfer_error_daily_limit'));
-      } else if (data.error === 'insufficient_mari') {
-        setTransferError(t('transfer_error_insufficient_mari'));
       } else if (data.error === 'invalid_payload') {
         setTransferError(t('transfer_error_invalid_payload'));
       } else if (data.error === 'unauthorized') {
@@ -1070,9 +1065,6 @@ export default function DashboardPage() {
 
     if (typeof data.senderBalance === 'number') {
       setWalletBalance(data.senderBalance);
-    }
-    if (typeof data.senderMariBalance === 'number') {
-      setMariBalance(data.senderMariBalance);
     }
     setTransferSuccess(t('transfer_success', { amount: Number(data.taxAmount ?? 0).toFixed(2) }));
     setTransferRecipientId('');
@@ -1701,8 +1693,6 @@ export default function DashboardPage() {
         loading={transferLoading}
         error={transferError}
         success={transferSuccess}
-        mariBalance={mariBalance}
-        mariFee={transferMariFee}
         recipientProfile={transferRecipientProfile}
         recipientStatus={transferRecipientStatus}
         onRecipientChange={setTransferRecipientId}
@@ -1719,7 +1709,6 @@ export default function DashboardPage() {
           amount={moneyFormatter.format(Number(transferAmount || 0))}
           taxAmount={moneyFormatter.format(Number((Number(transferAmount || 0) * transferTaxRate).toFixed(2)))}
           totalDebit={moneyFormatter.format(Number((Number(transferAmount || 0) * (1 + transferTaxRate)).toFixed(2)))}
-          mariFee={transferMariFee}
           onClose={() => setTransferConfirmOpen(false)}
           onConfirm={handleConfirmTransfer}
         />

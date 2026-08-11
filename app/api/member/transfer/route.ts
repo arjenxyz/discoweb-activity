@@ -3,11 +3,6 @@ import { NextResponse } from 'next/server';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { checkMaintenance } from '@/lib/maintenance';
 import { requireSessionUser } from '@/lib/auth';
-import {
-  deductUserMari,
-  getUserMariBalance,
-  insertMariLedger,
-} from '@/lib/mariWallet';
 
 const GUILD_ID = process.env.DISCORD_GUILD_ID ?? null;
 
@@ -189,46 +184,25 @@ export async function POST(request: Request) {
   const totalDebit = Number((payload.amount + taxAmount).toFixed(2));
 
   const senderBalance = await getBalance(supabase, userId, selectedGuildId ?? server.id, server.id);
-  const mariFee = 1;
-  const senderMariBalance = await getUserMariBalance(supabase, userId);
   if (senderBalance.balance < totalDebit) {
     return NextResponse.json({ error: 'insufficient_funds' }, { status: 400 });
-  }
-  if (senderMariBalance < mariFee) {
-    return NextResponse.json({ error: 'insufficient_mari' }, { status: 400 });
   }
 
   const receiverBalance = await getBalance(supabase, payload.recipientId, selectedGuildId ?? server.id, server.id);
 
   const newSenderBalance = Number((senderBalance.balance - totalDebit).toFixed(2));
   const newReceiverBalance = Number((receiverBalance.balance + payload.amount).toFixed(2));
-  let newSenderMariBalance: number;
-  try {
-    newSenderMariBalance = await deductUserMari(supabase, userId, mariFee);
-  } catch {
-    return NextResponse.json({ error: 'insufficient_mari' }, { status: 400 });
-  }
 
   await setPapelBalance(supabase, userId, senderBalance.guildId, newSenderBalance);
   await addLedger(supabase, userId, senderBalance.guildId, payload.amount, 'transfer_out', newSenderBalance, {
     recipientId: payload.recipientId,
     tax: taxAmount,
-    mari_fee: mariFee,
   });
   if (taxAmount > 0) {
     await addLedger(supabase, userId, senderBalance.guildId, taxAmount, 'transfer_tax', newSenderBalance, {
       recipientId: payload.recipientId,
     });
   }
-
-  await insertMariLedger(supabase, {
-    userId,
-    amount: -mariFee,
-    type: 'transfer_mari_fee',
-    balanceAfter: newSenderMariBalance,
-    contextGuildId: selectedGuildId ?? server.id,
-    metadata: { recipient_id: payload.recipientId },
-  });
 
   await setPapelBalance(supabase, payload.recipientId, receiverBalance.guildId, newReceiverBalance);
   await addLedger(supabase, payload.recipientId, receiverBalance.guildId, payload.amount, 'transfer_in', newReceiverBalance, {
@@ -246,8 +220,6 @@ export async function POST(request: Request) {
   return NextResponse.json({
     status: 'ok',
     senderBalance: newSenderBalance,
-    senderMariBalance: newSenderMariBalance,
-    mariFee,
     receiverBalance: newReceiverBalance,
     taxAmount,
   });
