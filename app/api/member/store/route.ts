@@ -8,6 +8,7 @@ import { logBotError } from '@/lib/activityLogger';
 import { cleanupExpiredRolesForUser } from '@/lib/roleCleanup';
 import { getSelectedGuildId } from '@/lib/guild';
 import { isLocalDevRequest, localDevStore } from '@/lib/localDev';
+import { insertOrderMail } from '@/lib/orderMail';
 
 const GUILD_ID = process.env.DISCORD_GUILD_ID ?? null;
 
@@ -337,10 +338,23 @@ export async function POST(request: Request) {
           const siteUrl = process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || '';
           const normalizedSite = siteUrl ? siteUrl.replace(/\/$/, '') : '';
           const refundUrl = normalizedSite ? `${normalizedSite}/api/member/refund?orderId=${order?.id}` : null;
-          const { refundButtonHtml } = await import('@/lib/mailHelpers');
-          const buttonHtml = refundButtonHtml('role_assign_failed', refundUrl);
-          const html = `<!doctype html><html><head><meta charset="utf-8"></head><body style="background:#0f1113;color:#e6eef8;font-family:Inter,system-ui,Arial;padding:20px"><div style="max-width:600px;margin:0 auto;background:#0b0c0d;padding:20px;border-radius:12px"><div style="display:flex;gap:12px;align-items:center"><div style="width:48px;height:48;border-radius:10px;background:linear-gradient(135deg,#5865F2,#8b5cf6);display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff">FOX</div><div><div style="font-weight:800">Sistem Raporu: İşlem Kesintisi</div><div style="color:#b9bbbe;font-size:13px">DiscoWeb</div></div></div><div style="margin-top:12px;background:#111214;padding:14px;border-radius:10px;line-height:1.6"><p>Satın alma teslimatı sırasında bir hata oluştu. Ödeme düşülmeden önce rol verme işlemi başarısız oldu.</p><div style="font-family:Courier New,monospace;background:rgba(255,255,255,0.02);padding:12px;border-radius:8px;margin-top:12px">Durum: <strong>FAILED_TO_DELIVER</strong><br>HTTP: ${assignRes.status}</div><p style="margin-top:12px">Aşağıdaki butonu kullanarak iade talebini başlatabilirsin.</p><div style="margin-top:10px">${buttonHtml}</div><p style="margin-top:12px;color:#9aa0a6">Yaşanan aksaklık için üzgünüz.</p></div></div></body></html>`;
-          await supabaseClient.from('system_mails').insert({ guild_id: selectedGuildId, user_id: userId, title: 'Sistem Raporu: İşlem Kesintisi', body: html, category: 'system', status: 'published', author_name: 'DiscoWeb Sistem', created_at: new Date().toISOString() });
+          await insertOrderMail(supabaseClient, {
+            guildId: selectedGuildId,
+            userId,
+            kind: 'order_rejected',
+            orderId: order?.id,
+            items: orderItems.map((it) => ({
+              title: it.title,
+              qty: it.qty,
+              price: Number(it.price),
+              total: Number(it.total),
+            })),
+            subtotal: Number(subtotal),
+            discount: Number(discountAmount ?? 0),
+            total: Number(total),
+            reason: 'role_assign_failed',
+            refundUrl,
+          });
         } catch (e) {
           console.warn('Failed to insert delivery-failure mail', e);
         }
@@ -397,15 +411,21 @@ export async function POST(request: Request) {
         .eq('id', order?.id);
       // Kullanıcıya bilgi ver
       try {
-        await supabaseClient.from('system_mails').insert({
-          guild_id: selectedGuildId,
-          user_id: userId,
-          title: 'Sipariş Hatası: Yönetici İncelemesi Gerekiyor',
-          body: `Sipariş #${order?.id} işleminizde ödeme alınamadı ancak rol geri alınamadı. Yönetici inceleyecektir.`,
-          category: 'system',
-          status: 'published',
-          author_name: 'DiscoWeb Sistem',
-          created_at: new Date().toISOString(),
+        await insertOrderMail(supabaseClient, {
+          guildId: selectedGuildId,
+          userId,
+          kind: 'order_rejected',
+          orderId: order?.id,
+          items: orderItems.map((it) => ({
+            title: it.title,
+            qty: it.qty,
+            price: Number(it.price),
+            total: Number(it.total),
+          })),
+          subtotal: Number(subtotal),
+          discount: Number(discountAmount ?? 0),
+          total: Number(total),
+          reason: 'rollback_failed',
         });
       } catch {}
       return NextResponse.json({ error: 'rollback_failed', message: 'Ödeme işlemi başarısız, yönetici bilgilendirildi.' }, { status: 500 });
@@ -507,74 +527,23 @@ export async function POST(request: Request) {
   let mailInserted = false;
   let mailInsertError: string | null = null;
   try {
-    const getDiscordUser = async (uid: string) => {
-      try {
-        const botToken = process.env.DISCORD_BOT_TOKEN;
-        if (!botToken) return null;
-        const res = await fetch(`https://discord.com/api/users/${uid}`, { headers: { Authorization: `Bot ${botToken}` } });
-        if (!res.ok) return null;
-        const u = await res.json();
-        return { username: u.username, avatar: u.avatar ? `https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.png` : null };
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (e) {
-        return null;
-      }
-    };
-
-    const userInfo = await getDiscordUser(userId);
-    const purchaseDate = new Date(updatedOrder.applied_at ?? updatedOrder.created_at ?? Date.now()).toLocaleString('tr-TR', { dateStyle: 'long', timeStyle: 'short' } as Intl.DateTimeFormatOptions);
-
-    const lines: string[] = [];
-    lines.push(`Sayın @${userInfo?.username ?? userId},`);
-    lines.push('');
-    lines.push(`${purchaseDate} tarihinde gerçekleştirdiğiniz satın alma işlemi başarıyla tamamlandı.`);
-    lines.push('');
-    lines.push(`Sipariş No: ${updatedOrder.id}`);
-    lines.push('');
-    lines.push('Ürünler:');
-    for (const it of orderItems) {
-      lines.push(`• ${it.title} x${it.qty} — ${Number(it.price).toFixed(2)} each, toplam ${Number(it.total).toFixed(2)} Papel`);
-    }
-    lines.push('');
-    lines.push(`Ara Toplam: ${Number(subtotal).toFixed(2)} Papel`);
-    lines.push(`İndirim: ${Number(discountAmount ?? 0).toFixed(2)} Papel`);
-    lines.push(`Toplam Ödenen: ${Number(total).toFixed(2)} Papel`);
-    lines.push('');
-    // Ödeme yöntemi ve hesap bakiyesi artık bildirime eklenmiyor
-    lines.push('Fişiniz tarafınıza iletilmiştir. İyi günlerde kullanın.');
-
-    const receiptBody = lines.join('\n');
-
-    const metadata = {
-      kind: 'order',
-      i18nKey: 'order',
-      order_id: updatedOrder.id,
-      items: orderItems.map(it => ({ title: it.title, qty: it.qty, price: it.price, total: it.total })),
+    const result = await insertOrderMail(supabaseClient, {
+      guildId: selectedGuildId,
+      userId,
+      kind: 'order_confirmed',
+      orderId: updatedOrder.id,
+      items: orderItems.map((it) => ({
+        title: it.title,
+        qty: it.qty,
+        price: Number(it.price),
+        total: Number(it.total),
+      })),
       subtotal: Number(subtotal),
       discount: Number(discountAmount ?? 0),
       total: Number(total),
-      purchase_date: updatedOrder.applied_at ?? updatedOrder.created_at,
-    };
-
-    const { error: mailErr } = await supabaseClient.from('system_mails').insert({
-      guild_id: selectedGuildId,
-      user_id: userId,
-      title: `Sipariş Onayı`,
-      body: receiptBody,
-      metadata: metadata,
-      category: 'order',
-      status: 'published',
-      created_at: new Date().toISOString(),
-      author_name: 'DiscoWeb',
-      author_avatar_url: userInfo?.avatar ?? null,
     });
-    if (mailErr) {
-      mailInsertError = String(mailErr.message ?? JSON.stringify(mailErr));
-      console.error('Receipt mail error:', mailErr);
-    } else {
-      mailInserted = true;
-      console.log(`Receipt mail saved for ${userId} (order ${updatedOrder.id})`);
-    }
+    mailInserted = result.ok;
+    mailInsertError = result.error ?? null;
   } catch {
     console.error('Receipt notification failed');
   }

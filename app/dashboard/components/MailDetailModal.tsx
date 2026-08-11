@@ -257,11 +257,13 @@ export default function MailDetailModal({
                     ? '🎁'
                     : txn?.kind === 'discount' || mailTemplate === 'discount'
                       ? '🏷️'
-                      : mailTemplate === 'order'
+                      : mailTemplate === 'order_confirmed' || mailTemplate === 'order'
                         ? '📦'
-                        : mailTemplate === 'earn_claim'
-                          ? '💰'
-                          : senderCfg.avatar}
+                        : mailTemplate === 'order_rejected'
+                          ? '❌'
+                          : mailTemplate === 'earn_claim'
+                            ? '💰'
+                            : senderCfg.avatar}
                 </div>
               )}
               <div>
@@ -271,6 +273,8 @@ export default function MailDetailModal({
                     txn?.kind === 'discount' ||
                     mailTemplate === 'discount' ||
                     mailTemplate === 'order' ||
+                    mailTemplate === 'order_confirmed' ||
+                    mailTemplate === 'order_rejected' ||
                     mailTemplate === 'earn_claim'
                       ? 'DiscoWeb'
                       : transferSenderName}
@@ -278,6 +282,8 @@ export default function MailDetailModal({
                   {(txn?.kind === 'promotion' ||
                     txn?.kind === 'discount' ||
                     mailTemplate === 'order' ||
+                    mailTemplate === 'order_confirmed' ||
+                    mailTemplate === 'order_rejected' ||
                     mailTemplate === 'earn_claim' ||
                     senderCfg.verified) && (
                     <LuShield className="h-3.5 w-3.5 text-[#5865F2]" title={t('mail_detail_verified_tooltip')} />
@@ -316,10 +322,17 @@ export default function MailDetailModal({
           <div className="mb-6 min-w-0 overflow-hidden">
             {txn ? (
               <MailTransactionReceipt mail={mail} txn={txn} t={t} />
-            ) : mailTemplate === 'order' || mailTemplate === 'earn_claim' ? (
+            ) : mailTemplate === 'order_confirmed' ||
+              mailTemplate === 'order_rejected' ||
+              mailTemplate === 'order' ||
+              mailTemplate === 'earn_claim' ? (
               <MailLocalizedBody
                 mail={mail}
-                template={mailTemplate}
+                template={
+                  mailTemplate === 'order'
+                    ? 'order_confirmed'
+                    : (mailTemplate as 'order_confirmed' | 'order_rejected' | 'earn_claim')
+                }
                 t={t}
               />
             ) : (

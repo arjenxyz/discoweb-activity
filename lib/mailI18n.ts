@@ -39,7 +39,10 @@ export function resolveMailTemplateId(mail: MailLike): string | null {
     if (explicit === 'transfer') return 'transfer';
     if (explicit === 'promotion' || explicit === 'promo') return 'promotion';
     if (explicit === 'discount') return 'discount';
-    if (explicit === 'order' || explicit === 'order_receipt') return 'order';
+    if (explicit === 'order' || explicit === 'order_receipt' || explicit === 'order_confirmed') {
+      return 'order_confirmed';
+    }
+    if (explicit === 'order_rejected' || explicit === 'order_failed') return 'order_rejected';
     if (explicit === 'earn_claim' || explicit === 'earn' || explicit === 'claim') return 'earn_claim';
     if (explicit.startsWith('mail_title_')) return explicit.replace(/^mail_title_/, '');
   }
@@ -52,13 +55,23 @@ export function resolveMailTemplateId(mail: MailLike): string | null {
   if (/yeni\s+indirim/i.test(title) || /özel\s+promosyon\s*kodu/i.test(title) || /discount\s*code/i.test(title)) {
     return 'discount';
   }
-  if (/sipari[sş]\s*onay/i.test(title) || /order\s*confirm/i.test(title)) return 'order';
+  if (
+    /sipari[sş].*(red|hata|ba[sş]ar[iı]s[iı]z|kesinti)/i.test(title) ||
+    /order\s*(reject|fail|denied)/i.test(title) ||
+    /i[sş]lem\s*kesinti/i.test(title) ||
+    /bakiye\s*yetersiz/i.test(title) ||
+    /sat[iı]n\s*alma\s*ba[sş]ar[iı]s[iı]z/i.test(title)
+  ) {
+    return 'order_rejected';
+  }
+  if (/sipari[sş]\s*onay/i.test(title) || /order\s*confirm/i.test(title)) return 'order_confirmed';
   if (/kazançlar[iı]n[iı]z/i.test(title) || /earnings?\s*(credited|claimed)/i.test(title)) {
     return 'earn_claim';
   }
 
   // Structured metadata without kind
-  if (meta.order_id || meta.orderId || Array.isArray(meta.items)) return 'order';
+  if (meta.status === 'rejected' || meta.status === 'failed') return 'order_rejected';
+  if (meta.order_id || meta.orderId || Array.isArray(meta.items)) return 'order_confirmed';
   if (meta.message_total != null || meta.voice_total != null || meta.messageTotal != null) {
     return 'earn_claim';
   }
@@ -72,6 +85,8 @@ const TITLE_KEYS: Record<string, string> = {
   promotion: 'mail_title_promo_redeemed',
   discount: 'mail_title_discount_new',
   order: 'mail_title_order_confirmed',
+  order_confirmed: 'mail_title_order_confirmed',
+  order_rejected: 'mail_title_order_rejected',
   earn_claim: 'mail_title_earn_claimed',
 };
 
@@ -80,6 +95,8 @@ const PREVIEW_KEYS: Record<string, string> = {
   promotion: 'mail_preview_promo',
   discount: 'mail_preview_discount',
   order: 'mail_preview_order',
+  order_confirmed: 'mail_preview_order',
+  order_rejected: 'mail_preview_order_rejected',
   earn_claim: 'mail_preview_earn_claim',
 };
 
@@ -121,9 +138,15 @@ export function resolveMailPreview(mail: MailLike, t: MailT, maxLen = 120): stri
     });
   }
 
-  if (template === 'order') {
+  if (template === 'order' || template === 'order_confirmed') {
     return t('mail_preview_order', {
       total: String(meta.total ?? ''),
+      orderId: String(meta.order_id ?? meta.orderId ?? ''),
+    });
+  }
+
+  if (template === 'order_rejected') {
+    return t('mail_preview_order_rejected', {
       orderId: String(meta.order_id ?? meta.orderId ?? ''),
     });
   }
