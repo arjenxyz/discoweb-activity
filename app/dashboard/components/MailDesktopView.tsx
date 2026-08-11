@@ -145,6 +145,17 @@ export default function MailDesktopView({
               <span className="sm:hidden">{t('mail_mark_all_read_short')}</span>
             </button>
           )}
+          {!loading && (countsUnread.reward ?? 0) > 0 && (
+            <button
+              type="button"
+              onClick={onClaimAll}
+              className="inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-[11px] font-semibold text-emerald-300 transition hover:bg-emerald-500/15 hover:text-white"
+            >
+              <LuGift className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">{t('mail_claim_all')}</span>
+              <span className="sm:hidden">{t('mail_claim_all_short')}</span>
+            </button>
+          )}
           <button
             type="button"
             onClick={onRefresh}
