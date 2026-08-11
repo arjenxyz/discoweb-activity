@@ -31,7 +31,7 @@ export default function MailChatBubble({ mail, dateLabel, onClick }: Props) {
       <div
         className={`relative max-w-[88%] rounded-2xl rounded-bl-md border px-3.5 py-3 text-left transition-all duration-200 active:scale-[0.99] ${
           unread
-            ? 'border-l-[3px] border-l-[#5865F2] border-y-white/[0.08] border-r-white/[0.08] bg-[#0f1116]/95 shadow-[0_0_24px_-10px_rgba(88,101,242,0.4)]'
+            ? 'border-white/[0.10] bg-[#12141b]'
             : 'border-white/[0.06] bg-[#0f1116]/80'
         }`}
       >
@@ -40,6 +40,11 @@ export default function MailChatBubble({ mail, dateLabel, onClick }: Props) {
             {config.icon}
           </span>
           <span className="truncate text-[11px] font-semibold text-white/45">{senderName}</span>
+          {unread && (
+            <span className="shrink-0 rounded-md bg-white/[0.08] px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-white/55">
+              {t('mail_unread_label')}
+            </span>
+          )}
           {mail.is_starred && <LuStar className="ml-auto h-3 w-3 shrink-0 fill-yellow-400 text-yellow-400" />}
         </div>
 
@@ -56,10 +61,6 @@ export default function MailChatBubble({ mail, dateLabel, onClick }: Props) {
           </span>
           <span className="text-[10px] text-white/30">{dateLabel}</span>
         </div>
-
-        {unread && (
-          <span className="absolute -left-1 top-4 h-2 w-2 rounded-full bg-[#5865F2] shadow-[0_0_8px_rgba(88,101,242,0.7)]" />
-        )}
       </div>
     </button>
   );
