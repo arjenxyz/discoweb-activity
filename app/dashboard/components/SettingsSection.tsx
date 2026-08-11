@@ -34,6 +34,7 @@ import {
 } from 'react-icons/lu';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { closeDiscordActivity, isDiscordActivityClient } from '@/lib/discordSdk';
+import { playUiClickPreview } from '@/lib/uiClickSound';
 import type { MemberProfile } from '../types';
 
 type SettingsSectionProps = {
@@ -1027,9 +1028,15 @@ export default function SettingsSection({
                 <SettingRow
                   icon={LuVolume2}
                   title="Efekt seviyesi"
-                  description="Tıklama ve bildirim sesleri için saklanır"
+                  description="Buton ve menü tıklama sesi"
                 >
-                  <Slider value={draftSfxVolume} onChange={setDraftSfxVolume} />
+                  <Slider
+                    value={draftSfxVolume}
+                    onChange={(value) => {
+                      setDraftSfxVolume(value);
+                      playUiClickPreview(value);
+                    }}
+                  />
                 </SettingRow>
                 <SettingRow title="Sessiz mod" description="Müzik ve efektleri tek tuşta kapat">
                   <button

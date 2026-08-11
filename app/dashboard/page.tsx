@@ -14,6 +14,7 @@ import LeaderboardDrawer from './components/LeaderboardDrawer';
 import ProfileSection from './components/ProfileSection';
 import StoreSection from './components/StoreSection';
 import SettingsSection from './components/SettingsSection';
+import UiClickSound from './components/UiClickSound';
 import MailSection from './components/MailSection';
 import SessionExpiredModal from './components/SessionExpiredModal';
 import TagBadgeSection from './components/TagBadgeSection';
@@ -1620,7 +1621,13 @@ export default function DashboardPage() {
                 onBack={() => setActiveSection('overview')}
                 profile={profile}
                 profileLoading={profileLoading}
-                serverCount={headerServer.guilds.length}
+                serverCount={
+                  headerServer.guilds.length > 0
+                    ? headerServer.guilds.length
+                    : headerServer.data
+                      ? 1
+                      : 0
+                }
                 serverName={headerServer.data?.name ?? activeServerName}
                 serverIconUrl={headerServer.data?.iconUrl ?? profile?.guildIcon ?? null}
                 isActivityEmbed={isActivityEmbed}
