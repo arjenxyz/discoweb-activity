@@ -616,7 +616,7 @@ export default function DashboardHeader({
 
                     <button
                       type="button"
-                      onClick={settings.onOpenSettings}
+                      onClick={() => { setIsProfileOpen(false); settings.onOpenSettings(); }}
                       className="flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-white/70 transition hover:bg-white/5 hover:text-white"
                     >
                       <div className="flex items-center gap-3">
@@ -633,7 +633,7 @@ export default function DashboardHeader({
                     <div className="grid gap-1.5 pt-1 grid-cols-3">
                       <button
                         type="button"
-                        onClick={settings.onOpenTransfer}
+                        onClick={() => { setIsProfileOpen(false); settings.onOpenTransfer(); }}
                         className="flex flex-col items-center gap-1 rounded-xl border border-white/[0.06] bg-white/[0.03] py-2.5 text-xs text-white/60 transition hover:bg-white/[0.07] hover:text-white"
                       >
                         <LuSend className="h-3.5 w-3.5" />
@@ -641,7 +641,7 @@ export default function DashboardHeader({
                       </button>
                       <button
                         type="button"
-                        onClick={settings.onOpenPromotions}
+                        onClick={() => { setIsProfileOpen(false); settings.onOpenPromotions(); }}
                         className="flex flex-col items-center gap-1 rounded-xl border border-white/[0.06] bg-white/[0.03] py-2.5 text-xs text-white/60 transition hover:bg-white/[0.07] hover:text-white"
                       >
                         <LuTag className="h-3.5 w-3.5" />

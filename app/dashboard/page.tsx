@@ -1229,13 +1229,11 @@ export default function DashboardPage() {
   };
 
   const openPromotionsModal = () => {
-    setActiveSection('settings');
     setSettingsOpen(false);
     setPromotionsModalOpen(true);
   };
 
   const openDiscountsModal = () => {
-    setActiveSection('settings');
     setSettingsOpen(false);
     setDiscountsModalOpen(true);
   };
