@@ -134,32 +134,24 @@ export default function DiscordProfileCard({
 
         {/* Identity */}
         <div className="mb-3 rounded-xl bg-[#232428] px-3.5 py-3">
-          <div className="flex items-center gap-2 min-w-0">
-            <p className="text-[18px] font-bold leading-tight text-white tracking-tight truncate">
-              {displayName}
-            </p>
-            {(hasTag || isBooster) && (
-              <div className="flex shrink-0 items-center gap-1">
-                {hasTag && (
-                  <span
-                    className="inline-flex h-[22px] w-[22px] items-center justify-center rounded-[6px] bg-indigo-500/20 text-indigo-300 ring-1 ring-indigo-400/30"
-                    title={t('overview_badge_tag')}
-                  >
-                    <LuTag className="h-3 w-3" />
-                  </span>
-                )}
-                {isBooster && (
-                  <span
-                    className="inline-flex h-[22px] w-[22px] items-center justify-center rounded-[6px] bg-pink-500/20 text-pink-300 ring-1 ring-pink-400/30"
-                    title={t('overview_badge_booster')}
-                  >
-                    <LuZap className="h-3 w-3" />
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
+          <p className="text-[18px] font-bold leading-tight text-white tracking-tight truncate">
+            {displayName}
+          </p>
           <p className="mt-0.5 text-[13px] text-[#b5bac1] truncate">{username}</p>
+          {(hasTag || isBooster) && (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {hasTag && (
+                <span className="inline-flex items-center gap-1 rounded-full border border-indigo-500/25 bg-indigo-500/10 px-2 py-0.5 text-[10px] font-semibold text-indigo-300">
+                  <LuTag className="h-2.5 w-2.5" /> {t('overview_badge_tag')}
+                </span>
+              )}
+              {isBooster && (
+                <span className="inline-flex items-center gap-1 rounded-full border border-pink-500/25 bg-pink-500/10 px-2 py-0.5 text-[10px] font-semibold text-pink-300">
+                  <LuZap className="h-2.5 w-2.5" /> {t('overview_badge_booster')}
+                </span>
+              )}
+            </div>
+          )}
 
           {(discordSince || serverSince) && (
             <div className="mt-3.5">
