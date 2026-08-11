@@ -6,7 +6,6 @@ import {
   LuVolume2,
   LuGlobe,
   LuUser,
-  LuFileCheck,
   LuCheck,
   LuTriangleAlert,
   LuArrowLeft,
@@ -32,7 +31,7 @@ type SettingsSectionProps = {
   onBack?: () => void;
 };
 
-type TabId = 'account' | 'sound' | 'language' | 'contracts';
+type TabId = 'account' | 'sound' | 'language';
 
 const SURFACE = 'rounded-2xl border border-white/[0.08] bg-white/[0.03]';
 const SURFACE_SOFT = 'rounded-xl border border-white/[0.06] bg-white/[0.02]';
@@ -55,24 +54,6 @@ export default function SettingsSection({
   const displayName =
     profile?.displayName || profile?.nickname || profile?.username || 'Üye';
 
-  const contractItems = [
-    {
-      key: 'privacy_policy',
-      title: 'Gizlilik Politikası',
-      description: 'Kişisel verilerin nasıl işlendiğini kabul ettiniz.',
-    },
-    {
-      key: 'terms_of_service',
-      title: 'Kullanım Şartları',
-      description: 'Servis kullanım kurallarını ve sorumlulukları kabul ettiniz.',
-    },
-    {
-      key: 'data_processing',
-      title: 'Veri İşleme Onayı',
-      description: 'Veri işleme ve analiz için izin verdiniz.',
-    },
-  ];
-
   const [activeTab, setActiveTab] = useState<TabId>('account');
 
   const [savedSoundEnabled, setSavedSoundEnabled] = useState(() => {
@@ -89,30 +70,9 @@ export default function SettingsSection({
     }
     return 70;
   });
-  const [savedAcceptedContracts, setSavedAcceptedContracts] = useState<Record<string, boolean>>(() => {
-    if (typeof window === 'undefined') {
-      return { privacy_policy: false, terms_of_service: false, data_processing: false };
-    }
-    const stored = window.localStorage.getItem('dashboard_accepted_contracts');
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored) as Record<string, boolean>;
-        return {
-          privacy_policy: false,
-          terms_of_service: false,
-          data_processing: false,
-          ...parsed,
-        };
-      } catch {
-        /* ignore */
-      }
-    }
-    return { privacy_policy: false, terms_of_service: false, data_processing: false };
-  });
 
   const [draftSoundEnabled, setDraftSoundEnabled] = useState(savedSoundEnabled);
   const [draftSoundVolume, setDraftSoundVolume] = useState(savedSoundVolume);
-  const [draftAcceptedContracts, setDraftAcceptedContracts] = useState(savedAcceptedContracts);
   const [draftLocale, setDraftLocale] = useState(locale);
 
   useEffect(() => {
@@ -122,13 +82,11 @@ export default function SettingsSection({
   const hasUnsavedChanges =
     draftSoundEnabled !== savedSoundEnabled ||
     draftSoundVolume !== savedSoundVolume ||
-    JSON.stringify(draftAcceptedContracts) !== JSON.stringify(savedAcceptedContracts) ||
     draftLocale !== locale;
 
   const handleSaveChanges = () => {
     window.localStorage.setItem('dashboard_music_enabled', String(draftSoundEnabled));
     window.localStorage.setItem('dashboard_music_volume', String(draftSoundVolume));
-    window.localStorage.setItem('dashboard_accepted_contracts', JSON.stringify(draftAcceptedContracts));
     window.dispatchEvent(new Event('dashboard-music-settings-changed'));
 
     if (draftLocale !== locale) {
@@ -137,13 +95,11 @@ export default function SettingsSection({
 
     setSavedSoundEnabled(draftSoundEnabled);
     setSavedSoundVolume(draftSoundVolume);
-    setSavedAcceptedContracts(draftAcceptedContracts);
   };
 
   const handleResetChanges = () => {
     setDraftSoundEnabled(savedSoundEnabled);
     setDraftSoundVolume(savedSoundVolume);
-    setDraftAcceptedContracts(savedAcceptedContracts);
     setDraftLocale(locale);
   };
 
@@ -256,7 +212,6 @@ export default function SettingsSection({
     { id: 'account' as const, label: 'Hesap', icon: LuUser },
     { id: 'sound' as const, label: 'Ses', icon: LuVolume2 },
     { id: 'language' as const, label: 'Dil', icon: LuGlobe },
-    { id: 'contracts' as const, label: 'Sözleşmeler', icon: LuFileCheck },
   ];
 
   const modalShell = (children: ReactNode) => (
@@ -403,7 +358,7 @@ export default function SettingsSection({
           </p>
           <h1 className="mt-1 text-2xl font-bold tracking-tight text-white sm:text-3xl">Ayarlar</h1>
           <p className="mt-1.5 max-w-xl text-sm text-white/40">
-            Hesap, ses, dil ve sözleşmeleri buradan yönet.
+            Hesap, ses ve dil tercihlerini buradan yönet.
           </p>
         </div>
 
@@ -651,46 +606,6 @@ export default function SettingsSection({
                 );
               })}
             </div>
-          </div>
-        )}
-
-        {activeTab === 'contracts' && (
-          <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
-            {contractItems.map((contract) => {
-              const accepted = draftAcceptedContracts[contract.key];
-              return (
-                <div
-                  key={contract.key}
-                  className={`${SURFACE} flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5 ${
-                    accepted ? '' : 'border-[#5865F2]/25'
-                  }`}
-                >
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="text-sm font-semibold text-white">{contract.title}</p>
-                      {accepted && (
-                        <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-300">
-                          <LuCheck className="h-3 w-3" />
-                          Onaylandı
-                        </span>
-                      )}
-                    </div>
-                    <p className="mt-1 text-xs leading-relaxed text-white/35">{contract.description}</p>
-                  </div>
-                  {!accepted && (
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setDraftAcceptedContracts((prev) => ({ ...prev, [contract.key]: true }))
-                      }
-                      className="shrink-0 rounded-xl bg-[#5865F2] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#4752C4]"
-                    >
-                      Onayla
-                    </button>
-                  )}
-                </div>
-              );
-            })}
           </div>
         )}
       </div>
