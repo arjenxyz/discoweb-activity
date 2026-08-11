@@ -25,7 +25,9 @@
   "mail_empty_box_subtitle2": "Bu kategoride henüz mesaj yok.",
   "mail_delete_button": "Hepsini Sil",
   "mail_mark_all_read": "Tümünü Okundu Say",
+  "mail_mark_all_read_short": "Okundu",
   "mail_claim_all": "Hepsini Al",
+  "mail_claim_all_short": "Al",
   "mail_back_button": "Geri",
   "mail_loading": "Yükleniyor...",
   "mail_deleted_toast": "Mesaj silindi",
@@ -42,6 +44,7 @@
   "mail_action_failed": "İşlem başarısız",
   "mail_action_error": "İşlem hatası",
   "mail_marked_read": "Okundu işaretlendi",
+  "mail_messages_deleted": "{count} mesaj silindi",
   "mail_star_failed": "Yıldız işlemi başarısız",
   "mail_refreshed": "Yenilendi",
   "mail_selected_count": "{count} seçili",
@@ -50,6 +53,7 @@
   "mail_unread_count": "{total} mesajdan {unread} okunmadı",
   "mail_count_badge": "{total} Mesaj",
   "mail_unread_badge": "{count} Okunmamış",
+  "mail_select_prompt": "Bir mesaj seçin",
   "mail_detail_back_aria": "Geri",
   "mail_detail_star_aria": "Yıldız",
   "mail_detail_delete_aria": "Sil",
@@ -98,5 +102,9 @@
   "mail_delete_title": "Sil",
   "mail_read_title": "Okundu işaretle",
   "mail_mobile_title": "Posta",
-  "mail_folders_label": "Klasörler"
+  "mail_folders_label": "Klasörler",
+  "mail_fab_open": "İşlemler",
+  "mail_fab_close": "Kapat",
+  "mail_fab_menus": "Menüler",
+  "mail_fab_menus_subtitle": "Sayfalar"
 }

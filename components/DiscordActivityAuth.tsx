@@ -22,8 +22,24 @@ const isInIframe = () => {
   try { return window.self !== window.top; } catch { return true; }
 };
 
+const isLocalDevBrowserHost = () => {
+  if (typeof window === 'undefined') return false;
+  const hostname = window.location.hostname.toLowerCase();
+  return (
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    hostname === '[::1]' ||
+    hostname === '::1'
+  );
+};
+
+const isLocalDevBrowser = () =>
+  process.env.NODE_ENV === 'development' && isLocalDevBrowserHost();
+
 const isDiscordEmbedRuntime = () => {
   if (typeof window === 'undefined') return false;
+  // localhost geliştirmede frame_id veya Discord UA olsa bile Activity sayma
+  if (isLocalDevBrowserHost()) return false;
   const host = window.location.host;
   const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : '';
   const hasFrameId = new URLSearchParams(window.location.search).has('frame_id');
@@ -33,6 +49,47 @@ const isDiscordEmbedRuntime = () => {
     userAgent.includes('Discord') ||
     hasFrameId
   );
+};
+
+const bootstrapLocalDevSession = async (
+  guildId: string,
+  signal: AbortSignal,
+  setDiscordLocale: (locale: string) => void,
+) => {
+  try {
+    const timeoutController = new AbortController();
+    const timeoutId = window.setTimeout(() => timeoutController.abort(), 5000);
+    const onParentAbort = () => timeoutController.abort();
+    signal.addEventListener('abort', onParentAbort, { once: true });
+    const res = await fetch(apiUrl('/api/activity/dev-session'), {
+      signal: timeoutController.signal,
+      credentials: 'include',
+    });
+    window.clearTimeout(timeoutId);
+    signal.removeEventListener('abort', onParentAbort);
+    if (res.ok) {
+      const json = (await res.json()) as { token?: string };
+      if (json.token) {
+        try { localStorage.setItem('discord_bearer_token', json.token); } catch {}
+      }
+    }
+  } catch {
+    // cookie/session olmadan da API localhost bypass ile çalışır
+  }
+  const selectedGuild = guildId || 'dev-guild';
+  setCookie('selected_guild_id', selectedGuild);
+  try {
+    localStorage.setItem('selectedGuildId', selectedGuild);
+    localStorage.setItem('auth_ready', '1');
+    localStorage.removeItem('discord_frame_id');
+    const url = new URL(window.location.href);
+    if (url.searchParams.has('frame_id') || url.searchParams.has('instance_id')) {
+      url.searchParams.delete('frame_id');
+      url.searchParams.delete('instance_id');
+      window.history.replaceState(null, '', url.toString());
+    }
+  } catch {}
+  setDiscordLocale(navigator.language);
 };
 
 const setCookie = (name: string, value: string, maxAge = 604800) => {
@@ -324,34 +381,15 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
       const frameIdFromUrl = urlParams.get('frame_id') || urlParams.get('instance_id');
       const isDevMode = process.env.NODE_ENV === 'development';
       const inDiscordRuntime = isDiscordEmbedRuntime();
-      const isLocalhost =
-        window.location.hostname === 'localhost' ||
-        window.location.hostname === '127.0.0.1' ||
-        window.location.hostname === '[::1]';
+      const isLocalhost = isLocalDevBrowserHost();
 
       addLog(`guildId=${guildId}, dev=${isDevMode}, discord=${inDiscordRuntime}, localhost=${isLocalhost}`);
 
-      // Localhost: Discord/Google OAuth yok — örnek session + guild ile devam
-      if (isDevMode && isLocalhost && !inDiscordRuntime) {
-        addLog('Localhost oturumsuz erişim aktif');
-        try {
-          const res = await fetch(apiUrl('/api/activity/dev-session'), { signal, credentials: 'include' });
-          if (res.ok) {
-            const json = (await res.json()) as { token?: string };
-            if (json.token) {
-              try { localStorage.setItem('discord_bearer_token', json.token); } catch {}
-            }
-          }
-        } catch {
-          // cookie/session olmadan da API localhost bypass ile çalışır
-        }
-        const selectedGuild = guildId || 'dev-guild';
-        setCookie('selected_guild_id', selectedGuild);
-        try {
-          localStorage.setItem('selectedGuildId', selectedGuild);
-          localStorage.setItem('auth_ready', '1');
-        } catch {}
-        setDiscordLocale(navigator.language);
+      // Localhost dev: Discord OAuth / SDK yok — her zaman örnek session ile devam
+      if (isLocalDevBrowser()) {
+        addLog('Localhost dev session aktif (Discord auth atlandı)');
+        await bootstrapLocalDevSession(guildId, signal, setDiscordLocale);
+        if (signal.aborted) return;
         setIsLoading(false);
         addLog('Localhost session hazır');
         return;
@@ -404,7 +442,7 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
 
             // Rich Presence — SDK'yı başlat ve ayarla
             const fastClientId = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
-            if (fastClientId && inDiscordRuntime) {
+            if (fastClientId && inDiscordRuntime && !isLocalDevBrowserHost()) {
               try {
                 const { DiscordSDK } = await import('@discord/embedded-app-sdk');
                 const fastSdk = new DiscordSDK(fastClientId);
@@ -486,19 +524,11 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
         return;
       }
 
-      // Dev modda Discord çalışmıyorsa fallback session oluştur
+      // Dev modda Discord embed yoksa fallback session oluştur (LAN IP vb.)
       if (isDevMode && !inDiscordRuntime) {
         addLog('Dev mode fallback session oluşturuluyor...');
-        try {
-          const res = await fetch(apiUrl('/api/activity/dev-session'), { signal, credentials: 'include' });
-          if (res.ok) {
-            const json = await res.json();
-            if (json.token) try { localStorage.setItem('discord_bearer_token', json.token); } catch {}
-          }
-        } catch {}
-        // Geçerli session cookie sunucu tarafında set edilir; client'ta geçersiz token yazma
-        setCookie('selected_guild_id', guildId || 'dev-guild');
-        try { localStorage.setItem('selectedGuildId', guildId || 'dev-guild'); } catch {}
+        await bootstrapLocalDevSession(guildId, signal, setDiscordLocale);
+        if (signal.aborted) return;
         setIsLoading(false);
         addLog('Dev session oluşturuldu');
         return;
@@ -529,7 +559,7 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
       abortController.abort();
       window.clearTimeout(hardTimeoutId);
     };
-  }, [addLog]);
+  }, [addLog, setDiscordLocale]);
 
   if (isLoading) {
     // Auth arka planda çalışır, kullanıcıya siyah ekran gösterilir

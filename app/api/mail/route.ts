@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { getSessionUserId, requireSessionUser } from '@/lib/auth';
 import { getSelectedGuildId } from '@/lib/guild';
-import { isLocalDevRequest, localDevMails } from '@/lib/localDev';
+import { isLocalDevRequest, getLocalDevMails, markLocalDevMailsRead, deleteLocalDevMails } from '@/lib/localDev';
 
 type Database = {
   public: {
@@ -96,7 +96,7 @@ const getSupabase = (): SupabaseClient<Database> | null => {
 
 export async function GET(request: NextRequest) {
   if (isLocalDevRequest(request)) {
-    return NextResponse.json(localDevMails);
+    return NextResponse.json(getLocalDevMails());
   }
 
   const supabase = getSupabase();
@@ -196,6 +196,16 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: Request) {
+  if (isLocalDevRequest(request)) {
+    const session = await requireSessionUser(request);
+    if (!session.ok) return session.response;
+    const payload = (await request.json()) as { id?: string; ids?: string[] };
+    const ids = payload.ids ?? (payload.id ? [payload.id] : []);
+    if (!ids.length) return NextResponse.json({ error: 'invalid_payload' }, { status: 400 });
+    markLocalDevMailsRead(ids);
+    return NextResponse.json({ status: 'ok' });
+  }
+
   const supabase = getSupabase();
   if (!supabase) {
     return NextResponse.json({ error: 'missing_service_role' }, { status: 500 });
@@ -224,6 +234,16 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  if (isLocalDevRequest(request)) {
+    const session = await requireSessionUser(request);
+    if (!session.ok) return session.response;
+    const payload = (await request.json()) as { ids?: string[] };
+    const ids = payload.ids ?? [];
+    if (!ids.length) return NextResponse.json({ error: 'invalid_payload' }, { status: 400 });
+    deleteLocalDevMails(ids);
+    return NextResponse.json({ status: 'ok' });
+  }
+
   const supabase = getSupabase();
   if (!supabase) {
     return NextResponse.json({ error: 'missing_service_role' }, { status: 500 });

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { getDiscordSdk } from '@/lib/discordSdk';
 import { useT } from '@/contexts/LocaleContext';
+import { getVisualTheme } from '@/lib/visualTheme';
 
 export default function SpoilerWarningModal() {
   const [isVisible, setIsVisible] = useState(false);
@@ -12,9 +13,8 @@ export default function SpoilerWarningModal() {
   const linkSdkRef = useRef<InstanceType<Awaited<typeof import('@discord/embedded-app-sdk')>['DiscordSDK']> | null>(null);
 
   useEffect(() => {
-    // Component mount olduğunda localStorage kontrolü yap
     const hasSeenWarning = localStorage.getItem('hasSeenSpoilerWarning');
-    if (!hasSeenWarning) {
+    if (!hasSeenWarning && getVisualTheme() !== 'soft') {
       setIsVisible(true);
     }
   }, []);
@@ -128,14 +128,8 @@ export default function SpoilerWarningModal() {
             </p>
           </div>
 
-          {/* Alt Kısım: Not ve Butonlar */}
-          <div className="flex flex-col sm:flex-row items-end sm:items-center justify-between gap-6 mt-auto">
-            <div>
-              <p className="text-sm text-gray-400 font-medium">
-                {t('spoiler_warning_note')}
-              </p>
-            </div>
-            
+          {/* Alt Kısım: Butonlar */}
+          <div className="flex flex-col sm:flex-row items-end sm:items-center justify-end gap-6 mt-auto">
             {/* Butonlar */}
             <div className="flex gap-3">
               {/* Watch Button with Prime Video Logo */}

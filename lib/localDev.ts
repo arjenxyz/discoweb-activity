@@ -168,7 +168,7 @@ export const localDevBadges = {
     reward_earn_multiplier: 1.15,
     reward_message: null,
     role_id: null,
-    background_image: null,
+    background_image: '/store-background/invincible/invincible2.jpg',
   },
   nextBadge: {
     id: 'badge-gold',
@@ -182,7 +182,7 @@ export const localDevBadges = {
     reward_earn_multiplier: 1.3,
     reward_message: null,
     role_id: null,
-    background_image: null,
+    background_image: '/store-background/invincible/invincible3.jpg',
   },
   tagDays: 45,
   daysToNext: 15,
@@ -201,7 +201,7 @@ export const localDevBadges = {
       reward_earn_multiplier: 1.05,
       reward_message: null,
       role_id: null,
-      background_image: null,
+      background_image: '/store-background/invincible/invincible.jpg',
     },
     {
       id: 'badge-silver',
@@ -215,7 +215,7 @@ export const localDevBadges = {
       reward_earn_multiplier: 1.15,
       reward_message: null,
       role_id: null,
-      background_image: null,
+      background_image: '/store-background/invincible/invincible2.jpg',
     },
     {
       id: 'badge-gold',
@@ -229,7 +229,7 @@ export const localDevBadges = {
       reward_earn_multiplier: 1.3,
       reward_message: null,
       role_id: null,
-      background_image: null,
+      background_image: '/store-background/invincible/invincible3.jpg',
     },
   ],
   currentBoosterBadge: {
@@ -244,7 +244,7 @@ export const localDevBadges = {
     reward_earn_multiplier: 1.1,
     reward_message: null,
     role_id: null,
-    background_image: null,
+    background_image: '/store-background/invincible/invincible4.jpg',
   },
   nextBoosterBadge: {
     id: 'boost-2',
@@ -258,7 +258,7 @@ export const localDevBadges = {
     reward_earn_multiplier: 1.25,
     reward_message: null,
     role_id: null,
-    background_image: null,
+    background_image: '/store-background/invincible/invincible5.jpg',
   },
   boosterMonths: 2,
   monthsToNext: 1,
@@ -277,7 +277,7 @@ export const localDevBadges = {
       reward_earn_multiplier: 1.1,
       reward_message: null,
       role_id: null,
-      background_image: null,
+      background_image: '/store-background/invincible/invincible4.jpg',
     },
     {
       id: 'boost-2',
@@ -291,7 +291,7 @@ export const localDevBadges = {
       reward_earn_multiplier: 1.25,
       reward_message: null,
       role_id: null,
-      background_image: null,
+      background_image: '/store-background/invincible/invincible5.jpg',
     },
   ],
 };
@@ -417,7 +417,7 @@ export const localDevNotifications = [
   },
 ];
 
-export const localDevMails = [
+export const localDevMailsSeed = [
   {
     id: 'mail-1',
     title: 'Hoş geldin (örnek)',
@@ -432,17 +432,67 @@ export const localDevMails = [
   },
   {
     id: 'mail-2',
-    title: 'Örnek ödül maili',
-    body: 'Bu mail UI testleri için örnek veridir.',
+    title: '50 Papel ödülü (örnek)',
+    body: 'Bu ödül maili localhost UI testleri içindir. Hepsini Al ile talep edebilirsin.',
     category: 'reward',
     status: 'published' as const,
     created_at: new Date(Date.now() - 86_400_000).toISOString(),
     author_name: 'Bot',
     author_avatar_url: LOCAL_DEV_AVATAR,
-    is_read: true,
+    is_read: false,
     is_starred: true,
+    metadata: { reward_amount: 50 },
   },
-];
+  {
+    id: 'mail-3',
+    title: 'Yeni özellik duyurusu',
+    body: 'Dashboard güncellendi — menü ve modallar yenilendi.',
+    category: 'announcement',
+    status: 'published' as const,
+    created_at: new Date(Date.now() - 3_600_000).toISOString(),
+    author_name: 'DiscoWeb',
+    author_avatar_url: LOCAL_DEV_AVATAR,
+    is_read: false,
+    is_starred: false,
+  },
+] as const;
+
+type LocalDevMail = {
+  id: string;
+  title: string;
+  body: string;
+  category: string;
+  status: 'published';
+  created_at: string;
+  author_name: string;
+  author_avatar_url: string;
+  is_read: boolean;
+  is_starred: boolean;
+  metadata?: { reward_amount?: number };
+};
+
+let localDevMailStore: LocalDevMail[] = localDevMailsSeed.map((m) => ({ ...m }));
+
+export function getLocalDevMails(): LocalDevMail[] {
+  return localDevMailStore.map((m) => ({ ...m, metadata: m.metadata ? { ...m.metadata } : undefined }));
+}
+
+export function markLocalDevMailsRead(ids: string[]) {
+  const idSet = new Set(ids);
+  localDevMailStore = localDevMailStore.map((m) => (idSet.has(m.id) ? { ...m, is_read: true } : m));
+}
+
+export function deleteLocalDevMails(ids: string[]) {
+  const idSet = new Set(ids);
+  localDevMailStore = localDevMailStore.filter((m) => !idSet.has(m.id));
+}
+
+export function setLocalDevMailStarred(id: string, starred: boolean) {
+  localDevMailStore = localDevMailStore.map((m) => (m.id === id ? { ...m, is_starred: starred } : m));
+}
+
+/** @deprecated use getLocalDevMails() */
+export const localDevMails = localDevMailsSeed;
 
 export const localDevTransactions = [
   {

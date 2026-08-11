@@ -1,4 +1,7 @@
+'use client';
+
 import type { RefObject } from 'react';
+import { useVisualTheme } from '@/hooks/useVisualTheme';
 
 const DEFAULT_VIDEO_URL = '/cdn/Storage/test.mp4';
 
@@ -8,24 +11,37 @@ type VideoBackgroundProps = {
   src?: string | null;
 };
 
-export function VideoBackground({ videoRef, src }: VideoBackgroundProps) {
-  const videoUrl = src !== undefined ? src : DEFAULT_VIDEO_URL;
+function SoftBackground() {
   return (
     <>
-      {videoUrl ? (
-        <video
-          ref={videoRef}
-          src={videoUrl}
-          autoPlay
-          loop
-          muted
-          playsInline
-          disablePictureInPicture
-          className="pointer-events-none absolute inset-0 h-full w-full object-cover"
-        />
-      ) : (
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,#5865F255_0%,transparent_45%),radial-gradient(circle_at_bottom_right,#3a9cff33_0%,transparent_40%)]" />
-      )}
+      <div className="pointer-events-none absolute inset-0 bg-[#0b0d12]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,#5865F233_0%,transparent_42%),radial-gradient(circle_at_bottom_right,#3a9cff22_0%,transparent_38%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/10" />
+    </>
+  );
+}
+
+export function VideoBackground({ videoRef, src }: VideoBackgroundProps) {
+  const { isSoft } = useVisualTheme();
+  const requestedUrl = src !== undefined ? src : DEFAULT_VIDEO_URL;
+  const videoUrl = isSoft ? null : requestedUrl;
+
+  if (!videoUrl) {
+    return <SoftBackground />;
+  }
+
+  return (
+    <>
+      <video
+        ref={videoRef}
+        src={videoUrl}
+        autoPlay
+        loop
+        muted
+        playsInline
+        disablePictureInPicture
+        className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+      />
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/10" />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
     </>
@@ -38,8 +54,11 @@ type MuteButtonProps = {
 };
 
 export function MuteButton({ muted, onToggle, src }: MuteButtonProps & { src?: string | null }) {
-  const videoUrl = src !== undefined ? src : DEFAULT_VIDEO_URL;
+  const { isSoft } = useVisualTheme();
+  const requestedUrl = src !== undefined ? src : DEFAULT_VIDEO_URL;
+  const videoUrl = isSoft ? null : requestedUrl;
   if (!videoUrl) return null;
+
   return (
     <button
       type="button"

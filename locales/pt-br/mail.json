@@ -50,6 +50,7 @@
   "mail_unread_count": "{unread} não lidas de {total} mensagens",
   "mail_count_badge": "{total} Mensagens",
   "mail_unread_badge": "{count} Não Lidas",
+  "mail_select_prompt": "Selecione uma mensagem",
   "mail_detail_back_aria": "Voltar",
   "mail_detail_star_aria": "Favoritar",
   "mail_detail_delete_aria": "Excluir",

@@ -28,28 +28,97 @@ import enWallet from '@/locales/en/wallet.json';
 import enWelcome from '@/locales/en/welcome.json';
 import enSupport from '@/locales/en/support.json';
 
-export type SupportedLocale = 'tr' | 'en';
+import deDashboard from '@/locales/de/dashboard.json';
+import deDm from '@/locales/de/dm.json';
+import deErrors from '@/locales/de/errors.json';
+import deNotifications from '@/locales/de/notifications.json';
 
-export const translations: Record<SupportedLocale, Record<string, string>> = {
-  tr: {
-    ...trAuth, ...trDashboard, ...trDm, ...trDocs, ...trErrors, ...trMail, ...trMisc,
-    ...trNotifications, ...trPrivacy, ...trProfile, ...trStore, ...trUI, ...trWallet, ...trWelcome,
-    ...trSupport,
-  },
-  en: {
-    ...enAuth, ...enDashboard, ...enDm, ...enErrors, ...enMail, ...enMisc,
-    ...enNotifications, ...enProfile, ...enStore, ...enUI, ...enWallet, ...enWelcome,
-    ...enSupport,
-  },
+import esDashboard from '@/locales/es/dashboard.json';
+import esDm from '@/locales/es/dm.json';
+import esErrors from '@/locales/es/errors.json';
+import esNotifications from '@/locales/es/notifications.json';
+
+import frDashboard from '@/locales/fr/dashboard.json';
+import frDm from '@/locales/fr/dm.json';
+import frErrors from '@/locales/fr/errors.json';
+import frNotifications from '@/locales/fr/notifications.json';
+
+import ruDashboard from '@/locales/ru/dashboard.json';
+import ruDm from '@/locales/ru/dm.json';
+import ruErrors from '@/locales/ru/errors.json';
+import ruNotifications from '@/locales/ru/notifications.json';
+
+import itDashboard from '@/locales/it/dashboard.json';
+import itDm from '@/locales/it/dm.json';
+import itErrors from '@/locales/it/errors.json';
+import itNotifications from '@/locales/it/notifications.json';
+
+import ptAuth from '@/locales/pt-br/auth.json';
+import ptDashboard from '@/locales/pt-br/dashboard.json';
+import ptDm from '@/locales/pt-br/dm.json';
+import ptErrors from '@/locales/pt-br/errors.json';
+import ptMail from '@/locales/pt-br/mail.json';
+import ptMisc from '@/locales/pt-br/misc.json';
+import ptNotifications from '@/locales/pt-br/notifications.json';
+import ptProfile from '@/locales/pt-br/profile.json';
+import ptStore from '@/locales/pt-br/store.json';
+import ptUI from '@/locales/pt-br/ui.json';
+import ptWallet from '@/locales/pt-br/wallet.json';
+import ptWelcome from '@/locales/pt-br/welcome.json';
+import ptSupport from '@/locales/pt-br/support.json';
+
+import {
+  type LanguageCode,
+  isLanguageCode,
+} from '@/lib/languages';
+
+export type SupportedLocale = LanguageCode;
+
+type TranslationMap = Record<string, string>;
+
+const mergeBundles = (...bundles: TranslationMap[]): TranslationMap =>
+  Object.assign({}, ...bundles);
+
+const enBundle = mergeBundles(
+  enAuth, enDashboard, enDm, enErrors, enMail, enMisc,
+  enNotifications, enProfile, enStore, enUI, enWallet, enWelcome, enSupport,
+);
+
+const trBundle = mergeBundles(
+  trAuth, trDashboard, trDm, trDocs, trErrors, trMail, trMisc,
+  trNotifications, trPrivacy, trProfile, trStore, trUI, trWallet, trWelcome, trSupport,
+);
+
+export const translations: Record<LanguageCode, TranslationMap> = {
+  en: enBundle,
+  tr: trBundle,
+  de: mergeBundles(enBundle, deDashboard, deDm, deErrors, deNotifications),
+  es: mergeBundles(enBundle, esDashboard, esDm, esErrors, esNotifications),
+  fr: mergeBundles(enBundle, frDashboard, frDm, frErrors, frNotifications),
+  ru: mergeBundles(enBundle, ruDashboard, ruDm, ruErrors, ruNotifications),
+  pt: mergeBundles(
+    enBundle,
+    ptAuth, ptDashboard, ptDm, ptErrors, ptMail, ptMisc,
+    ptNotifications, ptProfile, ptStore, ptUI, ptWallet, ptWelcome, ptSupport,
+  ),
+  id: enBundle,
+  hu: enBundle,
+  ja: enBundle,
+  ko: enBundle,
 };
 
 /**
- * Discord locale string'ini desteklenen locale'e çevirir.
- * Turkish kullanıcılar Türkçe, diğerleri İngilizce görür.
+ * Discord / tarayıcı locale string'ini desteklenen dile çevirir.
  */
-export function resolveLocale(discordLocale: string | null | undefined): SupportedLocale {
+export function resolveLocale(discordLocale: string | null | undefined): LanguageCode {
   if (!discordLocale) return 'en';
-  const lang = discordLocale.toLowerCase().split('-')[0];
-  if (lang === 'tr') return 'tr';
+
+  const normalized = discordLocale.toLowerCase().replace('_', '-');
+  if (isLanguageCode(normalized)) return normalized;
+
+  const primary = normalized.split('-')[0];
+  if (primary === 'pt') return 'pt';
+  if (isLanguageCode(primary)) return primary;
+
   return 'en';
 }

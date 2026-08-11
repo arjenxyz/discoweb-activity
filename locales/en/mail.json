@@ -25,7 +25,9 @@
   "mail_empty_box_subtitle2": "No messages in this category yet.",
   "mail_delete_button": "Delete All",
   "mail_mark_all_read": "Mark All as Read",
+  "mail_mark_all_read_short": "Read",
   "mail_claim_all": "Claim All",
+  "mail_claim_all_short": "Claim",
   "mail_back_button": "Back",
   "mail_loading": "Loading...",
   "mail_deleted_toast": "Message deleted",
@@ -42,6 +44,7 @@
   "mail_action_failed": "Action failed",
   "mail_action_error": "Action error",
   "mail_marked_read": "Marked as read",
+  "mail_messages_deleted": "{count} messages deleted",
   "mail_star_failed": "Star action failed",
   "mail_refreshed": "Refreshed",
   "mail_selected_count": "{count} selected",
@@ -50,6 +53,7 @@
   "mail_unread_count": "{unread} unread of {total} messages",
   "mail_count_badge": "{total} Messages",
   "mail_unread_badge": "{count} Unread",
+  "mail_select_prompt": "Select a message",
   "mail_detail_back_aria": "Back",
   "mail_detail_star_aria": "Star",
   "mail_detail_delete_aria": "Delete",
@@ -98,5 +102,9 @@
   "mail_delete_title": "Delete",
   "mail_read_title": "Mark as read",
   "mail_mobile_title": "Mail",
-  "mail_folders_label": "Folders"
+  "mail_folders_label": "Folders",
+  "mail_fab_open": "Actions",
+  "mail_fab_close": "Close",
+  "mail_fab_menus": "Menus",
+  "mail_fab_menus_subtitle": "Pages"
 }

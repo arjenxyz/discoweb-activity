@@ -1,10 +1,9 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { LuTrendingUp, LuTrendingDown, LuTriangleAlert, LuLoader, LuArrowRight } from 'react-icons/lu';
+import { LuTrendingUp, LuTrendingDown, LuTriangleAlert, LuLoader } from 'react-icons/lu';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { apiUrl } from '@/lib/api';
-import type { Section } from '../types';
 import { useT } from '@/contexts/LocaleContext';
 
 type Holding = {
@@ -17,11 +16,7 @@ type Holding = {
   server_name?: string;
 };
 
-type Props = {
-  onNavigate: (section: Section, extra?: unknown) => void;
-};
-
-export default function PortfolioSection({ onNavigate }: Props) {
+export default function PortfolioSection() {
   const t = useT();
   const [holdings, setHoldings] = useState<Holding[]>([]);
   const [loading, setLoading] = useState(true);
@@ -88,13 +83,6 @@ export default function PortfolioSection({ onNavigate }: Props) {
       ) : holdings.length === 0 ? (
         <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] py-16 text-center">
           <p className="text-white/30">{t('portfolio_empty_title')}</p>
-          <button
-            type="button"
-            onClick={() => onNavigate('discover')}
-            className="mt-4 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/60 hover:bg-white/10 hover:text-white"
-          >
-            {t('portfolio_empty_button')}
-          </button>
         </div>
       ) : (
         <div className="space-y-3">
@@ -108,11 +96,9 @@ export default function PortfolioSection({ onNavigate }: Props) {
             const dailyLimit = Math.floor(h.lot_count * 0.3);
 
             return (
-              <button
+              <div
                 key={h.guild_id}
-                type="button"
-                onClick={() => onNavigate('discover', h.guild_id)}
-                className="group w-full rounded-2xl border border-white/[0.06] bg-white/[0.03] p-4 text-left transition hover:border-white/15 hover:bg-white/[0.06]"
+                className="w-full rounded-2xl border border-white/[0.06] bg-white/[0.03] p-4"
               >
                 <div className="flex items-center justify-between">
                   <div>
@@ -127,7 +113,6 @@ export default function PortfolioSection({ onNavigate }: Props) {
                         {positive ? '+' : ''}{pnl.toFixed(2)} ({pnlPct.toFixed(1)}%)
                       </div>
                     </div>
-                    <LuArrowRight className="h-4 w-4 text-white/20 transition group-hover:text-white/50" />
                   </div>
                 </div>
                 <div className="mt-3 flex items-center justify-between text-xs text-white/30">
@@ -140,7 +125,7 @@ export default function PortfolioSection({ onNavigate }: Props) {
                     style={{ width: dailyLimit > 0 ? `${Math.min(100, (h.daily_sell_used / dailyLimit) * 100)}%` : '0%' }}
                   />
                 </div>
-              </button>
+              </div>
             );
           })}
         </div>

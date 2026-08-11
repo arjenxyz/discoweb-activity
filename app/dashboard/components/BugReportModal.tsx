@@ -253,7 +253,7 @@ export default function BugReportModal({ onClose, section }: Props) {
       frameId: ls('discord_frame_id'),
       instanceId: ls('discord_instance_id'),
       authMethod: ls('discord_bearer_token') ? 'bearer_token' : 'cookie_session',
-      theme: ls('uiTheme') ?? ls('mailSectionTheme'),
+      theme: ls('visualTheme') ?? ls('uiTheme') ?? ls('mailSectionTheme'),
     };
 
     const errorLog = getClientErrors();
@@ -279,15 +279,18 @@ export default function BugReportModal({ onClose, section }: Props) {
 
   // Shared header
   const header = (
-    <div className="flex items-center gap-3 pr-10">
-      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-500/15 border border-red-500/20 flex-shrink-0">
-        <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 text-red-400">
-          <path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0114.082 15H1.918a1.75 1.75 0 01-1.543-2.575L6.457 1.047zM9 11a1 1 0 11-2 0 1 1 0 012 0zm-.25-5.25a.75.75 0 00-1.5 0v2.5a.75.75 0 001.5 0v-2.5z" />
-        </svg>
-      </div>
-      <div>
-        <h2 className="text-sm font-bold text-white">{t('support_bug_title')}</h2>
-        <p className="text-xs text-white/40">{t('support_bug_subtitle')}</p>
+    <div className="flex items-center justify-between gap-3 pr-8">
+      <div className="flex items-center gap-3 min-w-0">
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-red-500/20 bg-red-500/10 flex-shrink-0">
+          <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 text-red-400">
+            <path
+              fillRule="evenodd"
+              d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 6a.75.75 0 00-.75.75v3.5a.75.75 0 001.5 0v-3.5A.75.75 0 0010 6zm0 9a1 1 0 100-2 1 1 0 000 2z"
+              clipRule="evenodd"
+            />
+          </svg>
+        </div>
+        <h2 className="text-base font-bold text-white truncate">{t('support_bug_title')}</h2>
       </div>
     </div>
   );
@@ -299,40 +302,43 @@ export default function BugReportModal({ onClose, section }: Props) {
       className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div className="relative w-full max-w-md rounded-2xl border border-white/10 bg-[#0b0d12]/95 backdrop-blur-xl shadow-2xl overflow-hidden">
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-red-500/30 to-transparent" />
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+      <div className="relative flex max-h-[min(640px,90vh)] w-full max-w-md flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#0b0d12]/80 shadow-2xl backdrop-blur-md">
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
 
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/50 hover:text-white hover:bg-white/10 transition z-10"
+          className="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/50 transition hover:bg-white/10 hover:text-white"
         >
           <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5">
             <path d="M3.72 3.72a.75.75 0 011.06 0L8 6.94l3.22-3.22a.75.75 0 111.06 1.06L9.06 8l3.22 3.22a.75.75 0 11-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 01-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 010-1.06z" />
           </svg>
         </button>
 
-        <div className="px-6 pt-6 pb-6 flex flex-col gap-4">
+        <div className="flex flex-shrink-0 flex-col gap-3.5 px-5 pt-5">
           {header}
 
-          {/* Tabs */}
-          <div className="flex gap-1 rounded-xl border border-white/8 bg-white/[0.03] p-1">
+          <div className="flex gap-1 rounded-xl border border-white/10 bg-black/20 p-1">
             <button
               type="button"
               onClick={() => setTab('new')}
-              className={`flex-1 rounded-lg py-1.5 text-xs font-semibold transition ${tab === 'new' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white/70'}`}
+              className={`flex-1 rounded-lg py-2 text-xs font-semibold transition ${tab === 'new' ? 'bg-white/10 text-white shadow-sm' : 'text-white/45 hover:text-white/75'}`}
             >
               {t('support_bug_tab_new')}
             </button>
             <button
               type="button"
               onClick={() => setTab('list')}
-              className={`flex-1 rounded-lg py-1.5 text-xs font-semibold transition ${tab === 'list' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white/70'}`}
+              className={`flex-1 rounded-lg py-2 text-xs font-semibold transition ${tab === 'list' ? 'bg-white/10 text-white shadow-sm' : 'text-white/45 hover:text-white/75'}`}
             >
               {t('support_bug_tab_list')}
             </button>
           </div>
+        </div>
+
+        <div className="custom-scrollbar flex-1 overflow-y-auto px-5 pb-5 pt-3.5 [color-scheme:dark]">
+          <div className="flex flex-col gap-3.5">
 
           {/* ── TAB: Hata Bildir ── */}
           {tab === 'new' && (
@@ -387,28 +393,24 @@ export default function BugReportModal({ onClose, section }: Props) {
                 </div>
               ) : (
                 <>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-white/50 uppercase tracking-wider">{t('support_bug_description_label')}</label>
-                    <textarea
-                      value={description}
-                      onChange={e => setDescription(e.target.value)}
-                      placeholder={t('support_bug_description_placeholder')}
-                      rows={4}
-                      className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white placeholder-white/25 resize-none focus:outline-none focus:border-white/20 transition"
-                    />
-                  </div>
+                  <textarea
+                    value={description}
+                    onChange={e => setDescription(e.target.value)}
+                    placeholder={t('support_bug_description_placeholder')}
+                    rows={4}
+                    className="w-full rounded-xl border border-white/10 bg-black/20 px-3.5 py-3 text-sm text-white placeholder-white/30 resize-none focus:outline-none focus:border-white/20 transition"
+                  />
 
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-white/50 uppercase tracking-wider">{t('support_screenshot_label')} <span className="text-white/25 normal-case">{t('support_screenshot_optional')}</span></label>
+                  <div className="flex gap-2">
                     <div
                       onDrop={handleDrop}
                       onDragOver={e => e.preventDefault()}
                       onClick={() => fileRef.current?.click()}
-                      className="relative cursor-pointer rounded-xl border border-dashed border-white/15 bg-white/3 hover:bg-white/5 hover:border-white/25 transition flex items-center justify-center min-h-[72px] overflow-hidden"
+                      className="relative flex-1 cursor-pointer rounded-xl border border-dashed border-white/15 bg-black/15 hover:bg-black/25 hover:border-white/25 transition flex items-center justify-center min-h-[52px] overflow-hidden"
                     >
                       {imagePreview ? (
                         <div className="relative w-full">
-                          <img src={imagePreview} alt="preview" className="w-full max-h-36 object-contain rounded-xl" />
+                          <img src={imagePreview} alt="preview" className="w-full max-h-28 object-contain rounded-xl" />
                           <button
                             type="button"
                             onClick={e => { e.stopPropagation(); setImageFile(null); setImagePreview(null); }}
@@ -420,39 +422,34 @@ export default function BugReportModal({ onClose, section }: Props) {
                           </button>
                         </div>
                       ) : (
-                        <div className="flex flex-col items-center gap-1.5 py-4 px-4 text-center">
-                          <svg viewBox="0 0 16 16" fill="currentColor" className="h-5 w-5 text-white/25">
-                            <path d="M7.75 2a.75.75 0 01.75.75V7h4.25a.75.75 0 010 1.5H8.5v4.25a.75.75 0 01-1.5 0V8.5H2.75a.75.75 0 010-1.5H7V2.75A.75.75 0 017.75 2z" />
-                          </svg>
-                          <span className="text-xs text-white/30">{t('support_screenshot_drop')}</span>
-                        </div>
+                        <span className="text-xs text-white/35 px-3 text-center">{t('support_screenshot_drop')}</span>
                       )}
                     </div>
-                    <div className="flex items-center justify-between gap-2">
-                      <button
-                        type="button"
-                        onClick={handleCapture}
-                        disabled={captureStatus === 'capturing' || captureStatus === 'unsupported'}
-                        className="text-xs font-semibold text-white/70 hover:text-white transition disabled:cursor-not-allowed disabled:text-white/30"
-                      >
-                        {captureStatus === 'capturing' ? t('support_screenshot_capturing') : t('support_screenshot_capture')}
-                      </button>
-                      {captureStatus === 'unsupported' && (
-                        <span className="text-xs text-white/30">{t('support_screenshot_capture_unavailable')}</span>
+                    <button
+                      type="button"
+                      onClick={handleCapture}
+                      disabled={captureStatus === 'capturing' || captureStatus === 'unsupported'}
+                      title={t('support_screenshot_capture')}
+                      className="flex h-[52px] w-[52px] flex-shrink-0 items-center justify-center rounded-xl border border-white/10 bg-black/20 text-white/60 hover:bg-black/30 hover:text-white transition disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      {captureStatus === 'capturing' ? (
+                        <svg className="h-4 w-4 animate-spin" viewBox="0 0 16 16" fill="none">
+                          <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="2" strokeOpacity="0.3" />
+                          <path d="M8 2a6 6 0 016 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                        </svg>
+                      ) : (
+                        <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                          <path fillRule="evenodd" d="M1 8a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 018.07 3h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0016.07 6H17a2 2 0 012 2v7a2 2 0 01-2 2H3a2 2 0 01-2-2V8zm5 3a3 3 0 116 0 3 3 0 01-6 0z" clipRule="evenodd" />
+                        </svg>
                       )}
-                      {captureStatus === 'error' && (
-                        <span className="text-xs text-red-400">{t('support_screenshot_capture_error')}</span>
-                      )}
-                    </div>
+                    </button>
                     <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleImage(f); }} />
                   </div>
-
-                  <div className="flex items-center gap-2 rounded-lg border border-white/5 bg-white/3 px-3 py-2">
-                    <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5 text-[#5865F2] flex-shrink-0">
-                      <path fillRule="evenodd" d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm9 3a1 1 0 11-2 0 1 1 0 012 0zm-.25-6.25a.75.75 0 00-1.5 0v3.5a.75.75 0 001.5 0v-3.5z" />
-                    </svg>
-                    <span className="text-xs text-white/35">{t('support_bug_info')}</span>
-                  </div>
+                  {(captureStatus === 'unsupported' || captureStatus === 'error') && (
+                    <p className="text-[11px] text-white/35">
+                      {captureStatus === 'unsupported' ? t('support_screenshot_capture_unavailable') : t('support_screenshot_capture_error')}
+                    </p>
+                  )}
 
                   {sendStatus === 'error' && (
                     <p className="text-xs text-red-400 text-center">{t('support_send_error')}</p>
@@ -462,7 +459,7 @@ export default function BugReportModal({ onClose, section }: Props) {
                     type="button"
                     onClick={handleSubmit}
                     disabled={!description.trim() || sendStatus === 'sending'}
-                    className="w-full rounded-xl border border-white/10 bg-white/8 py-2.5 text-sm font-semibold text-white hover:bg-white/12 disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center justify-center gap-2"
+                    className="w-full rounded-xl border border-white/15 bg-white/10 py-2.5 text-sm font-semibold text-white hover:bg-white/15 disabled:opacity-35 disabled:cursor-not-allowed transition flex items-center justify-center gap-2"
                   >
                     {sendStatus === 'sending' ? (
                       <>
@@ -619,6 +616,7 @@ export default function BugReportModal({ onClose, section }: Props) {
               )}
             </>
           )}
+          </div>
         </div>
       </div>
     </div>

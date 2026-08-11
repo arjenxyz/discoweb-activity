@@ -58,22 +58,33 @@ type MailDetailModalProps = {
   onDelete?: (id: string) => void;
   onStar?: (id: string) => void;
   renderBody?: (body: string) => React.ReactNode;
+  /** modal = centered overlay (default), inline = fill parent panel, fullscreen = mobile slide-in */
+  variant?: 'modal' | 'inline' | 'fullscreen';
 };
 
 const isVideoUrl = (url: string) => {
   return ['.mp4', '.webm', '.mov', '.avi', '.mkv'].some(ext => url.toLowerCase().includes(ext));
 };
 
-export default function MailDetailModal({ mail, onClose, onDelete, onStar }: MailDetailModalProps) {
+export default function MailDetailModal({
+  mail,
+  onClose,
+  onDelete,
+  onStar,
+  variant = 'modal',
+}: MailDetailModalProps) {
   const t = useT();
   const modalRef = useRef<HTMLDivElement>(null);
+  const isInline = variant === 'inline';
+  const isFullscreen = variant === 'fullscreen';
 
-  // ESC ile kapat
+  // ESC ile kapat (inline panel'de de çalışır)
   useEffect(() => {
+    if (isInline && !mail) return undefined;
     const handleEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
-  }, [onClose]);
+  }, [onClose, isInline, mail]);
 
   // Okundu işaretle
   useEffect(() => {
@@ -91,7 +102,20 @@ export default function MailDetailModal({ mail, onClose, onDelete, onStar }: Mai
     }
   }, [mail]);
 
-  if (!mail) return null;
+  if (!mail) {
+    if (isInline) {
+      return (
+        <div className="flex h-full min-h-0 flex-col items-center justify-center gap-3 px-6 text-center">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-white/[0.08] bg-white/[0.03] text-2xl">
+            ✉️
+          </div>
+          <p className="text-sm font-semibold text-white/60">{t('mail_select_prompt')}</p>
+          <p className="max-w-[14rem] text-xs text-white/30">{t('mail_empty_box_subtitle2')}</p>
+        </div>
+      );
+    }
+    return null;
+  }
 
   const senderCfg = SENDER_CONFIG[mail.category] ?? SENDER_CONFIG.system;
   const senderName = t(senderCfg.nameKey);
@@ -105,199 +129,167 @@ export default function MailDetailModal({ mail, onClose, onDelete, onStar }: Mai
       ' • ' + d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
   };
 
-  /* ─── Mail İçeriği Render ─── */
-  const renderEmailBody = (body: string, category: string) => {
+  /* ─── Mail İçeriği Render — tüm kategoriler aynı düz görünüm ─── */
+  const renderEmailBody = (body: string) => {
     if (!body) return null;
 
-    type QuizMailMeta = {
-      source?: string;
-      quiz_title?: string;
-      total_earned?: number;
-      total_correct?: number;
-      total_questions?: number;
-      wrong_count?: number;
-      last_position?: number;
-      eliminated?: boolean;
-      is_perfect?: boolean;
-      checkpoint_papel?: number;
-      perfect_bonus?: number;
-      breakdown?: Array<{ position: number; papel_reward: number; label?: string | null }>;
-    };
-    const meta = (mail as { metadata?: QuizMailMeta })?.metadata;
-    const quizSource = meta?.source;
-
-    if (quizSource === 'quiz_motivation' || quizSource === 'quiz_reward') {
-      const isReward = quizSource === 'quiz_reward';
-      const totalEarn = Number(meta?.total_earned ?? 0);
-      const title = meta?.quiz_title ?? mail.title;
-      const breakdown = meta?.breakdown ?? [];
-      const stat = (label: string, value: string) => (
-        <div key={label} className="flex items-center justify-between px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.05]">
-          <span className="text-sm text-white/50">{label}</span>
-          <span className="text-sm font-semibold text-white">{value}</span>
-        </div>
-      );
-
+    const looksLikeHtml = /<[a-z][\s\S]*>/i.test(body);
+    if (looksLikeHtml) {
       return (
-        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5 sm:p-6 space-y-4">
-          <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg ${isReward ? 'bg-emerald-500/20' : 'bg-indigo-500/20'}`}>
-              {isReward ? '🏆' : '🎯'}
-            </div>
-            <div>
-              <p className="text-sm font-bold text-white">{title}</p>
-              <p className="text-[11px] text-white/40 mt-0.5">{formatDate(mail.created_at)}</p>
-            </div>
-          </div>
-
-          {isReward && totalEarn > 0 && (
-            <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-emerald-500/[0.08] border border-emerald-500/20">
-              <span className="text-sm text-white/60">{t('mail_receipt_reward_amount')}</span>
-              <span className="text-lg font-bold text-emerald-400">+{totalEarn.toLocaleString('tr-TR')} Papel</span>
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-300/80 px-1">Sonuç özeti</p>
-            {typeof meta?.total_correct === 'number' && typeof meta?.total_questions === 'number' &&
-              stat('Doğru cevap', `${meta.total_correct} / ${meta.total_questions}`)}
-            {typeof meta?.wrong_count === 'number' && stat('Yanlış', String(meta.wrong_count))}
-            {typeof meta?.last_position === 'number' && typeof meta?.total_questions === 'number' && !isReward &&
-              stat('Ulaştığın soru', `${meta.last_position} / ${meta.total_questions}`)}
-            {meta?.eliminated && !isReward && stat('Durum', 'Bu turda elendin')}
-            {isReward && typeof meta?.is_perfect === 'boolean' &&
-              stat('Mükemmel skor', meta?.is_perfect ? 'Evet' : 'Hayır')}
-          </div>
-
-          {isReward && breakdown.length > 0 && (
-            <div className="space-y-2 pt-2 border-t border-white/[0.06]">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-300/80 px-1">Ödeme detayı</p>
-              {breakdown.map((b) => (
-                <div key={b.position} className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.05] text-sm">
-                  <span className="text-white/60 truncate">Checkpoint — soru {b.position}{b.label ? ` (${b.label})` : ''}</span>
-                  <span className="font-mono text-emerald-400 ml-2">+{Number(b.papel_reward).toLocaleString('tr-TR')} Papel</span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {typeof meta?.total_correct !== 'number' && body && (
-            <div className="pt-2 border-t border-white/[0.06] text-sm text-white/60 leading-relaxed whitespace-pre-wrap">
-              {body.includes('<') ? (
-                <div className="mail-body-content" dangerouslySetInnerHTML={{ __html: sanitizeHtml(body) }} />
-              ) : (
-                body
-              )}
-            </div>
-          )}
+        <div className="text-sm leading-relaxed text-white/70">
+          <div className="mail-body-content" dangerouslySetInnerHTML={{ __html: sanitizeHtml(body) }} />
         </div>
       );
     }
 
-    // Makbuz render (order/reward - metadata varsa)
-    if (category === 'order' || category === 'reward') {
-      try {
-        type MailMetadata = {
-          items?: Array<{ title: string; total: number }>;
-          subtotal?: number;
-          discount?: number;
-          total?: number;
-          purchase_date?: string;
-          coupon_code?: string;
-          coupon_pct?: number;
-          reward_amount?: number;
-        };
-        const meta: MailMetadata | undefined = (mail as { metadata?: MailMetadata })?.metadata;
-
-        // Ödül maili (reward_amount varsa)
-        if (meta && typeof meta === 'object' && typeof meta.reward_amount === 'number') {
-          return (
-            <div className="rounded-2xl border border-emerald-500/15 bg-emerald-500/[0.04] p-5 sm:p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center text-lg">🎁</div>
-                <div>
-                  <p className="text-sm font-bold text-white">{mail.title}</p>
-                  <p className="text-[11px] text-white/40 mt-0.5">{formatDate(mail.created_at)}</p>
-                </div>
-              </div>
-              <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-white/[0.04] border border-white/[0.06]">
-                <span className="text-sm text-white/60">{t('mail_receipt_reward_amount')}</span>
-                <span className="text-lg font-bold text-emerald-400">+{meta.reward_amount.toFixed(2)} Papel</span>
-              </div>
-              {body && (
-                <div className="mt-4 text-sm text-white/60 leading-relaxed">
-                  <div className="mail-body-content" dangerouslySetInnerHTML={{ __html: sanitizeHtml(body) }} />
-                </div>
-              )}
-            </div>
-          );
-        }
-
-        // Sipariş makbuzu (items varsa)
-        if (meta && typeof meta === 'object' && Array.isArray(meta.items)) {
-          const items = meta.items;
-          const subtotal = Number(meta.subtotal || 0);
-          const discount = Number(meta.discount || 0);
-          const total = Number(meta.total || 0);
-
-          return (
-            <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5 sm:p-6">
-              <div className="flex items-center justify-between mb-5">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#5865F2]/70">{t('mail_receipt_label')}</p>
-                  <p className="text-base font-bold text-white mt-1">{mail.title}</p>
-                </div>
-                <p className="text-[11px] text-white/40">{formatDate(meta.purchase_date || mail.created_at)}</p>
-              </div>
-
-              <div className="space-y-2">
-                {items.map((it: { title: string; total: number }, idx: number) => (
-                  <div key={idx} className="flex items-center justify-between px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.05]">
-                    <span className="text-sm text-white/80 truncate">{it.title}</span>
-                    <span className="text-sm font-bold font-mono text-indigo-400 ml-3">{Number(it.total).toFixed(2)} Papel</span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-5 pt-4 border-t border-white/[0.06] space-y-2">
-                <div className="flex justify-between text-sm px-1">
-                  <span className="text-white/40">{t('mail_receipt_subtotal')}</span>
-                  <span className="text-white/60">{subtotal.toFixed(2)} Papel</span>
-                </div>
-                {discount > 0 && (
-                  <div className="flex justify-between text-sm px-1">
-                    <span className="text-white/40">{t('mail_receipt_discount')}</span>
-                    <span className="text-emerald-400">-{discount.toFixed(2)} Papel</span>
-                  </div>
-                )}
-                {meta.coupon_code && (
-                  <div className="px-1">
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-[11px] text-emerald-300">
-                      {t('mail_receipt_coupon_label')} <span className="font-mono font-bold">{meta.coupon_code}</span>
-                      {meta.coupon_pct && <span>({meta.coupon_pct}%)</span>}
-                    </span>
-                  </div>
-                )}
-                <div className="flex justify-between items-center pt-2 px-1">
-                  <span className="text-base font-bold text-white">{t('mail_receipt_total')}</span>
-                  <span className="text-xl font-black text-white">{total.toFixed(2)} Papel</span>
-                </div>
-              </div>
-            </div>
-          );
-        }
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (e) { /* fallback aşağıda */ }
-    }
-
-    // Genel HTML içerik
-    const safeBody = sanitizeHtml(body);
     return (
-      <div className="text-sm text-white/70 leading-relaxed">
-        <div className="mail-body-content" dangerouslySetInnerHTML={{ __html: safeBody }} />
+      <div className="whitespace-pre-wrap text-sm leading-relaxed text-white/70">
+        {body}
       </div>
     );
   };
+
+  const panelInner = (
+    <div
+      ref={modalRef}
+      className={
+        isInline
+          ? 'relative flex h-full min-h-0 w-full flex-col overflow-hidden bg-[#0c0e12]'
+          : isFullscreen
+            ? 'mail-modal-enter relative flex h-full min-h-0 w-full flex-col overflow-hidden bg-[#0c0e12]'
+            : 'mail-modal-enter relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0c0e12]/98 shadow-2xl shadow-black/40 backdrop-blur-2xl sm:rounded-[24px]'
+      }
+    >
+      {/* ═══ Header ═══ */}
+      <div className="flex flex-shrink-0 items-center justify-between border-b border-white/[0.06] px-4 py-3 sm:px-5">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg p-1.5 text-white/40 transition-all hover:bg-white/[0.06] hover:text-white"
+            aria-label={t('mail_detail_back_aria')}
+          >
+            <LuChevronLeft className="h-5 w-5" />
+          </button>
+
+          <span className={`inline-flex items-center rounded-lg border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${categoryColor}`}>
+            {categoryLabel}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-1">
+          {onStar && (
+            <button
+              type="button"
+              onClick={() => onStar(mail.id)}
+              className="rounded-lg p-1.5 transition-all hover:bg-white/[0.06]"
+              aria-label={t('mail_detail_star_aria')}
+            >
+              <LuStar className={`h-4 w-4 transition-colors ${mail.is_starred ? 'fill-yellow-400 text-yellow-400' : 'text-white/30 hover:text-yellow-400'}`} />
+            </button>
+          )}
+          {onDelete && (
+            <button
+              type="button"
+              onClick={() => onDelete(mail.id)}
+              className="rounded-lg p-1.5 text-white/30 transition-all hover:bg-rose-500/10 hover:text-rose-400"
+              aria-label={t('mail_detail_delete_aria')}
+            >
+              <LuTrash2 className="h-4 w-4" />
+            </button>
+          )}
+          {!isInline && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-lg p-1.5 text-white/30 transition-all hover:bg-white/[0.06] hover:text-white sm:hidden"
+              aria-label={t('mail_detail_close_aria')}
+            >
+              <LuX className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* ═══ İçerik ═══ */}
+      <div className="mail-scroll flex-1 overflow-y-auto">
+        <div className="px-5 py-6 sm:px-8">
+          <div className="mb-5 flex items-start justify-between gap-3">
+            <div className="flex items-center gap-3">
+              {mail.author_avatar_url ? (
+                <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-xl bg-white/[0.06]">
+                  <Image
+                    src={mail.author_avatar_url}
+                    alt="avatar"
+                    width={40}
+                    height={40}
+                    className="h-full w-full object-cover"
+                    unoptimized
+                  />
+                </div>
+              ) : (
+                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-[#5865F2]/15 text-lg">
+                  {senderCfg.avatar}
+                </div>
+              )}
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm font-semibold text-white">
+                    {mail.author_name ?? senderName}
+                  </span>
+                  {senderCfg.verified && (
+                    <LuShield className="h-3.5 w-3.5 text-[#5865F2]" title={t('mail_detail_verified_tooltip')} />
+                  )}
+                </div>
+                <p className="mt-0.5 text-[11px] text-white/30">{formatDate(mail.created_at)}</p>
+              </div>
+            </div>
+          </div>
+
+          <h1 className="mb-5 text-xl font-bold leading-tight text-white sm:text-2xl">
+            {mail.title}
+          </h1>
+
+          {mail.image_url && (
+            <div className="mb-5 overflow-hidden rounded-xl border border-white/[0.06]">
+              {isVideoUrl(mail.image_url) ? (
+                <video
+                  src={mail.image_url}
+                  controls
+                  className="max-h-[400px] w-full object-contain bg-black"
+                />
+              ) : (
+                <Image
+                  src={mail.image_url}
+                  alt="Ek medya"
+                  width={800}
+                  height={400}
+                  className="h-auto max-h-[400px] w-full object-contain"
+                  unoptimized
+                />
+              )}
+            </div>
+          )}
+
+          <div className="mb-6">
+            {renderEmailBody(mail.body ?? '')}
+          </div>
+
+          {mail.details_url && (
+            <a
+              href={mail.details_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-xl border border-[#5865F2]/20 bg-[#5865F2]/10 px-5 py-2.5 text-sm font-semibold text-[#7289DA] transition-all hover:bg-[#5865F2]/20 hover:text-white"
+            >
+              <LuExternalLink className="h-4 w-4" />
+              {t('mail_detail_view_details')}
+            </a>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <>
@@ -309,8 +301,14 @@ export default function MailDetailModal({ mail, onClose, onDelete, onStar }: Mai
           from { opacity: 0; transform: scale(0.97) translateY(6px); }
           to { opacity: 1; transform: scale(1) translateY(0); }
         }
+        @keyframes mailSlideUp {
+          from { opacity: 0; transform: translateY(16px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .mail-fullscreen-enter {
+          animation: mailSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
 
-        /* --- Mail içerik stilleri (dark theme uyumlu) --- */
         .mail-body-content,
         .mail-body-content * {
           color: rgba(255, 255, 255, 0.7) !important;
@@ -344,8 +342,6 @@ export default function MailDetailModal({ mail, onClose, onDelete, onStar }: Mai
         .mail-body-content h1 { font-size: 1.1rem !important; }
         .mail-body-content h2 { font-size: 0.95rem !important; }
         .mail-body-content h3 { font-size: 0.85rem !important; }
-
-        /* Eski template light background'ları dark'a çevir */
         .mail-body-content div[style*="background: #f"],
         .mail-body-content div[style*="background-color: #f"],
         .mail-body-content div[style*="background: rgb(2"] {
@@ -361,8 +357,6 @@ export default function MailDetailModal({ mail, onClose, onDelete, onStar }: Mai
           border-left: 3px solid rgba(99, 102, 241, 0.5) !important;
           padding-left: 12px !important;
         }
-
-        /* Yeşil/kırmızı renkler korunsun */
         .mail-body-content *[style*="color: #10b981"],
         .mail-body-content *[style*="color: #059669"],
         .mail-body-content *[style*="color: rgb(16, 185"] {
@@ -373,8 +367,6 @@ export default function MailDetailModal({ mail, onClose, onDelete, onStar }: Mai
         .mail-body-content *[style*="color: rgb(239, 68"] {
           color: #f87171 !important;
         }
-
-        /* Tablo stilleri */
         .mail-body-content table {
           width: 100%;
           border-collapse: collapse;
@@ -392,159 +384,27 @@ export default function MailDetailModal({ mail, onClose, onDelete, onStar }: Mai
           text-transform: uppercase;
           letter-spacing: 0.05em;
         }
-
-        /* Gereksiz stili gizle */
         .mail-body-content script { display: none; }
-
-        /* Scrollbar */
         .mail-scroll::-webkit-scrollbar { width: 5px; }
         .mail-scroll::-webkit-scrollbar-track { background: transparent; }
         .mail-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
         .mail-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
       `}</style>
 
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-3 sm:p-6"
-        onClick={(e) => { if (modalRef.current && !modalRef.current.contains(e.target as Node)) onClose(); }}
-      >
-        {/* Modal */}
-        <div
-          ref={modalRef}
-          className="mail-modal-enter relative w-full max-w-2xl rounded-2xl sm:rounded-[24px] border border-white/[0.08] bg-[#0c0e12]/98 backdrop-blur-2xl shadow-2xl shadow-black/40 overflow-hidden flex flex-col max-h-[90vh]"
-        >
-          {/* ═══ Header ═══ */}
-          <div className="flex-shrink-0 px-4 sm:px-5 py-3 border-b border-white/[0.06] flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <button
-                onClick={onClose}
-                className="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/[0.06] transition-all"
-                aria-label={t('mail_detail_back_aria')}
-              >
-                <LuChevronLeft className="w-5 h-5" />
-              </button>
-
-              {/* Kategori etiketi */}
-              <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border ${categoryColor}`}>
-                {categoryLabel}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-1">
-              {onStar && (
-                <button
-                  onClick={() => onStar(mail.id)}
-                  className="p-1.5 rounded-lg hover:bg-white/[0.06] transition-all"
-                  aria-label={t('mail_detail_star_aria')}
-                >
-                  <LuStar className={`w-4 h-4 transition-colors ${mail.is_starred ? 'fill-yellow-400 text-yellow-400' : 'text-white/30 hover:text-yellow-400'}`} />
-                </button>
-              )}
-              {onDelete && (
-                <button
-                  onClick={() => onDelete(mail.id)}
-                  className="p-1.5 rounded-lg text-white/30 hover:text-rose-400 hover:bg-rose-500/10 transition-all"
-                  aria-label={t('mail_detail_delete_aria')}
-                >
-                  <LuTrash2 className="w-4 h-4" />
-                </button>
-              )}
-              <button
-                onClick={onClose}
-                className="p-1.5 rounded-lg text-white/30 hover:text-white hover:bg-white/[0.06] transition-all sm:hidden"
-                aria-label={t('mail_detail_close_aria')}
-              >
-                <LuX className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          {/* ═══ İçerik ═══ */}
-          <div className="flex-1 overflow-y-auto mail-scroll">
-            <div className="px-5 sm:px-8 py-6">
-
-              {/* Gönderici & Tarih */}
-              <div className="flex items-start justify-between gap-3 mb-5">
-                <div className="flex items-center gap-3">
-                  {/* Avatar */}
-                  {mail.author_avatar_url ? (
-                    <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 bg-white/[0.06]">
-                      <Image
-                        src={mail.author_avatar_url}
-                        alt="avatar"
-                        width={40}
-                        height={40}
-                        className="w-full h-full object-cover"
-                        unoptimized
-                      />
-                    </div>
-                  ) : (
-                    <div className="w-10 h-10 rounded-xl bg-[#5865F2]/15 flex items-center justify-center text-lg flex-shrink-0">
-                      {senderCfg.avatar}
-                    </div>
-                  )}
-                  <div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-sm font-semibold text-white">
-                        {mail.author_name ?? senderName}
-                      </span>
-                      {senderCfg.verified && (
-                        <LuShield className="w-3.5 h-3.5 text-[#5865F2]" title={t('mail_detail_verified_tooltip')} />
-                      )}
-                    </div>
-                    <p className="text-[11px] text-white/30 mt-0.5">{formatDate(mail.created_at)}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Başlık */}
-              <h1 className="text-xl sm:text-2xl font-bold text-white mb-5 leading-tight">
-                {mail.title}
-              </h1>
-
-              {/* Ek Medya (üstte, içerikten önce) */}
-              {mail.image_url && (
-                <div className="mb-5 rounded-xl overflow-hidden border border-white/[0.06]">
-                  {isVideoUrl(mail.image_url) ? (
-                    <video
-                      src={mail.image_url}
-                      controls
-                      className="w-full max-h-[400px] object-contain bg-black"
-                    />
-                  ) : (
-                    <Image
-                      src={mail.image_url}
-                      alt="Ek medya"
-                      width={800}
-                      height={400}
-                      className="w-full h-auto object-contain max-h-[400px]"
-                      unoptimized
-                    />
-                  )}
-                </div>
-              )}
-
-              {/* Mail İçeriği */}
-              <div className="mb-6">
-                {renderEmailBody(mail.body ?? '', mail.category)}
-              </div>
-
-              {/* Detay Linki */}
-              {mail.details_url && (
-                <a
-                  href={mail.details_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#5865F2]/10 hover:bg-[#5865F2]/20 border border-[#5865F2]/20 text-[#7289DA] hover:text-white text-sm font-semibold rounded-xl transition-all"
-                >
-                  <LuExternalLink className="w-4 h-4" />
-                  {t('mail_detail_view_details')}
-                </a>
-              )}
-            </div>
-          </div>
+      {isInline ? (
+        panelInner
+      ) : isFullscreen ? (
+        <div className="mail-fullscreen-enter fixed inset-0 z-[100] flex flex-col bg-[#0c0e12] pt-[env(safe-area-inset-top,0px)]">
+          {panelInner}
         </div>
-      </div>
+      ) : (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-3 backdrop-blur-sm sm:p-6"
+          onClick={(e) => { if (modalRef.current && !modalRef.current.contains(e.target as Node)) onClose(); }}
+        >
+          {panelInner}
+        </div>
+      )}
     </>
   );
 }

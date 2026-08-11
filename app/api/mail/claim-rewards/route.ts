@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { createClient } from '@supabase/supabase-js';
 import { requireSessionUser } from '@/lib/auth';
 import { getSelectedGuildId } from '@/lib/guild';
+import { isLocalDevRequest, getLocalDevMails, markLocalDevMailsRead } from '@/lib/localDev';
 
 
 const getSupabase = () => {
@@ -30,23 +31,36 @@ function getRewardAmount(mail: any): number {
 }
 
 export async function POST(request: Request) {
-  const supabase = getSupabase();
-  if (!supabase) {
-    return NextResponse.json({ error: 'missing_service_role' }, { status: 500 });
-  }
-
   const session = await requireSessionUser(request);
-  if (!session.ok) {
-    return session.response;
-  }
-  const userId = session.userId;
-  const selectedGuildId = await getSelectedGuildId(request);
+  if (!session.ok) return session.response;
 
   const payload = (await request.json()) as { ids?: string[] };
   const ids = payload.ids ?? [];
   if (!ids.length) {
     return NextResponse.json({ error: 'no_ids' }, { status: 400 });
   }
+
+  if (isLocalDevRequest(request)) {
+    const mails = getLocalDevMails();
+    const eligible = mails.filter((m) => ids.includes(m.id) && m.category === 'reward' && !m.is_read);
+    if (!eligible.length) {
+      return NextResponse.json({ error: 'already_claimed' }, { status: 400 });
+    }
+    let totalReward = 0;
+    for (const mail of eligible) {
+      totalReward += getRewardAmount(mail);
+    }
+    markLocalDevMailsRead(eligible.map((m) => m.id));
+    return NextResponse.json({ status: 'ok', claimed: totalReward, count: eligible.length });
+  }
+
+  const supabase = getSupabase();
+  if (!supabase) {
+    return NextResponse.json({ error: 'missing_service_role' }, { status: 500 });
+  }
+
+  const userId = session.userId;
+  const selectedGuildId = await getSelectedGuildId(request);
 
   // Reward maillerini getir (metadata dahil)
   const { data: mails, error: mailError } = await supabase

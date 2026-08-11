@@ -188,50 +188,56 @@ export default function SuggestionModal({ onClose, section }: Props) {
 
   const cfg = STATUS_CONFIG[activeReportStatus];
 
+  const header = (
+    <div className="flex items-center justify-between gap-3 pr-8">
+      <div className="flex min-w-0 items-center gap-3">
+        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-violet-500/20 bg-violet-500/10">
+          <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 text-violet-400">
+            <path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm3.75-1.5a.75.75 0 000 1.5h5.5a.75.75 0 000-1.5h-5.5zm0 3a.75.75 0 000 1.5h3.5a.75.75 0 000-1.5h-3.5z" />
+          </svg>
+        </div>
+        <h2 className="truncate text-base font-bold text-white">{t('support_suggestion_title')}</h2>
+      </div>
+    </div>
+  );
+
   const content = (
     <div
       className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div className="relative w-full max-w-md rounded-2xl border border-white/10 bg-[#0b0d12]/95 backdrop-blur-xl shadow-2xl overflow-hidden">
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-500/40 to-transparent" />
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+      <div className="relative flex max-h-[min(640px,90vh)] w-full max-w-md flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#0b0d12]/80 shadow-2xl backdrop-blur-md">
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
 
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/50 hover:text-white hover:bg-white/10 transition z-10"
+          className="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/50 transition hover:bg-white/10 hover:text-white"
+          aria-label={t('support_modal_close')}
         >
           <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5">
             <path d="M3.72 3.72a.75.75 0 011.06 0L8 6.94l3.22-3.22a.75.75 0 111.06 1.06L9.06 8l3.22 3.22a.75.75 0 11-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 01-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 010-1.06z" />
           </svg>
         </button>
 
-        <div className="px-6 pt-6 pb-6 flex flex-col gap-4">
-          {/* Header */}
-          <div className="flex items-center gap-3 pr-10">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-500/15 border border-violet-500/20 flex-shrink-0">
-              <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 text-violet-400">
-                <path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm3.75-1.5a.75.75 0 000 1.5h5.5a.75.75 0 000-1.5h-5.5zm0 3a.75.75 0 000 1.5h3.5a.75.75 0 000-1.5h-3.5z" />
-              </svg>
-            </div>
-            <div>
-              <h2 className="text-sm font-bold text-white">{t('support_suggestion_title')}</h2>
-              <p className="text-xs text-white/40">{t('support_suggestion_subtitle')}</p>
-            </div>
-          </div>
+        <div className="flex flex-shrink-0 flex-col gap-3.5 px-5 pt-5">
+          {header}
 
-          {/* Tabs */}
-          <div className="flex gap-1 rounded-xl border border-white/8 bg-white/[0.03] p-1">
+          <div className="flex gap-1 rounded-xl border border-white/10 bg-black/20 p-1">
             <button type="button" onClick={() => setTab('new')}
-              className={`flex-1 rounded-lg py-1.5 text-xs font-semibold transition ${tab === 'new' ? 'bg-violet-500/15 text-violet-300' : 'text-white/40 hover:text-white/70'}`}>
+              className={`flex-1 rounded-lg py-2 text-xs font-semibold transition ${tab === 'new' ? 'bg-white/10 text-white shadow-sm' : 'text-white/45 hover:text-white/75'}`}>
               {t('support_suggestion_tab_new')}
             </button>
             <button type="button" onClick={() => setTab('list')}
-              className={`flex-1 rounded-lg py-1.5 text-xs font-semibold transition ${tab === 'list' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white/70'}`}>
+              className={`flex-1 rounded-lg py-2 text-xs font-semibold transition ${tab === 'list' ? 'bg-white/10 text-white shadow-sm' : 'text-white/45 hover:text-white/75'}`}>
               {t('support_suggestion_tab_list')}
             </button>
           </div>
+        </div>
+
+        <div className="custom-scrollbar flex-1 overflow-y-auto px-5 pb-5 pt-3.5 [color-scheme:dark]">
+          <div className="flex flex-col gap-3.5">
 
           {/* ── TAB: Öneri Gönder ── */}
           {tab === 'new' && (
@@ -245,7 +251,6 @@ export default function SuggestionModal({ onClose, section }: Props) {
                       </svg>
                     </div>
                     <p className="text-sm font-semibold text-white">{t('support_suggestion_success_title')}</p>
-                    <p className="text-xs text-white/40">{t('support_suggestion_success_subtitle')}</p>
                   </div>
 
                   <div className={`rounded-xl border px-4 py-3 flex items-start gap-3 transition-colors ${cfg.color}`}>
@@ -277,67 +282,53 @@ export default function SuggestionModal({ onClose, section }: Props) {
                 </div>
               ) : (
                 <>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-white/50 uppercase tracking-wider">{t('support_suggestion_title_label')} <span className="text-white/25 normal-case">{t('support_suggestion_title_optional')}</span></label>
-                    <input
-                      value={title}
-                      onChange={e => setTitle(e.target.value)}
-                      placeholder={t('support_suggestion_title_placeholder')}
-                      className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white placeholder-white/25 focus:outline-none focus:border-white/20 transition"
-                    />
-                  </div>
+                  <input
+                    value={title}
+                    onChange={e => setTitle(e.target.value)}
+                    placeholder={t('support_suggestion_title_placeholder')}
+                    className="w-full rounded-xl border border-white/10 bg-black/20 px-3.5 py-2.5 text-sm text-white placeholder-white/30 transition focus:border-white/20 focus:outline-none"
+                  />
 
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-white/50 uppercase tracking-wider">{t('support_suggestion_description_label')}</label>
-                    <textarea
-                      value={description}
-                      onChange={e => setDescription(e.target.value)}
-                      placeholder={t('support_suggestion_description_placeholder')}
-                      rows={4}
-                      className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white placeholder-white/25 resize-none focus:outline-none focus:border-white/20 transition"
-                    />
-                  </div>
+                  <textarea
+                    value={description}
+                    onChange={e => setDescription(e.target.value)}
+                    placeholder={t('support_suggestion_description_placeholder')}
+                    rows={4}
+                    className="w-full resize-none rounded-xl border border-white/10 bg-black/20 px-3.5 py-3 text-sm text-white placeholder-white/30 transition focus:border-white/20 focus:outline-none"
+                  />
 
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-white/50 uppercase tracking-wider">{t('support_image_label')} <span className="text-white/25 normal-case">{t('support_screenshot_optional')}</span></label>
-                    <div
-                      onDrop={handleDrop}
-                      onDragOver={e => e.preventDefault()}
-                      onClick={() => fileRef.current?.click()}
-                      className="relative cursor-pointer rounded-xl border border-dashed border-white/15 bg-white/3 hover:bg-white/5 hover:border-white/25 transition flex items-center justify-center min-h-[72px] overflow-hidden"
-                    >
-                      {imagePreview ? (
-                        <div className="relative w-full">
-                          <img src={imagePreview} alt="preview" className="w-full max-h-36 object-contain rounded-xl" />
-                          <button
-                            type="button"
-                            onClick={e => { e.stopPropagation(); setImageFile(null); setImagePreview(null); }}
-                            className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white/70 hover:text-white transition"
-                          >
-                            <svg viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3">
-                              <path d="M3.72 3.72a.75.75 0 011.06 0L8 6.94l3.22-3.22a.75.75 0 111.06 1.06L9.06 8l3.22 3.22a.75.75 0 11-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 01-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 010-1.06z" />
-                            </svg>
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="flex flex-col items-center gap-1.5 py-4 text-center">
-                          <svg viewBox="0 0 16 16" fill="currentColor" className="h-5 w-5 text-white/25">
-                            <path d="M7.75 2a.75.75 0 01.75.75V7h4.25a.75.75 0 010 1.5H8.5v4.25a.75.75 0 01-1.5 0V8.5H2.75a.75.75 0 010-1.5H7V2.75A.75.75 0 017.75 2z" />
+                  <div
+                    onDrop={handleDrop}
+                    onDragOver={e => e.preventDefault()}
+                    onClick={() => fileRef.current?.click()}
+                    className="relative flex min-h-[52px] cursor-pointer items-center justify-center overflow-hidden rounded-xl border border-dashed border-white/15 bg-black/15 transition hover:border-white/25 hover:bg-black/25"
+                  >
+                    {imagePreview ? (
+                      <div className="relative w-full">
+                        <img src={imagePreview} alt="preview" className="max-h-28 w-full rounded-xl object-contain" />
+                        <button
+                          type="button"
+                          onClick={e => { e.stopPropagation(); setImageFile(null); setImagePreview(null); }}
+                          className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white/70 transition hover:text-white"
+                        >
+                          <svg viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3">
+                            <path d="M3.72 3.72a.75.75 0 011.06 0L8 6.94l3.22-3.22a.75.75 0 111.06 1.06L9.06 8l3.22 3.22a.75.75 0 11-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 01-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 010-1.06z" />
                           </svg>
-                          <span className="text-xs text-white/30">{t('support_screenshot_drop')}</span>
-                        </div>
-                      )}
-                    </div>
-                    <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleImage(f); }} />
+                        </button>
+                      </div>
+                    ) : (
+                      <span className="px-3 text-center text-xs text-white/35">{t('support_screenshot_drop')}</span>
+                    )}
                   </div>
+                  <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleImage(f); }} />
 
                   {sendStatus === 'error' && (
-                    <p className="text-xs text-red-400 text-center">{t('support_send_error')}</p>
+                    <p className="text-center text-xs text-red-400">{t('support_send_error')}</p>
                   )}
 
                   <button type="button" onClick={handleSubmit}
                     disabled={!description.trim() || sendStatus === 'sending'}
-                    className="w-full rounded-xl border border-violet-500/20 bg-violet-500/10 py-2.5 text-sm font-semibold text-violet-300 hover:bg-violet-500/20 disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center justify-center gap-2">
+                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/10 py-2.5 text-sm font-semibold text-white transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-35">
                     {sendStatus === 'sending' ? (
                       <>
                         <svg className="h-4 w-4 animate-spin" viewBox="0 0 16 16" fill="none">
@@ -461,6 +452,7 @@ export default function SuggestionModal({ onClose, section }: Props) {
               )}
             </>
           )}
+          </div>
         </div>
       </div>
     </div>

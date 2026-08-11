@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { LuTrendingUp, LuTrendingDown, LuSearch, LuArrowRight, LuTriangleAlert } from 'react-icons/lu';
+import { LuTrendingUp, LuTrendingDown, LuSearch, LuTriangleAlert } from 'react-icons/lu';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { apiUrl } from '@/lib/api';
 import type { Section } from '../types';
@@ -112,7 +112,7 @@ export default function BorsaSection({ onNavigate }: BorsaSectionProps) {
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {filtered.map((l) => (
-            <ListingCard key={l.guild_id} listing={l} onNavigate={onNavigate} t={t} />
+            <ListingCard key={l.guild_id} listing={l} t={t} />
           ))}
         </div>
       )}
@@ -120,15 +120,13 @@ export default function BorsaSection({ onNavigate }: BorsaSectionProps) {
   );
 }
 
-function ListingCard({ listing: l, onNavigate, t }: { listing: Listing; onNavigate: (s: Section, e?: unknown) => void; t: (key: string, vars?: Record<string, string | number>) => string }) {
+function ListingCard({ listing: l, t }: { listing: Listing; t: (key: string, vars?: Record<string, string | number>) => string }) {
   const positive = (l.price_change_pct ?? 0) >= 0;
   const fillPct = l.public_lots > 0 ? Math.min(100, Math.round((l.circulating_lots / l.public_lots) * 100)) : 0;
 
   return (
-    <button
-      type="button"
-      onClick={() => onNavigate('discover', l.guild_id)}
-      className="group flex flex-col gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.03] p-4 text-left transition hover:border-white/15 hover:bg-white/[0.06]"
+    <div
+      className="flex flex-col gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.03] p-4"
     >
       {/* Top row */}
       <div className="flex items-center justify-between">
@@ -145,7 +143,6 @@ function ListingCard({ listing: l, onNavigate, t }: { listing: Listing; onNaviga
             )}
           </div>
         </div>
-        <LuArrowRight className="h-4 w-4 text-white/20 transition group-hover:text-white/50" />
       </div>
 
       {/* Price */}
@@ -172,6 +169,6 @@ function ListingCard({ listing: l, onNavigate, t }: { listing: Listing; onNaviga
           </div>
         </div>
       </div>
-    </button>
+    </div>
   );
 }
