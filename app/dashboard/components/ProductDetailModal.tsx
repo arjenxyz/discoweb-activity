@@ -58,12 +58,12 @@ export default function ProductDetailModal({
       onMouseDown={(e) => {
         if (e.target === overlayRef.current) onClose();
       }}
-      className="fixed inset-0 z-[999] flex items-end justify-center bg-black/80 p-0 backdrop-blur-md animate-in fade-in duration-200 sm:items-center sm:p-4"
+      className="fixed inset-0 z-[999] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md animate-in fade-in duration-200"
       role="dialog"
       aria-modal="true"
       aria-label={item.title}
     >
-      <div className="relative flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-t-3xl border border-white/10 bg-[#0f1116] shadow-[0_24px_80px_rgba(0,0,0,0.65)] animate-in slide-in-from-bottom-4 duration-300 sm:max-h-[85vh] sm:rounded-3xl sm:slide-in-from-bottom-0 sm:zoom-in-95">
+      <div className="relative flex max-h-[85vh] w-full max-w-md flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#0f1116] shadow-[0_24px_80px_rgba(0,0,0,0.65)] animate-in zoom-in-95 duration-200">
         {/* Hero — mağaza kartı görseli */}
         <div className="relative h-52 shrink-0 overflow-hidden sm:h-64">
           <div className="absolute inset-0 opacity-70 mix-blend-screen brightness-110 sm:opacity-80">
