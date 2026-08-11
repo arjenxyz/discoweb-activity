@@ -173,16 +173,28 @@ export default function WatchEarnSection() {
       setDuration(0);
       setCurrentTime(0);
       setIsPlaying(true);
+      setIsFullscreen(false);
       return;
     }
-    if (videoRef.current) {
-      videoRef.current.play().catch(() => setIsPlaying(false));
-      setIsPlaying(true);
-    }
-    // Discord mobilde native fullscreen yok — video açılınca landscape + immersive
+
+    let cancelled = false;
+    // Orientation lock'u video mount/play sonrası uygula (iframe remount + play race riskini azaltır)
+    let orientTimer: ReturnType<typeof setTimeout> | undefined;
     if (isDiscordActivityClient() && isCoarsePointerMobile()) {
-      void setDiscordOrientationLock('landscape').then(() => setIsFullscreen(true));
+      orientTimer = setTimeout(() => {
+        if (cancelled) return;
+        void setDiscordOrientationLock('landscape').then(() => {
+          if (!cancelled) setIsFullscreen(true);
+        });
+      }, 250);
     }
+
+    return () => {
+      cancelled = true;
+      if (orientTimer) clearTimeout(orientTimer);
+      const video = videoRef.current;
+      if (video) video.pause();
+    };
   }, [activeVideo]);
 
   useEffect(() => {
@@ -380,7 +392,8 @@ export default function WatchEarnSection() {
       ? createPortal(
           <div
             ref={playerShellRef}
-            className="fixed inset-0 z-[10000] flex h-[100dvh] w-full flex-col overflow-hidden bg-black"
+            className="fixed inset-0 z-[99999] flex w-full flex-col overflow-hidden bg-black"
+            style={{ top: 0, right: 0, bottom: 0, left: 0 }}
           >
             <div className="flex shrink-0 items-center gap-3 border-b border-white/10 bg-[#12141c] px-3 py-2.5 sm:px-4">
               <div className="min-w-0 flex-1">
@@ -418,6 +431,7 @@ export default function WatchEarnSection() {
 
             <div className="relative min-h-0 w-full flex-1 cursor-pointer bg-black" onClick={togglePlay}>
               <video
+                key={activeTask.id}
                 ref={videoRef}
                 src={toActivityMediaUrl(activeTask.videoUrl)}
                 className="h-full w-full bg-black object-contain"
@@ -425,6 +439,19 @@ export default function WatchEarnSection() {
                 onLoadedMetadata={(e) => {
                   setDuration(e.currentTarget.duration || 0);
                   setCurrentTime(e.currentTarget.currentTime || 0);
+                }}
+                onLoadedData={(e) => {
+                  // Mount sonrası güvenli autoplay (play() race'ini azaltır)
+                  const video = e.currentTarget;
+                  void video.play().then(
+                    () => setIsPlaying(true),
+                    (err: unknown) => {
+                      const aborted =
+                        (err instanceof DOMException && err.name === 'AbortError') ||
+                        (err instanceof Error && /interrupted|aborted/i.test(err.message));
+                      if (!aborted) setIsPlaying(false);
+                    },
+                  );
                 }}
                 onTimeUpdate={(e) => {
                   setCurrentTime(e.currentTarget.currentTime || 0);
