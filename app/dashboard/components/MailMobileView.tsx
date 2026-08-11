@@ -165,19 +165,13 @@ export default function MailMobileView({
           <button
             type="button"
             onClick={() => setFoldersOpen((o) => !o)}
-            className={`flex flex-1 items-center gap-2.5 rounded-2xl px-3 py-2 transition-all ${
-              foldersOpen
-                ? 'border border-white/15 bg-white/10'
-                : 'border border-white/[0.06] bg-white/[0.04] hover:bg-white/[0.08]'
+            className={`flex flex-1 items-center gap-2.5 px-1 py-1.5 transition-colors ${
+              foldersOpen ? 'text-white' : 'text-white/80 hover:text-white'
             }`}
             aria-expanded={foldersOpen}
           >
-            <div
-              className={`flex h-7 w-7 items-center justify-center rounded-xl transition-colors ${
-                foldersOpen ? 'bg-white/15' : 'bg-white/8'
-              }`}
-            >
-              <LuLayoutGrid className="h-3.5 w-3.5 text-white/70" />
+            <div className="flex h-7 w-7 items-center justify-center">
+              <LuLayoutGrid className={`h-3.5 w-3.5 ${foldersOpen ? 'text-white' : 'text-white/60'}`} />
             </div>
             <div className="flex flex-col items-start leading-none">
               <span className="text-[10px] font-medium text-white/35">Şu an</span>
