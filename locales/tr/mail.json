@@ -95,6 +95,7 @@
   "mail_txn_received": "Alınan tutar",
   "mail_txn_from": "Gönderen",
   "mail_txn_user_id": "Kullanıcı ID",
+  "mail_txn_sender_id": "Gönderen ID",
   "mail_txn_copy_id": "Kopyala",
   "mail_txn_copied": "Kopyalandı",
   "mail_txn_id_unavailable": "ID bu mesajda kayıtlı değil",

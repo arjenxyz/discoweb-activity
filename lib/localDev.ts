@@ -577,7 +577,7 @@ export const localDevMailsSeed = [
     metadata: {
       kind: 'transfer',
       amount: 250,
-      note: 'Anlam evrensel değil. Aynı veri, farklı zihinlerde başka şeyler ifade eder.',
+      note: 'Anlam evrensel değil. Aynı veri, farklı zihinlerde başka şeyler ifade eder. Bu yüzden uzun notlar da kutunun içinde satır kırarak kalmalı; taşmamalı ve layoutu bozmamalı.',
       senderId: '139725308086878208',
       senderUsername: 'thearjen',
       senderAvatarUrl: LOCAL_DEV_AVATAR,

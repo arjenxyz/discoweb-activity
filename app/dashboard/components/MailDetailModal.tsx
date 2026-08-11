@@ -154,7 +154,7 @@ export default function MailDetailModal({
     }
 
     return (
-      <div className="whitespace-pre-wrap text-sm leading-relaxed text-white/70">
+      <div className="whitespace-pre-wrap break-words text-sm leading-relaxed text-white/70 [overflow-wrap:anywhere]">
         {body}
       </div>
     );
@@ -295,7 +295,7 @@ export default function MailDetailModal({
             </div>
           )}
 
-          <div className="mb-6">
+          <div className="mb-6 min-w-0 overflow-hidden">
             {txn ? (
               <MailTransactionReceipt mail={mail} txn={txn} t={t} />
             ) : (
