@@ -150,7 +150,14 @@
 
   "pending_earnings_title": "Ganhos Acumulados",
   "pending_earnings_claim": "Resgatar Ganhos",
+  "pending_earnings_claiming": "Resgatando...",
+  "pending_earnings_claimed": "Resgatado",
+  "pending_earnings_retry": "Tentar de novo",
   "pending_earnings_auto_note": "Ganhos não resgatados são automaticamente transferidos para sua conta todos os dias à meia-noite.",
+  "pending_earnings_success": "{amount} papel foi adicionado à sua conta.",
+  "pending_earnings_empty": "Nenhum ganho novo disponível para resgatar.",
+  "pending_earnings_error": "Não foi possível transferir os ganhos para sua conta.",
+  "pending_earnings_error_retry": "Algo deu errado ao resgatar. Tente novamente.",
 
   "discover_title": "Comunidade",
   "discover_subtitle": "Descubra servidores em destaque",

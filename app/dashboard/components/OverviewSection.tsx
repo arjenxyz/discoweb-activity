@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { useEffect } from 'react';
 import { useT } from '@/contexts/LocaleContext';
 import {
   LuMessageSquare,
@@ -10,8 +11,12 @@ import {
   LuTrendingUp,
   LuClock,
   LuCoins,
+  LuCheck,
+  LuTriangleAlert,
+  LuInfo,
 } from 'react-icons/lu';
-import type { MemberProfile, OverviewStats, OrderStats, OverviewStatsExpanded } from '../types';
+import type { BadgeInfo, MemberProfile, OverviewStats, OrderStats, OverviewStatsExpanded } from '../types';
+import { computeProgressPct } from './privileges/tierUtils';
 
 type OverviewSectionProps = {
   overviewLoading: boolean;
@@ -27,6 +32,9 @@ type OverviewSectionProps = {
   claimLoading?: boolean;
   claimResult?: { kind: 'idle' | 'success' | 'error' | 'empty'; message?: string };
   onClaim?: () => void;
+  onClearClaimResult?: () => void;
+  badgeInfo?: BadgeInfo | null;
+  onNavigateToPrivileges?: () => void;
 };
 
 export default function OverviewSection({
@@ -41,14 +49,37 @@ export default function OverviewSection({
   claimLoading,
   claimResult,
   onClaim,
+  onClearClaimResult,
+  badgeInfo,
+  onNavigateToPrivileges,
 }: OverviewSectionProps) {
   const t = useT();
 
   const hasTag = (overviewStats as OverviewStatsExpanded)?.hasTag ?? false;
   const isBooster = (overviewStats as OverviewStatsExpanded)?.isBooster ?? false;
+  const currentBadge = badgeInfo?.currentBadge ?? null;
+  const nextBadge = badgeInfo?.nextBadge ?? null;
+  const currentBoosterBadge = badgeInfo?.currentBoosterBadge ?? null;
+  const nextBoosterBadge = badgeInfo?.nextBoosterBadge ?? null;
+  const tagProgressPct = computeProgressPct(
+    badgeInfo?.tagDays ?? 0,
+    currentBadge?.days_required ?? 0,
+    nextBadge?.days_required ?? null,
+  );
+  const boostProgressPct = computeProgressPct(
+    badgeInfo?.boosterMonths ?? 0,
+    currentBoosterBadge?.months_required ?? 0,
+    nextBoosterBadge?.months_required ?? null,
+  );
   const claimStatus = claimResult?.kind ?? 'idle';
   const totalsSince = (overviewStats as OverviewStatsExpanded)?.totalsSinceVerified;
   const verifiedSince = (overviewStats as OverviewStatsExpanded)?.verifiedSince;
+
+  useEffect(() => {
+    if (!claimResult || claimResult.kind === 'idle' || !onClearClaimResult) return;
+    const timer = window.setTimeout(() => onClearClaimResult(), 4500);
+    return () => window.clearTimeout(timer);
+  }, [claimResult, onClearClaimResult]);
 
   const card = 'rounded-2xl border border-white/[0.10] bg-white/[0.05] p-4 sm:p-5';
 
@@ -181,30 +212,58 @@ export default function OverviewSection({
               },
               {
                 label: t('overview_stat_tag_label'),
-                value: hasTag ? t('overview_stat_active') : t('overview_stat_none'),
-                sub: t('overview_stat_tag_sub'),
+                value: hasTag ? (currentBadge?.name ?? t('overview_stat_active')) : t('overview_stat_none'),
+                sub: hasTag && nextBadge
+                  ? t('badge_next_badge', { name: nextBadge.name })
+                  : t('overview_stat_tag_sub'),
                 icon: <LuTag className="h-4 w-4" />,
                 color: hasTag ? 'text-indigo-400' : 'text-white/20',
                 active: hasTag,
+                progress: hasTag && nextBadge ? tagProgressPct : null,
+                accent: currentBadge?.color ?? '#818cf8',
+                onClick: onNavigateToPrivileges,
               },
               {
                 label: t('overview_stat_boost_label'),
-                value: isBooster ? t('overview_stat_active') : t('overview_stat_none'),
-                sub: t('overview_stat_boost_sub'),
+                value: isBooster ? (currentBoosterBadge?.name ?? t('overview_stat_active')) : t('overview_stat_none'),
+                sub: isBooster && nextBoosterBadge
+                  ? t('badge_next_badge', { name: nextBoosterBadge.name })
+                  : t('overview_stat_boost_sub'),
                 icon: <LuZap className="h-4 w-4" />,
                 color: isBooster ? 'text-pink-400' : 'text-white/20',
                 active: isBooster,
+                progress: isBooster && nextBoosterBadge ? boostProgressPct : null,
+                accent: currentBoosterBadge?.color ?? '#f472b6',
+                onClick: onNavigateToPrivileges,
               },
-            ].map(({ label, value, sub, icon, color, active }) => (
-              <div key={label} className={`rounded-2xl border p-4 transition-colors ${active ? 'border-white/[0.12] bg-white/[0.06]' : 'border-white/[0.06] bg-white/[0.02]'}`}>
+            ].map(({ label, value, sub, icon, color, active, progress, accent, onClick }) => {
+              const Wrapper = onClick ? 'button' : 'div';
+              return (
+              <Wrapper
+                key={label}
+                type={onClick ? 'button' : undefined}
+                onClick={onClick}
+                className={`rounded-2xl border p-4 text-left transition-colors ${onClick ? 'hover:bg-white/[0.08] cursor-pointer' : ''} ${active ? 'border-white/[0.12] bg-white/[0.06]' : 'border-white/[0.06] bg-white/[0.02]'}`}
+              >
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-[10px] font-semibold text-white/40 uppercase tracking-wider">{label}</span>
                   <span className={color}>{icon}</span>
                 </div>
-                <p className={`text-xl sm:text-2xl font-black tabular-nums ${active ? 'text-white' : 'text-white/20'}`}>{value}</p>
+                <p className={`text-xl sm:text-2xl font-black tabular-nums truncate ${active ? 'text-white' : 'text-white/20'}`}>{value}</p>
                 <p className="mt-0.5 text-[10px] text-white/30">{sub}</p>
-              </div>
-            ))}
+                {progress != null && (
+                  <div className="mt-2.5 h-1 overflow-hidden rounded-full bg-white/[0.06]">
+                    <div
+                      className="h-full rounded-full transition-all duration-700"
+                      style={{ width: `${progress}%`, background: accent ?? '#818cf8' }}
+                    />
+                  </div>
+                )}
+                {onClick && (
+                  <p className="mt-2 text-[10px] font-medium text-white/25">{t('overview_privilege_view')}</p>
+                )}
+              </Wrapper>
+            );})}
           </div>
 
           {/* BİRİKEN KAZANÇ */}
@@ -236,33 +295,59 @@ export default function OverviewSection({
                     </div>
                   </div>
                   <button
+                    type="button"
                     onClick={onClaim}
-                    disabled={claimLoading}
-                    className={`flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-black transition-colors ${claimStatus === 'success' ? 'bg-emerald-400 hover:bg-emerald-300' : 'bg-amber-500 hover:bg-amber-400'} disabled:opacity-50 disabled:cursor-not-allowed`}
+                    disabled={claimLoading || claimStatus === 'success'}
+                    className={`flex min-w-[140px] items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition-all active:scale-[0.98] disabled:cursor-not-allowed ${
+                      claimStatus === 'success'
+                        ? 'bg-emerald-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.35)]'
+                        : claimStatus === 'error'
+                          ? 'bg-rose-500 text-white hover:bg-rose-400'
+                          : claimStatus === 'empty'
+                            ? 'bg-white/15 text-white/80 hover:bg-white/20'
+                            : 'bg-amber-500 text-black hover:bg-amber-400 disabled:opacity-50'
+                    }`}
                   >
                     {claimLoading ? (
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-black/20 border-t-black/60" />
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-black/20 border-t-black/70" />
+                    ) : claimStatus === 'success' ? (
+                      <LuCheck className="h-4 w-4" />
                     ) : (
                       <LuCoins className="h-4 w-4" />
                     )}
                     {claimLoading
-                      ? t('pending_earnings_claim')
+                      ? t('pending_earnings_claiming')
                       : claimStatus === 'success'
-                        ? 'Başarılı'
+                        ? t('pending_earnings_claimed')
                         : claimStatus === 'error'
-                          ? 'Tekrar Dene'
+                          ? t('pending_earnings_retry')
                           : t('pending_earnings_claim')}
                   </button>
                 </div>
                 <p className="mt-2 text-[10px] text-white/25">{t('pending_earnings_auto_note')}</p>
-                {claimResult?.kind === 'error' && claimResult.message && (
-                  <p className="mt-2 text-sm text-rose-300">{claimResult.message}</p>
-                )}
-                {claimResult?.kind === 'success' && claimResult.message && (
-                  <p className="mt-2 text-sm text-emerald-300">{claimResult.message}</p>
-                )}
-                {claimResult?.kind === 'empty' && claimResult.message && (
-                  <p className="mt-2 text-sm text-white/70">{claimResult.message}</p>
+
+                {claimResult && claimResult.kind !== 'idle' && claimResult.message && (
+                  <div
+                    className={`mt-3 flex items-start gap-2.5 rounded-xl border px-3 py-2.5 animate-in fade-in slide-in-from-top-1 duration-200 ${
+                      claimResult.kind === 'success'
+                        ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-200'
+                        : claimResult.kind === 'error'
+                          ? 'border-rose-500/25 bg-rose-500/10 text-rose-200'
+                          : 'border-white/10 bg-white/[0.05] text-white/70'
+                    }`}
+                    role="status"
+                  >
+                    <span className="mt-0.5 shrink-0">
+                      {claimResult.kind === 'success' ? (
+                        <LuCheck className="h-4 w-4" />
+                      ) : claimResult.kind === 'error' ? (
+                        <LuTriangleAlert className="h-4 w-4" />
+                      ) : (
+                        <LuInfo className="h-4 w-4" />
+                      )}
+                    </span>
+                    <p className="text-sm font-medium leading-snug">{claimResult.message}</p>
+                  </div>
                 )}
               </div>
             </div>

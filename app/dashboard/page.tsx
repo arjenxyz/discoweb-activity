@@ -762,11 +762,19 @@ export default function DashboardPage() {
         const data = await res.json();
         if (data.totalTransferred > 0) {
           setWalletBalance(prev => Number((prev + data.totalTransferred).toFixed(2)));
-          setClaimResult({ kind: 'success', message: `${data.totalTransferred.toFixed(2)} papel hesabınıza yüklendi.` });
+          setClaimResult({
+            kind: 'success',
+            message: t('pending_earnings_success', {
+              amount: Number(data.totalTransferred).toLocaleString('tr-TR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              }),
+            }),
+          });
           setPendingEarnings({ pending: 0, messageTotal: 0, voiceTotal: 0, count: 0 });
           await refreshWalletBalance();
         } else {
-          setClaimResult({ kind: 'empty', message: 'Alınacak yeni kazanç bulunamadı.' });
+          setClaimResult({ kind: 'empty', message: t('pending_earnings_empty') });
         }
       } else {
         const errorData = await res.json().catch(() => ({ error: 'unknown' }));
@@ -774,16 +782,16 @@ export default function DashboardPage() {
           ? errorData.message
           : typeof errorData?.error === 'string'
             ? errorData.error
-            : 'Kazanç hesabınıza yüklenemedi.';
+            : t('pending_earnings_error');
         console.error('[claim-earnings] API error:', errorData);
         setClaimResult({ kind: 'error', message });
       }
     } catch (err) {
       console.error('[claim-earnings] failed:', err);
-      setClaimResult({ kind: 'error', message: 'Kazanç talebi sırasında bir hata oluştu. Lütfen tekrar deneyin.' });
+      setClaimResult({ kind: 'error', message: t('pending_earnings_error_retry') });
     }
     setClaimLoading(false);
-  }, [refreshWalletBalance, loadPendingEarnings]);
+  }, [refreshWalletBalance, loadPendingEarnings, t]);
 
   const refreshStoreItems = useCallback(async (page = 1, append = false) => {
     if (page === 1) {
@@ -1507,6 +1515,7 @@ export default function DashboardPage() {
                   claimLoading={claimLoading}
                   claimResult={claimResult}
                   onClaim={claimEarnings}
+                  onClearClaimResult={() => setClaimResult({ kind: 'idle' })}
                   badgeInfo={badgeInfo}
                   onNavigateToPrivileges={ENABLE_TAG_BADGE_SECTION ? () => setActiveSection('tag-badge') : undefined}
                 />
