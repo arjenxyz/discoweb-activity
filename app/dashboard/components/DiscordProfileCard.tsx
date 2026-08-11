@@ -17,7 +17,7 @@ type DiscordProfileCardProps = {
 function discordCreatedAt(userId?: string): Date | null {
   if (!userId || !/^\d+$/.test(userId)) return null;
   try {
-    const ms = Number((BigInt(userId) >> 22n) + 1420070400000n);
+    const ms = Number((BigInt(userId) >> BigInt(22)) + BigInt(1420070400000));
     if (!Number.isFinite(ms) || ms <= 0) return null;
     return new Date(ms);
   } catch {

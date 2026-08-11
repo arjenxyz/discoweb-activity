@@ -50,7 +50,7 @@ function buildAvatarUrl(userId: string, avatar: string | null | undefined, size 
     const ext = avatar.startsWith('a_') ? 'gif' : 'png';
     return `https://cdn.discordapp.com/avatars/${userId}/${avatar}.${ext}?size=${size}`;
   }
-  const fallback = Number.isFinite(Number(userId)) ? Number(BigInt(userId) % 5n) : 0;
+  const fallback = /^\d+$/.test(userId) ? Number(BigInt(userId) % BigInt(5)) : 0;
   return `https://cdn.discordapp.com/embed/avatars/${fallback}.png`;
 }
 
