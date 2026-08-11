@@ -68,7 +68,7 @@ export default function SidebarNav({
 
   return (
     <aside
-      className={`sticky top-0 hidden h-screen flex-col border-r border-white/[0.06] bg-[#0b0d12] transition-all duration-300 lg:flex ${
+      className={`hidden h-full min-h-0 shrink-0 flex-col overflow-hidden border-r border-white/[0.06] bg-[#0b0d12] transition-all duration-300 lg:flex ${
         collapsed ? 'w-[72px]' : 'w-[240px]'
       }`}
     >
@@ -112,10 +112,10 @@ export default function SidebarNav({
         )}
       </div>
 
-      <div className="mx-3 border-t border-white/[0.06]" />
+      <div className="mx-3 shrink-0 border-t border-white/[0.06]" />
 
       {/* Navigasyon */}
-      <nav className="mt-4 flex-1 overflow-y-auto px-3 pb-6 space-y-5">
+      <nav className="mt-4 min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-3 pb-6 custom-scrollbar">
         {NAV_GROUPS.filter(g => !g.requiresAuth || !unauthorized).map((group) => (
           <div key={group.label} className="space-y-0.5">
             {!collapsed && (
