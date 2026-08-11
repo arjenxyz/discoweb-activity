@@ -157,7 +157,7 @@ export default function MailDetailModal({
           ? 'relative flex h-full min-h-0 w-full flex-col overflow-hidden bg-[#0c0e12]'
           : isFullscreen
             ? 'mail-modal-enter relative flex h-full min-h-0 w-full flex-col overflow-hidden bg-[#0c0e12]'
-            : 'mail-modal-enter relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0c0e12]/98 shadow-2xl shadow-black/40 backdrop-blur-2xl sm:rounded-[24px]'
+            : 'mail-modal-enter relative flex max-h-[min(90vh,880px)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0c0e12]/98 shadow-2xl shadow-black/40 backdrop-blur-2xl sm:rounded-[24px]'
       }
     >
       {/* ═══ Header ═══ */}
@@ -212,7 +212,7 @@ export default function MailDetailModal({
       </div>
 
       {/* ═══ İçerik ═══ */}
-      <div className="mail-scroll flex-1 overflow-y-auto">
+      <div className="mail-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <div className="px-5 py-6 sm:px-8">
           <div className="mb-5 flex items-start justify-between gap-3">
             <div className="flex items-center gap-3">
