@@ -545,3 +545,26 @@ html, body {
   animation-iteration-count: infinite;
 }
 
+@keyframes lang-drip {
+  0% {
+    transform: translateY(-12vh) rotate(var(--lang-rotate, 0deg));
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.9;
+  }
+  85% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(112vh) rotate(var(--lang-rotate, 0deg));
+    opacity: 0;
+  }
+}
+
+.lang-drip-label {
+  animation-name: lang-drip;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+

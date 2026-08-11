@@ -106,17 +106,25 @@ const FLAGS: Record<LanguageCode, ReactNode> = {
   )),
 };
 
-/** Decorative background labels — "set language" in each locale */
-export const LANGUAGE_BG_LABELS: { code: LanguageCode; text: string }[] = [
-  { code: 'en', text: 'Set language' },
-  { code: 'tr', text: 'Dili ayarla' },
-  { code: 'de', text: 'Sprache wählen' },
-  { code: 'fr', text: 'Choisir la langue' },
-  { code: 'es', text: 'Ajustar idioma' },
-  { code: 'pt', text: 'Ajustar idioma' },
-  { code: 'ja', text: '言語を設定' },
-  { code: 'ko', text: '언어 설정' },
-  { code: 'ru', text: 'Настроить язык' },
-  { code: 'id', text: 'Atur bahasa' },
-  { code: 'hu', text: 'Nyelv beállítása' },
+/** Decorative background labels — one "set language" phrase per locale */
+export const LANGUAGE_BG_LABELS: {
+  code: LanguageCode;
+  text: string;
+  left: string;
+  rotate: number;
+  size: string;
+  duration: string;
+  delay: string;
+}[] = [
+  { code: 'en', text: 'Set language', left: '6%', rotate: -10, size: 'text-base', duration: '18s', delay: '0s' },
+  { code: 'tr', text: 'Dili ayarla', left: '58%', rotate: 8, size: 'text-base', duration: '22s', delay: '-3s' },
+  { code: 'de', text: 'Sprache wählen', left: '78%', rotate: -6, size: 'text-sm', duration: '20s', delay: '-7s' },
+  { code: 'fr', text: 'Choisir la langue', left: '10%', rotate: 9, size: 'text-sm', duration: '24s', delay: '-11s' },
+  { code: 'es', text: 'Ajustar idioma', left: '48%', rotate: -8, size: 'text-base', duration: '19s', delay: '-5s' },
+  { code: 'pt', text: 'Ajustar idioma', left: '28%', rotate: 5, size: 'text-sm', duration: '21s', delay: '-14s' },
+  { code: 'ja', text: '言語を設定', left: '4%', rotate: -4, size: 'text-base', duration: '23s', delay: '-9s' },
+  { code: 'ko', text: '언어 설정', left: '70%', rotate: 11, size: 'text-base', duration: '17s', delay: '-2s' },
+  { code: 'ru', text: 'Настроить язык', left: '36%', rotate: -9, size: 'text-sm', duration: '25s', delay: '-16s' },
+  { code: 'id', text: 'Atur bahasa', left: '84%', rotate: 4, size: 'text-sm', duration: '20s', delay: '-12s' },
+  { code: 'hu', text: 'Nyelv beállítása', left: '20%', rotate: -5, size: 'text-sm', duration: '26s', delay: '-8s' },
 ];
