@@ -130,7 +130,7 @@ export default function MailDesktopView({
         </div>
       </div>
 
-      {/* 3-panel body */}
+      {/* 2-panel body: folders + list (detail opens as modal) */}
       <div className="relative z-10 flex min-h-0 flex-1">
         {/* Sidebar */}
         <aside className="flex w-60 shrink-0 flex-col border-r border-white/[0.06] bg-[#0b0d12]/98">
@@ -191,7 +191,7 @@ export default function MailDesktopView({
         </aside>
 
         {/* List panel */}
-        <div className="flex min-w-0 flex-1 flex-col border-r border-white/[0.06]">
+        <div className="flex min-w-0 flex-1 flex-col">
           <div className="flex shrink-0 items-center gap-2 border-b border-white/5 px-4 py-3">
             <div className="flex flex-1 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 focus-within:border-[#5865F2]/30">
               <LuSearch className="h-4 w-4 shrink-0 text-white/30" />
@@ -404,30 +404,16 @@ export default function MailDesktopView({
             </button>
           </div>
         </div>
-
-        {/* Detail panel */}
-        <div className="hidden min-w-0 flex-1 lg:flex lg:flex-col">
-          <MailDetailModal
-            mail={selectedMail}
-            variant="inline"
-            onClose={onCloseMail}
-            onDelete={onDeleteMail}
-            onStar={onStarMail}
-          />
-        </div>
       </div>
 
-      {/* Medium screens without 3rd panel: modal fallback when mail selected */}
       {selectedMail && (
-        <div className="lg:hidden">
-          <MailDetailModal
-            mail={selectedMail}
-            variant="modal"
-            onClose={onCloseMail}
-            onDelete={onDeleteMail}
-            onStar={onStarMail}
-          />
-        </div>
+        <MailDetailModal
+          mail={selectedMail}
+          variant="modal"
+          onClose={onCloseMail}
+          onDelete={onDeleteMail}
+          onStar={onStarMail}
+        />
       )}
     </div>
   );
