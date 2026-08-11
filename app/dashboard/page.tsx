@@ -1620,6 +1620,7 @@ export default function DashboardPage() {
                 onBack={() => setActiveSection('overview')}
                 profile={profile}
                 serverCount={headerServer.guilds.length}
+                serverName={headerServer.data?.name ?? activeServerName}
               />
             )}
 

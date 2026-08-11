@@ -592,34 +592,57 @@ export default function SettingsSection({
                   </div>
                   <div className="min-w-0">
                     <h2 className="text-base font-bold tracking-tight text-white sm:text-lg">
-                      Veri silme onayı
+                      {deleteScope === 'current' ? 'Sunucu verisi temizleme' : 'Tam hesap veri silme'}
                     </h2>
                     <p className="mt-1 text-xs leading-relaxed text-white/45 sm:text-sm">
-                      Bu işlem geri alınamaz. Onay sonrası seçilen kapsam sistemden kaldırılır.
+                      {deleteScope === 'current'
+                        ? 'Kapsam sınırlıdır. Onay sonrası yalnızca bu sunucuya ait Activity kayıtları kaldırılır.'
+                        : 'Bu işlem geri alınamaz. Onay sonrası tüm platform kayıtların silinir ve oturum kapanır.'}
                     </p>
                   </div>
                 </div>
               </div>
 
               <div className="space-y-3.5 px-5 py-4">
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] px-3 py-2.5">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-white/30">Kapsam</p>
-                    <p className="mt-1 text-xs font-semibold text-white/80">
-                      {deleteOptionConfig[deleteScope].scopeLabel}
-                    </p>
+                {deleteScope === 'current' ? (
+                  <div className="rounded-xl border border-amber-500/25 bg-gradient-to-br from-amber-500/[0.12] to-transparent p-3.5">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-300">
+                        <LuServer className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-amber-200/60">
+                          Hedef sunucu
+                        </p>
+                        <p className="mt-0.5 truncate text-sm font-bold text-white">
+                          {serverName?.trim() || 'Mevcut sunucu'}
+                        </p>
+                        <p className="mt-0.5 text-[11px] text-white/40">
+                          @{profile?.username ?? '—'} · sınırlı kapsam
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] px-3 py-2.5">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-white/30">Hesap</p>
-                    <p className="mt-1 truncate text-xs font-semibold text-white/80">
-                      @{profile?.username ?? '—'}
-                    </p>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] px-3 py-2.5">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-white/30">Kapsam</p>
+                      <p className="mt-1 text-xs font-semibold text-white/80">
+                        {deleteOptionConfig[deleteScope].scopeLabel}
+                      </p>
+                    </div>
+                    <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] px-3 py-2.5">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-white/30">Hesap</p>
+                      <p className="mt-1 truncate text-xs font-semibold text-white/80">
+                        @{profile?.username ?? '—'}
+                      </p>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-3.5">
                   <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/30">
-                    Etkilenecek kayıtlar
+                    Silinecek kayıtlar
                   </p>
                   <ul className="mt-2.5 space-y-2">
                     {deleteOptionConfig[deleteScope].items.map((item) => (
@@ -634,6 +657,23 @@ export default function SettingsSection({
                     ))}
                   </ul>
                 </div>
+
+                {deleteScope === 'current' && deleteOptionConfig.current.kept.length > 0 && (
+                  <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/[0.06] p-3.5">
+                    <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-300/80">
+                      <LuShieldCheck className="h-3.5 w-3.5" />
+                      Korunacaklar
+                    </p>
+                    <ul className="mt-2.5 space-y-2">
+                      {deleteOptionConfig.current.kept.map((item) => (
+                        <li key={item} className="flex items-start gap-2 text-xs text-emerald-100/70">
+                          <LuCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-400" />
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
 
                 <div
                   className={`rounded-xl border p-3.5 ${
@@ -669,7 +709,9 @@ export default function SettingsSection({
                     }`}
                   />
                   <span className="text-xs leading-relaxed text-white/60">
-                    Bu işlemin kalıcı ve geri alınamaz olduğunu anladım; silme işlemini onaylıyorum.
+                    {deleteScope === 'current'
+                      ? 'Yalnızca bu sunucuya ait verilerin silineceğini anladım ve onaylıyorum.'
+                      : 'Bu işlemin kalıcı ve geri alınamaz olduğunu anladım; silme işlemini onaylıyorum.'}
                   </span>
                 </label>
 
