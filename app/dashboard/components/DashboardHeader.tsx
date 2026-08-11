@@ -562,7 +562,7 @@ export default function DashboardHeader({
                     className="h-full w-full object-cover"
                   />
                 </div>
-                <div className="hidden text-left 2xl:block">
+                <div className="hidden text-left lg:block">
                   <p className="max-w-[100px] truncate text-sm font-semibold leading-tight text-white">
                     {profile?.name || t('dashboard_user_fallback')}
                   </p>
