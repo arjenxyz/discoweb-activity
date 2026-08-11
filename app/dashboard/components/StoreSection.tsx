@@ -240,8 +240,8 @@ export default function StoreSection({
                           <div
                             className={`relative z-10 grid grid-cols-[auto_1fr] gap-2 overflow-hidden transition-all duration-300 ease-out ${
                               actionsOpen
-                                ? 'mt-3 max-h-11 opacity-100 pointer-events-auto'
-                                : 'mt-0 max-h-0 opacity-0 pointer-events-none group-hover:mt-3 group-hover:max-h-11 group-hover:opacity-100 group-hover:pointer-events-auto'
+                                ? 'mt-3 max-h-14 pt-1.5 opacity-100 pointer-events-auto'
+                                : 'mt-0 max-h-0 pt-0 opacity-0 pointer-events-none group-hover:mt-3 group-hover:max-h-14 group-hover:pt-1.5 group-hover:opacity-100 group-hover:pointer-events-auto'
                             }`}
                           >
                             {(() => {
@@ -260,7 +260,7 @@ export default function StoreSection({
                                 >
                                   <LuShoppingCart className="w-4 h-4" />
                                   {cartQty > 0 ? (
-                                    <span className="absolute -top-1 -right-1 inline-flex h-5 min-w-[18px] items-center justify-center rounded-full bg-emerald-400 px-1.5 text-[10px] font-bold text-black">
+                                    <span className="absolute -top-1 -right-1 z-10 inline-flex h-5 min-w-[18px] items-center justify-center rounded-full bg-emerald-400 px-1.5 text-[10px] font-bold leading-none text-black shadow-sm ring-2 ring-[#0b0d12]">
                                       {cartQty}
                                     </span>
                                   ) : null}
