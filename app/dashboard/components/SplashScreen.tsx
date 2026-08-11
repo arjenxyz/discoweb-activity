@@ -3,7 +3,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { MuteButton, VideoBackground } from './VideoBackground';
-import RulesModal, { hasAcceptedRules } from './RulesModal';
 import SupportMenu from './SupportMenu';
 import { apiUrl } from '@/lib/api';
 import fetchWithCreds from '@/lib/fetchWithCreds';
@@ -24,7 +23,6 @@ export default function SplashScreen({ onEnter }: Props) {
   const [maintenanceChecked, setMaintenanceChecked] = useState(false);
   const [isDeveloper, setIsDeveloper] = useState(false);
   const [isDeveloperChecked, setIsDeveloperChecked] = useState(false);
-  const [rulesOpen, setRulesOpen] = useState(false);
   const [user, setUser] = useState<{ username: string; avatarUrl: string } | null>(null);
   const [userLoading, setUserLoading] = useState(true);
   const [tipIndex, setTipIndex] = useState(0);
@@ -44,14 +42,6 @@ export default function SplashScreen({ onEnter }: Props) {
     {
       icon: (
         <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 flex-shrink-0">
-          <path d="M1.5 2A1.5 1.5 0 000 3.5v2A1.5 1.5 0 001.5 7h13A1.5 1.5 0 0016 5.5v-2A1.5 1.5 0 0014.5 2h-13zM0 10.5A1.5 1.5 0 011.5 9h13a1.5 1.5 0 010 3h-13A1.5 1.5 0 010 10.5z" />
-        </svg>
-      ),
-      textKey: 'splash_tip_market_shares',
-    },
-    {
-      icon: (
-        <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 flex-shrink-0">
           <path d="M2.5 3A1.5 1.5 0 001 4.5v.793c.026.009.051.02.076.032L7.674 8.51c.206.1.446.1.652 0l6.598-3.185A.755.755 0 0115 5.293V4.5A1.5 1.5 0 0013.5 3h-11z" />
           <path d="M15 6.954L8.978 9.86a2.25 2.25 0 01-1.956 0L1 6.954V11.5A1.5 1.5 0 002.5 13h11a1.5 1.5 0 001.5-1.5V6.954z" />
         </svg>
@@ -61,34 +51,34 @@ export default function SplashScreen({ onEnter }: Props) {
     {
       icon: (
         <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 flex-shrink-0">
-          <path fillRule="evenodd" d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm9 3a1 1 0 11-2 0 1 1 0 012 0zm-.25-6.25a.75.75 0 00-1.5 0v3.5a.75.75 0 001.5 0v-3.5z" />
-        </svg>
-      ),
-      textKey: 'splash_tip_universal_currency',
-    },
-    {
-      icon: (
-        <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 flex-shrink-0">
-          <path d="M3.75 2a.75.75 0 00-.75.75v10.5a.75.75 0 001.28.53L8 10.06l3.72 3.72a.75.75 0 001.28-.53V2.75a.75.75 0 00-.75-.75h-8.5z" />
-        </svg>
-      ),
-      textKey: 'splash_tip_badge_days',
-    },
-    {
-      icon: (
-        <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 flex-shrink-0">
           <path d="M1 2.75C1 1.784 1.784 1 2.75 1h10.5c.966 0 1.75.784 1.75 1.75v7.5A1.75 1.75 0 0113.25 12H9.06l.038.48.016.2c.017.193.035.327.06.45a.75.75 0 01-.605.894l-.01.001a.75.75 0 01-.848-.532c-.067-.228-.107-.483-.131-.724L7.5 12.5H5a.75.75 0 01-.596-.295L3 10.5H2.75A1.75 1.75 0 011 8.75v-6zM2.75 2.5a.25.25 0 00-.25.25v6.25c0 .138.112.25.25.25h.5a.75.75 0 01.596.295l1.404 1.705H7.5a.75.75 0 01.75.75v.059l.013.191H13.25a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25H2.75z" />
         </svg>
       ),
-      textKey: 'splash_tip_discount_coupons',
+      textKey: 'splash_tip_store',
     },
     {
       icon: (
         <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 flex-shrink-0">
-          <path d="M7.22 1.63a1 1 0 011.56 0l1.22 1.46 1.86-.38a1 1 0 011.16.9l.17 1.9 1.6 1.04a1 1 0 010 1.7l-1.6 1.04-.17 1.9a1 1 0 01-1.16.9l-1.86-.38-1.22 1.46a1 1 0 01-1.56 0L6 10.21l-1.86.38a1 1 0 01-1.16-.9l-.17-1.9L1.21 6.75a1 1 0 010-1.7l1.6-1.04.17-1.9a1 1 0 011.16-.9L6 1.59l1.22-1.46z" />
+          <path fillRule="evenodd" d="M8 1.75A2.25 2.25 0 005.75 4v.455c-.566.09-1.072.3-1.5.59-.59.4-.99.98-.99 1.705v.05c0 .55.26 1.04.69 1.39l.01.01c.18.15.28.37.28.61v1.74c0 .69.56 1.25 1.25 1.25h5.02c.69 0 1.25-.56 1.25-1.25V9.51c0-.24.1-.46.28-.61l.01-.01c.43-.35.69-.84.69-1.39v-.05c0-.725-.4-1.305-.99-1.705a3.3 3.3 0 00-1.5-.59V4A2.25 2.25 0 008 1.75zm1 2.705V4a1 1 0 10-2 0v.455A5.8 5.8 0 018 4.4c.34 0 .675.02 1 .055zM5.5 8c0-.28.22-.5.5-.5h4c.28 0 .5.22.5.5v.5H5.5V8zm0 2h5v.5a.25.25 0 01-.25.25H5.75a.25.25 0 01-.25-.25V10z" clipRule="evenodd" />
         </svg>
       ),
-      textKey: 'splash_tip_badge_days',
+      textKey: 'splash_tip_quiz',
+    },
+    {
+      icon: (
+        <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 flex-shrink-0">
+          <path d="M2 3.75A.75.75 0 012.75 3h10.5a.75.75 0 01.75.75v8.5a.75.75 0 01-.75.75H2.75a.75.75 0 01-.75-.75v-8.5zM4 6a1 1 0 011-1h6a1 1 0 110 2H5a1 1 0 01-1-1zm1 3a1 1 0 100 2h3a1 1 0 100-2H5z" />
+        </svg>
+      ),
+      textKey: 'splash_tip_watch_earn',
+    },
+    {
+      icon: (
+        <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 flex-shrink-0">
+          <path d="M3.5 2A1.5 1.5 0 002 3.5v9A1.5 1.5 0 003.5 14h9a1.5 1.5 0 001.5-1.5v-9A1.5 1.5 0 0012.5 2h-9zM4 5.75A.75.75 0 014.75 5h6.5a.75.75 0 010 1.5h-6.5A.75.75 0 014 5.75zM4.75 8a.75.75 0 000 1.5h6.5a.75.75 0 000-1.5h-6.5zM4 11.25a.75.75 0 01.75-.75h3.5a.75.75 0 010 1.5h-3.5a.75.75 0 01-.75-.75z" />
+        </svg>
+      ),
+      textKey: 'splash_tip_announcements',
     },
     {
       icon: (
@@ -97,6 +87,14 @@ export default function SplashScreen({ onEnter }: Props) {
         </svg>
       ),
       textKey: 'splash_tip_leaderboard',
+    },
+    {
+      icon: (
+        <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4 flex-shrink-0">
+          <path d="M8 8a3 3 0 100-6 3 3 0 000 6zM12.735 14c.618 0 1.093-.561.872-1.139a6.002 6.002 0 00-11.215 0c-.22.578.254 1.139.872 1.139h9.47z" />
+        </svg>
+      ),
+      textKey: 'splash_tip_referral_code',
     },
   ];
 
@@ -196,10 +194,6 @@ export default function SplashScreen({ onEnter }: Props) {
   const handleScreenClick = (e: React.MouseEvent) => {
     if (stillLoading || blocked) return;
     if ((e.target as HTMLElement).closest('button, a')) return;
-    if (!hasAcceptedRules()) {
-      setRulesOpen(true);
-      return;
-    }
     onEnter();
   };
 
@@ -304,17 +298,17 @@ export default function SplashScreen({ onEnter }: Props) {
         </main>
 
         {/* Tap / click hint — footer üstü, ortalı */}
-        <div className="relative z-10 flex justify-center pb-4 flex-shrink-0">
+        <div className="relative z-10 flex justify-center pb-10 mb-2 flex-shrink-0">
           {stillLoading ? (
-            <svg className="h-3.5 w-3.5 animate-spin text-white/25" viewBox="0 0 16 16" fill="none">
+            <svg className="h-4 w-4 animate-spin text-white/25" viewBox="0 0 16 16" fill="none">
               <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="2" strokeOpacity="0.3" />
               <path d="M8 2a6 6 0 016 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
             </svg>
           ) : blocked ? (
-            <span className="text-xs text-white/25">{t('splash_maintenance_title')}</span>
+            <span className="text-sm text-white/25">{t('splash_maintenance_title')}</span>
           ) : (
             <span
-              className="text-xs text-white/40 tracking-wide"
+              className="text-sm text-white/50 tracking-wide"
               style={{ textShadow: '0 1px 10px rgba(0,0,0,1)', animation: 'splashPulse 2.5s ease-in-out infinite' }}
             >
               {isTouch ? t('splash_tap_to_start') : t('splash_click_to_start')}
@@ -336,14 +330,6 @@ export default function SplashScreen({ onEnter }: Props) {
           </div>
         </div>
       </div>
-
-      {rulesOpen && (
-        <RulesModal
-          onAccept={() => { setRulesOpen(false); onEnter(); }}
-          onClose={() => setRulesOpen(false)}
-          openLink={openLink}
-        />
-      )}
     </div>
   );
 }

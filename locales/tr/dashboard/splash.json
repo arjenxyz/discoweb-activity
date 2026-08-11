@@ -12,13 +12,12 @@
   "splash_terms": "Kullanım Şartları",
   "splash_privacy": "Gizlilik Politikası",
   "splash_tip_earn_papel": "Mesaj atarak ve sesli kanalda vakit geçirerek Papel kazanabilirsin.",
-  "splash_tip_market_shares": "DiscoWeb Market'te sunucu hisseleri alıp satabilir, portföy oluşturabilirsin.",
   "splash_tip_mailbox_rewards": "Posta kutusunda seni bekleyen ödüller ve sistem bildirimleri olabilir.",
-  "splash_tip_universal_currency": "Papel'ini evrensel para birimi Mari'ye dönüştürerek farklı sunucularda kullanabilirsin.",
-  "splash_tip_badge_days": "Aktif olarak rozet günleri biriktirerek özel etiketler ve ödüller kazanabilirsin.",
-  "splash_tip_referral_code": "Arkadaşlarını davet et, referans kodun üzerinden ekstra Papel kazan.",
-  "splash_tip_discount_coupons": "Mağazadan indirim kuponları kullanarak daha avantajlı alışveriş yapabilirsin.",
-  "splash_tip_giveaway_rewards": "Rozet günleri biriktirerek özel ödüller ve ek avantajlar kazanabilirsin.",
+  "splash_tip_store": "Mağazadan roller ve ürünler alabilir, indirim kuponlarıyla daha avantajlı alışveriş yapabilirsin.",
+  "splash_tip_quiz": "Quiz etkinliklerine katılarak soruları cevapla ve ekstra Papel kazan.",
+  "splash_tip_watch_earn": "İzle & Kazan bölümünde görevleri tamamlayarak Mari ve ödüller toplayabilirsin.",
+  "splash_tip_announcements": "Duyurular sayfasından sunucu haberlerini, oylamaları ve güncellemeleri takip et.",
   "splash_tip_leaderboard": "Liderlik tablosundan sunucunun en aktif üyelerini ve sıralamanı görebilirsin.",
+  "splash_tip_referral_code": "Arkadaşlarını davet et, referans kodun üzerinden ekstra Papel kazan.",
   "splash_thanks_button": "Teşekkürler"
 }
