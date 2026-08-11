@@ -754,7 +754,7 @@ export default function DashboardHeader({
 
         {/* Nav menüsü — yukarı açılır */}
         {mobileMenuOpen && (
-          <div className="absolute bottom-full left-0 right-0 mb-1 mx-2 z-50 rounded-2xl border border-white/10 bg-[#0f1116]/98 backdrop-blur-2xl shadow-2xl overflow-hidden max-h-[70vh] overflow-y-auto">
+          <div className="absolute bottom-full left-0 right-0 mb-1 mx-2 z-50 rounded-2xl border border-white/10 bg-white/[0.08] backdrop-blur-xl shadow-2xl overflow-hidden max-h-[70vh] overflow-y-auto">
             {/* Bakiye satırı */}
             {!unauthorized && (
               <div className="flex items-center gap-2 px-3 pt-3 pb-2">
