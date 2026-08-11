@@ -544,7 +544,7 @@ export default function DashboardHeader({
                     ? '—'
                     : walletBalance.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                 </span>
-                <span className="text-[11px] font-semibold text-white/55">Papel</span>
+                <span className="text-[11px] font-semibold text-amber-400">Papel</span>
               </div>
             </div>
           )}
@@ -754,7 +754,7 @@ export default function DashboardHeader({
                 <div className="flex flex-1 items-center gap-1.5 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2 text-sm">
                   <Image src="/papel.gif" alt="Papel" width={16} height={16} className="h-4 w-4 shrink-0" />
                   <span className="font-bold text-white tabular-nums">{walletLoading ? '—' : walletBalance.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                  <span className="ml-auto text-[10px] font-semibold text-white/55">Papel</span>
+                  <span className="ml-auto text-[10px] font-semibold text-amber-400">Papel</span>
                 </div>
               </div>
             )}
