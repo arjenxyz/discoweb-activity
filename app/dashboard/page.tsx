@@ -233,8 +233,13 @@ export default function DashboardPage() {
   const [activityReadiness, setActivityReadiness] = useState<ActivityReadiness | null>(null);
   const [activityReadinessLoading, setActivityReadinessLoading] = useState(true);
 
+  const isBlockedByReadiness = Boolean(
+    activityReadiness?.blocking &&
+      !(activityReadiness.status === 'maintenance' && isDeveloper),
+  );
+
   useEffect(() => {
-    if (!splashDone || activityReadinessLoading || activityReadiness?.blocking || !musicReady) return;
+    if (!splashDone || activityReadinessLoading || isBlockedByReadiness || !musicReady) return;
     if (dashboardMusicRef.current) return;
     if (musicPlaylistRef.current.length === 0) return;
 
@@ -329,9 +334,7 @@ export default function DashboardPage() {
         dashboardMusicRef.current = null;
       }
     };
-  }, [splashDone, activityReadinessLoading, activityReadiness?.blocking, musicReady]);
-
-  const isBlockedByReadiness = Boolean(activityReadiness?.blocking);
+  }, [splashDone, activityReadinessLoading, isBlockedByReadiness, musicReady]);
 
   const effectiveSection = unauthorized && activeSection !== 'store'
     ? 'overview'
@@ -491,7 +494,11 @@ export default function DashboardPage() {
   }, [activityReadinessLoading, isBlockedByReadiness]);
 
   const isSiteMaintenance = Boolean(maintenanceFlags?.site?.is_active);
-  const siteReason = maintenanceFlags?.site?.reason;
+  const isActivityMaintenance = Boolean(maintenanceFlags?.activity?.is_active);
+  const isFullMaintenance = isSiteMaintenance || isActivityMaintenance;
+  const siteReason =
+    (isSiteMaintenance ? maintenanceFlags?.site?.reason : null) ??
+    (isActivityMaintenance ? maintenanceFlags?.activity?.reason : null);
   const isStoreMaintenance = Boolean(maintenanceFlags?.store?.is_active);
   const storeReason = maintenanceFlags?.store?.reason;
   const storeUpdater = maintenanceFlags?.store?.updated_by ? maintenanceUpdaters[maintenanceFlags.store.updated_by] : null;
@@ -510,10 +517,10 @@ export default function DashboardPage() {
       : null;
 
   useEffect(() => {
-    if (!maintenanceLoading && isSiteMaintenance && !isDeveloper) {
+    if (!maintenanceLoading && isFullMaintenance && !isDeveloper) {
       router.replace('/maintenance');
     }
-  }, [isSiteMaintenance, maintenanceLoading, isDeveloper, router]);
+  }, [isFullMaintenance, maintenanceLoading, isDeveloper, router]);
 
   const refreshMailRef = useRef<() => Promise<void>>();
   const refreshWalletRef = useRef<() => Promise<void>>();
@@ -1427,7 +1434,7 @@ export default function DashboardPage() {
     );
   }
 
-  if (activityReadiness?.blocking) {
+  if (isBlockedByReadiness && activityReadiness) {
     return (
       <ActivityReadinessGate
         readiness={activityReadiness}
@@ -1501,11 +1508,11 @@ export default function DashboardPage() {
         )}
 
         <main className={`${mainWrapperClass} flex flex-col flex-1 min-h-0 ${mainSpacingClass} ${effectiveSection === 'quiz' && quizImmersive ? 'overflow-hidden' : 'overflow-y-auto custom-scrollbar'} bg-[#0e1018]`}>
-            {!maintenanceLoading && isSiteMaintenance && (
+            {!maintenanceLoading && isFullMaintenance && (
               <section className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-6">
-                <p className="text-sm font-semibold text-amber-200">Site bakÄ±mda</p>
+                <p className="text-sm font-semibold text-amber-200">Site bakımda</p>
                 <p className="mt-2 text-sm text-amber-100/80">
-                  {siteReason ?? 'Sistem geÃ§ici olarak bakÄ±ma alÄ±nmÄ±ÅŸtÄ±r. LÃ¼tfen daha sonra tekrar deneyin.'}
+                  {siteReason ?? 'Sistem geçici olarak bakıma alınmıştır. Lütfen daha sonra tekrar deneyin.'}
                 </p>
                 {siteUpdater && (
                   <div className="mt-3 flex items-center gap-2 text-xs text-amber-100/70">

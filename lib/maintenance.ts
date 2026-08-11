@@ -9,6 +9,7 @@ export const MAINTENANCE_KEYS = [
   'discounts',
   'transfers',
   'bot',
+  'activity',
   'borsa',
 ] as const;
 

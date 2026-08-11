@@ -19,7 +19,8 @@ type ReadinessStatus =
   | 'user_not_in_guild'
   | 'missing_user_profile'
   | 'missing_verify_role'
-  | 'discord_api_error';
+  | 'discord_api_error'
+  | 'maintenance';
 
 type ReadinessResponse = {
   status: ReadinessStatus;
@@ -179,10 +180,16 @@ export async function GET(request: Request) {
     return NextResponse.json(localDevReadiness);
   }
 
-  const maintenance = await checkMaintenance(['site']);
+  const maintenance = await checkMaintenance(['site', 'activity']);
   if (maintenance.blocked) {
     return NextResponse.json(
-      buildResponse({ status: 'discord_api_error', debug: { reason: `maintenance: ${maintenance.reason ?? maintenance.key}` } }),
+      buildResponse({
+        status: 'maintenance',
+        debug: {
+          key: maintenance.key,
+          reason: maintenance.reason,
+        },
+      }),
       { status: 503 },
     );
   }

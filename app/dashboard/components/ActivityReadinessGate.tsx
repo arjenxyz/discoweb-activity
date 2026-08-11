@@ -21,7 +21,8 @@ export type ActivityReadinessStatus =
   | 'user_not_in_guild'
   | 'missing_user_profile'
   | 'missing_verify_role'
-  | 'discord_api_error';
+  | 'discord_api_error'
+  | 'maintenance';
 
 export type ActivityReadiness = {
   status: ActivityReadinessStatus;
@@ -171,6 +172,14 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry, onB
     bot_not_in_guild: { title: t('gate_bot_not_in_guild_title'), description: t('gate_bot_not_in_guild_description'), helper: t('gate_bot_not_in_guild_helper') },
     user_not_in_guild: { title: t('gate_user_not_in_guild_title'), description: t('gate_user_not_in_guild_description'), helper: t('gate_user_not_in_guild_helper') },
     discord_api_error: { title: t('gate_discord_api_error_title'), description: t('gate_discord_api_error_description'), helper: t('gate_discord_api_error_helper') },
+    maintenance: {
+      title: t('gate_maintenance_title'),
+      description:
+        typeof readiness.debug?.reason === 'string' && readiness.debug.reason.trim()
+          ? readiness.debug.reason
+          : t('gate_maintenance_description'),
+      helper: t('gate_maintenance_helper'),
+    },
   };
   const [copied, setCopied] = useState(false);
   const [muted, setMuted] = useState(true);

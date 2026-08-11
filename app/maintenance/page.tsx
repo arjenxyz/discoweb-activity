@@ -45,7 +45,9 @@ export default async function MaintenancePage() {
     };
   };
 
-  const active = flags ? MAINTENANCE_KEYS.filter((key) => key !== 'site' && flags[key].is_active) : [];
+  const active = flags
+    ? MAINTENANCE_KEYS.filter((key) => key !== 'site' && key !== 'activity' && flags[key].is_active)
+    : [];
   const flagsSignature = flags
     ? MAINTENANCE_KEYS.map((key) => {
         const flag = flags[key];
@@ -61,10 +63,12 @@ export default async function MaintenancePage() {
     profiles.filter(([, profile]) => profile).map(([id, profile]) => [id, profile]),
   ) as Record<string, { id: string; name: string; avatarUrl: string }>;
   const isSiteMaintenance = Boolean(flags?.site?.is_active);
-  const siteUpdaterId = flags?.site?.updated_by;
+  const isActivityMaintenance = Boolean(flags?.activity?.is_active);
+  const isFullMaintenance = isSiteMaintenance || isActivityMaintenance;
+  const siteUpdaterId = flags?.site?.updated_by ?? flags?.activity?.updated_by;
   const siteUpdater = siteUpdaterId ? updaterProfiles[siteUpdaterId] : undefined;
 
-  if (!isSiteMaintenance && active.length === 0) {
+  if (!isFullMaintenance && active.length === 0) {
     redirect('/dashboard');
   }
 
@@ -80,10 +84,10 @@ export default async function MaintenancePage() {
 
           <div className="flex flex-col gap-3">
             <h1 className="text-4xl font-black leading-tight tracking-tight text-white">
-              {isSiteMaintenance ? 'Kısa bir mola veriyoruz.' : 'Bazı özellikler geçici olarak kapalı.'}
+              {isFullMaintenance ? 'Kısa bir mola veriyoruz.' : 'Bazı özellikler geçici olarak kapalı.'}
             </h1>
             <p className="text-sm text-white/70 leading-relaxed max-w-sm">
-              {isSiteMaintenance
+              {isFullMaintenance
                 ? 'Güvenlik ve performans için tüm dashboard servisleri geçici olarak durduruldu. Bakım tamamlandığında erişim otomatik olarak açılacak.'
                 : 'Seçili modüller bakımda. İlgili özellikler geçici olarak kullanılamıyor, diğer her şey normal çalışıyor.'}
             </p>
