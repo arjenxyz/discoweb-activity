@@ -1426,7 +1426,7 @@ export default function DashboardPage() {
         )}
 
         {/* Sağ taraf: header + main */}
-        <div className="flex flex-1 flex-col min-w-0 min-h-0 overflow-hidden bg-[#0e1018]">
+        <div className="relative flex flex-1 flex-col min-w-0 min-h-0 overflow-hidden bg-[#0e1018]">
         {effectiveSection !== 'mail' && !(effectiveSection === 'quiz' && quizImmersive) && (
         <DashboardHeader
           isActivityEmbed={isActivityEmbed}
