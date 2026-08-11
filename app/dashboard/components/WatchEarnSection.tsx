@@ -273,11 +273,6 @@ export default function WatchEarnSection() {
               )}
             </div>
 
-            <div className="bg-[#1e1f25] p-4 text-center">
-              <p className="text-sm text-white/50">
-                Video oynatıcısında ileri saramazsınız. Ödülü kazanmak için videonun bitmesini bekleyin.
-              </p>
-            </div>
           </div>
         </div>
       )}
