@@ -13,13 +13,21 @@ export async function GET() {
     }
 
     const supabase = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('system_incident')
       .select('id,title,public_message,started_at,status')
       .eq('status', 'active')
       .order('started_at', { ascending: false })
       .limit(1)
       .maybeSingle();
+
+    if (error) {
+      const msg = error.message || '';
+      if (!/schema cache|could not find the table|does not exist/i.test(msg)) {
+        console.error('[activity/api/incident]', msg);
+      }
+      return NextResponse.json({ active: false });
+    }
 
     if (!data) return NextResponse.json({ active: false });
 
