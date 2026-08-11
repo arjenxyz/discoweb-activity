@@ -79,7 +79,7 @@ export default function SupportMenu({ openLink, section }: Props) {
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
-          className={`flex h-9 w-9 items-center justify-center rounded-full border backdrop-blur-sm transition ${
+          className={`flex h-10 w-10 items-center justify-center rounded-full border backdrop-blur-sm transition ${
             open
               ? 'border-white/20 bg-black/35 text-white'
               : 'border-white/10 bg-black/20 text-white/70 hover:bg-black/35 hover:text-white'
