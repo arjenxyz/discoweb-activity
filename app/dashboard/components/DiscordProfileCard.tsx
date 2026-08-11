@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import Image from 'next/image';
 import { LuTag, LuZap, LuX } from 'react-icons/lu';
 import { useLocale, useT } from '@/contexts/LocaleContext';
@@ -225,6 +225,107 @@ export default function DiscordProfileCard({
   const dateLocale = locale === 'tr' ? 'tr-TR' : locale;
   const [modalOpen, setModalOpen] = useState(false);
 
+  type DropSide = 'left' | 'right';
+  type DropPos = { side: DropSide; topPct: number };
+
+  const DROP_POS_KEY = 'dashboard_profile_drop_pos';
+
+  const [dropPos, setDropPos] = useState<DropPos>(() => {
+    if (typeof window === 'undefined') return { side: 'left', topPct: 42 };
+    try {
+      const raw = window.localStorage.getItem(DROP_POS_KEY);
+      if (!raw) return { side: 'left', topPct: 42 };
+      const parsed = JSON.parse(raw) as Partial<DropPos>;
+      const side = parsed.side === 'right' ? 'right' : 'left';
+      const topPct =
+        typeof parsed.topPct === 'number' && Number.isFinite(parsed.topPct)
+          ? Math.min(82, Math.max(12, parsed.topPct))
+          : 42;
+      return { side, topPct };
+    } catch {
+      return { side: 'left', topPct: 42 };
+    }
+  });
+
+  const dragRef = useRef<{
+    pointerId: number;
+    startX: number;
+    startY: number;
+    originTopPct: number;
+    moved: boolean;
+    liveSide: DropSide;
+    liveTopPct: number;
+  } | null>(null);
+  const [dragging, setDragging] = useState(false);
+
+  const persistDropPos = (next: DropPos) => {
+    setDropPos(next);
+    try {
+      window.localStorage.setItem(DROP_POS_KEY, JSON.stringify(next));
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const clampTopPct = (pct: number) => Math.min(82, Math.max(12, pct));
+
+  const onDropPointerDown = (e: ReactPointerEvent<HTMLButtonElement>) => {
+    if (e.button !== 0) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    dragRef.current = {
+      pointerId: e.pointerId,
+      startX: e.clientX,
+      startY: e.clientY,
+      originTopPct: dropPos.topPct,
+      moved: false,
+      liveSide: dropPos.side,
+      liveTopPct: dropPos.topPct,
+    };
+    setDragging(true);
+  };
+
+  const onDropPointerMove = (e: ReactPointerEvent<HTMLButtonElement>) => {
+    const drag = dragRef.current;
+    if (!drag || drag.pointerId !== e.pointerId) return;
+
+    const dx = e.clientX - drag.startX;
+    const dy = e.clientY - drag.startY;
+    if (!drag.moved && dx * dx + dy * dy > 36) {
+      drag.moved = true;
+    }
+    if (!drag.moved) return;
+
+    const vh = window.innerHeight || 1;
+    const nextTop = clampTopPct(drag.originTopPct + (dy / vh) * 100);
+    const mid = (window.innerWidth || 0) / 2;
+    const nextSide: DropSide = e.clientX >= mid ? 'right' : 'left';
+
+    drag.liveSide = nextSide;
+    drag.liveTopPct = nextTop;
+    setDropPos({ side: nextSide, topPct: nextTop });
+  };
+
+  const endDropDrag = (e: ReactPointerEvent<HTMLButtonElement>) => {
+    const drag = dragRef.current;
+    if (!drag || drag.pointerId !== e.pointerId) return;
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch {
+      /* ignore */
+    }
+
+    const wasMoved = drag.moved;
+    if (wasMoved) {
+      persistDropPos({ side: drag.liveSide, topPct: clampTopPct(drag.liveTopPct) });
+    }
+    dragRef.current = null;
+    setDragging(false);
+
+    if (!wasMoved) {
+      setModalOpen(true);
+    }
+  };
+
   useEffect(() => {
     if (!modalOpen) return;
     const onKey = (e: KeyboardEvent) => {
@@ -237,8 +338,15 @@ export default function DiscordProfileCard({
   if (loading) {
     return (
       <>
-        <div className="fixed left-0 top-[42%] z-40 lg:hidden">
-          <div className="h-14 w-14 animate-pulse rounded-r-full border border-l-0 border-white/10 bg-white/10" />
+        <div
+          className={`fixed z-40 lg:hidden ${dropPos.side === 'left' ? 'left-0' : 'right-0'}`}
+          style={{ top: `${dropPos.topPct}%` }}
+        >
+          <div
+            className={`h-14 w-14 animate-pulse border border-white/10 bg-white/10 ${
+              dropPos.side === 'left' ? 'rounded-r-full border-l-0' : 'rounded-l-full border-r-0'
+            }`}
+          />
         </div>
         <div className="hidden overflow-hidden rounded-2xl border border-white/[0.08] bg-[#111214] shadow-[0_8px_24px_rgba(0,0,0,0.35)] animate-pulse lg:block">
           <div className="h-[72px] bg-white/10" />
@@ -267,14 +375,24 @@ export default function DiscordProfileCard({
     t,
   };
 
+  const onLeft = dropPos.side === 'left';
+
   return (
     <>
-      {/* Mobil — sola yapışık damla */}
+      {/* Mobil — kenara yapışık sürüklenir damla */}
       <button
         type="button"
-        onClick={() => setModalOpen(true)}
         aria-label={username}
-        className="group fixed left-0 top-[min(42%,calc(100%-8rem))] z-40 flex items-center rounded-r-[2rem] border border-l-0 border-white/15 bg-[#111214]/92 p-1.5 pr-2.5 shadow-[4px_0_24px_rgba(0,0,0,0.45)] backdrop-blur-md transition hover:bg-[#16181d] hover:pr-3 lg:hidden"
+        onPointerDown={onDropPointerDown}
+        onPointerMove={onDropPointerMove}
+        onPointerUp={endDropDrag}
+        onPointerCancel={endDropDrag}
+        className={`group fixed z-40 flex touch-none items-center border border-white/15 bg-[#111214]/92 p-1.5 backdrop-blur-md transition-[padding,background-color] lg:hidden ${
+          onLeft
+            ? 'left-0 rounded-r-[2rem] border-l-0 pr-2.5 shadow-[4px_0_24px_rgba(0,0,0,0.45)] hover:bg-[#16181d] hover:pr-3'
+            : 'right-0 rounded-l-[2rem] border-r-0 pl-2.5 shadow-[-4px_0_24px_rgba(0,0,0,0.45)] hover:bg-[#16181d] hover:pl-3'
+        } ${dragging ? 'cursor-grabbing scale-[1.03]' : 'cursor-grab'}`}
+        style={{ top: `min(${dropPos.topPct}%, calc(100% - 8rem))` }}
       >
         <span className="relative block h-12 w-12 overflow-hidden rounded-full border border-white/10 bg-[#1e1f22]">
           {profile.avatarUrl ? (
@@ -284,7 +402,8 @@ export default function DiscordProfileCard({
               width={48}
               height={48}
               unoptimized
-              className="h-full w-full object-cover"
+              className="pointer-events-none h-full w-full object-cover"
+              draggable={false}
             />
           ) : (
             <span className="flex h-full w-full items-center justify-center text-sm font-bold text-white/40">
