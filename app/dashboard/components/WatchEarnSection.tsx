@@ -505,69 +505,81 @@ export default function WatchEarnSection() {
             </div>
 
             <div
-              className={`pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center gap-3 bg-gradient-to-b from-black/80 via-black/40 to-transparent px-3 py-3 transition-opacity duration-300 sm:px-4 sm:py-4 ${
-                controlsVisible ? 'opacity-100' : 'opacity-0'
+              className={`pointer-events-none absolute inset-x-0 top-0 z-10 flex items-start justify-between gap-3 bg-gradient-to-b from-black/70 via-black/25 to-transparent px-3 pb-10 pt-[max(0.75rem,env(safe-area-inset-top))] transition-all duration-300 sm:px-5 ${
+                controlsVisible ? 'translate-y-0 opacity-100' : '-translate-y-2 opacity-0'
               }`}
             >
-              <div className="pointer-events-none min-w-0 flex-1">
-                <p className="truncate text-xs font-semibold text-white/90 sm:text-sm">{activeTask.logoText}</p>
-              </div>
-              <div
-                className={`rounded-xl border border-white/10 bg-black/50 px-3 py-1.5 text-center backdrop-blur-sm transition-opacity ${
-                  controlsVisible ? 'pointer-events-auto' : 'pointer-events-none'
-                }`}
-              >
-                <p className="text-[9px] font-medium uppercase tracking-wider text-white/40">Kalan</p>
-                <p className="font-mono text-sm font-bold tabular-nums text-white sm:text-base">
-                  {duration > 0 ? formatRemaining(remaining) : '—:—'}
+              <div className="pointer-events-none min-w-0 pt-1.5">
+                <p className="truncate text-[13px] font-semibold tracking-wide text-white drop-shadow-md sm:text-sm">
+                  {activeTask.logoText}
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  revealControls();
-                  void toggleFullscreen();
-                }}
-                className={`flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-sm transition hover:bg-white/25 ${
+
+              <div
+                className={`flex items-center gap-1.5 rounded-full border border-white/10 bg-black/45 p-1 shadow-[0_8px_30px_rgba(0,0,0,0.45)] backdrop-blur-xl ${
                   controlsVisible ? 'pointer-events-auto' : 'pointer-events-none'
                 }`}
-                aria-label={isFullscreen ? 'Tam ekrandan çık' : 'Tam ekran'}
-                tabIndex={controlsVisible ? 0 : -1}
               >
-                {isFullscreen ? <LuMinimize className="h-5 w-5" /> : <LuMaximize className="h-5 w-5" />}
-              </button>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  void closePlayer();
-                }}
-                className={`flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-sm transition hover:bg-white/25 ${
-                  controlsVisible ? 'pointer-events-auto' : 'pointer-events-none'
-                }`}
-                aria-label="Kapat"
-                tabIndex={controlsVisible ? 0 : -1}
-              >
-                <LuX className="h-5 w-5" />
-              </button>
+                <div
+                  className="flex min-w-[4.25rem] flex-col items-center justify-center rounded-full px-3 py-1.5"
+                  aria-live="polite"
+                >
+                  <span className="text-[8px] font-semibold uppercase tracking-[0.14em] text-white/45">
+                    Kalan
+                  </span>
+                  <span className="font-mono text-[13px] font-bold leading-none tabular-nums text-white">
+                    {duration > 0 ? formatRemaining(remaining) : '—:—'}
+                  </span>
+                </div>
+
+                <div className="h-7 w-px bg-white/10" aria-hidden />
+
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    revealControls();
+                    void toggleFullscreen();
+                  }}
+                  className="flex h-9 w-9 items-center justify-center rounded-full text-white/90 transition hover:bg-white/10 hover:text-white active:scale-95"
+                  aria-label={isFullscreen ? 'Tam ekrandan çık' : 'Tam ekran'}
+                  tabIndex={controlsVisible ? 0 : -1}
+                >
+                  {isFullscreen ? <LuMinimize className="h-[18px] w-[18px]" /> : <LuMaximize className="h-[18px] w-[18px]" />}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    void closePlayer();
+                  }}
+                  className="flex h-9 w-9 items-center justify-center rounded-full text-white/90 transition hover:bg-rose-500/25 hover:text-rose-200 active:scale-95"
+                  aria-label="Kapat"
+                  tabIndex={controlsVisible ? 0 : -1}
+                >
+                  <LuX className="h-[18px] w-[18px]" />
+                </button>
+              </div>
             </div>
 
             <div
-              className={`pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-3 py-3 transition-opacity duration-300 sm:px-4 sm:py-4 ${
-                controlsVisible ? 'opacity-100' : 'opacity-0'
+              className={`pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/75 via-black/30 to-transparent px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-10 transition-all duration-300 sm:px-5 ${
+                controlsVisible ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'
               }`}
             >
-              <div className="mb-1.5 h-1.5 overflow-hidden rounded-full bg-white/15">
-                <div
-                  className="h-full rounded-full bg-[#5865F2] transition-[width] duration-200"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-              <div className="flex items-center justify-between text-[11px] text-white/50">
-                <span className="font-mono tabular-nums">{formatRemaining(currentTime)}</span>
-                <span>İleri saramazsın</span>
-                <span className="font-mono tabular-nums">{duration > 0 ? formatRemaining(duration) : '—:—'}</span>
+              <div className="mx-auto w-full max-w-3xl">
+                <div className="mb-2 h-1 overflow-hidden rounded-full bg-white/15">
+                  <div
+                    className="h-full rounded-full bg-[#5865F2] shadow-[0_0_12px_rgba(88,101,242,0.55)] transition-[width] duration-200"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+                <div className="flex items-center justify-between text-[11px] text-white/55">
+                  <span className="font-mono tabular-nums">{formatRemaining(currentTime)}</span>
+                  <span className="text-white/40">İleri saramazsın</span>
+                  <span className="font-mono tabular-nums">{duration > 0 ? formatRemaining(duration) : '—:—'}</span>
+                </div>
               </div>
             </div>
           </div>,
