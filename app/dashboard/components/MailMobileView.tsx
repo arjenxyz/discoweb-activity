@@ -112,7 +112,7 @@ export default function MailMobileView({
       </div>
 
       {/* Chat list */}
-      <div className="custom-scrollbar flex-1 space-y-3 overflow-y-auto px-0 py-3 pb-28">
+      <div className="custom-scrollbar flex-1 space-y-2.5 overflow-y-auto overflow-x-hidden px-3 py-3 pb-28">
         {loading && (
           <div className="flex h-48 flex-col items-center justify-center text-white/50">
             <LuRefreshCw className="mb-3 h-7 w-7 animate-spin" />

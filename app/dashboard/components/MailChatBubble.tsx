@@ -26,36 +26,36 @@ export default function MailChatBubble({ mail, dateLabel, onClick }: Props) {
     <button
       type="button"
       onClick={onClick}
-      className="group flex w-full justify-start px-3"
+      className="group block w-full"
     >
       <div
-        className={`relative max-w-[88%] rounded-2xl rounded-bl-md border px-3.5 py-3 text-left transition-all duration-200 active:scale-[0.99] ${
+        className={`flex h-[132px] w-full flex-col rounded-2xl border px-3.5 py-3 text-left transition-all duration-200 active:scale-[0.99] ${
           unread
             ? 'border-white/[0.10] bg-[#12141b]'
             : 'border-white/[0.06] bg-[#0f1116]/80'
         }`}
       >
-        <div className="mb-1.5 flex items-center gap-2">
-          <span className={`flex h-6 w-6 items-center justify-center rounded-lg text-xs ${config.css}`}>
+        <div className="flex items-center gap-2">
+          <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-xs ${config.css}`}>
             {config.icon}
           </span>
-          <span className="truncate text-[11px] font-semibold text-white/45">{senderName}</span>
+          <span className="min-w-0 flex-1 truncate text-[11px] font-semibold text-white/45">{senderName}</span>
           {unread && (
             <span className="shrink-0 rounded-md bg-white/[0.08] px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-white/55">
               {t('mail_unread_label')}
             </span>
           )}
-          {mail.is_starred && <LuStar className="ml-auto h-3 w-3 shrink-0 fill-yellow-400 text-yellow-400" />}
+          {mail.is_starred && <LuStar className="h-3 w-3 shrink-0 fill-yellow-400 text-yellow-400" />}
         </div>
 
-        <h4 className={`text-[13px] leading-snug ${unread ? 'font-bold text-white' : 'font-semibold text-white/75'}`}>
+        <h4 className={`mt-1.5 line-clamp-1 text-[13px] leading-snug ${unread ? 'font-bold text-white' : 'font-semibold text-white/75'}`}>
           {mail.title}
         </h4>
-        <p className="mt-1 line-clamp-2 text-[12px] leading-relaxed text-white/40">
+        <p className="mt-1 min-h-0 flex-1 line-clamp-2 text-[12px] leading-relaxed text-white/40">
           {previewText(mail.body, 120)}
         </p>
 
-        <div className="mt-2 flex items-center justify-between gap-2">
+        <div className="mt-auto flex items-center justify-between gap-2 pt-1">
           <span className={`inline-flex items-center rounded-md border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide ${config.css}`}>
             {t(config.labelKey)}
           </span>
