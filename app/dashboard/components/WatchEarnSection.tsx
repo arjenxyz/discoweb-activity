@@ -496,9 +496,19 @@ export default function WatchEarnSection() {
               />
 
               {!isPlaying && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/40 transition-opacity">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#5865F2] pl-1 text-white shadow-2xl shadow-[#5865F2]/40 sm:h-20 sm:w-20 sm:pl-1.5">
-                    <LuPlay className="h-8 w-8 sm:h-10 sm:w-10" />
+                <div className="absolute inset-0 flex items-center justify-center bg-black/35 transition-opacity">
+                  <div className="relative flex h-[4.5rem] w-[4.5rem] items-center justify-center sm:h-20 sm:w-20">
+                    <span
+                      className="absolute inset-0 rounded-full bg-[#5865F2]/35 blur-xl"
+                      aria-hidden
+                    />
+                    <span
+                      className="absolute inset-0 rounded-full border border-white/20 bg-white/10 backdrop-blur-md"
+                      aria-hidden
+                    />
+                    <div className="relative flex h-[3.35rem] w-[3.35rem] items-center justify-center rounded-full bg-[#5865F2] pl-0.5 text-white shadow-[0_10px_40px_rgba(88,101,242,0.55)] ring-1 ring-white/25 sm:h-16 sm:w-16 sm:pl-1">
+                      <LuPlay className="h-7 w-7 fill-white sm:h-8 sm:w-8" strokeWidth={0} />
+                    </div>
                   </div>
                 </div>
               )}
