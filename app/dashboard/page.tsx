@@ -26,7 +26,6 @@ import PromotionsModal from './components/PromotionsModal';
 import DiscountsModal from './components/DiscountsModal';
 import ActivityReadinessGate, { type ActivityReadiness } from './components/ActivityReadinessGate';
 import SplashScreen from './components/SplashScreen';
-import SidebarNav from './components/SidebarNav';
 import { sanitizeHtml } from '@/lib/sanitizeHtml';
 import { useRealtimeDashboard } from '@/lib/utils/useRealtimeDashboard';
 import { useT } from '@/contexts/LocaleContext';
@@ -1414,17 +1413,6 @@ export default function DashboardPage() {
   return (
     <div className="h-screen bg-[#0b0d12] text-white overflow-hidden flex flex-col">
       <div className="flex flex-1 min-h-0">
-        {/* Sidebar */}
-        {effectiveSection !== 'mail' && effectiveSection !== 'settings' && !(effectiveSection === 'quiz' && quizImmersive) && !unauthorized && (
-          <SidebarNav
-            effectiveSection={effectiveSection}
-            unauthorized={unauthorized}
-            onNavigate={setActiveSection}
-            profile={profile}
-            duyuruEveryoneUnreadCount={duyuruEveryoneUnreadCount}
-          />
-        )}
-
         {/* Sağ taraf: header + main */}
         <div className="relative flex flex-1 flex-col min-w-0 min-h-0 overflow-hidden bg-[#0e1018]">
         {effectiveSection !== 'mail' && !(effectiveSection === 'quiz' && quizImmersive) && (

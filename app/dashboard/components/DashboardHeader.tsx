@@ -453,17 +453,64 @@ export default function DashboardHeader({
         <style>{`@keyframes titleShine{0%,60%{background-position:100% 0}100%{background-position:-100% 0}}`}</style>
 
         {/* Sol — logo */}
-        <div className={`${minimalProfileOnly ? 'hidden' : 'flex'} min-w-0 items-center ${profileChromeHidden}`}>
+        <div className={`${minimalProfileOnly ? 'hidden' : 'flex'} min-w-0 shrink-0 items-center ${profileChromeHidden}`}>
           <span className="font-black text-xl tracking-tight leading-none" style={logoWhiteStyle}>
             Disco<span style={logoBlueStyle}>Web</span>
           </span>
         </div>
 
-        {/* Orta — boşluk */}
-        <div className="flex-1" />
+        {/* Orta — PC navigasyon (eski sidebar) */}
+        {!minimalProfileOnly && !unauthorized && (
+          <nav
+            className={`ml-4 mr-2 hidden min-w-0 flex-1 items-center justify-center gap-0.5 lg:flex ${profileChromeHidden}`}
+            aria-label="Main"
+          >
+            {NAV_GROUPS.filter((g) => !g.requiresAuth || !unauthorized)
+              .flatMap((g) => g.items)
+              .map((item) => {
+                const active = navigation.activeSection === item.key;
+                const unread =
+                  item.key === 'duyuru'
+                    ? duyuruEveryoneUnreadCount
+                    : item.key === 'mail'
+                      ? mailUnreadCount
+                      : 0;
+                return (
+                  <button
+                    key={item.key}
+                    type="button"
+                    onClick={() => handleNavClick(item.key)}
+                    className={`relative inline-flex max-w-full items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-[12px] font-semibold transition-colors ${
+                      active
+                        ? 'bg-white/[0.1] text-white'
+                        : 'text-white/45 hover:bg-white/[0.05] hover:text-white/85'
+                    }`}
+                  >
+                    <span
+                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg ${
+                        active ? 'bg-[#5865F2]/20 text-[#a5b4fc]' : 'text-white/40'
+                      }`}
+                    >
+                      {item.icon}
+                    </span>
+                    <span className="hidden truncate xl:inline">{item.label}</span>
+                    {unread > 0 ? (
+                      <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white">
+                        {unread > 9 ? '9+' : unread}
+                      </span>
+                    ) : active ? (
+                      <span className="absolute bottom-0.5 left-1/2 h-0.5 w-3 -translate-x-1/2 rounded-full bg-[#5865F2] xl:hidden" />
+                    ) : null}
+                  </button>
+                );
+              })}
+          </nav>
+        )}
+
+        {(minimalProfileOnly || unauthorized) && <div className="flex-1" />}
 
         {/* Sağ — bakiye + profil */}
-        <div className="flex items-center gap-2.5">
+        <div className="flex shrink-0 items-center gap-2.5">
           {!unauthorized && !minimalProfileOnly && (
             <div className={`hidden lg:flex items-center gap-2 ${profileChromeHidden}`}>
               {mariBalance !== undefined && (
