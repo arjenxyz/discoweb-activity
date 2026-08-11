@@ -14,10 +14,8 @@ import LeaderboardDrawer from './components/LeaderboardDrawer';
 import ProfileSection from './components/ProfileSection';
 import StoreSection from './components/StoreSection';
 import SettingsSection from './components/SettingsSection';
-import CustomRolePage from './components/customRole/CustomRolePage';
 import MailSection from './components/MailSection';
 import SessionExpiredModal from './components/SessionExpiredModal';
-import DiscoverSection from './components/DiscoverSection';
 import TagBadgeSection from './components/TagBadgeSection';
 import QuizEventSection from './components/QuizEventSection';
 import WatchEarnSection from './components/WatchEarnSection';
@@ -26,7 +24,6 @@ import NotificationsModal from './components/NotificationsModal';
 import TransferModal, { TransferConfirmModal } from './components/TransferModal';
 import PromotionsModal from './components/PromotionsModal';
 import DiscountsModal from './components/DiscountsModal';
-import MailDetailModal from './components/MailDetailModal';
 import ActivityReadinessGate, { type ActivityReadiness } from './components/ActivityReadinessGate';
 import SplashScreen from './components/SplashScreen';
 import SidebarNav from './components/SidebarNav';
@@ -221,7 +218,6 @@ export default function DashboardPage() {
   const [mailItems, setMailItems] = useState<MailItem[]>([]);
   const [mailLoading, setMailLoading] = useState(true);
   const [mailError, setMailError] = useState<string | null>(null);
-  const [activeMail, setActiveMail] = useState<MailItem | null>(null);
   const activeServerName = headerServer.data?.name ?? t('server_unknown');
   const [activityReadiness, setActivityReadiness] = useState<ActivityReadiness | null>(null);
   const [activityReadinessLoading, setActivityReadinessLoading] = useState(true);
@@ -503,9 +499,14 @@ export default function DashboardPage() {
       try {
         const response = await fetchWithCreds(apiUrl('/api/mail'));
         if (response.ok) {
-          const data = (await response.json()) as MailItem[];
-          setMailItems(data);
-          setMailError(null);
+          const data = (await response.json()) as MailItem[] | { error?: string };
+          if (Array.isArray(data)) {
+            setMailItems(data);
+            setMailError(null);
+          } else {
+            setMailItems([]);
+            setMailError('Mailler yüklenemedi.');
+          }
         } else {
           // Hata anında mevcut listeyi koruyup sadece banner göster
           setMailError('Mailler güncellenemedi. Mevcut liste gösteriliyor.');
@@ -1319,28 +1320,26 @@ export default function DashboardPage() {
     await refreshStoreItems(storePage + 1, true);
   };
 
-  const FULL_WIDTH_SECTIONS = ['mail', 'store', 'settings', 'duyuru', 'quiz', 'custom-role'];
+  const FULL_WIDTH_SECTIONS = ['mail', 'store', 'settings', 'duyuru', 'quiz'];
   const mainWrapperClass = FULL_WIDTH_SECTIONS.includes(effectiveSection)
     ? (effectiveSection === 'store' && !isActivityEmbed)
       ? 'w-full max-w-4xl px-0 sm:px-6'
       : 'mx-0 w-full max-w-full px-0'
     : 'w-full max-w-4xl px-4 sm:px-6';
-  // pb-20 on mobile ensures content clears the fixed bottom nav bar (~64px + safe area)
+  // Mail is full-screen on mobile (no bottom nav); avoid extra bottom padding gap.
   const mainSpacingClass = effectiveSection === 'mail'
-    ? 'py-0 gap-0 pb-20 lg:pb-0'
+    ? 'py-0 gap-0 pb-0'
     : effectiveSection === 'duyuru'
-      ? 'md:pt-16 pb-20 lg:pb-0 gap-0'
+      ? 'md:pt-20 pb-20 lg:pb-0 gap-0'
       : effectiveSection === 'store'
         ? isActivityEmbed
-          ? 'md:pt-16 pb-28 gap-0 md:pb-0'
-          : 'md:pt-16 pb-28 sm:pb-10 gap-0 sm:gap-6 md:pb-0'
+          ? 'md:pt-20 pb-28 gap-0 md:pb-0'
+          : 'md:pt-20 pb-28 sm:pb-10 gap-0 sm:gap-6 md:pb-0'
         : effectiveSection === 'settings'
           ? 'md:pt-6 pb-12 lg:pb-3 gap-3'
-          : effectiveSection === 'custom-role'
-            ? 'md:pt-8 pb-16 lg:pb-8 gap-4 px-4 sm:px-6'
-            : effectiveSection === 'quiz' && quizImmersive
+          : effectiveSection === 'quiz' && quizImmersive
               ? 'py-0 pb-0 gap-0 px-0 flex-1 min-h-0 overflow-hidden'
-              : 'md:pt-16 pb-20 lg:pb-6 gap-6';
+              : 'md:pt-20 pb-20 lg:pb-6 gap-6';
 
   // Splash — readiness sorgulanmadan önce gösterilir
   if (!splashDone) {
@@ -1495,6 +1494,8 @@ export default function DashboardPage() {
                   claimLoading={claimLoading}
                   claimResult={claimResult}
                   onClaim={claimEarnings}
+                  badgeInfo={badgeInfo}
+                  onNavigateToPrivileges={() => setActiveSection('tag-badge')}
                 />
                 
               </>
@@ -1579,15 +1580,15 @@ export default function DashboardPage() {
               />
             )}
 
-            {effectiveSection === 'custom-role' && !isSiteMaintenance && (
-              <CustomRolePage profile={profile} />
-            )}
-
             {effectiveSection === 'tag-badge' && !isSiteMaintenance && (
               <TagBadgeSection
                 badgeInfo={badgeInfo}
                 loading={!badgeInfo && !unauthorized}
                 overviewStats={overviewStats}
+                userId={profile?.userId ?? null}
+                guildId={getCurrentGuildId()}
+                displayName={profile?.nickname ?? profile?.displayName ?? profile?.username ?? 'User'}
+                avatarUrl={profile?.avatarUrl ?? null}
               />
             )}
 
@@ -1597,16 +1598,21 @@ export default function DashboardPage() {
                 error={mailError}
                 items={mailItems}
                 onOpenMail={async (mail) => {
-                  setActiveMail(mail);
-                  if (!mail.is_read) {
+                  if (!mail.is_read && mail.category !== 'reward') {
                     try {
                       await fetchWithCreds(apiUrl('/api/mail'), {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ id: mail.id }),
                       });
-                      setMailItems(prev => prev.map(m => String(m.id) === String(mail.id) ? { ...m, is_read: true } : m));
-                    } catch {}
+                      setMailItems((prev) =>
+                        prev.map((m) =>
+                          String(m.id) === String(mail.id) ? { ...m, is_read: true } : m,
+                        ),
+                      );
+                    } catch {
+                      // ignore
+                    }
                   }
                 }}
                 onBack={() => setActiveSection('overview')}
@@ -1617,10 +1623,6 @@ export default function DashboardPage() {
               <div className="flex min-h-0 flex-1 flex-col">
                 <DuyuruPage variant="panel" />
               </div>
-            )}
-
-            {effectiveSection === 'discover' && (
-              <DiscoverSection />
             )}
 
             {effectiveSection === 'quiz' && !isSiteMaintenance && (
@@ -1702,37 +1704,6 @@ export default function DashboardPage() {
         error={promoError}
         success={promoSuccess}
       />
-
-      {activeMail && (
-        <MailDetailModal
-          mail={activeMail}
-          onClose={() => setActiveMail(null)}
-          onDelete={async (id) => {
-            try {
-              await fetchWithCreds(apiUrl('/api/mail'), {
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ids: [id] }),
-              });
-              setMailItems(prev => prev.filter(m => String(m.id) !== String(id)));
-              setActiveMail(null);
-            } catch {}
-          }}
-          onStar={async (id) => {
-            try {
-              const mail = mailItems.find(m => String(m.id) === String(id));
-              const method = mail?.is_starred ? 'DELETE' : 'POST';
-              await fetchWithCreds(apiUrl('/api/mail/star'), {
-                method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: String(id) }),
-              });
-              setMailItems(prev => prev.map(m => String(m.id) === String(id) ? { ...m, is_starred: !m.is_starred } : m));
-              setActiveMail(prev => prev && String(prev.id) === String(id) ? { ...prev, is_starred: !prev.is_starred } : prev);
-            } catch {}
-          }}
-        />
-      )}
 
       <DiscountsModal
         isOpen={discountsModalOpen}

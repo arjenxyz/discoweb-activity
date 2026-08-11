@@ -438,15 +438,13 @@ export default function DashboardHeader({
         }`}
       />
 
-      {/* Header — desktop full / mobile sadece bakiye */}
-      <header className={`md:fixed inset-x-0 top-0 flex items-center border-b border-white/[0.06] bg-[#090b10]/90 backdrop-blur-xl px-4 sm:px-6 transition-all duration-200 relative ${
-        minimalProfileOnly ? '' : ''
-      } ${
+      {/* Header — yüzen kavisli üst bar */}
+      <header className={`relative mx-3 mt-2.5 mb-1 flex items-center rounded-2xl border border-white/[0.1] bg-[#12141c]/92 shadow-[0_10px_36px_rgba(0,0,0,0.45)] backdrop-blur-xl px-4 sm:px-5 transition-all duration-200 md:fixed md:left-4 md:right-4 md:top-3 md:mx-0 md:mb-0 ${
         minimalProfileOnly
           ? 'h-12 pt-[env(safe-area-inset-top,0px)]'
           : isActivityEmbed
             ? 'h-auto pt-[env(safe-area-inset-top,0px)] pb-2 min-h-[4rem]'
-            : 'h-16'
+            : 'h-14 sm:h-16'
       } ${isProfileOpen ? 'z-[9991]' : 'z-30'}`}>
 
         <style>{`@keyframes titleShine{0%,60%{background-position:100% 0}100%{background-position:-100% 0}}`}</style>
