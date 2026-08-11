@@ -3,6 +3,12 @@ import { createClient } from '@supabase/supabase-js';
 import { requireSessionUser } from '@/lib/auth';
 import { getSelectedGuildId } from '@/lib/guild';
 import { checkMaintenance } from '@/lib/maintenance';
+import {
+  isLocalDevRequest,
+  getLocalDevWatchEarnTasks,
+  claimLocalDevWatchEarn,
+  localDevWallet,
+} from '@/lib/localDev';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,6 +40,10 @@ export async function GET(request: Request) {
       { error: 'maintenance', key: maintenance.key, reason: maintenance.reason },
       { status: 503 },
     );
+  }
+
+  if (isLocalDevRequest(request)) {
+    return NextResponse.json({ tasks: getLocalDevWatchEarnTasks() });
   }
 
   const session = await requireSessionUser(request);
@@ -129,17 +139,31 @@ export async function POST(request: Request) {
   if (!session.ok) return session.response;
   const userId = session.userId;
 
+  const payload = (await request.json().catch(() => ({}))) as { taskId?: string };
+  if (!payload.taskId) {
+    return NextResponse.json({ error: 'invalid_payload' }, { status: 400 });
+  }
+
+  if (isLocalDevRequest(request)) {
+    const result = claimLocalDevWatchEarn(payload.taskId);
+    if (!result.ok) {
+      const status = result.error === 'already_claimed' ? 409 : 404;
+      return NextResponse.json({ error: result.error }, { status });
+    }
+    return NextResponse.json({
+      ok: true,
+      reward: result.reward,
+      balance: localDevWallet.balance + result.reward,
+      claimed_at: new Date().toISOString(),
+    });
+  }
+
   const supabase = getSupabase();
   if (!supabase) return NextResponse.json({ error: 'missing_service_role' }, { status: 500 });
 
   const selectedGuildId = await getSelectedGuildId(request);
   if (!selectedGuildId) {
     return NextResponse.json({ error: 'no_guild_specified' }, { status: 400 });
-  }
-
-  const payload = (await request.json().catch(() => ({}))) as { taskId?: string };
-  if (!payload.taskId) {
-    return NextResponse.json({ error: 'invalid_payload' }, { status: 400 });
   }
 
   const nowIso = new Date().toISOString();

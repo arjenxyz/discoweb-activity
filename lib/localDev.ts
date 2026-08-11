@@ -597,6 +597,62 @@ export function setLocalDevMailStarred(id: string, starred: boolean) {
 /** @deprecated use getLocalDevMails() */
 export const localDevMails = localDevMailsSeed;
 
+type LocalDevWatchEarnTask = {
+  id: string;
+  title: string;
+  logoText: string;
+  sponsor: string;
+  reward: number;
+  multiplier: string | null;
+  banner: string;
+  videoUrl: string;
+  startsAt: string;
+  endsAt: string;
+  claimed: boolean;
+  claimedAt: string | null;
+  createdAt: string;
+};
+
+const localDevWatchEarnSeed: Omit<LocalDevWatchEarnTask, 'claimed' | 'claimedAt'>[] = [
+  {
+    id: 'watch-earn-invincible-1',
+    title: 'INVINCIBLE GAMEPLAY GÖREVİ (ÖRNEK)',
+    logoText: 'INVINCIBLE',
+    sponsor: 'Amazon MGM Studios',
+    reward: 200,
+    multiplier: '1,2 kat kilit aç',
+    banner: '/menu-background/varyant3.jpg',
+    // Thragg.mp4 ~49MB — mevcut storage içindeki en uzun örnek video
+    videoUrl: '/cdn/Storage/Thragg.mp4',
+    startsAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+    endsAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+    createdAt: nowIso(),
+  },
+];
+
+const localDevWatchEarnClaims = new Set<string>();
+
+export function getLocalDevWatchEarnTasks(): LocalDevWatchEarnTask[] {
+  const tasks = localDevWatchEarnSeed.map((task) => ({
+    ...task,
+    claimed: localDevWatchEarnClaims.has(task.id),
+    claimedAt: localDevWatchEarnClaims.has(task.id) ? nowIso() : null,
+  }));
+  tasks.sort((a, b) => {
+    if (a.claimed !== b.claimed) return a.claimed ? 1 : -1;
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
+  return tasks;
+}
+
+export function claimLocalDevWatchEarn(taskId: string): { ok: true; reward: number } | { ok: false; error: string } {
+  const task = localDevWatchEarnSeed.find((t) => t.id === taskId);
+  if (!task) return { ok: false, error: 'task_not_found' };
+  if (localDevWatchEarnClaims.has(taskId)) return { ok: false, error: 'already_claimed' };
+  localDevWatchEarnClaims.add(taskId);
+  return { ok: true, reward: task.reward };
+}
+
 export const localDevTransactions = [
   {
     id: 'tx-1',
