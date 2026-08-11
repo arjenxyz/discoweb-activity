@@ -167,8 +167,8 @@ export default function MailMobileView({
             onClick={() => setFoldersOpen((o) => !o)}
             className={`flex flex-1 items-center gap-2.5 rounded-2xl border px-3 py-2 backdrop-blur-md transition-all ${
               foldersOpen
-                ? 'border-white/20 bg-[#0b0d12]/95 text-white'
-                : 'border-white/10 bg-[#0b0d12]/90 text-white/90 hover:bg-[#0b0d12]/95 hover:text-white'
+                ? 'border-white/20 bg-white/[0.12] text-white'
+                : 'border-white/10 bg-white/[0.08] text-white/90 hover:bg-white/[0.12] hover:text-white'
             }`}
             aria-expanded={foldersOpen}
           >
