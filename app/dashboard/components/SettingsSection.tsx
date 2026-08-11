@@ -1,10 +1,9 @@
 'use client';
 
-import { useEffect, useState, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import Image from 'next/image';
 import {
   LuVolume2,
-  LuGlobe,
   LuUser,
   LuCheck,
   LuTriangleAlert,
@@ -18,7 +17,6 @@ import {
   LuServer,
   LuTrash2,
 } from 'react-icons/lu';
-import { useLocale } from '@/contexts/LocaleContext';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { closeDiscordActivity, isDiscordActivityClient } from '@/lib/discordSdk';
 import type { MemberProfile } from '../types';
@@ -31,18 +29,15 @@ type SettingsSectionProps = {
   onBack?: () => void;
 };
 
-type TabId = 'account' | 'sound' | 'language';
+type TabId = 'account' | 'sound';
 
 const SURFACE = 'rounded-2xl border border-white/[0.08] bg-white/[0.03]';
-const SURFACE_SOFT = 'rounded-xl border border-white/[0.06] bg-white/[0.02]';
 
 export default function SettingsSection({
   profile,
   serverCount,
   onBack,
 }: SettingsSectionProps) {
-  const { locale, setDiscordLocale } = useLocale();
-
   const greeting = (() => {
     const h = new Date().getHours();
     if (h < 6) return 'İyi geceler';
@@ -73,25 +68,14 @@ export default function SettingsSection({
 
   const [draftSoundEnabled, setDraftSoundEnabled] = useState(savedSoundEnabled);
   const [draftSoundVolume, setDraftSoundVolume] = useState(savedSoundVolume);
-  const [draftLocale, setDraftLocale] = useState(locale);
-
-  useEffect(() => {
-    setDraftLocale(locale);
-  }, [locale]);
 
   const hasUnsavedChanges =
-    draftSoundEnabled !== savedSoundEnabled ||
-    draftSoundVolume !== savedSoundVolume ||
-    draftLocale !== locale;
+    draftSoundEnabled !== savedSoundEnabled || draftSoundVolume !== savedSoundVolume;
 
   const handleSaveChanges = () => {
     window.localStorage.setItem('dashboard_music_enabled', String(draftSoundEnabled));
     window.localStorage.setItem('dashboard_music_volume', String(draftSoundVolume));
     window.dispatchEvent(new Event('dashboard-music-settings-changed'));
-
-    if (draftLocale !== locale) {
-      setDiscordLocale(draftLocale);
-    }
 
     setSavedSoundEnabled(draftSoundEnabled);
     setSavedSoundVolume(draftSoundVolume);
@@ -100,7 +84,6 @@ export default function SettingsSection({
   const handleResetChanges = () => {
     setDraftSoundEnabled(savedSoundEnabled);
     setDraftSoundVolume(savedSoundVolume);
-    setDraftLocale(locale);
   };
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -211,7 +194,6 @@ export default function SettingsSection({
   const navItems = [
     { id: 'account' as const, label: 'Hesap', icon: LuUser },
     { id: 'sound' as const, label: 'Ses', icon: LuVolume2 },
-    { id: 'language' as const, label: 'Dil', icon: LuGlobe },
   ];
 
   const modalShell = (children: ReactNode) => (
@@ -358,7 +340,7 @@ export default function SettingsSection({
           </p>
           <h1 className="mt-1 text-2xl font-bold tracking-tight text-white sm:text-3xl">Ayarlar</h1>
           <p className="mt-1.5 max-w-xl text-sm text-white/40">
-            Hesap, ses ve dil tercihlerini buradan yönet.
+            Hesap ve ses tercihlerini buradan yönet.
           </p>
         </div>
 
@@ -568,43 +550,6 @@ export default function SettingsSection({
                   />
                 </div>
               </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'language' && (
-          <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <div className="grid gap-3 sm:grid-cols-2">
-              {[
-                { id: 'tr' as const, label: 'Türkçe', desc: 'Arayüz dilini Türkçe yap' },
-                { id: 'en' as const, label: 'English', desc: 'Set interface language to English' },
-              ].map((lang) => {
-                const active = draftLocale === lang.id;
-                return (
-                  <button
-                    key={lang.id}
-                    type="button"
-                    onClick={() => setDraftLocale(lang.id)}
-                    className={`${SURFACE_SOFT} p-4 text-left transition ${
-                      active
-                        ? 'border-[#5865F2]/40 bg-[#5865F2]/10'
-                        : 'hover:border-white/10 hover:bg-white/[0.04]'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <p className={`text-sm font-semibold ${active ? 'text-white' : 'text-white/70'}`}>
-                        {lang.label}
-                      </p>
-                      {active && (
-                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#5865F2] text-white">
-                          <LuCheck className="h-3.5 w-3.5" />
-                        </span>
-                      )}
-                    </div>
-                    <p className="mt-2 text-xs text-white/35">{lang.desc}</p>
-                  </button>
-                );
-              })}
             </div>
           </div>
         )}
