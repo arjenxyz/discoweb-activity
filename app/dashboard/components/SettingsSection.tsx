@@ -12,7 +12,6 @@ import {
   LuShieldAlert,
   LuInfo,
   LuDownload,
-  LuMessageSquare,
   LuSave,
   LuUndo2,
   LuServer,
@@ -22,6 +21,8 @@ import {
   LuZap,
   LuEye,
   LuPause,
+  LuX,
+  LuFileJson,
 } from 'react-icons/lu';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { closeDiscordActivity, isDiscordActivityClient } from '@/lib/discordSdk';
@@ -265,17 +266,38 @@ export default function SettingsSection({
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteMessage, setDeleteMessage] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deleteAcknowledged, setDeleteAcknowledged] = useState(false);
   const [accountDeletedExit, setAccountDeletedExit] = useState(false);
 
   const [requestModalOpen, setRequestModalOpen] = useState(false);
   const [requestLoading, setRequestLoading] = useState(false);
   const [requestMessage, setRequestMessage] = useState<string | null>(null);
   const [requestError, setRequestError] = useState<string | null>(null);
+  const [requestAcknowledged, setRequestAcknowledged] = useState(false);
 
   const openDeleteModal = (scope: 'all' | 'current') => {
     setDeleteScope(scope);
     setDeleteError(null);
+    setDeleteAcknowledged(false);
     setDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    if (deleteLoading) return;
+    setDeleteModalOpen(false);
+    setDeleteAcknowledged(false);
+  };
+
+  const openRequestModal = () => {
+    setRequestError(null);
+    setRequestAcknowledged(false);
+    setRequestModalOpen(true);
+  };
+
+  const closeRequestModal = () => {
+    if (requestLoading) return;
+    setRequestModalOpen(false);
+    setRequestAcknowledged(false);
   };
 
   const handleDeleteConfirm = async () => {
@@ -350,18 +372,36 @@ export default function SettingsSection({
     all: {
       title: 'Tüm verileri sil',
       description: 'Platformdaki tüm Activity kayıtların kalıcı olarak silinir.',
-      button: 'Hepsini sil',
-      tone: 'bg-rose-500 hover:bg-rose-600',
-      badge: 'border-rose-500/25 bg-rose-500/10 text-rose-300',
+      button: 'Kalıcı olarak sil',
+      tone: 'bg-rose-600 hover:bg-rose-500 shadow-[0_0_24px_rgba(244,63,94,0.25)]',
+      badge: 'border-rose-500/30 bg-rose-500/10 text-rose-300',
       iconTone: 'text-rose-400',
+      severity: 'Kritik',
+      severityTone: 'border-rose-500/40 bg-rose-500/15 text-rose-300',
+      ref: 'DEL-ALL',
+      scopeLabel: 'Tüm sunucular',
+      items: [
+        'Profil, cüzdan ve ekonomi bakiyeleri',
+        'Portföy, istatistik ve Activity kayıtları',
+        'Sunucu bağlantıları ve yerel tercihler',
+      ],
     },
     current: {
       title: 'Bu sunucu verilerini sil',
       description: 'Yalnızca bulunduğun sunucuya ait kayıtlar temizlenir.',
-      button: 'Sunucuyu temizle',
-      tone: 'bg-amber-500 hover:bg-amber-600',
-      badge: 'border-amber-500/25 bg-amber-500/10 text-amber-300',
+      button: 'Sunucu verilerini sil',
+      tone: 'bg-amber-600 hover:bg-amber-500 shadow-[0_0_24px_rgba(245,158,11,0.22)]',
+      badge: 'border-amber-500/30 bg-amber-500/10 text-amber-300',
       iconTone: 'text-amber-400',
+      severity: 'Uyarı',
+      severityTone: 'border-amber-500/40 bg-amber-500/15 text-amber-300',
+      ref: 'DEL-SRV',
+      scopeLabel: 'Yalnızca mevcut sunucu',
+      items: [
+        'Bu sunucuya ait ekonomi ve istatistikler',
+        'Sunucu özel Activity kayıtları',
+        'Hesap genelinde diğer sunucular korunur',
+      ],
     },
   };
 
@@ -371,111 +411,287 @@ export default function SettingsSection({
     { id: 'account' as const, label: 'Hesap', icon: LuUser },
   ];
 
-  const modalShell = (children: ReactNode) => (
-    <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/75 px-4 py-6 backdrop-blur-md">
-      <div className="w-full max-w-md overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0b0d12]/95 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-        {children}
+  const systemDialog = ({
+    accent,
+    children,
+    onClose,
+  }: {
+    accent: 'danger' | 'warn' | 'info';
+    children: ReactNode;
+    onClose: () => void;
+  }) => {
+    const ring =
+      accent === 'danger'
+        ? 'shadow-[0_0_0_1px_rgba(244,63,94,0.22),0_28px_80px_rgba(0,0,0,0.65)]'
+        : accent === 'warn'
+          ? 'shadow-[0_0_0_1px_rgba(245,158,11,0.22),0_28px_80px_rgba(0,0,0,0.65)]'
+          : 'shadow-[0_0_0_1px_rgba(88,101,242,0.28),0_28px_80px_rgba(0,0,0,0.65)]';
+    const bar =
+      accent === 'danger'
+        ? 'from-rose-500 via-rose-500/40 to-transparent'
+        : accent === 'warn'
+          ? 'from-amber-500 via-amber-500/40 to-transparent'
+          : 'from-[#5865F2] via-[#5865F2]/40 to-transparent';
+
+    return (
+      <div
+        className="fixed inset-0 z-[99999] flex items-center justify-center bg-[#05060a]/80 px-4 py-6 backdrop-blur-[10px]"
+        onClick={onClose}
+        role="presentation"
+      >
+        <div
+          role="dialog"
+          aria-modal="true"
+          onClick={(e) => e.stopPropagation()}
+          className={`relative w-full max-w-[440px] overflow-hidden rounded-2xl border border-white/[0.1] bg-[#0c0f16] ${ring} animate-in fade-in zoom-in-95 duration-200`}
+        >
+          <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${bar}`} />
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-lg border border-white/[0.06] bg-white/[0.03] text-white/40 transition hover:bg-white/[0.06] hover:text-white"
+            aria-label="Kapat"
+          >
+            <LuX className="h-4 w-4" />
+          </button>
+          {children}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const requestConfirmModal = requestModalOpen
-    ? modalShell(
-        <>
-          <div className="border-b border-white/[0.08] px-5 py-5 text-center">
-            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl border border-[#5865F2]/30 bg-[#5865F2]/10">
-              <LuMessageSquare className="h-5 w-5 text-[#5865F2]" />
-            </div>
-            <h2 className="text-lg font-bold text-white">Veri talep onayı</h2>
-            <p className="mt-2 text-sm leading-relaxed text-white/45">
-              Verilerin JSON olarak Discord DM üzerinden gönderilecek.
-            </p>
-          </div>
-          <div className="space-y-4 p-5">
-            <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-3.5">
-              <div className="flex gap-3">
-                <LuTriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
-                <p className="text-xs leading-relaxed text-amber-100/80">
-                  İndirdiğin andan itibaren dosyanın güvenliği sana aittir.
-                </p>
+    ? systemDialog({
+        accent: 'info',
+        onClose: closeRequestModal,
+        children: (
+          <>
+            <div className="border-b border-white/[0.07] px-5 pb-4 pt-5 pr-12">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <span className="rounded-md border border-[#5865F2]/35 bg-[#5865F2]/12 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.14em] text-[#a5b4fc]">
+                  Resmi talep
+                </span>
+                <span className="font-mono text-[10px] text-white/25">REF · GDPR-DM</span>
+              </div>
+              <div className="flex items-start gap-3.5">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#5865F2]/30 bg-[#5865F2]/10">
+                  <LuFileJson className="h-5 w-5 text-[#5865F2]" />
+                </div>
+                <div className="min-w-0">
+                  <h2 className="text-base font-bold tracking-tight text-white sm:text-lg">
+                    Kişisel veri dosyası talebi
+                  </h2>
+                  <p className="mt-1 text-xs leading-relaxed text-white/45 sm:text-sm">
+                    DiscoWeb, hesap verilerini JSON formatında Discord DM üzerinden iletir.
+                  </p>
+                </div>
               </div>
             </div>
-            {requestError && (
-              <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-3 text-sm text-rose-300">
-                {requestError}
+
+            <div className="space-y-3.5 px-5 py-4">
+              <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-3.5">
+                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/30">Paket içeriği</p>
+                <ul className="mt-2.5 space-y-2">
+                  {[
+                    'Profil ve kimlik özeti',
+                    'Ekonomi / cüzdan kayıtları',
+                    'Activity kullanım geçmişi',
+                  ].map((item) => (
+                    <li key={item} className="flex items-start gap-2 text-xs text-white/65">
+                      <LuCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#5865F2]" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
               </div>
-            )}
-            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+
+              <div className="rounded-xl border border-amber-500/20 bg-amber-500/[0.07] p-3.5">
+                <div className="flex gap-2.5">
+                  <LuTriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+                  <p className="text-xs leading-relaxed text-amber-100/85">
+                    Dosya cihazına ulaştıktan sonra güvenliği ve paylaşımı tamamen sana aittir.
+                    Üçüncü şahıslarla paylaşımından DiscoWeb sorumlu değildir.
+                  </p>
+                </div>
+              </div>
+
+              <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] px-3.5 py-3 transition hover:border-white/10">
+                <input
+                  type="checkbox"
+                  checked={requestAcknowledged}
+                  onChange={(e) => setRequestAcknowledged(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded border-white/20 bg-transparent accent-[#5865F2]"
+                />
+                <span className="text-xs leading-relaxed text-white/60">
+                  Sorumluluk bilgisini okudum ve veri dosyasının DM ile gönderilmesini onaylıyorum.
+                </span>
+              </label>
+
+              {requestError && (
+                <div className="rounded-xl border border-rose-500/25 bg-rose-500/10 px-3.5 py-2.5 text-xs text-rose-300">
+                  {requestError}
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-col-reverse gap-2 border-t border-white/[0.07] bg-white/[0.015] px-5 py-4 sm:flex-row sm:justify-end">
               <button
                 type="button"
-                onClick={() => setRequestModalOpen(false)}
-                className="rounded-xl border border-white/10 px-4 py-2.5 text-sm font-medium text-white/60 transition hover:bg-white/[0.05] hover:text-white"
+                onClick={closeRequestModal}
+                disabled={requestLoading}
+                className="rounded-xl border border-white/10 px-4 py-2.5 text-sm font-semibold text-white/55 transition hover:bg-white/[0.05] hover:text-white disabled:opacity-50"
               >
-                Vazgeç
+                İptal
               </button>
               <button
                 type="button"
                 onClick={handleRequestConfirm}
-                disabled={requestLoading}
-                className="rounded-xl bg-[#5865F2] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#4752C4] disabled:opacity-60"
+                disabled={requestLoading || !requestAcknowledged}
+                className="rounded-xl bg-[#5865F2] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#4752C4] disabled:cursor-not-allowed disabled:opacity-45"
               >
-                {requestLoading ? 'Gönderiliyor...' : 'Kabul edip gönder'}
+                {requestLoading ? 'Gönderiliyor...' : 'Talebi onayla ve gönder'}
               </button>
             </div>
-          </div>
-        </>,
-      )
+          </>
+        ),
+      })
     : null;
 
   const confirmModal =
     deleteModalOpen && deleteScope
-      ? modalShell(
-          <>
-            <div className="border-b border-white/[0.08] px-5 py-5 text-center">
-              <div
-                className={`mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl border ${deleteOptionConfig[deleteScope].badge}`}
-              >
-                <LuShieldAlert className={`h-5 w-5 ${deleteOptionConfig[deleteScope].iconTone}`} />
+      ? systemDialog({
+          accent: deleteScope === 'all' ? 'danger' : 'warn',
+          onClose: closeDeleteModal,
+          children: (
+            <>
+              <div className="border-b border-white/[0.07] px-5 pb-4 pt-5 pr-12">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <span
+                    className={`rounded-md border px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.14em] ${deleteOptionConfig[deleteScope].severityTone}`}
+                  >
+                    {deleteOptionConfig[deleteScope].severity}
+                  </span>
+                  <span className="font-mono text-[10px] text-white/25">
+                    REF · {deleteOptionConfig[deleteScope].ref}
+                  </span>
+                </div>
+                <div className="flex items-start gap-3.5">
+                  <div
+                    className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border ${deleteOptionConfig[deleteScope].badge}`}
+                  >
+                    <LuShieldAlert className={`h-5 w-5 ${deleteOptionConfig[deleteScope].iconTone}`} />
+                  </div>
+                  <div className="min-w-0">
+                    <h2 className="text-base font-bold tracking-tight text-white sm:text-lg">
+                      Veri silme onayı
+                    </h2>
+                    <p className="mt-1 text-xs leading-relaxed text-white/45 sm:text-sm">
+                      Bu işlem geri alınamaz. Onay sonrası seçilen kapsam sistemden kaldırılır.
+                    </p>
+                  </div>
+                </div>
               </div>
-              <h2 className="text-lg font-bold text-white">Bu işlem geri alınamaz</h2>
-              <p className="mt-2 text-sm leading-relaxed text-white/45">
-                {deleteOptionConfig[deleteScope].description}
-              </p>
-            </div>
-            <div className="space-y-4 p-5">
-              <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-3.5">
-                <div className="flex gap-3">
-                  <LuTriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
-                  <p className="text-xs leading-relaxed text-amber-100/80">
-                    Onayladığın anda seçtiğin kapsamdaki kayıtlar kalıcı olarak silinir.
+
+              <div className="space-y-3.5 px-5 py-4">
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] px-3 py-2.5">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-white/30">Kapsam</p>
+                    <p className="mt-1 text-xs font-semibold text-white/80">
+                      {deleteOptionConfig[deleteScope].scopeLabel}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] px-3 py-2.5">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-white/30">Hesap</p>
+                    <p className="mt-1 truncate text-xs font-semibold text-white/80">
+                      @{profile?.username ?? '—'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-3.5">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/30">
+                    Etkilenecek kayıtlar
                   </p>
+                  <ul className="mt-2.5 space-y-2">
+                    {deleteOptionConfig[deleteScope].items.map((item) => (
+                      <li key={item} className="flex items-start gap-2 text-xs text-white/65">
+                        <span
+                          className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${
+                            deleteScope === 'all' ? 'bg-rose-400' : 'bg-amber-400'
+                          }`}
+                        />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
+
+                <div
+                  className={`rounded-xl border p-3.5 ${
+                    deleteScope === 'all'
+                      ? 'border-rose-500/25 bg-rose-500/[0.07]'
+                      : 'border-amber-500/25 bg-amber-500/[0.07]'
+                  }`}
+                >
+                  <div className="flex gap-2.5">
+                    <LuTriangleAlert
+                      className={`mt-0.5 h-4 w-4 shrink-0 ${
+                        deleteScope === 'all' ? 'text-rose-400' : 'text-amber-400'
+                      }`}
+                    />
+                    <p
+                      className={`text-xs leading-relaxed ${
+                        deleteScope === 'all' ? 'text-rose-100/85' : 'text-amber-100/85'
+                      }`}
+                    >
+                      {deleteOptionConfig[deleteScope].description} Yedeklere erişilemez; onay anında işlem
+                      başlar.
+                    </p>
+                  </div>
+                </div>
+
+                <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] px-3.5 py-3 transition hover:border-white/10">
+                  <input
+                    type="checkbox"
+                    checked={deleteAcknowledged}
+                    onChange={(e) => setDeleteAcknowledged(e.target.checked)}
+                    className={`mt-0.5 h-4 w-4 rounded border-white/20 bg-transparent ${
+                      deleteScope === 'all' ? 'accent-rose-500' : 'accent-amber-500'
+                    }`}
+                  />
+                  <span className="text-xs leading-relaxed text-white/60">
+                    Bu işlemin kalıcı ve geri alınamaz olduğunu anladım; silme işlemini onaylıyorum.
+                  </span>
+                </label>
+
+                {deleteError && (
+                  <div className="rounded-xl border border-rose-500/25 bg-rose-500/10 px-3.5 py-2.5 text-xs text-rose-300">
+                    {deleteError}
+                  </div>
+                )}
               </div>
-              {deleteError && (
-                <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-3 text-sm text-rose-300">
-                  {deleteError}
-                </div>
-              )}
-              <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+
+              <div className="flex flex-col-reverse gap-2 border-t border-white/[0.07] bg-white/[0.015] px-5 py-4 sm:flex-row sm:justify-end">
                 <button
                   type="button"
-                  onClick={() => setDeleteModalOpen(false)}
-                  className="rounded-xl border border-white/10 px-4 py-2.5 text-sm font-medium text-white/60 transition hover:bg-white/[0.05] hover:text-white"
+                  onClick={closeDeleteModal}
+                  disabled={deleteLoading}
+                  className="rounded-xl border border-white/10 px-4 py-2.5 text-sm font-semibold text-white/55 transition hover:bg-white/[0.05] hover:text-white disabled:opacity-50"
                 >
-                  Vazgeç
+                  İptal
                 </button>
                 <button
                   type="button"
                   onClick={handleDeleteConfirm}
-                  disabled={deleteLoading}
-                  className={`rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition disabled:opacity-60 ${deleteOptionConfig[deleteScope].tone}`}
+                  disabled={deleteLoading || !deleteAcknowledged}
+                  className={`rounded-xl px-4 py-2.5 text-sm font-bold text-white transition disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none ${deleteOptionConfig[deleteScope].tone}`}
                 >
-                  {deleteLoading ? 'Siliniyor...' : deleteOptionConfig[deleteScope].button}
+                  {deleteLoading ? 'İşleniyor...' : deleteOptionConfig[deleteScope].button}
                 </button>
               </div>
-            </div>
-          </>,
-        )
+            </>
+          ),
+        })
       : null;
 
   if (accountDeletedExit) {
