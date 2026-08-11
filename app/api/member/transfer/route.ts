@@ -54,6 +54,12 @@ const getTodayStartIso = () => {
   return start.toISOString();
 };
 
+const getRollingWindowStartIso = (period: 'day' | 'week' | 'month') => {
+  if (period === 'day') return getTodayStartIso();
+  const ms = period === 'week' ? 7 * 24 * 60 * 60 * 1000 : 30 * 24 * 60 * 60 * 1000;
+  return new Date(Date.now() - ms).toISOString();
+};
+
 const getBalance = async (supabase: SupabaseClient, userId: string, primaryGuildId: string, fallbackGuildId: string) => {
   const { data: walletRows } = await supabase
     .from('member_wallets')
@@ -157,7 +163,7 @@ export async function POST(request: Request) {
 
   const { data: server } = await supabase
     .from('servers')
-    .select('id,transfer_daily_limit,transfer_tax_rate')
+    .select('id,transfer_daily_limit,transfer_tax_rate,transfer_count_limit,transfer_count_period')
     .eq('discord_id', selectedGuildId)
     .eq('is_setup', true)
     .maybeSingle();
@@ -175,8 +181,32 @@ export async function POST(request: Request) {
     .gte('created_at', getTodayStartIso());
 
   const totalSent = sentToday?.reduce((sum, row) => sum + Number(row.amount ?? 0), 0) ?? 0;
-  if (totalSent + payload.amount > Number(server.transfer_daily_limit)) {
+  const dailyAmountLimit = Number(server.transfer_daily_limit ?? 0);
+  if (dailyAmountLimit > 0 && totalSent + payload.amount > dailyAmountLimit) {
     return NextResponse.json({ error: 'daily_limit_exceeded' }, { status: 400 });
+  }
+
+  const countLimit = Number(server.transfer_count_limit ?? 0);
+  const countPeriodRaw = server.transfer_count_period;
+  const countPeriod =
+    countPeriodRaw === 'day' || countPeriodRaw === 'week' || countPeriodRaw === 'month'
+      ? countPeriodRaw
+      : null;
+  if (countLimit > 0 && countPeriod) {
+    const { count, error: countError } = await supabase
+      .from('wallet_ledger')
+      .select('id', { count: 'exact', head: true })
+      .eq('guild_id', selectedGuildId)
+      .eq('user_id', userId)
+      .eq('type', 'transfer_out')
+      .gte('created_at', getRollingWindowStartIso(countPeriod));
+
+    if (countError) {
+      return NextResponse.json({ error: 'transfer_count_check_failed' }, { status: 500 });
+    }
+    if ((count ?? 0) >= countLimit) {
+      return NextResponse.json({ error: 'transfer_count_limit_exceeded' }, { status: 400 });
+    }
   }
 
   const taxRate = Number(server.transfer_tax_rate ?? 0);

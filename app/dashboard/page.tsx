@@ -1052,6 +1052,8 @@ export default function DashboardPage() {
         setTransferError(t('transfer_error_insufficient'));
       } else if (data.error === 'daily_limit_exceeded') {
         setTransferError(t('transfer_error_daily_limit'));
+      } else if (data.error === 'transfer_count_limit_exceeded') {
+        setTransferError(t('transfer_error_count_limit'));
       } else if (data.error === 'invalid_payload') {
         setTransferError(t('transfer_error_invalid_payload'));
       } else if (data.error === 'unauthorized') {
@@ -1693,6 +1695,7 @@ export default function DashboardPage() {
         loading={transferLoading}
         error={transferError}
         success={transferSuccess}
+        taxRate={transferTaxRate}
         recipientProfile={transferRecipientProfile}
         recipientStatus={transferRecipientStatus}
         onRecipientChange={setTransferRecipientId}

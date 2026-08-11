@@ -85,6 +85,8 @@ type LocalDevGlobal = typeof globalThis & {
     dailyLimit: number;
     taxRate: number;
     sentToday: number;
+    transferCountLimit: number | null;
+    transferCountPeriod: 'day' | 'week' | 'month' | null;
   };
   __dwLocalDevWatchEarnClaims?: Set<string>;
 };
@@ -99,6 +101,8 @@ export const localDevWallet =
     dailyLimit: 5000,
     taxRate: 0.05,
     sentToday: 250,
+    transferCountLimit: null,
+    transferCountPeriod: null,
   });
 
 function getLocalDevWatchEarnClaims(): Set<string> {

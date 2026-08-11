@@ -245,6 +245,7 @@
   "transfer_error_no_recipient": "Destinatário não encontrado",
   "transfer_error_self": "Você não pode transferir para si mesmo",
   "transfer_error_daily_limit": "Limite diário excedido",
+  "transfer_error_count_limit": "Limite de quantidade de transferências atingido neste período.",
   "transfer_error_maintenance": "Transferência está em manutenção no momento",
   "transfer_error_unauthorized": "Operação não autorizada",
   "transfer_error_insufficient_mari": "Saldo de Mari insuficiente",

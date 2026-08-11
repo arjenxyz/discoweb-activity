@@ -268,6 +268,7 @@
   "transfer_error_no_recipient": "Recipient not found",
   "transfer_error_self": "You cannot transfer to yourself",
   "transfer_error_daily_limit": "Daily limit exceeded",
+  "transfer_error_count_limit": "Transfer count limit reached for this period.",
   "transfer_error_maintenance": "Transfer is under maintenance",
   "transfer_error_unauthorized": "Unauthorized transaction",
   "transfer_error_insufficient_mari": "Insufficient Mari balance",

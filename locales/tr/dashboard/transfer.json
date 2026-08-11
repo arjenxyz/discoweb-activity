@@ -8,6 +8,7 @@
   "transfer_error_no_recipient": "Alıcı bulunamadı",
   "transfer_error_self": "Kendinize transfer yapamazsınız",
   "transfer_error_daily_limit": "Günlük limit aşıldı",
+  "transfer_error_count_limit": "Bu dönem için transfer adet limitine ulaşıldı.",
   "transfer_error_maintenance": "Transfer şu an bakımda",
   "transfer_error_unauthorized": "Yetkisiz işlem"
 }

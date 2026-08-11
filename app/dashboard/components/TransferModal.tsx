@@ -19,6 +19,7 @@ type TransferModalProps = {
   loading: boolean;
   error: string | null;
   success: string | null;
+  taxRate?: number;
   recipientProfile?: RecipientProfile | null;
   recipientStatus?: 'idle' | 'loading' | 'ready' | 'not_found' | 'error';
   onRecipientChange: (value: string) => void;
@@ -93,6 +94,7 @@ export default function TransferModal({
   loading,
   error,
   success,
+  taxRate = 0,
   recipientProfile,
   recipientStatus = 'idle',
   onRecipientChange,
@@ -104,6 +106,12 @@ export default function TransferModal({
   useModalEffects(open, onClose);
 
   if (!open) return null;
+
+  const amountValue = Number(amount);
+  const hasAmount = Number.isFinite(amountValue) && amountValue > 0;
+  const taxAmount = hasAmount ? Number((amountValue * taxRate).toFixed(2)) : 0;
+  const totalDebit = hasAmount ? Number((amountValue + taxAmount).toFixed(2)) : 0;
+  const taxPercent = Number((taxRate * 100).toFixed(2));
 
   return createPortal(
     <div className={OVERLAY_CLASS} aria-hidden={!open}>
@@ -161,6 +169,20 @@ export default function TransferModal({
               className={INPUT_CLASS}
             />
           </div>
+
+          {taxRate > 0 ? (
+            <p className="text-xs text-white/45">
+              {hasAmount
+                ? t('transfer_tax_preview', {
+                    percent: taxPercent,
+                    tax: taxAmount.toFixed(2),
+                    total: totalDebit.toFixed(2),
+                  })
+                : t('transfer_tax_rate_label', { percent: taxPercent })}
+            </p>
+          ) : (
+            <p className="text-xs text-white/35">{t('transfer_tax_none')}</p>
+          )}
 
           {error && <p className="text-xs text-rose-300">{error}</p>}
           {success && <p className="text-xs text-emerald-300">{success}</p>}
