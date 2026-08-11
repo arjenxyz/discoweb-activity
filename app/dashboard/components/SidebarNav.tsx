@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import { LuHouse, LuMail, LuStore, LuMegaphone, LuShieldCheck, LuTrophy, LuMonitorPlay } from 'react-icons/lu';
 import type { MemberProfile, Section } from '../types';
 import { useT } from '@/contexts/LocaleContext';
@@ -21,16 +20,6 @@ export default function SidebarNav({
   duyuruEveryoneUnreadCount = 0,
 }: SidebarNavProps) {
   const t = useT();
-
-  const SECTION_BG: Partial<Record<Section, string>> = {
-    duyuru: '/menu-background/varyant6.jpg',
-    overview: '/menu-background/varyant.jpg',
-    store: '/menu-background/varyant2.jpg',
-    'tag-badge': '/menu-background/varyant4.jpg',
-    mail: '/menu-background/varyant6.jpg',
-    quiz: '/menu-background/varyant.jpg',
-    'watch-earn': '/menu-background/varyant3.jpg',
-  };
 
   const NAV_GROUPS = [
     {
@@ -62,68 +51,51 @@ export default function SidebarNav({
   ];
 
   return (
-    <aside className="hidden h-full min-h-0 w-[240px] shrink-0 flex-col overflow-hidden border-r border-white/[0.06] bg-[#0b0d12] transition-all duration-300 lg:flex">
-      <nav className="mt-4 min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-3 pb-6 custom-scrollbar">
+    <aside className="hidden h-full min-h-0 w-[248px] shrink-0 flex-col overflow-hidden border-r border-white/[0.06] bg-[#0b0d12] lg:flex">
+      <div className="flex h-14 shrink-0 items-center px-5">
+        <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-white/35">DiscoWeb</span>
+      </div>
+
+      <nav className="custom-scrollbar min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain px-3 pb-6">
         {NAV_GROUPS.filter((g) => !g.requiresAuth || !unauthorized).map((group) => (
-          <div key={group.label} className="space-y-0.5">
-            <p className="mb-2 px-3 text-[9px] font-semibold uppercase tracking-[0.3em] text-white/25">
+          <div key={group.label} className="space-y-1">
+            <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.22em] text-white/28">
               {group.label}
             </p>
             {group.items.map(({ key, label, icon: Icon }) => {
               const active = effectiveSection === key;
+              const unread = key === 'duyuru' ? duyuruEveryoneUnreadCount : 0;
+
               return (
                 <button
                   key={key}
                   type="button"
                   onClick={() => onNavigate(key)}
-                  className={`group relative flex w-full items-center gap-3 overflow-hidden rounded-xl px-3 py-2.5 transition-all duration-150 ${
-                    active ? 'text-white' : 'text-white/45 hover:text-white/80'
+                  className={`group relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors duration-150 ${
+                    active
+                      ? 'bg-white/[0.08] text-white shadow-[inset_3px_0_0_0_#5865F2]'
+                      : 'text-white/50 hover:bg-white/[0.04] hover:text-white/85'
                   }`}
                 >
-                  {SECTION_BG[key] && (
-                    <>
-                      <Image
-                        src={SECTION_BG[key]!}
-                        alt=""
-                        fill
-                        className="pointer-events-none object-cover opacity-0 transition-opacity duration-300 group-hover:opacity-30"
-                      />
-                      {active && (
-                        <Image
-                          src={SECTION_BG[key]!}
-                          alt=""
-                          fill
-                          className="pointer-events-none object-cover opacity-20"
-                        />
-                      )}
-                    </>
-                  )}
-                  <div
-                    className={`pointer-events-none absolute inset-0 rounded-xl transition-all duration-150 ${
-                      active ? 'bg-white/10' : 'group-hover:bg-white/[0.06]'
-                    }`}
-                  />
                   <span
-                    className={`relative flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition-all ${
-                      active ? 'text-white' : 'text-white/45 group-hover:text-white/70'
+                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors ${
+                      active
+                        ? 'bg-[#5865F2]/15 text-[#a5b4fc]'
+                        : 'bg-white/[0.03] text-white/45 group-hover:text-white/75'
                     }`}
                   >
                     <Icon className="h-4 w-4" />
                   </span>
-                  <span className={`relative text-sm font-medium leading-none ${active ? 'text-white' : ''}`}>
+                  <span className={`min-w-0 flex-1 truncate text-[13px] leading-none ${active ? 'font-semibold text-white' : 'font-medium'}`}>
                     {label}
                   </span>
-                  {key === 'duyuru' && duyuruEveryoneUnreadCount > 0 && (
-                    <span className="relative ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white">
-                      {duyuruEveryoneUnreadCount > 9 ? '9+' : duyuruEveryoneUnreadCount}
+                  {unread > 0 ? (
+                    <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-rose-500 px-1.5 text-[9px] font-bold text-white">
+                      {unread > 9 ? '9+' : unread}
                     </span>
-                  )}
-                  {active && key !== 'duyuru' && (
-                    <span className="relative ml-auto h-1.5 w-1.5 rounded-full bg-white/60" />
-                  )}
-                  {active && key === 'duyuru' && duyuruEveryoneUnreadCount === 0 && (
-                    <span className="relative ml-auto h-1.5 w-1.5 rounded-full bg-white/60" />
-                  )}
+                  ) : active ? (
+                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#5865F2]" />
+                  ) : null}
                 </button>
               );
             })}
