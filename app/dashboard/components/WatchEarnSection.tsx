@@ -238,7 +238,17 @@ export default function WatchEarnSection() {
         }
         throw new Error(data?.error ?? 'claim_failed');
       }
-      showToast('Ödül başarıyla hesabınıza eklendi!', 'success');
+      showToast(
+        typeof data?.reward === 'number'
+          ? `+${data.reward} Papel hesabına eklendi!`
+          : 'Ödül başarıyla hesabınıza eklendi!',
+        'success',
+      );
+      try {
+        window.dispatchEvent(new CustomEvent('wallet:refresh'));
+      } catch {
+        // ignore
+      }
       await loadTasks();
     } catch {
       showToast('Ödül alınamadı. Tekrar dene.', 'error');

@@ -7,7 +7,6 @@ import {
   isLocalDevRequest,
   getLocalDevWatchEarnTasks,
   claimLocalDevWatchEarn,
-  localDevWallet,
 } from '@/lib/localDev';
 
 export const dynamic = 'force-dynamic';
@@ -153,7 +152,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       ok: true,
       reward: result.reward,
-      balance: localDevWallet.balance + result.reward,
+      balance: result.balance,
       claimed_at: new Date().toISOString(),
     });
   }
@@ -223,7 +222,7 @@ export async function POST(request: Request) {
   }
 
   if (reward > 0) {
-    await supabase.from('member_wallets').upsert(
+    const { error: walletError } = await supabase.from('member_wallets').upsert(
       {
         guild_id: selectedGuildId,
         user_id: userId,
@@ -233,7 +232,12 @@ export async function POST(request: Request) {
       { onConflict: 'guild_id,user_id' },
     );
 
-    await supabase.from('wallet_ledger').insert({
+    if (walletError) {
+      // Claim kaydı yazıldı ama bakiye güncellenemedi — kullanıcıyı yanıltma
+      return NextResponse.json({ error: 'wallet_update_failed' }, { status: 500 });
+    }
+
+    const { error: ledgerError } = await supabase.from('wallet_ledger').insert({
       guild_id: selectedGuildId,
       user_id: userId,
       amount: reward,
@@ -241,6 +245,10 @@ export async function POST(request: Request) {
       balance_after: newBalance,
       metadata: { source: 'watch_earn', task_id: task.id },
     });
+
+    if (ledgerError) {
+      console.warn('[watch-earn] ledger insert failed:', ledgerError.message);
+    }
   }
 
   return NextResponse.json({

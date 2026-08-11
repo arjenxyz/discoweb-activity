@@ -77,13 +77,36 @@ export const localDevProfile = {
   booster_since: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(),
 };
 
-export const localDevWallet = {
-  balance: 12500,
-  mari_balance: 320,
-  dailyLimit: 5000,
-  taxRate: 0.05,
-  sentToday: 250,
+/** Mutable localhost state must live on globalThis — App Router route bundles don't share module singletons. */
+type LocalDevGlobal = typeof globalThis & {
+  __dwLocalDevWallet?: {
+    balance: number;
+    mari_balance: number;
+    dailyLimit: number;
+    taxRate: number;
+    sentToday: number;
+  };
+  __dwLocalDevWatchEarnClaims?: Set<string>;
 };
+
+const localDevGlobal = globalThis as LocalDevGlobal;
+
+export const localDevWallet =
+  localDevGlobal.__dwLocalDevWallet ??
+  (localDevGlobal.__dwLocalDevWallet = {
+    balance: 12500,
+    mari_balance: 320,
+    dailyLimit: 5000,
+    taxRate: 0.05,
+    sentToday: 250,
+  });
+
+function getLocalDevWatchEarnClaims(): Set<string> {
+  if (!localDevGlobal.__dwLocalDevWatchEarnClaims) {
+    localDevGlobal.__dwLocalDevWatchEarnClaims = new Set();
+  }
+  return localDevGlobal.__dwLocalDevWatchEarnClaims;
+}
 
 const nowIso = () => new Date().toISOString();
 
@@ -705,13 +728,12 @@ const localDevWatchEarnSeed: Omit<LocalDevWatchEarnTask, 'claimed' | 'claimedAt'
   },
 ];
 
-const localDevWatchEarnClaims = new Set<string>();
-
 export function getLocalDevWatchEarnTasks(): LocalDevWatchEarnTask[] {
+  const claims = getLocalDevWatchEarnClaims();
   const tasks = localDevWatchEarnSeed.map((task) => ({
     ...task,
-    claimed: localDevWatchEarnClaims.has(task.id),
-    claimedAt: localDevWatchEarnClaims.has(task.id) ? nowIso() : null,
+    claimed: claims.has(task.id),
+    claimedAt: claims.has(task.id) ? nowIso() : null,
   }));
   tasks.sort((a, b) => {
     if (a.claimed !== b.claimed) return a.claimed ? 1 : -1;
@@ -720,12 +742,16 @@ export function getLocalDevWatchEarnTasks(): LocalDevWatchEarnTask[] {
   return tasks;
 }
 
-export function claimLocalDevWatchEarn(taskId: string): { ok: true; reward: number } | { ok: false; error: string } {
+export function claimLocalDevWatchEarn(
+  taskId: string,
+): { ok: true; reward: number; balance: number } | { ok: false; error: string } {
   const task = localDevWatchEarnSeed.find((t) => t.id === taskId);
   if (!task) return { ok: false, error: 'task_not_found' };
-  if (localDevWatchEarnClaims.has(taskId)) return { ok: false, error: 'already_claimed' };
-  localDevWatchEarnClaims.add(taskId);
-  return { ok: true, reward: task.reward };
+  const claims = getLocalDevWatchEarnClaims();
+  if (claims.has(taskId)) return { ok: false, error: 'already_claimed' };
+  claims.add(taskId);
+  localDevWallet.balance = Number((localDevWallet.balance + task.reward).toFixed(2));
+  return { ok: true, reward: task.reward, balance: localDevWallet.balance };
 }
 
 export const localDevTransactions = [

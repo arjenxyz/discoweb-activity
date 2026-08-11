@@ -688,6 +688,14 @@ export default function DashboardPage() {
   }, [activityReadinessLoading, isBlockedByReadiness, unauthorized, refreshWalletBalance]);
 
   useEffect(() => {
+    const onWalletRefresh = () => {
+      void refreshWalletRef.current?.();
+    };
+    window.addEventListener('wallet:refresh', onWalletRefresh);
+    return () => window.removeEventListener('wallet:refresh', onWalletRefresh);
+  }, []);
+
+  useEffect(() => {
     if (activityReadinessLoading || isBlockedByReadiness) {
       setOverviewLoading(false);
       return;
