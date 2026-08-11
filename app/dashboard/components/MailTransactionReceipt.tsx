@@ -1,11 +1,22 @@
 'use client';
 
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import type { MailItem } from '../types';
-import { LuCheck, LuCopy, LuGift, LuMessageSquareText, LuTicket, LuUser } from 'react-icons/lu';
+import {
+  LuCheck,
+  LuCopy,
+  LuGift,
+  LuMessageSquareText,
+  LuPercent,
+  LuShoppingBag,
+  LuTicket,
+  LuTimer,
+  LuUser,
+  LuUsers,
+} from 'react-icons/lu';
 
-export type MailTxnKind = 'transfer' | 'promotion';
+export type MailTxnKind = 'transfer' | 'promotion' | 'discount';
 
 type TransferMeta = {
   kind: 'transfer';
@@ -23,9 +34,21 @@ type PromoMeta = {
   balanceAfter: number | null;
 };
 
+type DiscountMeta = {
+  kind: 'discount';
+  code: string | null;
+  percent: number;
+  minSpend: number | null;
+  maxUses: number | null;
+  perUserLimit: number | null;
+  expiresAt: string | null;
+  note: string | null;
+};
+
 export type ParsedTxn =
   | { kind: 'transfer'; data: TransferMeta }
-  | { kind: 'promotion'; data: PromoMeta };
+  | { kind: 'promotion'; data: PromoMeta }
+  | { kind: 'discount'; data: DiscountMeta };
 
 const num = (v: unknown): number | null => {
   if (typeof v === 'number' && Number.isFinite(v)) return v;
@@ -56,8 +79,19 @@ export function parseMailTransaction(mail: MailItem): ParsedTxn | null {
 
   const isPromo =
     kind === 'promotion' ||
-    /promosyon\s*kodu/i.test(title) ||
+    /promosyon\s*kodu\s*kullanıldı/i.test(title) ||
+    (/promosyon\s*kodu/i.test(title) && kind !== 'discount') ||
     /promo(tion)?\s*code/i.test(title);
+
+  const isDiscount =
+    kind === 'discount' ||
+    /yeni\s+indirim\s*kodu/i.test(title) ||
+    /özel\s+promosyon\s*kodu/i.test(title) ||
+    /discount\s*code/i.test(title) ||
+    (kind !== 'promotion' &&
+      kind !== 'transfer' &&
+      num(meta.percent) != null &&
+      Boolean(str(meta.code)));
 
   if (isTransfer) {
     const amountFromBody = body.match(/Size\s+([\d.,]+)\s+Papel/i)?.[1]
@@ -88,6 +122,54 @@ export function parseMailTransaction(mail: MailItem): ParsedTxn | null {
           str(meta.senderAvatarUrl) ??
           str(meta.sender_avatar_url) ??
           str(mail.author_avatar_url),
+      },
+    };
+  }
+
+  if (isDiscount) {
+    const percentFromBody = body.match(/(?:İndirim|Discount)\s*:\s*%?\s*([\d.,]+)/i)?.[1]
+      ?? body.match(/%\s*([\d.,]+)/)?.[1];
+    const percent =
+      num(meta.percent) ??
+      (percentFromBody ? Number(String(percentFromBody).replace(',', '.')) : null) ??
+      0;
+    const codeFromBody =
+      body.match(/^([A-Z0-9_-]+)\s+indirim/im)?.[1]
+      ?? body.match(/kodu:\s*([A-Z0-9_-]+)/i)?.[1]
+      ?? null;
+    const minFromBody = body.match(/(?:Minimum sepet|Min(?:imum)?\s*spend)\s*:\s*([\d.,]+)/i)?.[1];
+    const maxFromBody = body.match(/(?:Kullanım limiti|Max(?:imum)?\s*uses)\s*:\s*(\S+)/i)?.[1];
+    const perUserFromBody = body.match(/(?:Kullanıcı başına|Per[- ]?user)\s*:\s*([\d.,]+)/i)?.[1];
+    const expiresFromBody =
+      body.match(/(?:Son kullanma|Expires?(?:\s*at)?)\s*:\s*(.+)$/im)?.[1]?.trim() ?? null;
+    const noteFromBody = body.match(/(?:Not|Note)\s*:\s*(.+)/is)?.[1]?.trim() ?? null;
+
+    const maxUsesRaw = meta.maxUses ?? meta.max_uses;
+    let maxUses = num(maxUsesRaw);
+    if (maxUses == null && maxFromBody) {
+      maxUses = /sınırsız|unlimited|∞/i.test(maxFromBody)
+        ? null
+        : Number(String(maxFromBody).replace(',', '.'));
+      if (maxUses != null && !Number.isFinite(maxUses)) maxUses = null;
+    }
+
+    return {
+      kind: 'discount',
+      data: {
+        kind: 'discount',
+        code: str(meta.code) ?? codeFromBody,
+        percent,
+        minSpend:
+          num(meta.minSpend) ??
+          num(meta.min_spend) ??
+          (minFromBody ? Number(String(minFromBody).replace(',', '.')) : null),
+        maxUses,
+        perUserLimit:
+          num(meta.perUserLimit) ??
+          num(meta.per_user_limit) ??
+          (perUserFromBody ? Number(String(perUserFromBody).replace(',', '.')) : null),
+        expiresAt: str(meta.expiresAt) ?? str(meta.expires_at) ?? expiresFromBody,
+        note: str(meta.note) ?? noteFromBody,
       },
     };
   }
@@ -196,6 +278,50 @@ function AmountHero({
   );
 }
 
+function PercentHero({ percent, label }: { percent: number; label: string }) {
+  return (
+    <div className="relative overflow-hidden rounded-2xl border border-sky-500/20 bg-gradient-to-br from-sky-500/15 via-sky-500/5 to-transparent px-5 py-6 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+      <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.22em] text-white/35">{label}</p>
+      <div className="flex items-center justify-center gap-2">
+        <LuPercent className="h-8 w-8 text-sky-300/90 drop-shadow-[0_0_12px_rgba(56,189,248,0.35)]" />
+        <span className="text-4xl font-black tabular-nums tracking-tight text-sky-300 sm:text-5xl">
+          {percent.toLocaleString('tr-TR', { maximumFractionDigits: 2 })}
+        </span>
+        <span className="pt-1 text-base font-bold text-sky-400/80">%</span>
+      </div>
+    </div>
+  );
+}
+
+function DetailRow({
+  icon,
+  label,
+  children,
+  accent = 'neutral',
+}: {
+  icon: ReactNode;
+  label: string;
+  children: ReactNode;
+  accent?: 'neutral' | 'emerald' | 'sky';
+}) {
+  const border =
+    accent === 'emerald'
+      ? 'border-emerald-500/15 bg-emerald-500/5'
+      : accent === 'sky'
+        ? 'border-sky-500/15 bg-sky-500/5'
+        : 'border-white/[0.06] bg-black/20';
+
+  return (
+    <div className={`flex items-center justify-between gap-3 rounded-xl border px-3 py-2.5 ${border}`}>
+      <div className="flex min-w-0 items-center gap-2">
+        {icon}
+        <span className="text-xs text-white/40">{label}</span>
+      </div>
+      <div className="min-w-0 shrink-0 text-right">{children}</div>
+    </div>
+  );
+}
+
 export default function MailTransactionReceipt({ mail, txn, t }: Props) {
   if (txn.kind === 'transfer') {
     const { amount, note, senderId, senderUsername, senderAvatarUrl } = txn.data;
@@ -247,6 +373,90 @@ export default function MailTransactionReceipt({ mail, txn, t }: Props) {
               {t('mail_txn_note')}
             </div>
             <blockquote className="border-l-2 border-amber-400/40 pl-3 text-sm leading-relaxed text-white/75">
+              {note}
+            </blockquote>
+          </div>
+        ) : null}
+      </div>
+    );
+  }
+
+  if (txn.kind === 'discount') {
+    const { code, percent, minSpend, maxUses, perUserLimit, expiresAt, note } = txn.data;
+    const expiresLabel = (() => {
+      if (!expiresAt) return t('mail_txn_discount_no_expiry');
+      if (/yok|none|—|-/i.test(expiresAt) && !/\d/.test(expiresAt)) {
+        return t('mail_txn_discount_no_expiry');
+      }
+      const parsed = Date.parse(expiresAt);
+      if (Number.isFinite(parsed)) {
+        return new Date(parsed).toLocaleString('tr-TR');
+      }
+      return expiresAt;
+    })();
+
+    return (
+      <div className="space-y-4">
+        <PercentHero percent={percent} label={t('mail_txn_discount_rate')} />
+
+        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4">
+          <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-white/30">
+            {t('mail_txn_discount_details')}
+          </p>
+          <div className="space-y-3">
+            {code ? (
+              <DetailRow
+                accent="sky"
+                icon={<LuTicket className="h-4 w-4 shrink-0 text-sky-400" />}
+                label={t('mail_txn_discount_code')}
+              >
+                <CopyIdButton value={code} t={t} />
+              </DetailRow>
+            ) : null}
+
+            {minSpend != null ? (
+              <DetailRow
+                icon={<LuShoppingBag className="h-4 w-4 text-white/35" />}
+                label={t('mail_txn_discount_min_spend')}
+              >
+                <span className="flex items-center gap-1.5 text-sm font-bold tabular-nums text-white">
+                  <Image src="/papel.gif" alt="" width={16} height={16} className="h-4 w-4" unoptimized />
+                  {minSpend.toLocaleString('tr-TR', { maximumFractionDigits: 2 })}
+                  <span className="text-xs font-semibold text-amber-400">Papel</span>
+                </span>
+              </DetailRow>
+            ) : null}
+
+            <DetailRow
+              icon={<LuUsers className="h-4 w-4 text-white/35" />}
+              label={t('mail_txn_discount_usage')}
+            >
+              <span className="text-sm font-semibold text-white">
+                {maxUses == null
+                  ? t('mail_txn_discount_unlimited')
+                  : t('mail_txn_discount_max_uses').replace('{count}', String(maxUses))}
+                {perUserLimit != null
+                  ? ` · ${t('mail_txn_discount_per_user').replace('{count}', String(perUserLimit))}`
+                  : ''}
+              </span>
+            </DetailRow>
+
+            <DetailRow
+              icon={<LuTimer className="h-4 w-4 text-white/35" />}
+              label={t('mail_txn_discount_expires')}
+            >
+              <span className="text-sm font-semibold text-white">{expiresLabel}</span>
+            </DetailRow>
+          </div>
+        </div>
+
+        {note ? (
+          <div className="rounded-2xl border border-white/[0.08] bg-gradient-to-br from-white/[0.05] to-transparent p-4">
+            <div className="mb-2.5 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.18em] text-white/30">
+              <LuMessageSquareText className="h-3.5 w-3.5 text-sky-300/80" />
+              {t('mail_txn_note')}
+            </div>
+            <blockquote className="border-l-2 border-sky-400/40 pl-3 text-sm leading-relaxed text-white/75">
               {note}
             </blockquote>
           </div>

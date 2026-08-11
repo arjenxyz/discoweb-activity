@@ -249,15 +249,19 @@ export default function MailDetailModal({
                 </div>
               ) : (
                 <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-[#5865F2]/15 text-lg">
-                  {txn?.kind === 'promotion' ? '🎁' : senderCfg.avatar}
+                  {txn?.kind === 'promotion' ? '🎁' : txn?.kind === 'discount' ? '🏷️' : senderCfg.avatar}
                 </div>
               )}
               <div>
                 <div className="flex items-center gap-1.5">
                   <span className="text-sm font-semibold text-white">
-                    {txn?.kind === 'promotion' ? 'DiscoWeb' : transferSenderName}
+                    {txn?.kind === 'promotion' || txn?.kind === 'discount'
+                      ? 'DiscoWeb'
+                      : transferSenderName}
                   </span>
-                  {(txn?.kind === 'promotion' || senderCfg.verified) && (
+                  {(txn?.kind === 'promotion' ||
+                    txn?.kind === 'discount' ||
+                    senderCfg.verified) && (
                     <LuShield className="h-3.5 w-3.5 text-[#5865F2]" title={t('mail_detail_verified_tooltip')} />
                   )}
                 </div>
