@@ -13,6 +13,7 @@ CREATE OR REPLACE FUNCTION public.apply_daily_earning(
 )
 RETURNS numeric
 LANGUAGE plpgsql
+SET search_path TO public, pg_temp
 AS $body$
 DECLARE
   v_amount numeric;
