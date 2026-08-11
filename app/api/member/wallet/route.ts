@@ -4,6 +4,7 @@ import { checkMaintenance } from '@/lib/maintenance';
 import { requireSessionUser } from '@/lib/auth';
 import { getSelectedGuildId } from '@/lib/guild';
 import { getUserMariBalance } from '@/lib/mariWallet';
+import { isLocalDevRequest, localDevWallet } from '@/lib/localDev';
 
 const getSupabase = () => {
   const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -21,6 +22,10 @@ const getTodayStartIso = (): string => {
 };
 
 export async function GET(request: Request) {
+  if (isLocalDevRequest(request)) {
+    return NextResponse.json(localDevWallet);
+  }
+
   const maintenance = await checkMaintenance(['site']);
   if (maintenance.blocked) {
     return NextResponse.json(

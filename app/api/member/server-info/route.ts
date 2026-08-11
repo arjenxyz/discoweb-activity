@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getSelectedGuildId } from '@/lib/guild';
+import { isLocalDevRequest, localDevServerInfo } from '@/lib/localDev';
 
 const getSupabase = () => {
   const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -12,21 +13,8 @@ const getSupabase = () => {
 };
 
 export async function GET(request: Request) {
-  // Development mode bypass for Activity
-  if (process.env.NODE_ENV === 'development') {
-    return NextResponse.json({
-      id: 'dev-guild',
-      name: 'Development Server',
-      iconUrl: '/gif/cat.gif',
-      memberCount: 100,
-      isSetup: true,
-      features: {
-        shop: true,
-        daily: true,
-        coupons: true,
-        leaderboard: true
-      }
-    });
+  if (isLocalDevRequest(request)) {
+    return NextResponse.json(localDevServerInfo);
   }
 
   const supabase = getSupabase();

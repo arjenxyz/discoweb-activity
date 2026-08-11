@@ -12,6 +12,7 @@ import { createClient } from '@supabase/supabase-js';
 import { requireSessionUser } from '@/lib/auth';
 import { getSelectedGuildId } from '@/lib/guild';
 import { runQuizTick } from '@/lib/quiz/tick';
+import { isLocalDevRequest } from '@/lib/localDev';
 
 const getSupabase = () => {
   const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -21,6 +22,10 @@ const getSupabase = () => {
 };
 
 export async function GET(request: Request) {
+  if (isLocalDevRequest(request)) {
+    return NextResponse.json({ events: [], upcoming: [], live: [] });
+  }
+
   const supabase = getSupabase();
   if (!supabase) return NextResponse.json({ error: 'server_error' }, { status: 500 });
 

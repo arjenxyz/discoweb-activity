@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireSessionUser } from '@/lib/auth';
+import { isLocalDevRequest } from '@/lib/localDev';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,6 +10,10 @@ const DEV_USER_ID = process.env.DEVELOPER_DISCORD_USER_ID ?? '';
 
 export async function GET(request: Request) {
   console.log('is-developer API called');
+
+  if (isLocalDevRequest(request)) {
+    return NextResponse.json({ isDeveloper: true });
+  }
   
   const auth = await requireSessionUser(request);
   console.log('Auth result:', auth.ok, auth.userId);

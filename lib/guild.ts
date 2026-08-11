@@ -1,4 +1,9 @@
 import { cookies } from 'next/headers';
+import {
+  isLocalDev,
+  isLocalDevRequest,
+  LOCAL_DEV_GUILD_ID,
+} from '@/lib/localDev';
 
 const normalizeGuildId = (value?: string | null): string | null => {
   if (!value) return null;
@@ -13,6 +18,7 @@ const normalizeGuildId = (value?: string | null): string | null => {
  * 1) query param `guild_id` (used by Activity iframe)
  * 2) cookie `selected_guild_id` (legacy selection mechanism)
  * 3) env DISCORD_GUILD_ID
+ * 4) localhost fallback: LOCAL_DEV_GUILD_ID
  *
  * Returns null only if none of the above are available.
  */
@@ -34,6 +40,12 @@ export const getSelectedGuildId = async (request?: Request): Promise<string | nu
   const envGuildId = normalizeGuildId(process.env.DISCORD_GUILD_ID ?? process.env.NEXT_PUBLIC_DISCORD_GUILD_ID);
   if (envGuildId) return envGuildId;
 
-  // As a last fallback, return a default ID if set. This should be set by deployment env.
-  return normalizeGuildId(process.env.DEFAULT_DISCORD_GUILD_ID);
+  const defaultGuildId = normalizeGuildId(process.env.DEFAULT_DISCORD_GUILD_ID);
+  if (defaultGuildId) return defaultGuildId;
+
+  if ((request && isLocalDevRequest(request)) || (!request && (await isLocalDev()))) {
+    return LOCAL_DEV_GUILD_ID;
+  }
+
+  return null;
 };

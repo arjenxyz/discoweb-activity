@@ -3,6 +3,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { checkMaintenance } from '@/lib/maintenance';
 import { requireSessionUser } from '@/lib/auth';
 import { getSelectedGuildId } from '@/lib/guild';
+import { isLocalDevRequest, localDevLoadAccrued } from '@/lib/localDev';
 
 const getSupabase = (): SupabaseClient | null => {
   const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -29,6 +30,10 @@ const isDebugRequest = (request: Request): boolean => {
 
 /** GET — return pending (unsettled) earnings summary without claiming */
 export async function GET(request: Request) {
+  if (isLocalDevRequest(request)) {
+    return NextResponse.json(localDevLoadAccrued);
+  }
+
   const maintenance = await checkMaintenance(['site']);
   if (maintenance.blocked) {
     return NextResponse.json({ error: 'maintenance', key: maintenance.key, reason: maintenance.reason }, { status: 503 });
@@ -107,6 +112,10 @@ export async function GET(request: Request) {
 /** POST — claim (settle) all pending earnings into wallet */
 export async function POST(request: Request) {
   try {
+    if (isLocalDevRequest(request)) {
+      return NextResponse.json({ claimed: localDevLoadAccrued.pending, ...localDevLoadAccrued });
+    }
+
     const debugEnabled = isDebugRequest(request);
     const maintenance = await checkMaintenance(['site']);
     if (maintenance.blocked) {

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createDefaultFlags, getMaintenanceFlags } from '@/lib/maintenance';
+import { isLocalDev } from '@/lib/localDev';
 
 const getSelectedGuildId = async (): Promise<string | null> => {
   const cookieStore = await cookies();
@@ -41,11 +42,11 @@ const getDiscordProfile = async (userId: string, guildId: string) => {
 };
 
 export async function GET() {
-  // Development mode bypass for Activity
-  if (process.env.NODE_ENV === 'development') {
-    return NextResponse.json({ 
-      flags: {},
-      serverId: 'dev-mode'
+  if (await isLocalDev()) {
+    return NextResponse.json({
+      flags: createDefaultFlags(),
+      updaterProfiles: {},
+      serverId: 'dev-mode',
     });
   }
 

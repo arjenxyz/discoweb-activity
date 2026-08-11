@@ -1,6 +1,11 @@
 import crypto from 'crypto';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
+import {
+  isLocalDev,
+  isLocalDevRequest,
+  LOCAL_DEV_USER_ID,
+} from '@/lib/localDev';
 
 // Simple translation function for auth library
 const t = (key: string, params?: Record<string, string | number>): string => {
@@ -128,9 +133,9 @@ export const clearSessionCookies = (response: NextResponse) => {
 };
 
 export const getSessionUserId = async () => {
-  // Development mode bypass for Activity
-  if (process.env.NODE_ENV === 'development') {
-    return 'dev-user-12345';
+  // Localhost-only: no Discord/Google session required
+  if (await isLocalDev()) {
+    return LOCAL_DEV_USER_ID;
   }
 
   const cookieStore = await cookies();
@@ -206,6 +211,10 @@ const parseCookies = (cookieHeader: string | null): Record<string, string> => {
 };
 
 export const getSessionUserIdFromRequest = (request: Request): string | null => {
+  if (isLocalDevRequest(request)) {
+    return LOCAL_DEV_USER_ID;
+  }
+
   const authHeader = request.headers.get('Authorization');
 
   let token: string | null = null;
@@ -253,6 +262,14 @@ export const getSessionUserIdFromRequest = (request: Request): string | null => 
 };
 
 export const requireSessionUser = async (request?: Request) => {
+  if (request && isLocalDevRequest(request)) {
+    return { ok: true as const, userId: LOCAL_DEV_USER_ID };
+  }
+
+  if (!request && (await isLocalDev())) {
+    return { ok: true as const, userId: LOCAL_DEV_USER_ID };
+  }
+
   // Bearer token varsa önce onu dene (Activity iframe desteği)
   if (request) {
     const bearerUserId = getSessionUserIdFromRequest(request);

@@ -7,6 +7,7 @@ import { logWebEvent } from '@/lib/serverLogger';
 import { logBotError } from '@/lib/activityLogger';
 import { cleanupExpiredRolesForUser } from '@/lib/roleCleanup';
 import { getSelectedGuildId } from '@/lib/guild';
+import { isLocalDevRequest, localDevStore } from '@/lib/localDev';
 
 const GUILD_ID = process.env.DISCORD_GUILD_ID ?? null;
 
@@ -21,39 +22,8 @@ const getSupabase = (): SupabaseClient | null => {
 
 
 export async function GET(request: Request) {
-  // Development mode bypass for Activity
-  if (process.env.NODE_ENV === 'development') {
-    return NextResponse.json({
-      categories: [
-        {
-          id: 'roles',
-          name: 'Roller',
-          description: 'Sunucu rollerini satın al',
-          items: [
-            {
-              id: 'vip',
-              name: 'VIP Rolü',
-              description: 'Özel renk ve yetkiler',
-              price: 500,
-              icon: '/gif/cat.gif',
-              type: 'role',
-              available: true
-            },
-            {
-              id: 'premium',
-              name: 'Premium Rolü',
-              description: 'Tüm premium özellikler',
-              price: 1000,
-              icon: '/gif/cat.gif',
-              type: 'role',
-              available: true
-            }
-          ]
-        }
-      ],
-      featured: [],
-      limited: []
-    });
+  if (isLocalDevRequest(request)) {
+    return NextResponse.json(localDevStore);
   }
 
   const maintenance = await checkMaintenance(['site', 'store']);

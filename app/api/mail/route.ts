@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { getSessionUserId, requireSessionUser } from '@/lib/auth';
 import { getSelectedGuildId } from '@/lib/guild';
+import { isLocalDevRequest, localDevMails } from '@/lib/localDev';
 
 type Database = {
   public: {
@@ -94,6 +95,10 @@ const getSupabase = (): SupabaseClient<Database> | null => {
 
 
 export async function GET(request: NextRequest) {
+  if (isLocalDevRequest(request)) {
+    return NextResponse.json(localDevMails);
+  }
+
   const supabase = getSupabase();
   if (!supabase) {
     return NextResponse.json({ error: 'missing_service_role' }, { status: 500 });

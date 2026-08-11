@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { getSessionUserIdFromRequest, requireSessionUser } from '@/lib/auth';
+import { requireSessionUser } from '@/lib/auth';
 import { checkMaintenance } from '@/lib/maintenance';
 import { getSelectedGuildId } from '@/lib/guild';
 import { logNewUser } from '@/lib/activityLogger';
+import { isLocalDevRequest, localDevProfile } from '@/lib/localDev';
 
 const getSupabase = () => {
   const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -15,6 +16,10 @@ const getSupabase = () => {
 };
 
 export async function GET(request: Request) {
+  if (isLocalDevRequest(request)) {
+    return NextResponse.json(localDevProfile);
+  }
+
   // Allow auth via bearer token (for embedded activity where cookies may be blocked)
   const session = await requireSessionUser(request);
   if (!session.ok) {

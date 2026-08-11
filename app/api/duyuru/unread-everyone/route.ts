@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServiceClient } from '@/lib/supabaseServiceClient';
 import { requireSessionUser } from '@/lib/auth';
+import { isLocalDevRequest } from '@/lib/localDev';
 
 export async function GET(request: NextRequest) {
   try {
+    if (isLocalDevRequest(request)) {
+      return NextResponse.json({ count: 0 });
+    }
+
     const auth = await requireSessionUser(request);
     if (!auth.ok) {
       return NextResponse.json({ count: 0 });

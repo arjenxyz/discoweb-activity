@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { requireSessionUser } from '@/lib/auth';
 import { getSelectedGuildId } from '@/lib/guild';
 import { checkMaintenance } from '@/lib/maintenance';
+import { isLocalDevRequest, localDevReadiness } from '@/lib/localDev';
 
 type ReadinessStatus =
   | 'ready'
@@ -174,6 +175,10 @@ const resolveGuildAdminFromOAuth = async (
 };
 
 export async function GET(request: Request) {
+  if (isLocalDevRequest(request)) {
+    return NextResponse.json(localDevReadiness);
+  }
+
   const maintenance = await checkMaintenance(['site']);
   if (maintenance.blocked) {
     return NextResponse.json(

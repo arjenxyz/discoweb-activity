@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { requireSessionUser } from '@/lib/auth';
+import { isLocalDevRequest, localDevUser } from '@/lib/localDev';
 
 const getSupabase = () => {
   const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -12,6 +13,10 @@ const getSupabase = () => {
 };
 
 export async function GET(request: Request) {
+  if (isLocalDevRequest(request)) {
+    return NextResponse.json(localDevUser);
+  }
+
   const session = await requireSessionUser(request);
   if (!session.ok) {
     return session.response;
@@ -52,4 +57,3 @@ export async function GET(request: Request) {
     avatar: avatarUrl,
   });
 }
-

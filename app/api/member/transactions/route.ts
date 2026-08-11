@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { createClient } from '@supabase/supabase-js';
 import { checkMaintenance } from '@/lib/maintenance';
 import { getSessionUserId } from '@/lib/auth';
+import { isLocalDev } from '@/lib/localDev';
 
 const TIMEZONE_OFFSET_MINUTES = Number(process.env.PAPEL_TIMEZONE_OFFSET || 180);
 
@@ -22,6 +23,38 @@ const getSelectedGuildId = async (): Promise<string | null> => {
 };
 
 export async function GET() {
+  if (await isLocalDev()) {
+    const now = new Date().toISOString();
+    return NextResponse.json({
+      orders: [
+        {
+          id: 'order-vip-1',
+          amount: 500,
+          status: 'paid',
+          created_at: now,
+          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          failure_reason: null,
+          item_title: 'VIP Rolü',
+          role_id: 'role-vip',
+          duration_days: 30,
+          can_refund: false,
+        },
+        {
+          id: 'order-pending-1',
+          amount: 1000,
+          status: 'pending',
+          created_at: now,
+          expires_at: null,
+          failure_reason: null,
+          item_title: 'Premium Rolü',
+          role_id: 'role-premium',
+          duration_days: 30,
+          can_refund: true,
+        },
+      ],
+    });
+  }
+
   const maintenance = await checkMaintenance(['site', 'transactions']);
   if (maintenance.blocked) {
     return NextResponse.json(

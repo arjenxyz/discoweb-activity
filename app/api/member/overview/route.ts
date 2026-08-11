@@ -5,6 +5,7 @@ import { getSessionUserId } from '@/lib/auth';
 import { cleanupExpiredRolesForUser } from '@/lib/roleCleanup';
 import { getSupabaseServiceClient } from '@/lib/supabaseServiceClient';
 import { getSelectedGuildId } from '@/lib/guild';
+import { isLocalDevRequest, localDevOverview } from '@/lib/localDev';
 
 type PapelRow = { user_id: string; balance: number | null };
 
@@ -28,6 +29,10 @@ type PerkRow = {
 import { NextRequest } from 'next/server';
 
 export async function GET(request: NextRequest) {
+  if (isLocalDevRequest(request)) {
+    return NextResponse.json(localDevOverview);
+  }
+
   // Development mode'da da gerçek Supabase verilerini çek
   const selectedGuildId = await getSelectedGuildId(request);
   if (!selectedGuildId) {

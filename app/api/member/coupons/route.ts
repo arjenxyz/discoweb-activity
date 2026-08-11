@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { getSessionUserId } from '@/lib/auth';
 import { getSelectedGuildId } from '@/lib/guild';
+import { isLocalDevRequest, localDevCoupons } from '@/lib/localDev';
 
 const getSupabase = (): SupabaseClient | null => {
   const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -35,32 +36,8 @@ const FALLBACK_SERVER_ID = 'default-server-id';
 
 export async function GET(request: Request) {
   try {
-    // Development mode bypass for Activity
-    if (process.env.NODE_ENV === 'development') {
-      return NextResponse.json({
-        coupons: [
-          {
-            id: 'welcome10',
-            code: 'WELCOME10',
-            discount: 10,
-            description: 'Hoş geldin indirim! İlk alışverişinde %10 indirim',
-            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-            used: false,
-            maxUses: 1,
-            type: 'percentage'
-          },
-          {
-            id: 'weekend20',
-            code: 'WEEKEND20',
-            discount: 20,
-            description: 'Hafta sonu özel! %20 indirim',
-            expiresAt: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-            used: false,
-            maxUses: 1,
-            type: 'percentage'
-          }
-        ]
-      });
+    if (isLocalDevRequest(request)) {
+      return NextResponse.json(localDevCoupons);
     }
 
     const supabase = getSupabase();

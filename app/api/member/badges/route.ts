@@ -3,8 +3,13 @@ import { getSessionUserId } from '@/lib/auth';
 import { getSupabaseServiceClient } from '@/lib/supabaseServiceClient';
 import { getSelectedGuildId } from '@/lib/guild';
 import { checkMaintenance } from '@/lib/maintenance';
+import { isLocalDevRequest, localDevBadges } from '@/lib/localDev';
 
 export async function GET(request: NextRequest) {
+  if (isLocalDevRequest(request)) {
+    return NextResponse.json(localDevBadges);
+  }
+
   const selectedGuildId = await getSelectedGuildId(request);
   if (!selectedGuildId) {
     return NextResponse.json({ error: 'no_guild_selected' }, { status: 400 });

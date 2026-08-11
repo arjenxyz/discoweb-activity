@@ -184,6 +184,11 @@ function isDiscordEmbedRequest(request: NextRequest): boolean {
   return discordReferrer || discordOrigin || discordUserAgent || crossSiteEmbed;
 }
 
+const isLocalDevHost = (hostname: string) => {
+  const host = hostname.toLowerCase();
+  return host === 'localhost' || host === '127.0.0.1' || host === '::1';
+};
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -192,6 +197,19 @@ export async function middleware(request: NextRequest) {
     IGNORED_PATHS.includes(pathname) ||
     isStaticAsset(pathname)
   ) {
+    return NextResponse.next();
+  }
+
+  // Localhost-only: full access without Discord session (development)
+  const isLocalhost =
+    process.env.NODE_ENV !== 'production' && isLocalDevHost(request.nextUrl.hostname);
+  if (isLocalhost) {
+    if (pathname === '/') {
+      return redirectToActivity(request);
+    }
+    if (LEGACY_PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix))) {
+      return redirectToActivity(request);
+    }
     return NextResponse.next();
   }
 

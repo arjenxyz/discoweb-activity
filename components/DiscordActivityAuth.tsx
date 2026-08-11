@@ -324,8 +324,38 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
       const frameIdFromUrl = urlParams.get('frame_id') || urlParams.get('instance_id');
       const isDevMode = process.env.NODE_ENV === 'development';
       const inDiscordRuntime = isDiscordEmbedRuntime();
+      const isLocalhost =
+        window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1' ||
+        window.location.hostname === '[::1]';
 
-      addLog(`guildId=${guildId}, dev=${isDevMode}, discord=${inDiscordRuntime}`);
+      addLog(`guildId=${guildId}, dev=${isDevMode}, discord=${inDiscordRuntime}, localhost=${isLocalhost}`);
+
+      // Localhost: Discord/Google OAuth yok — örnek session + guild ile devam
+      if (isDevMode && isLocalhost && !inDiscordRuntime) {
+        addLog('Localhost oturumsuz erişim aktif');
+        try {
+          const res = await fetch(apiUrl('/api/activity/dev-session'), { signal, credentials: 'include' });
+          if (res.ok) {
+            const json = (await res.json()) as { token?: string };
+            if (json.token) {
+              try { localStorage.setItem('discord_bearer_token', json.token); } catch {}
+            }
+          }
+        } catch {
+          // cookie/session olmadan da API localhost bypass ile çalışır
+        }
+        const selectedGuild = guildId || 'dev-guild';
+        setCookie('selected_guild_id', selectedGuild);
+        try {
+          localStorage.setItem('selectedGuildId', selectedGuild);
+          localStorage.setItem('auth_ready', '1');
+        } catch {}
+        setDiscordLocale(navigator.language);
+        setIsLoading(false);
+        addLog('Localhost session hazır');
+        return;
+      }
 
       // DM veya grup sohbeti tespiti: Discord runtime'da guild_id yoksa DmScreen göster
       if (inDiscordRuntime && !isDevMode && !guildId) {
@@ -460,14 +490,15 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
       if (isDevMode && !inDiscordRuntime) {
         addLog('Dev mode fallback session oluşturuluyor...');
         try {
-          const res = await fetch(apiUrl('/api/activity/dev-session'), { signal });
+          const res = await fetch(apiUrl('/api/activity/dev-session'), { signal, credentials: 'include' });
           if (res.ok) {
             const json = await res.json();
             if (json.token) try { localStorage.setItem('discord_bearer_token', json.token); } catch {}
           }
         } catch {}
-        setCookie('discord_session', 'dev-session-12345');
+        // Geçerli session cookie sunucu tarafında set edilir; client'ta geçersiz token yazma
         setCookie('selected_guild_id', guildId || 'dev-guild');
+        try { localStorage.setItem('selectedGuildId', guildId || 'dev-guild'); } catch {}
         setIsLoading(false);
         addLog('Dev session oluşturuldu');
         return;

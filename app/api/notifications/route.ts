@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createClient } from '@supabase/supabase-js';
 import { getSessionUserId, requireSessionUser } from '@/lib/auth';
+import { isLocalDev, localDevNotifications } from '@/lib/localDev';
 
 const getSelectedGuildId = async (): Promise<string | null> => {
   const cookieStore = await cookies();
@@ -50,6 +51,10 @@ const isVerifiedUser = async (supabase: any, userId: string | null) => {
 };
 
 export async function GET() {
+  if (await isLocalDev()) {
+    return NextResponse.json(localDevNotifications);
+  }
+
   const supabase = getSupabase();
   if (!supabase) {
     return NextResponse.json({ error: 'missing_service_role' }, { status: 500 });
