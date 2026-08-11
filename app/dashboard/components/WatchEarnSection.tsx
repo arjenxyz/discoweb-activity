@@ -577,7 +577,6 @@ export default function WatchEarnSection() {
                 </div>
                 <div className="flex items-center justify-between text-[11px] text-white/55">
                   <span className="font-mono tabular-nums">{formatRemaining(currentTime)}</span>
-                  <span className="text-white/40">İleri saramazsın</span>
                   <span className="font-mono tabular-nums">{duration > 0 ? formatRemaining(duration) : '—:—'}</span>
                 </div>
               </div>
