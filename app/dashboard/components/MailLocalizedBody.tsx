@@ -12,6 +12,7 @@ import {
   LuGift,
   LuPackage,
   LuShoppingBag,
+  LuTrophy,
   LuTriangleAlert,
   LuWallet,
 } from 'react-icons/lu';
@@ -23,7 +24,9 @@ type Props = {
     | 'order_confirmed'
     | 'order_rejected'
     | 'earn_claim'
-    | 'earn_rejected';
+    | 'earn_rejected'
+    | 'quiz_reward'
+    | 'quiz_motivation';
   t: MailT;
 };
 
@@ -88,8 +91,131 @@ export default function MailLocalizedBody({ mail, template, t }: Props) {
   const meta = getMailMeta(mail);
   const isEarnReject = template === 'earn_rejected';
   const isEarn = template === 'earn_claim' || isEarnReject;
+  const isQuizMotivation = template === 'quiz_motivation';
+  const isQuiz = template === 'quiz_reward' || isQuizMotivation;
   const isOrderReject = template === 'order_rejected';
   const isOrder = template === 'order' || template === 'order_confirmed' || isOrderReject;
+
+  if (isQuiz) {
+    const eventTitle = String(meta.quiz_title ?? meta.event_title ?? 'Quiz');
+    const eventId = String(meta.event_id ?? meta.eventId ?? '');
+    const total = num(meta.total_earned ?? meta.totalEarn);
+    const correct = num(meta.total_correct ?? meta.totalCorrect);
+    const questions = num(meta.total_questions ?? meta.totalQuestions);
+    const wrong = num(meta.wrong_count ?? meta.wrongCount);
+    const lastPosition = num(meta.last_position ?? meta.lastPosition);
+    const perfectBonus = num(meta.perfect_bonus ?? meta.perfectBonus);
+    const isPerfect = Boolean(meta.is_perfect ?? meta.isPerfect);
+    const eliminated = Boolean(meta.eliminated);
+    const breakdown = Array.isArray(meta.breakdown) ? meta.breakdown : [];
+    const accentBorder = isQuizMotivation ? 'border-amber-400/25' : 'border-emerald-500/25';
+    const accentIcon = isQuizMotivation
+      ? 'border-amber-400/25 bg-amber-500/10 text-amber-300'
+      : 'border-emerald-500/25 bg-emerald-500/10 text-emerald-300';
+
+    return (
+      <div className={`w-full min-w-0 overflow-hidden rounded-2xl border ${accentBorder} bg-white/[0.03]`}>
+        <div className="min-w-0 px-4 py-4">
+          <p className="mb-2.5 text-[10px] font-bold uppercase tracking-[0.18em] text-white/30">
+            {isQuizMotivation ? t('mail_quiz_status_joined') : t('mail_quiz_status_reward')}
+          </p>
+          <div className="flex min-w-0 items-start gap-3">
+            <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full border ${accentIcon}`}>
+              {isQuizMotivation ? <LuTrophy className="h-5 w-5" /> : <LuGift className="h-5 w-5" />}
+            </div>
+            <div className="min-w-0 flex-1 space-y-1.5">
+              <p className="text-base font-semibold text-white">DiscoWeb</p>
+              <p className="break-words text-sm text-white/70 [overflow-wrap:anywhere]">{eventTitle}</p>
+              {eventId ? (
+                <div className="flex min-w-0 flex-col gap-1 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2">
+                  <span className="shrink-0 text-[11px] text-white/35">{t('mail_quiz_event_id')}</span>
+                  <CopyButton value={eventId} t={t} />
+                </div>
+              ) : null}
+            </div>
+          </div>
+        </div>
+
+        <div className="mx-4 border-t border-white/[0.07]" />
+
+        <div className="min-w-0 space-y-3 px-4 py-4">
+          {!isQuizMotivation ? (
+            <div>
+              <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-white/30">
+                {t('mail_quiz_total')}
+              </p>
+              <PapelAmount amount={total} className="text-3xl text-emerald-300" />
+            </div>
+          ) : null}
+
+          <div className="min-w-0 space-y-2 rounded-xl border border-white/[0.06] bg-black/20 px-3 py-3">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-xs text-white/40">{t('mail_quiz_correct')}</span>
+              <span className="text-sm font-semibold text-white">
+                {correct} / {questions || '—'}
+              </span>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-xs text-white/40">{t('mail_quiz_wrong')}</span>
+              <span className="text-sm font-semibold text-white">{wrong}</span>
+            </div>
+            {isQuizMotivation ? (
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-xs text-white/40">{t('mail_quiz_reached')}</span>
+                <span className="text-sm font-semibold text-white">
+                  {lastPosition} / {questions || '—'}
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-xs text-white/40">{t('mail_quiz_perfect')}</span>
+                <span className="text-sm font-semibold text-white">
+                  {isPerfect ? t('mail_quiz_yes') : t('mail_quiz_no')}
+                </span>
+              </div>
+            )}
+            {isQuizMotivation && eliminated ? (
+              <p className="pt-1 text-[11px] text-amber-200/70">{t('mail_quiz_eliminated')}</p>
+            ) : null}
+          </div>
+
+          {!isQuizMotivation && (breakdown.length > 0 || perfectBonus > 0) ? (
+            <div className="min-w-0 rounded-xl border border-white/[0.06] bg-black/20 p-3">
+              <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-white/30">
+                {t('mail_quiz_payout')}
+              </p>
+              <ul className="min-w-0 space-y-2">
+                {breakdown.map((raw, idx) => {
+                  const item = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
+                  const position = num(item.position);
+                  const reward = num(item.papel_reward ?? item.papelReward);
+                  const label = typeof item.label === 'string' && item.label.trim() ? item.label.trim() : null;
+                  return (
+                    <li
+                      key={`${position}-${idx}`}
+                      className="flex min-w-0 items-start justify-between gap-3 text-sm"
+                    >
+                      <span className="min-w-0 break-words text-white/80">
+                        {t('mail_quiz_checkpoint', { position })}
+                        {label ? <span className="text-white/40"> · {label}</span> : null}
+                      </span>
+                      <PapelAmount amount={reward} className="shrink-0 text-sm text-white" />
+                    </li>
+                  );
+                })}
+                {perfectBonus > 0 ? (
+                  <li className="flex min-w-0 items-start justify-between gap-3 text-sm">
+                    <span className="min-w-0 break-words text-white/80">{t('mail_quiz_perfect_bonus')}</span>
+                    <PapelAmount amount={perfectBonus} className="shrink-0 text-sm text-white" />
+                  </li>
+                ) : null}
+              </ul>
+            </div>
+          ) : null}
+        </div>
+      </div>
+    );
+  }
 
   if (isEarn) {
     const total = num(meta.total ?? meta.totalTransferred);

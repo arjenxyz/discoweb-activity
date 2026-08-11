@@ -265,7 +265,11 @@ export default function MailDetailModal({
                             ? '💰'
                             : mailTemplate === 'earn_rejected'
                               ? '❌'
-                              : senderCfg.avatar}
+                              : mailTemplate === 'quiz_reward'
+                                ? '🏆'
+                                : mailTemplate === 'quiz_motivation'
+                                  ? '🎯'
+                                  : senderCfg.avatar}
                 </div>
               )}
               <div>
@@ -278,7 +282,9 @@ export default function MailDetailModal({
                     mailTemplate === 'order_confirmed' ||
                     mailTemplate === 'order_rejected' ||
                     mailTemplate === 'earn_claim' ||
-                    mailTemplate === 'earn_rejected'
+                    mailTemplate === 'earn_rejected' ||
+                    mailTemplate === 'quiz_reward' ||
+                    mailTemplate === 'quiz_motivation'
                       ? 'DiscoWeb'
                       : transferSenderName}
                   </span>
@@ -289,6 +295,8 @@ export default function MailDetailModal({
                     mailTemplate === 'order_rejected' ||
                     mailTemplate === 'earn_claim' ||
                     mailTemplate === 'earn_rejected' ||
+                    mailTemplate === 'quiz_reward' ||
+                    mailTemplate === 'quiz_motivation' ||
                     senderCfg.verified) && (
                     <LuShield className="h-3.5 w-3.5 text-[#5865F2]" title={t('mail_detail_verified_tooltip')} />
                   )}
@@ -330,7 +338,9 @@ export default function MailDetailModal({
               mailTemplate === 'order_rejected' ||
               mailTemplate === 'order' ||
               mailTemplate === 'earn_claim' ||
-              mailTemplate === 'earn_rejected' ? (
+              mailTemplate === 'earn_rejected' ||
+              mailTemplate === 'quiz_reward' ||
+              mailTemplate === 'quiz_motivation' ? (
               <MailLocalizedBody
                 mail={mail}
                 template={
@@ -340,7 +350,9 @@ export default function MailDetailModal({
                         | 'order_confirmed'
                         | 'order_rejected'
                         | 'earn_claim'
-                        | 'earn_rejected')
+                        | 'earn_rejected'
+                        | 'quiz_reward'
+                        | 'quiz_motivation')
                 }
                 t={t}
               />

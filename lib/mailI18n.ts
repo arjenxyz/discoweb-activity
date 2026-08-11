@@ -34,7 +34,7 @@ const str = (v: unknown): string | null => {
 /** Resolve stable template id from metadata / legacy titles. */
 export function resolveMailTemplateId(mail: MailLike): string | null {
   const meta = asRecord(mail.metadata);
-  const explicit = str(meta.i18nKey) ?? str(meta.template) ?? str(meta.kind);
+  const explicit = str(meta.i18nKey) ?? str(meta.template) ?? str(meta.kind) ?? str(meta.source);
   if (explicit) {
     if (explicit === 'transfer') return 'transfer';
     if (explicit === 'promotion' || explicit === 'promo') return 'promotion';
@@ -45,6 +45,8 @@ export function resolveMailTemplateId(mail: MailLike): string | null {
     if (explicit === 'order_rejected' || explicit === 'order_failed') return 'order_rejected';
     if (explicit === 'earn_rejected' || explicit === 'earn_failed') return 'earn_rejected';
     if (explicit === 'earn_claim' || explicit === 'earn' || explicit === 'claim') return 'earn_claim';
+    if (explicit === 'quiz_reward') return 'quiz_reward';
+    if (explicit === 'quiz_motivation') return 'quiz_motivation';
     if (explicit.startsWith('mail_title_')) return explicit.replace(/^mail_title_/, '');
   }
 
@@ -78,6 +80,10 @@ export function resolveMailTemplateId(mail: MailLike): string | null {
   ) {
     return 'earn_claim';
   }
+  if (/papel\s*kazand[iı]n[iı]z/i.test(title) || /papel\s*earned/i.test(title)) return 'quiz_reward';
+  if (/kat[iı]ld[iı][gğ][iı]n\s*i[cç]in\s*te[sş]ekk[uü]r/i.test(title) || /thanks?\s*for\s*(joining|participating)/i.test(title)) {
+    return 'quiz_motivation';
+  }
 
   // Structured metadata without kind
   if (meta.status === 'rejected' || meta.status === 'failed') {
@@ -91,6 +97,10 @@ export function resolveMailTemplateId(mail: MailLike): string | null {
     return 'earn_claim';
   }
   if (typeof meta.percent === 'number' && str(meta.code)) return 'discount';
+  if (meta.quiz_title || meta.event_id) {
+    const earned = typeof meta.total_earned === 'number' ? meta.total_earned : Number(meta.total_earned ?? 0);
+    return earned > 0 ? 'quiz_reward' : 'quiz_motivation';
+  }
 
   return null;
 }
@@ -104,6 +114,8 @@ const TITLE_KEYS: Record<string, string> = {
   order_rejected: 'mail_title_order_rejected',
   earn_claim: 'mail_title_earn_claimed',
   earn_rejected: 'mail_title_earn_rejected',
+  quiz_reward: 'mail_title_quiz_reward',
+  quiz_motivation: 'mail_title_quiz_motivation',
 };
 
 const PREVIEW_KEYS: Record<string, string> = {
@@ -115,11 +127,32 @@ const PREVIEW_KEYS: Record<string, string> = {
   order_rejected: 'mail_preview_order_rejected',
   earn_claim: 'mail_preview_earn_claim',
   earn_rejected: 'mail_preview_earn_rejected',
+  quiz_reward: 'mail_preview_quiz_reward',
+  quiz_motivation: 'mail_preview_quiz_motivation',
 };
 
 export function resolveMailTitle(mail: MailLike, t: MailT): string {
   const template = resolveMailTemplateId(mail);
   if (!template) return mail.title ?? '';
+
+  const meta = asRecord(mail.metadata);
+  const eventTitle = str(meta.quiz_title) ?? str(meta.event_title) ?? '';
+
+  if (template === 'quiz_reward') {
+    const amount = meta.total_earned ?? meta.totalEarn ?? '';
+    const translated = t('mail_title_quiz_reward', {
+      title: eventTitle || 'Quiz',
+      amount: String(amount),
+    });
+    return translated === 'mail_title_quiz_reward' ? (mail.title ?? '') : translated;
+  }
+
+  if (template === 'quiz_motivation') {
+    const translated = t('mail_title_quiz_motivation', {
+      title: eventTitle || 'Quiz',
+    });
+    return translated === 'mail_title_quiz_motivation' ? (mail.title ?? '') : translated;
+  }
 
   const key = TITLE_KEYS[template];
   if (!key) return mail.title ?? '';
@@ -175,6 +208,19 @@ export function resolveMailPreview(mail: MailLike, t: MailT, maxLen = 120): stri
 
   if (template === 'earn_rejected') {
     return t('mail_preview_earn_rejected');
+  }
+
+  if (template === 'quiz_reward') {
+    return t('mail_preview_quiz_reward', {
+      amount: String(meta.total_earned ?? ''),
+      title: String(str(meta.quiz_title) ?? ''),
+    });
+  }
+
+  if (template === 'quiz_motivation') {
+    return t('mail_preview_quiz_motivation', {
+      title: String(str(meta.quiz_title) ?? ''),
+    });
   }
 
   if (template && PREVIEW_KEYS[template]) {
