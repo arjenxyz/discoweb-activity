@@ -6,6 +6,10 @@ import Image from 'next/image';
 import { LuCircleCheck, LuPlay, LuX, LuGift, LuMaximize, LuMinimize } from 'react-icons/lu';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { toActivityMediaUrl } from '@/lib/watchEarnMedia';
+import {
+  isDiscordActivityClient,
+  setDiscordOrientationLock,
+} from '@/lib/discordSdk';
 
 type WatchEarnTask = {
   id: string;
@@ -120,11 +124,17 @@ export default function WatchEarnSection() {
       videoRef.current.play().catch(() => setIsPlaying(false));
       setIsPlaying(true);
     }
+    // Discord mobilde native fullscreen yok — video açılınca landscape + immersive
+    if (isDiscordActivityClient() && isCoarsePointerMobile()) {
+      void setDiscordOrientationLock('landscape').then(() => setIsFullscreen(true));
+    }
   }, [activeVideo]);
 
   useEffect(() => {
     const onFsChange = () => {
       const shell = playerShellRef.current;
+      // Discord CSS immersive mode uses isFullscreen state without document.fullscreenElement
+      if (isDiscordActivityClient() && !document.fullscreenElement) return;
       const active =
         !!document.fullscreenElement &&
         (!!shell?.contains(document.fullscreenElement) || document.fullscreenElement === shell);
@@ -156,14 +166,26 @@ export default function WatchEarnSection() {
     } catch {
       /* ignore */
     }
+    if (isDiscordActivityClient()) {
+      // Dashboard portrait — videodan çıkınca geri dön
+      await setDiscordOrientationLock('portrait');
+    }
     setIsFullscreen(false);
   }, []);
 
   const enterFullscreen = useCallback(async () => {
     const shell = playerShellRef.current;
-    if (!shell) return;
+
+    // Discord Activity iframe: Fullscreen API + screen.orientation.lock engellenir.
+    // Doğru yol: SDK orientation lock + CSS immersive (zaten fixed inset-0 overlay).
+    if (isDiscordActivityClient()) {
+      await setDiscordOrientationLock('landscape');
+      setIsFullscreen(true);
+      return;
+    }
+
     try {
-      if (shell.requestFullscreen) {
+      if (shell?.requestFullscreen) {
         await shell.requestFullscreen();
       } else {
         const video = videoRef.current as HTMLVideoElement & {
@@ -171,28 +193,30 @@ export default function WatchEarnSection() {
         };
         video?.webkitEnterFullscreen?.();
       }
-      if (isCoarsePointerMobile()) {
-        try {
-          await (screen.orientation as ScreenOrientation & {
-            lock?: (orientation: OrientationLockType) => Promise<void>;
-          })?.lock?.('landscape');
-        } catch {
-          /* Discord / iOS may block orientation lock */
-        }
-      }
-      setIsFullscreen(true);
     } catch {
-      showToast('Tam ekran açılamadı.', 'error');
+      // Browser FS başarısız olsa bile CSS immersive devam eder
     }
+
+    if (isCoarsePointerMobile()) {
+      try {
+        await (screen.orientation as ScreenOrientation & {
+          lock?: (orientation: OrientationLockType) => Promise<void>;
+        })?.lock?.('landscape');
+      } catch {
+        /* iOS Safari / insecure context */
+      }
+    }
+
+    setIsFullscreen(true);
   }, []);
 
   const toggleFullscreen = useCallback(async () => {
-    if (document.fullscreenElement) {
+    if (isFullscreen || document.fullscreenElement) {
       await exitFullscreenSafe();
     } else {
       await enterFullscreen();
     }
-  }, [enterFullscreen, exitFullscreenSafe]);
+  }, [enterFullscreen, exitFullscreenSafe, isFullscreen]);
 
   const closePlayer = useCallback(async () => {
     await exitFullscreenSafe();
