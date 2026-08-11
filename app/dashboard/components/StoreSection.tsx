@@ -10,6 +10,7 @@ import Image from 'next/image';
 import { useCart } from '../../../lib/cart';
 import CartDrawer from '../../../components/CartDrawer';
 import { useT } from '@/contexts/LocaleContext';
+import { useVisualTheme } from '@/hooks/useVisualTheme';
 import ProductDetailModal from './ProductDetailModal';
 import { formatDuration } from '../../../lib/formatDuration';
 
@@ -61,20 +62,25 @@ export default function StoreSection({
   ownedRoleIds = [],
 }: StoreSectionProps) {
   const t = useT();
+  const { isSoft } = useVisualTheme();
   const cart = useCart();
   const [infoOpen, setInfoOpen] = useState(false);
   const [expandedItem, setExpandedItem] = useState<StoreItem | null>(null);
-  const bgOffset = useState(() => Math.floor(Math.random() * STORE_BACKGROUNDS.length))[0];
+  const availableBackgrounds = useMemo(
+    () => (isSoft ? STORE_BACKGROUNDS.filter((bg) => !bg.includes('/invincible/')) : STORE_BACKGROUNDS),
+    [isSoft],
+  );
+  const bgOffset = useState(() => Math.floor(Math.random() * availableBackgrounds.length))[0];
   const gifMap = useMemo(() => {
     const m = new Map<string, string | undefined>();
-    if (items.length === 0) return m;
+    if (items.length === 0 || availableBackgrounds.length === 0) return m;
 
     items.forEach((it, idx) => {
-      m.set(it.id, STORE_BACKGROUNDS[(bgOffset + idx) % STORE_BACKGROUNDS.length]);
+      m.set(it.id, availableBackgrounds[(bgOffset + idx) % availableBackgrounds.length]);
     });
 
     return m;
-  }, [items, bgOffset]);
+  }, [items, bgOffset, availableBackgrounds]);
 
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
@@ -468,6 +474,7 @@ export default function StoreSection({
       <CartDrawer />
       <ProductDetailModal
         item={expandedItem}
+        visualSrc={expandedItem ? (gifMap.get(expandedItem.id) ?? null) : null}
         onClose={() => setExpandedItem(null)}
         onAddToCart={onAddToCart}
         onPurchase={(id) => onPurchase(id)}
