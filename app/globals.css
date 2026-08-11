@@ -500,3 +500,48 @@ html, body {
   animation: quizSparkle 2.4s ease-in-out infinite;
 }
 
+@keyframes privilegeConfetti {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(0deg) translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(720deg) translateY(120px) scale(0.6);
+  }
+}
+
+.privilege-confetti {
+  animation: privilegeConfetti 1.2s ease-out forwards;
+}
+
+@keyframes privilegeConfetti {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(0deg) translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(720deg) translateY(140px) scale(0.4);
+  }
+}
+
+.privilege-confetti {
+  animation: privilegeConfetti 1.4s ease-out forwards;
+}
+
+@keyframes lang-fall {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-50%);
+  }
+}
+
+.lang-fall-column {
+  animation-name: lang-fall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
