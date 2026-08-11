@@ -26,6 +26,7 @@ import PromotionsModal from './components/PromotionsModal';
 import DiscountsModal from './components/DiscountsModal';
 import ActivityReadinessGate, { type ActivityReadiness } from './components/ActivityReadinessGate';
 import SplashScreen from './components/SplashScreen';
+import IncidentOverlay from './components/IncidentOverlay';
 import { sanitizeHtml } from '@/lib/sanitizeHtml';
 import { useRealtimeDashboard } from '@/lib/utils/useRealtimeDashboard';
 import { useT } from '@/contexts/LocaleContext';
@@ -1410,6 +1411,7 @@ export default function DashboardPage() {
 
   return (
     <div className="h-screen bg-[#0b0d12] text-white overflow-hidden flex flex-col">
+      <IncidentOverlay bypass={isDeveloper} />
       <div className="flex flex-1 min-h-0">
         {/* Sağ taraf: header + main */}
         <div className="relative flex flex-1 flex-col min-w-0 min-h-0 overflow-hidden bg-[#0e1018]">
