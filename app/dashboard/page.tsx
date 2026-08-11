@@ -76,7 +76,10 @@ export default function DashboardPage() {
     if (typeof window === 'undefined') return 0.7;
     const value = window.localStorage.getItem(MUSIC_VOLUME_KEY);
     const parsed = Number(value);
-    return Number.isFinite(parsed) ? Math.min(1, Math.max(0, parsed)) : 0.7;
+    if (!Number.isFinite(parsed)) return 0.7;
+    // Settings UI stores 0–100; older values may already be 0–1
+    const normalized = parsed > 1 ? parsed / 100 : parsed;
+    return Math.min(1, Math.max(0, normalized));
   };
 
   const updateAudioFromSettings = () => {
@@ -285,7 +288,24 @@ export default function DashboardPage() {
       updateAudioFromSettings();
     };
 
+    const shouldPauseWhenHidden = () => {
+      if (typeof window === 'undefined') return true;
+      const stored = window.localStorage.getItem('dashboard_pause_music_hidden');
+      return stored === null ? true : stored === 'true';
+    };
+
+    const handleVisibilityChange = () => {
+      const el = dashboardMusicRef.current;
+      if (!el || !shouldPauseWhenHidden()) return;
+      if (document.hidden) {
+        el.pause();
+      } else if (getSavedMusicEnabled()) {
+        void el.play().catch(() => {});
+      }
+    };
+
     window.addEventListener('dashboard-music-settings-changed', handleSettingsChange);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
     audio.addEventListener('ended', handleEnded);
     audio.addEventListener('error', handleAudioError);
     dashboardMusicRef.current = audio;
@@ -294,6 +314,7 @@ export default function DashboardPage() {
     return () => {
       document.removeEventListener('pointerdown', onUserGesture, true);
       window.removeEventListener('dashboard-music-settings-changed', handleSettingsChange);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       audio.removeEventListener('ended', handleEnded);
       audio.removeEventListener('error', handleAudioError);
       audio.pause();
