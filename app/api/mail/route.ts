@@ -120,16 +120,28 @@ export async function GET(request: NextRequest) {
   let createdAtCutoff = ninetyDaysAgo;
 
   if (userId) {
-    const { data: userRow } = await supabase
-      .from('users')
-      .select('created_at')
-      .eq('discord_id', userId)
-      .maybeSingle();
+    // Yeni hesap / sunucuya ilk giriş / veri silip profil yeniden oluşturma:
+    // broadcast mailler (user_id=null) canlı sorgulanır; cutoff = guild profil yaşı olmalı.
+    // Sadece users.created_at kullanmak, eski Discord hesabının eski duyuruları görmesine yol açıyordu.
+    const [{ data: profileRow }, { data: userRow }] = await Promise.all([
+      (supabase as unknown as SupabaseClient)
+        .from('member_profiles')
+        .select('created_at')
+        .eq('guild_id', selectedGuildId)
+        .eq('user_id', userId)
+        .maybeSingle(),
+      supabase
+        .from('users')
+        .select('created_at')
+        .eq('discord_id', userId)
+        .maybeSingle(),
+    ]);
 
-    if (userRow?.created_at) {
-      const userCreated = new Date(userRow.created_at);
-      if (!Number.isNaN(userCreated.getTime()) && userCreated > createdAtCutoff) {
-        createdAtCutoff = userCreated;
+    for (const raw of [profileRow?.created_at as string | null | undefined, userRow?.created_at]) {
+      if (!raw) continue;
+      const d = new Date(raw);
+      if (!Number.isNaN(d.getTime()) && d > createdAtCutoff) {
+        createdAtCutoff = d;
       }
     }
   }

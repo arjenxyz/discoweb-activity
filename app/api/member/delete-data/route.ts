@@ -47,6 +47,19 @@ const deleteForUser = async (
     }
   }
 
+  // Guild wipe: eski broadcast okuma/yıldız izlerini de temizle (paylaşılan mailler silinmez)
+  if (scope === 'current' && guildId) {
+    const { data: guildMails } = await supabase
+      .from('system_mails')
+      .select('id')
+      .eq('guild_id', guildId);
+    const mailIds = (guildMails ?? []).map((row: { id: string }) => row.id);
+    if (mailIds.length > 0) {
+      await supabase.from('system_mail_reads').delete().eq('user_id', userId).in('mail_id', mailIds);
+      await supabase.from('system_mail_stars').delete().eq('user_id', userId).in('mail_id', mailIds);
+    }
+  }
+
   if (scope === 'all') {
     for (const table of globalTables) {
       await supabase.from(table).delete().match({ user_id: userId });
