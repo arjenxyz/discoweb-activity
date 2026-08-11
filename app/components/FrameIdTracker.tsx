@@ -7,13 +7,15 @@ export default function FrameIdTracker() {
     if (typeof window === 'undefined') return;
 
     const params = new URLSearchParams(window.location.search);
+    const frameId = params.get('frame_id');
     const instanceId = params.get('instance_id');
 
-    if (!params.get('frame_id') && !instanceId) return;
+    if (!frameId && !instanceId) return;
 
     try {
-      // discord_frame_id'yi burada YAZMA — DiscordActivityAuth yeni session tespiti için
-      // önceki frame_id ile karşılaştırmalı. URL'deki frame_id SDK için zaten yeterli.
+      if (frameId) {
+        localStorage.setItem('discord_frame_id', frameId);
+      }
       if (instanceId) {
         localStorage.setItem('discord_instance_id', instanceId);
       }

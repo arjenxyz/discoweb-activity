@@ -1401,11 +1401,6 @@ export default function DashboardPage() {
         readiness={activityReadiness}
         loading={activityReadinessLoading}
         onRetry={() => {
-          if (activityReadiness?.status === 'unauthorized') {
-            // Session kayboldu — tam reload ile DiscordActivityAuth yeniden çalışsın
-            window.location.reload();
-            return;
-          }
           void checkActivityReadiness();
         }}
         onBackToSplash={() => {

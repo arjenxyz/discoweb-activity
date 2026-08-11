@@ -151,10 +151,21 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
   }, []);
 
   useEffect(() => {
-    // Discord Activity iframe'inde pagehide/beforeunload sıkça "yanlışlıkla" tetiklenir
-    // (mini mode, kanal geçişi, bfcache). Bearer token silinirse readiness 401 →
-    // "Unauthorized / Activity'yi kullanma yetkiniz yok" ekranı çıkar.
-    // Çıkışta sadece leave beacon at; auth temizliği yeni frame_id'de yapılır.
+    const clearActivitySessionData = () => {
+      try {
+        localStorage.removeItem('selectedGuildId');
+        localStorage.removeItem('discord_frame_id');
+        localStorage.removeItem('discord_instance_id');
+        localStorage.removeItem('discord_bearer_token');
+        localStorage.removeItem('discord_locale');
+        localStorage.removeItem('auth_ready');
+      } catch {
+        // ignore
+      }
+      document.cookie = 'selected_guild_id=; Path=/; Max-Age=0';
+      document.cookie = 'discord_session=; Path=/; Max-Age=0';
+    };
+
     const sendLeaveBeacon = () => {
       const info = userInfoRef.current;
       const blob = new Blob(
@@ -166,11 +177,14 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
 
     const onPageHide = () => {
       sendLeaveBeacon();
+      clearActivitySessionData();
     };
 
+    window.addEventListener('beforeunload', clearActivitySessionData);
     window.addEventListener('pagehide', onPageHide);
 
     return () => {
+      window.removeEventListener('beforeunload', clearActivitySessionData);
       window.removeEventListener('pagehide', onPageHide);
     };
   }, []);
@@ -389,42 +403,23 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
         return;
       }
 
-      // --- YENİ SESSION KONTROLÜ ---
-      // frame_id karşılaştırması YAZMADAN ÖNCE yapılmalı (aksi halde hep aynı görünür)
-      const previousFrameId = (() => {
-        try {
-          return localStorage.getItem('discord_frame_id');
-        } catch {
-          return null;
-        }
-      })();
-      const isNewSession = Boolean(
-        inDiscordRuntime && frameIdFromUrl && previousFrameId && frameIdFromUrl !== previousFrameId,
-      );
-
+      // frame_id'yi storage'a kaydet
       if (frameIdFromUrl) {
-        try {
-          localStorage.setItem('discord_frame_id', frameIdFromUrl);
-        } catch {}
+        try { localStorage.setItem('discord_frame_id', frameIdFromUrl); } catch {}
       }
-
-      const storedFrameId = (() => {
-        try {
-          return localStorage.getItem('discord_frame_id');
-        } catch {
-          return null;
-        }
-      })();
-      const currentFrameId = frameIdFromUrl || storedFrameId;
 
       // Guild cookie'yi her zaman güncel tut
       if (guildId) {
         setCookie('selected_guild_id', guildId);
-        try {
-          localStorage.setItem('selectedGuildId', guildId);
-        } catch {}
+        try { localStorage.setItem('selectedGuildId', guildId); } catch {}
       }
 
+      const storedFrameId = (() => { try { return localStorage.getItem('discord_frame_id'); } catch { return null; } })();
+      const currentFrameId = frameIdFromUrl || storedFrameId;
+
+      // --- YENİ SESSION KONTROLÜ ---
+      // frame_id URL'den geldi ve storage'dakinden farklıysa → yeni session → auth temizle
+      const isNewSession = inDiscordRuntime && frameIdFromUrl && frameIdFromUrl !== storedFrameId;
       if (isNewSession) {
         addLog(`Yeni Activity session: frame_id değişti → auth temizleniyor`);
         clearAuthState();
@@ -440,110 +435,77 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
 
           if (meRes.ok) {
             addLog('Mevcut session geçerli → hızlı geç');
-            // Cookie ile auth olduysa bile Activity için localStorage bearer şart
-            const existingBearer = (() => {
-              try {
-                return localStorage.getItem('discord_bearer_token');
-              } catch {
-                return null;
-              }
-            })();
-            if (!existingBearer) {
-              addLog('Bearer localStorage’da yok → SDK auth ile yenilenecek');
-            } else {
-              // Kaydedilmiş Discord locale'i kullan; yoksa navigator.language fallback
-              const savedLocale = (() => {
-                try {
-                  return localStorage.getItem('discord_locale');
-                } catch {
-                  return null;
-                }
-              })();
-              setDiscordLocale(savedLocale || navigator.language);
-              addLog(`Locale (hızlı yol): ${savedLocale || navigator.language}`);
+            // Kaydedilmiş Discord locale'i kullan; yoksa navigator.language fallback
+            const savedLocale = (() => { try { return localStorage.getItem('discord_locale'); } catch { return null; } })();
+            setDiscordLocale(savedLocale || navigator.language);
+            addLog(`Locale (hızlı yol): ${savedLocale || navigator.language}`);
 
-              // Rich Presence — SDK'yı başlat ve ayarla
-              const fastClientId = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
-              if (fastClientId && inDiscordRuntime && !isLocalDevBrowserHost()) {
-                try {
-                  const { DiscordSDK } = await import('@discord/embedded-app-sdk');
-                  const fastSdk = new DiscordSDK(fastClientId);
-                  await withTimeout(fastSdk.ready(), 10000, 'sdk_ready_fast_timeout');
-                  setDiscordSdk(fastSdk);
-                  const tokenRes = await fetchWithCreds(
-                    apiUrl(`/api/activity/discord-token?guild_id=${encodeURIComponent(guildId)}`),
-                    { signal },
-                  );
-                  const savedGuildName = (() => {
-                    try {
-                      return localStorage.getItem(`discord_guild_name_${guildId}`);
-                    } catch {
-                      return null;
-                    }
-                  })();
-                  let guildName: string | null = savedGuildName;
-                  if (tokenRes.ok) {
-                    const tokenData = (await tokenRes.json()) as {
-                      access_token: string;
-                      guild_name?: string | null;
-                    };
-                    addLog(`discord-token guild_name: ${JSON.stringify(tokenData.guild_name)}`);
-                    if (tokenData.guild_name) {
-                      guildName = tokenData.guild_name;
-                      try {
-                        localStorage.setItem(`discord_guild_name_${guildId}`, guildName);
-                      } catch {}
-                    }
-                    await withTimeout(
-                      fastSdk.commands.authenticate({ access_token: tokenData.access_token }),
-                      10000,
-                      'authenticate_fast_timeout',
-                    );
-                    addLog('RPC authenticate (hızlı yol) başarılı');
-                  } else {
-                    addLog(`discord-token endpoint hatası: ${tokenRes.status}`);
+            // Rich Presence — SDK'yı başlat ve ayarla
+            const fastClientId = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID;
+            if (fastClientId && inDiscordRuntime && !isLocalDevBrowserHost()) {
+              try {
+                const { DiscordSDK } = await import('@discord/embedded-app-sdk');
+                const fastSdk = new DiscordSDK(fastClientId);
+                await withTimeout(fastSdk.ready(), 10000, 'sdk_ready_fast_timeout');
+                setDiscordSdk(fastSdk);
+                // Discord access token ile RPC bağlantısını authenticate et
+                const tokenRes = await fetchWithCreds(
+                  apiUrl(`/api/activity/discord-token?guild_id=${encodeURIComponent(guildId)}`),
+                  { signal }
+                );
+                const savedGuildName = (() => { try { return localStorage.getItem(`discord_guild_name_${guildId}`); } catch { return null; } })();
+                let guildName: string | null = savedGuildName;
+                if (tokenRes.ok) {
+                  const tokenData = await tokenRes.json() as { access_token: string; guild_name?: string | null };
+                  addLog(`discord-token guild_name: ${JSON.stringify(tokenData.guild_name)}`);
+                  if (tokenData.guild_name) {
+                    guildName = tokenData.guild_name;
+                    try { localStorage.setItem(`discord_guild_name_${guildId}`, guildName); } catch {}
                   }
-                  const richPresenceConfig: RichPresenceConfig = {
-                    guildName,
-                    state: 'Economy & Role Management',
-                    buttons: [{ label: 'Open DiscoWeb', url: 'https://discoweb.tech' }],
-                    assets: { large_image: 'discoweb', large_text: 'DiscoWeb' },
-                  };
-
-                  const provider = new DiscordSdkRichPresenceProvider(
-                    fastSdk as unknown as {
-                      commands: { setActivity: (activity: { activity: unknown }) => Promise<unknown> };
-                    },
+                  await withTimeout(
+                    fastSdk.commands.authenticate({ access_token: tokenData.access_token }),
+                    10000, 'authenticate_fast_timeout'
                   );
+                  addLog('RPC authenticate (hızlı yol) başarılı');
+                } else {
+                  addLog(`discord-token endpoint hatası: ${tokenRes.status}`);
+                }
+                const richPresenceConfig: RichPresenceConfig = {
+                  guildName,
+                  state: 'Economy & Role Management',
+                  buttons: [{ label: 'Open DiscoWeb', url: 'https://discoweb.tech' }],
+                  assets: { large_image: 'discoweb', large_text: 'DiscoWeb' },
+                };
 
-                  await applyRichPresence(provider, richPresenceConfig, addLog);
-                } catch (e) {
-                  addLog(`Rich Presence ayarlanamadı (hızlı yol): ${JSON.stringify(e)}`);
-                }
+                const provider = new DiscordSdkRichPresenceProvider(
+                  fastSdk as unknown as { commands: { setActivity: (activity: { activity: unknown }) => Promise<unknown> } },
+                );
+
+                await applyRichPresence(provider, richPresenceConfig, addLog);
+              } catch (e) {
+                addLog(`Rich Presence ayarlanamadı (hızlı yol): ${JSON.stringify(e)}`);
               }
-              try {
-                const meData = (await meRes.clone().json()) as { username?: string; avatar?: string };
-                if (meData?.username) {
-                  userInfoRef.current = { username: meData.username, avatar: meData.avatar ?? null };
-                }
-                fetchWithCreds(apiUrl('/api/activity/ping'), {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ username: meData?.username, avatar: meData?.avatar }),
-                }).catch(() => {});
-              } catch {
-                /* ping opsiyonel */
-              }
-              setIsLoading(false);
-              return;
             }
-          } else {
-            addLog(`/api/auth/me başarısız (${meRes.status}), SDK auth gerekli`);
+            // Mevcut session varsa da login logu at (Activity yeniden açıldı)
+            try {
+              const meData = await meRes.clone().json() as { username?: string; avatar?: string };
+              if (meData?.username) {
+                userInfoRef.current = { username: meData.username, avatar: meData.avatar ?? null };
+              }
+              fetchWithCreds(apiUrl('/api/activity/ping'), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: meData?.username, avatar: meData?.avatar }),
+              }).catch(() => {});
+            } catch { /* ping opsiyonel */ }
+            setIsLoading(false);
+            return;
           }
+          addLog(`/api/auth/me başarısız (${meRes.status}), SDK auth gerekli`);
         } catch (e) {
           addLog(`/api/auth/me hata: ${e} → SDK auth gerekli`);
         }
-        // Session geçersiz veya bearer yok → SDK auth yap
+        // Session geçersiz → devam et, SDK auth yap
         clearAuthState();
       }
 
