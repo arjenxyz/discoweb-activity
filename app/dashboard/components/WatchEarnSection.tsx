@@ -246,7 +246,7 @@ export default function WatchEarnSection() {
   const progress = duration > 0 ? Math.min(100, (currentTime / duration) * 100) : 0;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-4 md:p-6 lg:p-8 space-y-6 max-w-5xl mx-auto w-full">
+    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-4 md:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto w-full">
       <div className="flex items-center justify-between mb-4">
         <div>
           <h1 className="text-2xl font-bold text-white">İzle Kazan Görevleri</h1>
@@ -259,7 +259,7 @@ export default function WatchEarnSection() {
       ) : tasks.length === 0 ? (
         <p className="text-sm text-white/40 text-center py-10">Şu an aktif İzle Kazan görevi yok.</p>
       ) : (
-        <div className="grid gap-6">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5 xl:grid-cols-3">
           {tasks.map((task) => {
             const isWatched = watchedTasks[task.id] || task.claimed;
             const isClaimed = task.claimed;
@@ -267,54 +267,56 @@ export default function WatchEarnSection() {
             return (
               <div
                 key={task.id}
-                className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#1e1f25] shadow-lg"
+                className="relative flex h-full flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#1e1f25] shadow-lg"
               >
-                <div className="relative h-36 w-full">
+                <div className="relative h-32 w-full shrink-0 sm:h-36">
                   <Image src={task.banner} alt={task.title} fill className="object-cover opacity-70" unoptimized />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#1e1f25] via-[#1e1f25]/60 to-transparent" />
 
-                  <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between">
-                    <div>
-                      <h3 className="text-2xl font-black text-white italic tracking-wider mb-2 drop-shadow-md">
+                  <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between gap-2">
+                    <div className="min-w-0">
+                      <h3 className="truncate text-xl font-black italic tracking-wider text-white drop-shadow-md sm:text-2xl">
                         {task.logoText}
                       </h3>
-                      <div className="flex items-center gap-2 text-xs font-medium text-white/70">
-                        <span>Tarafından sunuluyor</span>
-                        <LuCircleCheck className="h-4 w-4 text-emerald-400" />
-                        <span className="font-bold text-white">{task.sponsor}</span>
+                      <div className="mt-1 flex min-w-0 items-center gap-1.5 text-[11px] font-medium text-white/70">
+                        <span className="shrink-0">Tarafından sunuluyor</span>
+                        <LuCircleCheck className="h-3.5 w-3.5 shrink-0 text-emerald-400" />
+                        <span className="truncate font-bold text-white">{task.sponsor}</span>
                       </div>
                     </div>
-                    <div className="text-xs font-medium text-white/50">Bitiş: {formatEndDate(task.endsAt)}</div>
+                    <div className="shrink-0 text-[11px] font-medium text-white/50">
+                      Bitiş: {formatEndDate(task.endsAt)}
+                    </div>
                   </div>
                 </div>
 
-                <div className="p-5 flex flex-col md:flex-row items-start md:items-center gap-5">
-                  <div className="flex-1 space-y-2">
-                    <h4 className="text-lg font-bold text-white uppercase tracking-wide">{task.title}</h4>
-                    <div className="flex flex-wrap items-center gap-3">
-                      <div className="flex items-center gap-1.5 font-bold text-white">
-                        <Image src="/papel.gif" alt="Papel" width={18} height={18} unoptimized />
-                        <span className="text-lg">{task.reward} Papel</span>
-                      </div>
-                      {task.multiplier && (
-                        <div className="rounded-full bg-rose-500/20 px-2.5 py-0.5 text-xs font-bold text-rose-400 border border-rose-500/30 flex items-center gap-1">
-                          <LuPlay className="h-3 w-3" />
-                          {task.multiplier}
-                        </div>
-                      )}
+                <div className="flex flex-1 flex-col gap-3 p-4 sm:p-5">
+                  <h4 className="line-clamp-2 text-sm font-bold uppercase tracking-wide text-white sm:text-base">
+                    {task.title}
+                  </h4>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex items-center gap-1.5 font-bold text-white">
+                      <Image src="/papel.gif" alt="Papel" width={18} height={18} unoptimized />
+                      <span className="text-base sm:text-lg">{task.reward} Papel</span>
                     </div>
-                    {isClaimed && (
-                      <p className="text-xs text-white/40 font-medium">
-                        Bu ödülü {formatClaimedDate(task.claimedAt)} tarihinde aldın
-                      </p>
+                    {task.multiplier && (
+                      <div className="flex items-center gap-1 rounded-full border border-rose-500/30 bg-rose-500/20 px-2 py-0.5 text-[10px] font-bold text-rose-400 sm:text-xs">
+                        <LuPlay className="h-3 w-3" />
+                        {task.multiplier}
+                      </div>
                     )}
                   </div>
+                  {isClaimed && (
+                    <p className="text-xs font-medium text-white/40">
+                      Bu ödülü {formatClaimedDate(task.claimedAt)} tarihinde aldın
+                    </p>
+                  )}
 
-                  <div className="flex-shrink-0 w-full md:w-auto flex items-center gap-2">
+                  <div className="mt-auto flex w-full items-center pt-1">
                     {!isWatched && !isClaimed && (
                       <button
                         onClick={() => setActiveVideo(task.id)}
-                        className="w-full md:w-auto flex items-center justify-center gap-2 rounded-xl bg-[#5865F2] hover:bg-[#4752C4] px-8 py-3.5 text-sm font-bold text-white transition-colors shadow-lg shadow-[#5865F2]/20"
+                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#5865F2] px-5 py-3 text-sm font-bold text-white shadow-lg shadow-[#5865F2]/20 transition-colors hover:bg-[#4752C4]"
                       >
                         <LuPlay className="h-5 w-5" />
                         İzle
@@ -325,7 +327,7 @@ export default function WatchEarnSection() {
                       <button
                         onClick={() => void handleClaim(task.id)}
                         disabled={claimingId === task.id}
-                        className="w-full md:w-auto flex items-center justify-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 px-8 py-3.5 text-sm font-bold text-white transition-colors shadow-lg shadow-emerald-500/20 disabled:opacity-60"
+                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-500/20 transition-colors hover:bg-emerald-600 disabled:opacity-60"
                       >
                         <LuGift className="h-5 w-5" />
                         {claimingId === task.id ? 'Alınıyor...' : 'Ödülü Al'}
@@ -335,7 +337,7 @@ export default function WatchEarnSection() {
                     {isClaimed && (
                       <button
                         disabled
-                        className="w-full md:w-auto flex items-center justify-center gap-2 rounded-xl bg-white/5 px-8 py-3.5 text-sm font-bold text-white/40 cursor-not-allowed border border-white/10"
+                        className="flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-bold text-white/40"
                       >
                         Ödül Alındı
                       </button>

@@ -628,6 +628,32 @@ const localDevWatchEarnSeed: Omit<LocalDevWatchEarnTask, 'claimed' | 'claimedAt'
     endsAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
     createdAt: nowIso(),
   },
+  {
+    id: 'watch-earn-exodus-1',
+    title: 'EXODUS TRAILER GÖREVİ (ÖRNEK)',
+    logoText: 'EXODUS',
+    sponsor: 'Wizards of the Coast',
+    reward: 150,
+    multiplier: '1,1 kat kilit aç',
+    banner: '/menu-background/varyant.jpg',
+    videoUrl: '/cdn/Storage/Test3.mp4',
+    startsAt: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
+    endsAt: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000).toISOString(),
+    createdAt: new Date(Date.now() - 3_600_000).toISOString(),
+  },
+  {
+    id: 'watch-earn-monopoly-1',
+    title: 'MONOPOLY GO! GÖREVİ (ÖRNEK)',
+    logoText: 'MONOPOLY GO!',
+    sponsor: 'Scopely',
+    reward: 180,
+    multiplier: '1,2 kat kilit aç',
+    banner: '/menu-background/varyant2.jpg',
+    videoUrl: '/cdn/Storage/Test4.mp4',
+    startsAt: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
+    endsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+    createdAt: new Date(Date.now() - 7_200_000).toISOString(),
+  },
 ];
 
 const localDevWatchEarnClaims = new Set<string>();
