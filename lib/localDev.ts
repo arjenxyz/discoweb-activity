@@ -67,11 +67,11 @@ export const localDevProfile = {
   bannerUrl: null as string | null,
   bannerColor: '#d1ba95',
   joinedAt: new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString(),
-  about: null as string | null,
+  about: 'Local Dev — örnek Activity profili. Gerçek oturumda Discord API + member_profiles verisi gelir.',
   guildName: localDevServerInfo.name,
   guildIcon: LOCAL_DEV_AVATAR,
   roles: [
-    { id: 'role-admin', name: 'DiscoWeb', color: 0xffffff },
+    { id: 'role-admin', name: 'DiscoWeb', color: 0x5865f2 },
     { id: 'role-vip', name: 'Captain', color: 0xe74c3c },
     { id: 'role-member', name: 'Check-in', color: 0x95a5a6 },
   ],

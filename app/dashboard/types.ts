@@ -43,6 +43,10 @@ export type MemberProfile = {
   about: string | null;
   guildName?: string | null;
   guildIcon?: string | null;
+  has_tag?: boolean;
+  tag_granted_at?: string | null;
+  is_booster?: boolean;
+  booster_since?: string | null;
 };
 
 export type StoreItem = {

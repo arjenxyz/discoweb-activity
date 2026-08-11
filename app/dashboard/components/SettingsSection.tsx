@@ -24,6 +24,13 @@ import {
   LuX,
   LuFileJson,
   LuShieldCheck,
+  LuCopy,
+  LuTag,
+  LuCrown,
+  LuKeyRound,
+  LuCalendar,
+  LuHash,
+  LuLink2,
 } from 'react-icons/lu';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { closeDiscordActivity, isDiscordActivityClient } from '@/lib/discordSdk';
@@ -33,8 +40,11 @@ type SettingsSectionProps = {
   onOpenPromotionsModal: () => void;
   onOpenDiscountsModal: () => void;
   profile?: MemberProfile | null;
+  profileLoading?: boolean;
   serverCount?: number;
   serverName?: string | null;
+  serverIconUrl?: string | null;
+  isActivityEmbed?: boolean;
   onBack?: () => void;
 };
 
@@ -175,12 +185,104 @@ function Slider({
 
 export default function SettingsSection({
   profile,
+  profileLoading = false,
   serverCount,
   serverName,
+  serverIconUrl,
+  isActivityEmbed = false,
   onBack,
 }: SettingsSectionProps) {
   const displayName =
     profile?.displayName || profile?.nickname || profile?.username || 'Üye';
+
+  const formatRoleColor = (color: number) =>
+    color ? `#${color.toString(16).padStart(6, '0')}` : '#99aab5';
+
+  const discordCreatedAt = (() => {
+    const userId = profile?.userId;
+    if (!userId || !/^\d+$/.test(userId)) return null;
+    try {
+      const ms = Number((BigInt(userId) >> BigInt(22)) + BigInt(1420070400000));
+      if (!Number.isFinite(ms) || ms <= 0) return null;
+      return new Date(ms);
+    } catch {
+      return null;
+    }
+  })();
+
+  const formatDate = (value?: string | Date | null) => {
+    if (!value) return null;
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) return null;
+    return date.toLocaleDateString('tr-TR', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+  };
+
+  const formatDateTime = (value?: string | Date | null) => {
+    if (!value) return null;
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) return null;
+    return date.toLocaleString('tr-TR', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+  const copyText = async (label: string, value: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopiedField(label);
+      window.setTimeout(() => setCopiedField(null), 1600);
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const oauthScopes = [
+    {
+      id: 'identify',
+      title: 'identify',
+      status: 'granted' as const,
+      description: 'Discord kullanıcı kimliğin, kullanıcı adın ve avatarın.',
+      uses: 'Oturum açma, profil gösterimi, veri talebi doğrulama',
+    },
+    {
+      id: 'guilds',
+      title: 'guilds',
+      status: 'granted' as const,
+      description: 'Katıldığın sunucuların listesi (isim, ikon, üyelik).',
+      uses: 'Sunucu seçimi, aktif bağlantı sayısı, sunucu bazlı ekonomi',
+    },
+    {
+      id: 'rpc.activities.write',
+      title: 'rpc.activities.write',
+      status: isActivityEmbed ? ('granted' as const) : ('optional' as const),
+      description: 'Discord Activity oturumunu başlatma / yazma yetkisi.',
+      uses: 'Activity içinde Discord istemcisiyle entegre çalışma',
+    },
+    {
+      id: 'guilds.members.read',
+      title: 'guilds.members.read',
+      status: 'web_only' as const,
+      description: 'Web girişinde üye bilgilerini okuma (Activity SDK’da yok).',
+      uses: 'Tarayıcı OAuth akışında ek üye meta verisi',
+    },
+  ];
+
+  const activeGuildName = profile?.guildName || serverName || 'Mevcut sunucu';
+  const activeGuildIcon = profile?.guildIcon || serverIconUrl || null;
+  const accent =
+    profile?.bannerColor ||
+    (profile?.roles?.find((r) => r.color > 0)
+      ? formatRoleColor(profile.roles.find((r) => r.color > 0)!.color)
+      : '#5865F2');
 
   const [activeTab, setActiveTab] = useState<TabId>('general');
 
@@ -948,43 +1050,308 @@ export default function SettingsSection({
 
           {activeTab === 'account' && (
             <div className="space-y-3 animate-in fade-in duration-200">
-              <Panel title="Profil">
-                <div className="flex items-center gap-3 px-3.5 py-3.5 sm:px-4">
-                  <div className="relative h-12 w-12 overflow-hidden rounded-full border border-white/10">
-                    <Image
-                      src={profile?.avatarUrl || '/gif/cat.gif'}
-                      alt=""
-                      fill
-                      className="object-cover"
-                      unoptimized
-                    />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-bold text-white">{displayName}</p>
-                    <p className="truncate text-xs text-white/40">@{profile?.username ?? '—'}</p>
-                    <p className="mt-0.5 font-mono text-[10px] text-white/25">
-                      ID {profile?.userId ?? '—'}
-                    </p>
-                  </div>
-                  <div className="rounded-lg border border-white/[0.07] bg-white/[0.02] px-3 py-2 text-center">
-                    <p className="text-lg font-bold tabular-nums text-white">{serverCount ?? 0}</p>
-                    <p className="text-[10px] font-medium text-white/35">sunucu</p>
+              {profileLoading && !profile ? (
+                <div className="overflow-hidden rounded-xl border border-white/[0.08] bg-[#12151e]/80 animate-pulse">
+                  <div className="h-24 bg-white/10" />
+                  <div className="space-y-3 p-4">
+                    <div className="h-4 w-40 rounded bg-white/10" />
+                    <div className="h-3 w-56 rounded bg-white/10" />
+                    <div className="h-20 w-full rounded-xl bg-white/[0.06]" />
                   </div>
                 </div>
-                <SettingRow
-                  icon={LuServer}
-                  title="Roller"
-                  description={
-                    profile?.roles?.length
-                      ? `${profile.roles.length} rol bağlı`
-                      : 'Bu sunucuda rol yok'
-                  }
-                >
-                  <span className="text-xs font-semibold tabular-nums text-white/50">
-                    {profile?.roles?.length ?? 0}
-                  </span>
-                </SettingRow>
-              </Panel>
+              ) : (
+                <>
+                  <div className="overflow-hidden rounded-xl border border-white/[0.08] bg-[#12151e]/80">
+                    <div className="relative h-24 sm:h-28">
+                      {profile?.bannerUrl ? (
+                        <Image
+                          src={profile.bannerUrl}
+                          alt=""
+                          fill
+                          className="object-cover"
+                          unoptimized
+                        />
+                      ) : (
+                        <div
+                          className="absolute inset-0"
+                          style={{
+                            background: `linear-gradient(135deg, ${accent} 0%, #0b0d12 78%)`,
+                          }}
+                        />
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#12151e] via-[#12151e]/35 to-transparent" />
+                    </div>
+                    <div className="relative -mt-10 px-4 pb-4 sm:px-5">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                        <div className="flex items-end gap-3">
+                          <div className="relative h-16 w-16 overflow-hidden rounded-2xl border-2 border-[#12151e] bg-white/5 shadow-lg sm:h-[4.5rem] sm:w-[4.5rem]">
+                            <Image
+                              src={profile?.avatarUrl || '/gif/cat.gif'}
+                              alt=""
+                              fill
+                              className="object-cover"
+                              unoptimized
+                            />
+                          </div>
+                          <div className="min-w-0 pb-0.5">
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <p className="truncate text-lg font-bold text-white">{displayName}</p>
+                              {profile?.has_tag && (
+                                <span className="inline-flex items-center gap-1 rounded-md border border-sky-500/30 bg-sky-500/10 px-1.5 py-0.5 text-[10px] font-bold text-sky-300">
+                                  <LuTag className="h-3 w-3" />
+                                  Tag
+                                </span>
+                              )}
+                              {profile?.is_booster && (
+                                <span className="inline-flex items-center gap-1 rounded-md border border-fuchsia-500/30 bg-fuchsia-500/10 px-1.5 py-0.5 text-[10px] font-bold text-fuchsia-300">
+                                  <LuCrown className="h-3 w-3" />
+                                  Booster
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm text-white/45">@{profile?.username ?? '—'}</p>
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <div className="rounded-lg border border-white/[0.07] bg-white/[0.03] px-3 py-1.5 text-center">
+                            <p className="text-base font-bold tabular-nums text-white">{serverCount ?? 0}</p>
+                            <p className="text-[10px] text-white/35">bağlı sunucu</p>
+                          </div>
+                          <div className="rounded-lg border border-white/[0.07] bg-white/[0.03] px-3 py-1.5 text-center">
+                            <p className="text-base font-bold tabular-nums text-white">
+                              {profile?.roles?.length ?? 0}
+                            </p>
+                            <p className="text-[10px] text-white/35">rol</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Panel title="Kimlik">
+                    <div className="grid gap-px bg-white/[0.04] sm:grid-cols-2">
+                      {[
+                        { label: 'Görünür isim', value: displayName },
+                        { label: 'Kullanıcı adı', value: profile?.username ? `@${profile.username}` : '—' },
+                        { label: 'Sunucu takma adı', value: profile?.nickname || 'Yok' },
+                        {
+                          label: 'Discord hesabı',
+                          value: formatDate(discordCreatedAt) || '—',
+                          hint: 'Snowflake’ten hesaplandı',
+                        },
+                      ].map((row) => (
+                        <div key={row.label} className="bg-[#12151e] px-3.5 py-3 sm:px-4">
+                          <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-white/30">
+                            {row.label}
+                          </p>
+                          <p className="mt-1 truncate text-sm font-semibold text-white/90">{row.value}</p>
+                          {'hint' in row && row.hint ? (
+                            <p className="mt-0.5 text-[10px] text-white/25">{row.hint}</p>
+                          ) : null}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-3 border-t border-white/[0.06] px-3.5 py-3 sm:px-4">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/[0.06] bg-white/[0.03] text-white/45">
+                        <LuHash className="h-4 w-4" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-white/30">
+                          Discord kullanıcı ID
+                        </p>
+                        <p className="mt-0.5 truncate font-mono text-xs text-white/75">
+                          {profile?.userId ?? '—'}
+                        </p>
+                      </div>
+                      {profile?.userId ? (
+                        <button
+                          type="button"
+                          onClick={() => copyText('id', profile.userId!)}
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-2.5 py-1.5 text-[11px] font-semibold text-white/55 transition hover:bg-white/[0.05] hover:text-white"
+                        >
+                          <LuCopy className="h-3.5 w-3.5" />
+                          {copiedField === 'id' ? 'Kopyalandı' : 'Kopyala'}
+                        </button>
+                      ) : null}
+                    </div>
+                  </Panel>
+
+                  <Panel title="Aktif sunucu">
+                    <div className="flex items-center gap-3 px-3.5 py-3.5 sm:px-4">
+                      <div className="relative h-11 w-11 overflow-hidden rounded-xl border border-white/10 bg-white/5">
+                        {activeGuildIcon ? (
+                          <Image src={activeGuildIcon} alt="" fill className="object-cover" unoptimized />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-white/35">
+                            <LuServer className="h-5 w-5" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-bold text-white">{activeGuildName}</p>
+                        <p className="mt-0.5 text-[11px] text-white/40">
+                          {formatDate(profile?.joinedAt)
+                            ? `Katılım: ${formatDate(profile?.joinedAt)}`
+                            : 'Katılım tarihi bilinmiyor'}
+                        </p>
+                      </div>
+                      <span className="rounded-md border border-emerald-500/25 bg-emerald-500/10 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-300">
+                        Aktif
+                      </span>
+                    </div>
+                    <SettingRow
+                      icon={LuCalendar}
+                      title="Sunucuya katılma"
+                      description={formatDateTime(profile?.joinedAt) || 'Discord API’den alınamadı'}
+                    >
+                      <span className="text-xs font-semibold text-white/50">
+                        {formatDate(profile?.joinedAt) || '—'}
+                      </span>
+                    </SettingRow>
+                    <SettingRow
+                      icon={LuLink2}
+                      title="Bağlı Activity sunucuları"
+                      description="Oturumunda kayıtlı sunucu bağlantısı sayısı"
+                    >
+                      <span className="text-xs font-semibold tabular-nums text-white/70">
+                        {serverCount ?? 0}
+                      </span>
+                    </SettingRow>
+                  </Panel>
+
+                  <Panel title="Roller">
+                    <div className="px-3.5 py-3 sm:px-4">
+                      {profile?.roles?.length ? (
+                        <div className="flex flex-wrap gap-1.5">
+                          {profile.roles.map((role) => {
+                            const color = role.color > 0 ? formatRoleColor(role.color) : '#99aab5';
+                            return (
+                              <span
+                                key={role.id}
+                                className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold"
+                                style={{
+                                  borderColor: `${color}55`,
+                                  background: `${color}18`,
+                                  color,
+                                }}
+                                title={role.id}
+                              >
+                                <span
+                                  className="h-2 w-2 rounded-full"
+                                  style={{ background: color }}
+                                />
+                                {role.name}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-white/40">Bu sunucuda atanmış rol yok.</p>
+                      )}
+                    </div>
+                  </Panel>
+
+                  {(profile?.has_tag || profile?.is_booster || profile?.about) && (
+                    <Panel title="Üyelik durumu">
+                      {profile?.has_tag && (
+                        <SettingRow
+                          icon={LuTag}
+                          title="Sunucu etiketi"
+                          description={
+                            formatDateTime(profile.tag_granted_at)
+                              ? `Veriliş: ${formatDateTime(profile.tag_granted_at)}`
+                              : 'Tag aktif'
+                          }
+                        >
+                          <span className="rounded-md border border-sky-500/30 bg-sky-500/10 px-2 py-1 text-[10px] font-bold text-sky-300">
+                            Aktif
+                          </span>
+                        </SettingRow>
+                      )}
+                      {profile?.is_booster && (
+                        <SettingRow
+                          icon={LuCrown}
+                          title="Sunucu boost"
+                          description={
+                            formatDateTime(profile.booster_since)
+                              ? `Başlangıç: ${formatDateTime(profile.booster_since)}`
+                              : 'Booster aktif'
+                          }
+                        >
+                          <span className="rounded-md border border-fuchsia-500/30 bg-fuchsia-500/10 px-2 py-1 text-[10px] font-bold text-fuchsia-300">
+                            Booster
+                          </span>
+                        </SettingRow>
+                      )}
+                      {profile?.about ? (
+                        <div className="border-t border-white/[0.05] px-3.5 py-3 sm:px-4">
+                          <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-white/30">
+                            Hakkında
+                          </p>
+                          <p className="mt-1.5 whitespace-pre-wrap text-xs leading-relaxed text-white/65">
+                            {profile.about}
+                          </p>
+                        </div>
+                      ) : null}
+                    </Panel>
+                  )}
+
+                  <Panel title="OAuth2 yetkileri">
+                    <div className="border-b border-white/[0.06] px-3.5 py-3 sm:px-4">
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[#5865F2]/30 bg-[#5865F2]/10 text-[#5865F2]">
+                          <LuKeyRound className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-white">Discord OAuth2 kapsamları</p>
+                          <p className="mt-0.5 text-[11px] leading-relaxed text-white/40">
+                            Bu oturumda Activity’nin talep ettiği / kullanabildiği yetkiler. Ham access token
+                            güvenlik nedeniyle gösterilmez.
+                          </p>
+                          <p className="mt-1.5 text-[10px] font-medium text-white/30">
+                            Oturum tipi:{' '}
+                            <span className="text-white/55">
+                              {isActivityEmbed ? 'Discord Activity (Embedded SDK)' : 'Tarayıcı / yerel geliştirme'}
+                            </span>
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="divide-y divide-white/[0.05]">
+                      {oauthScopes.map((scope) => {
+                        const badge =
+                          scope.status === 'granted'
+                            ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+                            : scope.status === 'optional'
+                              ? 'border-white/15 bg-white/[0.04] text-white/45'
+                              : 'border-amber-500/30 bg-amber-500/10 text-amber-300';
+                        const badgeLabel =
+                          scope.status === 'granted'
+                            ? 'Verildi'
+                            : scope.status === 'optional'
+                              ? 'Activity dışı'
+                              : 'Yalnızca web';
+                        return (
+                          <div key={scope.id} className="px-3.5 py-3 sm:px-4">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <code className="rounded-md border border-white/10 bg-white/[0.03] px-2 py-0.5 font-mono text-[11px] font-semibold text-[#a5b4fc]">
+                                {scope.title}
+                              </code>
+                              <span
+                                className={`rounded-md border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${badge}`}
+                              >
+                                {badgeLabel}
+                              </span>
+                            </div>
+                            <p className="mt-2 text-xs leading-relaxed text-white/60">{scope.description}</p>
+                            <p className="mt-1 text-[11px] text-white/30">Kullanım: {scope.uses}</p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </Panel>
+                </>
+              )}
 
               {(deleteMessage || requestMessage) && (
                 <div className="space-y-2">

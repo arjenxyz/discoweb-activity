@@ -1619,8 +1619,11 @@ export default function DashboardPage() {
                 onOpenDiscountsModal={openDiscountsModal}
                 onBack={() => setActiveSection('overview')}
                 profile={profile}
+                profileLoading={profileLoading}
                 serverCount={headerServer.guilds.length}
                 serverName={headerServer.data?.name ?? activeServerName}
+                serverIconUrl={headerServer.data?.iconUrl ?? profile?.guildIcon ?? null}
+                isActivityEmbed={isActivityEmbed}
               />
             )}
 
