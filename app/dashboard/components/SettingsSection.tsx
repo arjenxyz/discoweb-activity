@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { LuVolume2, LuGlobe, LuUser, LuFileCheck, LuCheck, LuTriangleAlert, LuArrowLeft, LuShieldAlert, LuInfo, LuDownload, LuMessageSquare, LuSave, LuUndo2 } from 'react-icons/lu';
 import { useLocale } from '@/contexts/LocaleContext';
 import fetchWithCreds from '@/lib/fetchWithCreds';
+import { closeDiscordActivity, isDiscordActivityClient } from '@/lib/discordSdk';
 import type { MemberProfile } from '../types';
 
 type SettingsSectionProps = {
@@ -113,6 +114,7 @@ export default function SettingsSection({
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteMessage, setDeleteMessage] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [accountDeletedExit, setAccountDeletedExit] = useState(false);
   
   const [requestModalOpen, setRequestModalOpen] = useState(false);
   const [requestLoading, setRequestLoading] = useState(false);
@@ -144,13 +146,25 @@ export default function SettingsSection({
       }
 
       setDeleteMessage(deleteScope === 'all'
-        ? 'Tüm verileriniz silindi. Güvenli çıkış için yönlendiriliyorsunuz...'
+        ? 'Tüm verileriniz silindi.'
         : 'Sunucu verileriniz silindi. Sayfa yenileniyor...');
       setDeleteModalOpen(false);
 
       if (deleteScope === 'all') {
         await fetchWithCreds('/api/auth/logout', { method: 'POST' });
-        window.location.href = '/';
+        try {
+          localStorage.removeItem('discord_bearer_token');
+          localStorage.removeItem('discordUser');
+          localStorage.removeItem('auth_ready');
+        } catch {
+          /* ignore */
+        }
+        // '/' yönlendirmesi guild_id'yi düşürüp yanlışlıkla DmScreen ("We Need a Server") açıyordu.
+        // DM ekranı yalnızca gerçek DM bağlamında gösterilmeli.
+        setAccountDeletedExit(true);
+        if (isDiscordActivityClient()) {
+          await closeDiscordActivity();
+        }
         return;
       }
 

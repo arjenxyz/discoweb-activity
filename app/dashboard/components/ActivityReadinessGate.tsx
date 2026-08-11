@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import WelcomeScreen from './WelcomeScreen';
 import VerifyRoleScreen from './VerifyRoleScreen';
-import DmScreen from './DmScreen';
 import { getDiscordSdk } from '@/lib/discordSdk';
 import { VideoBackground, MuteButton } from './VideoBackground';
 import { useT } from '@/contexts/LocaleContext';
@@ -223,10 +222,6 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry, onB
     else { v.muted = true; }
     setMuted(v.muted);
   };
-  if (readiness.status === 'missing_guild') {
-    return <DmScreen />;
-  }
-
   if (readiness.status === 'missing_user_profile') {
     return <WelcomeScreen readiness={readiness} onRetry={onRetry} />;
   }
@@ -234,6 +229,9 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry, onB
   if (readiness.status === 'missing_verify_role') {
     return <VerifyRoleScreen readiness={readiness} onRetry={onRetry} />;
   }
+
+  // missing_guild → DmScreen DEĞİL. DmScreen yalnızca DiscordActivityAuth'ta
+  // gerçek DM/grup bağlamında (URL'de guild_id yokken) gösterilir.
 
   const openSetupSite = async () => {
     const url = 'https://discoweb.tech';
