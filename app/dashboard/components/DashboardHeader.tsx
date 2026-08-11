@@ -455,16 +455,14 @@ export default function DashboardHeader({
         }`}
       />
 
-      {/* Header — mobilde küçük ortalı pill; masaüstünde tam geniş bar */}
+      {/* Header — mobilde tam geniş cam bar; masaüstünde absolute full bar */}
       <header
-        className={`relative z-30 flex items-center rounded-2xl border border-white/20 bg-white/[0.08] shadow-[0_10px_36px_rgba(0,0,0,0.35)] backdrop-blur-2xl transition-all duration-200 ${
+        className={`relative z-30 flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.10] shadow-[0_10px_36px_rgba(0,0,0,0.35)] backdrop-blur-xl transition-all duration-200 ${
           isProfileOpen ? 'z-[9991]' : 'z-30'
         } ${
-          /* mobile compact centered */
-          'mx-auto mt-3 mb-1 w-fit max-w-[min(100%-1.5rem,20rem)] gap-2 px-3.5 h-10'
+          'mx-3 mt-3 mb-1 h-12 px-3'
         } ${
-          /* desktop full bar */
-          'lg:absolute lg:left-4 lg:right-4 lg:top-2 lg:mx-0 lg:mb-0 lg:mt-0 lg:h-16 lg:w-auto lg:max-w-none lg:gap-0 lg:px-5'
+          'lg:absolute lg:left-4 lg:right-4 lg:top-2 lg:mx-0 lg:mb-0 lg:mt-0 lg:h-16 lg:gap-0 lg:px-5'
         } ${
           minimalProfileOnly
             ? 'h-12 pt-[env(safe-area-inset-top,0px)] lg:h-12'
@@ -478,7 +476,7 @@ export default function DashboardHeader({
 
         {/* Sol — logo */}
         <div className={`${minimalProfileOnly ? 'hidden' : 'flex'} min-w-0 shrink-0 items-center ${profileChromeHidden}`}>
-          <span className="font-black text-[15px] tracking-tight leading-none lg:text-xl" style={logoWhiteStyle}>
+          <span className="font-black text-base tracking-tight leading-none lg:text-xl" style={logoWhiteStyle}>
             Disco<span style={logoBlueStyle}>Web</span>
           </span>
         </div>
@@ -530,31 +528,32 @@ export default function DashboardHeader({
           </nav>
         )}
 
-        {(minimalProfileOnly || unauthorized) && <div className="flex-1" />}
+        {/* Mobilde logo ile bakiyeler arası boşluk; masaüstünde nav zaten flex-1 */}
+        <div className={`min-w-0 flex-1 ${!minimalProfileOnly && !unauthorized ? 'lg:hidden' : ''}`} />
 
-        {/* Sağ — bakiye + profil (masaüstü; quiz minimal'de mobilde de) */}
-        <div className={`shrink-0 items-center gap-2 ${minimalProfileOnly ? 'flex' : 'hidden lg:flex'}`}>
+        {/* Sağ — bakiye (mobil + masaüstü) + profil (masaüstü / quiz) */}
+        <div className={`flex shrink-0 items-center gap-1.5 sm:gap-2`}>
           {!unauthorized && !minimalProfileOnly && (
-            <div className={`flex items-center gap-1.5 ${profileChromeHidden}`}>
+            <div className={`flex items-center gap-1 sm:gap-1.5 ${profileChromeHidden}`}>
               {mariBalance !== undefined && (
-                <div className="flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] px-2.5 py-1.5 text-sm">
-                  <Image src="/Mari.gif" alt="Mari" width={16} height={16} className="h-4 w-4 shrink-0" unoptimized />
-                  <span className="font-bold text-white tabular-nums">
+                <div className="flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.06] px-2 py-1 text-[11px] sm:gap-1.5 sm:px-2.5 sm:py-1.5 sm:text-sm">
+                  <Image src="/Mari.gif" alt="Mari" width={16} height={16} className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" unoptimized />
+                  <span className="font-bold tabular-nums text-white">
                     {walletLoading
                       ? '—'
-                      : mariBalance.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                      : mariBalance.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
                   </span>
-                  <span className="text-[11px] font-semibold text-[#a5b4ff]/75">Mari</span>
+                  <span className="hidden text-[11px] font-semibold text-[#a5b4ff]/75 sm:inline">Mari</span>
                 </div>
               )}
-              <div className="flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] px-2.5 py-1.5 text-sm">
-                <Image src="/papel.gif" alt="Papel" width={16} height={16} className="h-4 w-4 shrink-0" />
-                <span className="font-bold text-white tabular-nums">
+              <div className="flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.06] px-2 py-1 text-[11px] sm:gap-1.5 sm:px-2.5 sm:py-1.5 sm:text-sm">
+                <Image src="/papel.gif" alt="Papel" width={16} height={16} className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" />
+                <span className="font-bold tabular-nums text-white">
                   {walletLoading
                     ? '—'
-                    : walletBalance.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                    : walletBalance.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
                 </span>
-                <span className="text-[11px] font-semibold text-amber-400">Papel</span>
+                <span className="hidden text-[11px] font-semibold text-amber-400 sm:inline">Papel</span>
               </div>
             </div>
           )}

@@ -1445,6 +1445,7 @@ export default function DashboardPage() {
 
   return (
     <div className="h-screen bg-[#0b0d12] text-white overflow-hidden flex flex-col">
+      <UiClickSound />
       <IncidentOverlay bypass={isDeveloper} />
       <div className="flex flex-1 min-h-0">
         {/* Sağ taraf: header + main */}
