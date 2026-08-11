@@ -148,26 +148,26 @@ export default function StoreSection({
             {items.length ? (
               <>
                 {/* Desktop grid */}
-                <div className="hidden sm:grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <div className="hidden sm:grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 items-start">
                   {items.map((item) => (
                     <div
                       key={item.id}
-                      className="group relative isolate flex flex-col justify-between overflow-hidden rounded-[24px] border border-white/10 bg-[#0b0d12] p-5 transition-[border-color,box-shadow,transform] duration-300 transform-gpu hover:shadow-[0_8px_30px_rgba(88,101,242,0.2)] hover:border-[#5865F2]/40 hover:scale-[1.02] hover:z-10"
+                      className="group relative isolate flex flex-col overflow-hidden rounded-[20px] border border-white/10 bg-[#0b0d12] p-4 transition-[border-color,box-shadow,transform] duration-300 transform-gpu hover:shadow-[0_8px_30px_rgba(88,101,242,0.2)] hover:border-[#5865F2]/40 hover:scale-[1.02] hover:z-10"
                     >
                       {/* Expand button (small, top-right) */}
                       <button
                         type="button"
                         onClick={() => setExpandedItem(item)}
                         aria-label={t('store_expand_aria')}
-                        className="absolute top-3 right-3 z-20 p-1.5 rounded-md bg-white/5 hover:bg-white/10 transition-colors text-white/70"
+                        className="absolute top-2.5 right-2.5 z-20 p-1.5 rounded-md bg-white/5 hover:bg-white/10 transition-colors text-white/70"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
                         </svg>
                       </button>
 
                       {/* --- ARKA PLAN GIF KATMANI --- */}
-                      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden rounded-[24px]">
+                      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden rounded-[20px]">
                           {/* 1. Siyah Perde (Yazıların okunması için) */}
                           <div className="absolute inset-0 bg-[#0b0d12]/40 group-hover:bg-[#0b0d12]/30 transition-colors duration-500 z-10" />
 
@@ -186,24 +186,24 @@ export default function StoreSection({
                       {/* --- İÇERİK (Z-INDEX ile üste alındı) --- */}
                       <div className="relative z-10">
                         {/* Fiyat & İkon */}
-                        <div className="flex items-start justify-between gap-2 mb-3">
+                        <div className="flex items-start justify-between gap-2 mb-2 pr-8">
                           <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/60 border border-white/10 backdrop-blur-md shadow-lg">
                                {renderPapelAmount(item.price)}
                           </div>
                         </div>
 
                         {/* Başlık */}
-                        <h3 className="font-bold text-white text-base leading-tight mb-1 group-hover:text-[#5865F2] transition-colors drop-shadow-md">
+                        <h3 className="font-bold text-white text-[15px] leading-snug mb-0.5 group-hover:text-[#5865F2] transition-colors drop-shadow-md">
                           {item.title}
                         </h3>
 
                         {/* Açıklama */}
-                        <p className="text-xs text-white/60 leading-relaxed line-clamp-2 min-h-[32px] group-hover:text-white/90 transition-colors whitespace-normal break-words max-w-full">
+                        <p className="text-xs text-white/60 leading-relaxed line-clamp-2 group-hover:text-white/90 transition-colors whitespace-normal break-words max-w-full">
                           {item.description || t('store_no_description')}
                         </p>
 
                         {/* Etiketler */}
-                        <div className="mt-3 flex flex-wrap gap-2">
+                        <div className="mt-2.5 flex flex-wrap gap-1.5">
                           <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide border backdrop-blur-sm transition-colors ${
                             (item.duration_days ?? 0) === 0
                               ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
@@ -234,16 +234,23 @@ export default function StoreSection({
                         const isOwned = item.role_id ? ownedRoleIds.includes(item.role_id) && (item.duration_days ?? 0) === 0 : false;
                         if (isOwned) {
                           return (
-                            <div className="relative z-10 mt-4">
-                              <div className="flex items-center justify-center gap-2 rounded-xl px-4 h-10 text-xs font-bold text-teal-300 bg-teal-500/10 border border-teal-500/20">
+                            <div className="relative z-10 mt-3">
+                              <div className="flex items-center justify-center gap-2 rounded-xl px-4 h-9 text-xs font-bold text-teal-300 bg-teal-500/10 border border-teal-500/20">
                                 <LuBadgeCheck className="w-4 h-4" />
                                 <span>{t('store_already_owned')}</span>
                               </div>
                             </div>
                           );
                         }
+                        const actionsOpen = purchaseLoadingId === item.id || Boolean(purchaseFeedback[item.id]);
                         return (
-                          <div className={`relative z-10 grid grid-cols-[auto_1fr] gap-2 mt-4 transition-all duration-300 ease-out overflow-hidden max-h-[60px] ${purchaseLoadingId === item.id || purchaseFeedback[item.id] ? 'opacity-100 pointer-events-auto' : 'opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto'}`}>
+                          <div
+                            className={`relative z-10 grid grid-cols-[auto_1fr] gap-2 overflow-hidden transition-all duration-300 ease-out ${
+                              actionsOpen
+                                ? 'mt-3 max-h-11 opacity-100 pointer-events-auto'
+                                : 'mt-0 max-h-0 opacity-0 pointer-events-none group-hover:mt-3 group-hover:max-h-11 group-hover:opacity-100 group-hover:pointer-events-auto'
+                            }`}
+                          >
                             {(() => {
                               const cartQty = cart?.items.find(it => it.itemId === item.id)?.qty ?? 0;
                               const isInCart = cartQty > 0;
@@ -252,7 +259,7 @@ export default function StoreSection({
                                   type="button"
                                   onClick={() => onAddToCart(item)}
                                   title={isInCart ? t('store_in_cart') : t('store_add_to_cart')}
-                                  className={`relative flex items-center justify-center w-10 h-10 rounded-xl border backdrop-blur-md transition-all active:scale-95 ${
+                                  className={`relative flex items-center justify-center w-9 h-9 rounded-xl border backdrop-blur-md transition-all active:scale-95 ${
                                     isInCart
                                       ? 'border-emerald-500/30 bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30'
                                       : 'border-white/10 bg-white/10 text-white/80 hover:bg-white/20 hover:text-white'
@@ -271,7 +278,7 @@ export default function StoreSection({
                               type="button"
                               onClick={() => onPurchase(item.id)}
                               disabled={purchaseLoadingId === item.id}
-                              className={`flex items-center justify-center gap-2 rounded-xl px-4 h-10 text-xs font-bold text-white transition-all shadow-lg active:scale-95 disabled:cursor-not-allowed disabled:opacity-70 backdrop-blur-md ${
+                              className={`flex items-center justify-center gap-2 rounded-xl px-4 h-9 text-xs font-bold text-white transition-all shadow-lg active:scale-95 disabled:cursor-not-allowed disabled:opacity-70 backdrop-blur-md ${
                                 purchaseFeedback[item.id]?.status === 'success'
                                   ? 'bg-emerald-500 hover:bg-emerald-400'
                                   : purchaseFeedback[item.id]?.status === 'error'
