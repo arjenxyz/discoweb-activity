@@ -1,7 +1,8 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { LuTag, LuZap } from 'react-icons/lu';
+import { LuTag, LuZap, LuX } from 'react-icons/lu';
 import { useLocale, useT } from '@/contexts/LocaleContext';
 import type { MemberProfile } from '../types';
 
@@ -52,34 +53,23 @@ function pickBannerColor(profile: MemberProfile, formatRoleColor: (c: number) =>
   return '#5865F2';
 }
 
-export default function DiscordProfileCard({
+function ProfileCardBody({
   profile,
-  loading,
   joinedAt,
   formatRoleColor,
-  hasTag = false,
-  isBooster = false,
-}: DiscordProfileCardProps) {
-  const t = useT();
-  const { locale } = useLocale();
-  const dateLocale = locale === 'tr' ? 'tr-TR' : locale;
-
-  if (loading) {
-    return (
-      <div className="overflow-hidden rounded-2xl border border-white/[0.08] bg-[#111214] shadow-[0_8px_24px_rgba(0,0,0,0.35)] animate-pulse">
-        <div className="h-[72px] bg-white/10" />
-        <div className="px-4 pb-4 pt-12 space-y-3">
-          <div className="h-5 w-32 rounded bg-white/10" />
-          <div className="h-3 w-24 rounded bg-white/10" />
-          <div className="h-16 w-full rounded-xl bg-white/[0.06]" />
-          <div className="h-14 w-full rounded-xl bg-white/[0.06]" />
-        </div>
-      </div>
-    );
-  }
-
-  if (!profile) return null;
-
+  hasTag,
+  isBooster,
+  dateLocale,
+  t,
+}: {
+  profile: MemberProfile;
+  joinedAt?: string | null;
+  formatRoleColor: (color: number) => string;
+  hasTag: boolean;
+  isBooster: boolean;
+  dateLocale: string;
+  t: (key: string, vars?: Record<string, string | number>) => string;
+}) {
   const displayName = profile.nickname ?? profile.displayName ?? profile.username ?? '—';
   const username = profile.username || '—';
   const bannerColor = pickBannerColor(profile, formatRoleColor);
@@ -91,22 +81,14 @@ export default function DiscordProfileCard({
 
   return (
     <div className="overflow-hidden rounded-2xl border border-white/[0.08] bg-[#111214] shadow-[0_8px_24px_rgba(0,0,0,0.35)]">
-      {/* Banner */}
       <div className="relative h-[72px]" style={{ backgroundColor: bannerColor }}>
         {profile.bannerUrl ? (
-          <Image
-            src={profile.bannerUrl}
-            alt=""
-            fill
-            unoptimized
-            className="object-cover"
-          />
+          <Image src={profile.bannerUrl} alt="" fill unoptimized className="object-cover" />
         ) : null}
         <div className="absolute inset-0 bg-gradient-to-b from-black/0 to-black/25" />
       </div>
 
       <div className="relative px-4 pb-4">
-        {/* Avatar */}
         <div className="relative -mt-[42px] mb-3 w-fit">
           <div className="relative h-[84px] w-[84px] rounded-full bg-[#111214] p-[6px]">
             <div className="h-full w-full overflow-hidden rounded-full bg-[#1e1f22]">
@@ -132,12 +114,11 @@ export default function DiscordProfileCard({
           </div>
         </div>
 
-        {/* Identity */}
         <div className="mb-3 rounded-xl bg-[#232428] px-3.5 py-3">
-          <p className="text-[18px] font-bold leading-tight text-white tracking-tight truncate">
+          <p className="truncate text-[18px] font-bold leading-tight tracking-tight text-white">
             {displayName}
           </p>
-          <p className="mt-0.5 text-[13px] text-[#b5bac1] truncate">{username}</p>
+          <p className="mt-0.5 truncate text-[13px] text-[#b5bac1]">{username}</p>
           {(hasTag || isBooster) && (
             <div className="mt-2 flex flex-wrap gap-1.5">
               {hasTag && (
@@ -171,7 +152,7 @@ export default function DiscordProfileCard({
                   </span>
                 )}
                 {serverSince && (
-                  <span className="inline-flex items-center gap-1.5 min-w-0">
+                  <span className="inline-flex min-w-0 items-center gap-1.5">
                     {profile.guildIcon ? (
                       <Image
                         src={profile.guildIcon}
@@ -193,7 +174,6 @@ export default function DiscordProfileCard({
             </div>
           )}
 
-          {/* Roles */}
           <div className="mt-3.5">
             <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-[#b5bac1]">
               {t('discord_card_roles')}
@@ -207,10 +187,7 @@ export default function DiscordProfileCard({
                       key={role.id}
                       className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-white/[0.06] bg-[#111214]/80 px-2 py-0.5 text-[11px] font-medium text-[#dbdee1]"
                     >
-                      <span
-                        className="h-2.5 w-2.5 shrink-0 rounded-full"
-                        style={{ backgroundColor: color }}
-                      />
+                      <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: color }} />
                       <span className="truncate">{role.name}</span>
                     </span>
                   );
@@ -221,7 +198,6 @@ export default function DiscordProfileCard({
             )}
           </div>
 
-          {/* Note */}
           <div className="mt-3.5">
             <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-[#b5bac1]">
               {t('discord_card_note')}
@@ -233,5 +209,122 @@ export default function DiscordProfileCard({
         </div>
       </div>
     </div>
+  );
+}
+
+export default function DiscordProfileCard({
+  profile,
+  loading,
+  joinedAt,
+  formatRoleColor,
+  hasTag = false,
+  isBooster = false,
+}: DiscordProfileCardProps) {
+  const t = useT();
+  const { locale } = useLocale();
+  const dateLocale = locale === 'tr' ? 'tr-TR' : locale;
+  const [modalOpen, setModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (!modalOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setModalOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [modalOpen]);
+
+  if (loading) {
+    return (
+      <>
+        <div className="fixed left-0 top-[42%] z-40 lg:hidden">
+          <div className="h-14 w-14 animate-pulse rounded-r-full border border-l-0 border-white/10 bg-white/10" />
+        </div>
+        <div className="hidden overflow-hidden rounded-2xl border border-white/[0.08] bg-[#111214] shadow-[0_8px_24px_rgba(0,0,0,0.35)] animate-pulse lg:block">
+          <div className="h-[72px] bg-white/10" />
+          <div className="space-y-3 px-4 pb-4 pt-12">
+            <div className="h-5 w-32 rounded bg-white/10" />
+            <div className="h-3 w-24 rounded bg-white/10" />
+            <div className="h-16 w-full rounded-xl bg-white/[0.06]" />
+            <div className="h-14 w-full rounded-xl bg-white/[0.06]" />
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  if (!profile) return null;
+
+  const username = profile.username || '—';
+
+  const cardProps = {
+    profile,
+    joinedAt,
+    formatRoleColor,
+    hasTag,
+    isBooster,
+    dateLocale,
+    t,
+  };
+
+  return (
+    <>
+      {/* Mobil — sola yapışık damla */}
+      <button
+        type="button"
+        onClick={() => setModalOpen(true)}
+        aria-label={username}
+        className="group fixed left-0 top-[min(42%,calc(100%-8rem))] z-40 flex items-center rounded-r-[2rem] border border-l-0 border-white/15 bg-[#111214]/92 p-1.5 pr-2.5 shadow-[4px_0_24px_rgba(0,0,0,0.45)] backdrop-blur-md transition hover:bg-[#16181d] hover:pr-3 lg:hidden"
+      >
+        <span className="relative block h-12 w-12 overflow-hidden rounded-full border border-white/10 bg-[#1e1f22]">
+          {profile.avatarUrl ? (
+            <Image
+              src={profile.avatarUrl}
+              alt=""
+              width={48}
+              height={48}
+              unoptimized
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <span className="flex h-full w-full items-center justify-center text-sm font-bold text-white/40">
+              {username.charAt(0).toUpperCase()}
+            </span>
+          )}
+          <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#111214] bg-emerald-400" />
+        </span>
+      </button>
+
+      {/* Masaüstü kart */}
+      <div className="hidden lg:block">
+        <ProfileCardBody {...cardProps} />
+      </div>
+
+      {/* Mobil modal */}
+      {modalOpen && (
+        <div
+          className="fixed inset-0 z-[99980] flex items-center justify-center bg-black/70 px-4 py-6 backdrop-blur-md lg:hidden"
+          onClick={() => setModalOpen(false)}
+          role="presentation"
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full max-w-[340px] animate-in fade-in zoom-in-95 duration-200"
+          >
+            <button
+              type="button"
+              onClick={() => setModalOpen(false)}
+              className="absolute -right-1 -top-1 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-[#0b0d12] text-white/60 shadow-lg transition hover:text-white"
+              aria-label="Kapat"
+            >
+              <LuX className="h-4 w-4" />
+            </button>
+            <ProfileCardBody {...cardProps} />
+          </div>
+        </div>
+      )}
+    </>
   );
 }

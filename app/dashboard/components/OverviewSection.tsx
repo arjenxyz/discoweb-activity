@@ -346,7 +346,7 @@ export default function OverviewSection({
           )}
           </div>
 
-          <aside className="w-full lg:w-[300px] xl:w-[320px] shrink-0 order-1 lg:order-2 lg:sticky lg:top-6">
+          <aside className="contents lg:sticky lg:top-6 lg:order-2 lg:block lg:w-[300px] lg:shrink-0 xl:w-[320px]">
             <DiscordProfileCard
               profile={unauthorized ? null : profile}
               loading={profileLoading}
