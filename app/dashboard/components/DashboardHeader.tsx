@@ -140,15 +140,31 @@ export default function DashboardHeader({
   const [, setFetchedIcons] = useState<Record<string, string | null>>({});
   const fetchedIconsSeenRef = useRef<Set<string>>(new Set());
   const prevWalletBalanceRef = useRef<number | null>(null);
+  const walletBaselineReadyRef = useRef(false);
 
   useEffect(() => {
-    if (walletLoading || unauthorized) return;
+    if (unauthorized) {
+      prevWalletBalanceRef.current = null;
+      walletBaselineReadyRef.current = false;
+      return;
+    }
+
+    // Wait until the first wallet fetch finishes — never treat the initial 0 as real.
+    if (walletLoading) {
+      walletBaselineReadyRef.current = false;
+      return;
+    }
+
+    if (!walletBaselineReadyRef.current) {
+      prevWalletBalanceRef.current = walletBalance;
+      walletBaselineReadyRef.current = true;
+      return;
+    }
 
     const prev = prevWalletBalanceRef.current;
     prevWalletBalanceRef.current = walletBalance;
-
-    // Skip first known balance (initial load / hydration).
     if (prev === null) return;
+
     if (walletBalance > prev + 0.009) {
       playMoneyInSound();
     } else if (walletBalance < prev - 0.009) {

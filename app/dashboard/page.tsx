@@ -706,17 +706,21 @@ export default function DashboardPage() {
   refreshWalletRef.current = refreshWalletBalance;
 
   useEffect(() => {
-    if (activityReadinessLoading || isBlockedByReadiness) {
-      setWalletLoading(false);
+    if (activityReadinessLoading || isBlockedByReadiness || unauthorized) {
       return;
     }
 
+    let cancelled = false;
     const loadWallet = async () => {
+      setWalletLoading(true);
       await refreshWalletBalance();
-      setWalletLoading(false);
+      if (!cancelled) setWalletLoading(false);
     };
 
-    loadWallet();
+    void loadWallet();
+    return () => {
+      cancelled = true;
+    };
   }, [activityReadinessLoading, isBlockedByReadiness, unauthorized, refreshWalletBalance]);
 
   useEffect(() => {
