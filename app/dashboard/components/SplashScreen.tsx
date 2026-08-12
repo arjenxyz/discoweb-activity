@@ -8,7 +8,7 @@ import { apiUrl } from '@/lib/api';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { getDiscordSdk } from '@/lib/discordSdk';
 import { useT } from '@/contexts/LocaleContext';
-import type { MaintenanceKey } from '@/lib/maintenance';
+import type { MaintenanceKey } from '@/lib/maintenanceKeys';
 import { isMaintenanceKey } from '@/lib/maintenanceCopy';
 
 type Props = {

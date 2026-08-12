@@ -1,4 +1,4 @@
-import { MAINTENANCE_KEYS, type MaintenanceKey } from '@/lib/maintenance';
+import { MAINTENANCE_KEYS, type MaintenanceKey } from '@/lib/maintenanceKeys';
 
 export type MaintenanceCopy = {
   title: string;

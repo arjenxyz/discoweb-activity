@@ -2,21 +2,9 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { getSessionUserId, getSessionUserIdFromRequest } from '@/lib/auth';
 import { isLocalDev } from '@/lib/localDev';
+import { MAINTENANCE_KEYS, type MaintenanceKey } from '@/lib/maintenanceKeys';
 
-/** Global (platform-wide) maintenance modules — not per Discord server. */
-export const MAINTENANCE_KEYS = [
-  'site',
-  'store',
-  'transactions',
-  'tracking',
-  'promotions',
-  'discounts',
-  'transfers',
-  'bot',
-  'activity',
-] as const;
-
-export type MaintenanceKey = (typeof MAINTENANCE_KEYS)[number];
+export { MAINTENANCE_KEYS, type MaintenanceKey } from '@/lib/maintenanceKeys';
 
 export type MaintenanceFlag = {
   key: MaintenanceKey;

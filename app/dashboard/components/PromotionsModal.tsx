@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useT } from '@/contexts/LocaleContext';
 import { getMaintenanceCopy } from '@/lib/maintenanceCopy';
-import type { MaintenanceKey } from '@/lib/maintenance';
+import type { MaintenanceKey } from '@/lib/maintenanceKeys';
 
 type PromotionsModalProps = {
   isOpen: boolean;
