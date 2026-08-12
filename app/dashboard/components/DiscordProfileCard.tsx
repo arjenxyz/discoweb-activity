@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
+import { createPortal } from 'react-dom';
 import Image from 'next/image';
-import { LuTag, LuZap, LuX } from 'react-icons/lu';
+import { LuTag, LuZap, LuX, LuClock, LuShoppingBag, LuInfinity } from 'react-icons/lu';
 import { useLocale, useT } from '@/contexts/LocaleContext';
 import type { MemberProfile, ActivePerk } from '../types';
 
@@ -19,6 +20,9 @@ type DiscordProfileCardProps = {
 type RoleExpiryInfo = {
   permanent: boolean;
   expiresAt: Date | null;
+  appliedAt: Date | null;
+  itemTitle: string | null;
+  fromStore: boolean;
 };
 
 function buildRoleExpiryMap(activePerks: ActivePerk[]): Map<string, RoleExpiryInfo> {
@@ -28,23 +32,43 @@ function buildRoleExpiryMap(activePerks: ActivePerk[]): Map<string, RoleExpiryIn
     if (!perk.role_id) continue;
     const permanent = !perk.expires_at;
     const expiresAt = perk.expires_at ? new Date(perk.expires_at) : null;
+    const appliedAt = perk.applied_at ? new Date(perk.applied_at) : null;
+    const itemTitle = perk.item_title ?? null;
     const existing = map.get(perk.role_id);
 
     if (!existing) {
-      map.set(perk.role_id, { permanent, expiresAt });
+      map.set(perk.role_id, { permanent, expiresAt, appliedAt, itemTitle, fromStore: true });
       continue;
     }
 
+    const earliestApplied =
+      appliedAt && existing.appliedAt
+        ? appliedAt.getTime() < existing.appliedAt.getTime()
+          ? appliedAt
+          : existing.appliedAt
+        : appliedAt ?? existing.appliedAt;
+    const preferredTitle = existing.itemTitle || itemTitle;
+
     if (permanent || existing.permanent) {
-      map.set(perk.role_id, { permanent: true, expiresAt: null });
+      map.set(perk.role_id, {
+        permanent: true,
+        expiresAt: null,
+        appliedAt: earliestApplied,
+        itemTitle: preferredTitle,
+        fromStore: true,
+      });
       continue;
     }
 
     const existingMs = existing.expiresAt?.getTime() ?? 0;
     const nextMs = expiresAt?.getTime() ?? 0;
-    if (nextMs > existingMs) {
-      map.set(perk.role_id, { permanent: false, expiresAt });
-    }
+    map.set(perk.role_id, {
+      permanent: false,
+      expiresAt: nextMs > existingMs ? expiresAt : existing.expiresAt,
+      appliedAt: earliestApplied,
+      itemTitle: preferredTitle,
+      fromStore: true,
+    });
   }
 
   return map;
@@ -56,17 +80,13 @@ function resolveRoleExpiryInfo(
 ): RoleExpiryInfo {
   const fromStore = roleExpiryMap.get(roleId);
   if (fromStore) return fromStore;
-  // Normal Discord roles — no tracked expiry in our system.
-  return { permanent: true, expiresAt: null };
-}
-
-function getRoleExpiryLabel(
-  info: RoleExpiryInfo,
-  nowMs: number,
-  t: (key: string, vars?: Record<string, string | number>) => string,
-): string {
-  if (info.permanent || !info.expiresAt) return t('tracking_permanent');
-  return formatRoleCountdown(info.expiresAt, nowMs, t);
+  return {
+    permanent: true,
+    expiresAt: null,
+    appliedAt: null,
+    itemTitle: null,
+    fromStore: false,
+  };
 }
 
 function formatRoleCountdown(
@@ -90,6 +110,17 @@ function formatRoleCountdown(
   if (seconds > 0 || parts.length === 0) parts.push(t('tracking_duration_seconds', { count: seconds }));
 
   return parts.join(' ');
+}
+
+function formatDateTime(date: Date | null, locale: string): string | null {
+  if (!date || Number.isNaN(date.getTime())) return null;
+  return date.toLocaleString(locale, {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 }
 
 function discordCreatedAt(userId?: string): Date | null {
@@ -151,7 +182,12 @@ function ProfileCardBody({
 }) {
   const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.now());
+  const [mounted, setMounted] = useState(false);
   const roleExpiryMap = useMemo(() => buildRoleExpiryMap(activePerks), [activePerks]);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!selectedRoleId) return;
@@ -161,6 +197,16 @@ function ProfileCardBody({
     const timer = window.setInterval(() => setNowMs(Date.now()), 1000);
     return () => window.clearInterval(timer);
   }, [roleExpiryMap, selectedRoleId]);
+
+  useEffect(() => {
+    if (!selectedRoleId) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSelectedRoleId(null);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [selectedRoleId]);
+
   const displayName = profile.nickname ?? profile.displayName ?? profile.username ?? '—';
   const username = profile.username || '—';
   const bannerColor = pickBannerColor(profile, formatRoleColor);
@@ -169,6 +215,10 @@ function ProfileCardBody({
   const serverSince = formatMemberDate(serverJoin ? new Date(serverJoin) : null, dateLocale);
   const roles = (profile.roles ?? []).filter((r) => r.name !== '@everyone');
   const note = profile.about?.trim() || null;
+  const selectedRole = selectedRoleId ? roles.find((r) => r.id === selectedRoleId) ?? null : null;
+  const selectedInfo = selectedRoleId
+    ? resolveRoleExpiryInfo(selectedRoleId, roleExpiryMap)
+    : null;
 
   return (
     <div className="overflow-hidden rounded-2xl border border-white/[0.08] bg-[#111214] shadow-[0_8px_24px_rgba(0,0,0,0.35)]">
@@ -273,32 +323,16 @@ function ProfileCardBody({
               <div className="flex flex-wrap gap-1.5">
                 {roles.map((role) => {
                   const color = role.color > 0 ? formatRoleColor(role.color) : '#99aab5';
-                  const expiryInfo = resolveRoleExpiryInfo(role.id, roleExpiryMap);
-                  const isSelected = selectedRoleId === role.id;
-                  const expiryLabel = isSelected ? getRoleExpiryLabel(expiryInfo, nowMs, t) : null;
-
                   return (
                     <button
                       key={role.id}
                       type="button"
-                      onClick={() => setSelectedRoleId(isSelected ? null : role.id)}
-                      className={`inline-flex max-w-full cursor-pointer flex-col items-start gap-0.5 rounded-full border px-2 py-0.5 text-left text-[11px] font-medium text-[#dbdee1] transition-colors hover:border-white/15 hover:bg-white/[0.06] ${
-                        isSelected
-                          ? 'border-amber-400/35 bg-amber-500/10'
-                          : 'border-white/[0.06] bg-[#111214]/80'
-                      }`}
-                      aria-pressed={isSelected}
+                      onClick={() => setSelectedRoleId(role.id)}
+                      className="inline-flex max-w-full cursor-pointer items-center gap-1.5 rounded-full border border-white/[0.06] bg-[#111214]/80 px-2 py-0.5 text-left text-[11px] font-medium text-[#dbdee1] transition-colors hover:border-white/15 hover:bg-white/[0.06]"
                       title={t('discord_card_role_tap_title')}
                     >
-                      <span className="inline-flex max-w-full items-center gap-1.5">
-                        <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: color }} />
-                        <span className="truncate">{role.name}</span>
-                      </span>
-                      {expiryLabel && (
-                        <span className="max-w-full truncate pl-3.5 text-[10px] font-semibold tabular-nums text-amber-300/90">
-                          {expiryLabel}
-                        </span>
-                      )}
+                      <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: color }} />
+                      <span className="truncate">{role.name}</span>
                     </button>
                   );
                 })}
@@ -323,6 +357,110 @@ function ProfileCardBody({
           </div>
         </div>
       </div>
+
+      {mounted &&
+        selectedRole &&
+        selectedInfo &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/75 px-4 py-6 backdrop-blur-md"
+            onClick={() => setSelectedRoleId(null)}
+            role="presentation"
+          >
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="role-detail-title"
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-[360px] animate-in fade-in zoom-in-95 duration-200 overflow-hidden rounded-2xl border border-white/[0.10] bg-[#16181d] shadow-[0_24px_80px_rgba(0,0,0,0.55)]"
+            >
+              <button
+                type="button"
+                onClick={() => setSelectedRoleId(null)}
+                className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-black/30 text-white/60 transition hover:text-white"
+                aria-label={t('discord_card_role_close')}
+              >
+                <LuX className="h-4 w-4" />
+              </button>
+
+              <div className="border-b border-white/[0.06] px-5 pb-4 pt-5">
+                <p className="text-[11px] font-bold uppercase tracking-wide text-[#b5bac1]">
+                  {t('discord_card_role_detail_title')}
+                </p>
+                <div className="mt-3 flex items-center gap-3">
+                  <span
+                    className="h-4 w-4 shrink-0 rounded-full ring-2 ring-white/10"
+                    style={{
+                      backgroundColor:
+                        selectedRole.color > 0 ? formatRoleColor(selectedRole.color) : '#99aab5',
+                    }}
+                  />
+                  <div className="min-w-0">
+                    <h3 id="role-detail-title" className="truncate text-lg font-bold text-white">
+                      {selectedRole.name}
+                    </h3>
+                    {selectedInfo.itemTitle && selectedInfo.itemTitle !== selectedRole.name && (
+                      <p className="truncate text-xs text-white/45">{selectedInfo.itemTitle}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3 px-5 py-4">
+                <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] px-3.5 py-3">
+                  <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-[#b5bac1]">
+                    {selectedInfo.permanent ? (
+                      <LuInfinity className="h-3.5 w-3.5 text-emerald-300" />
+                    ) : (
+                      <LuClock className="h-3.5 w-3.5 text-amber-300" />
+                    )}
+                    {t('discord_card_role_status')}
+                  </div>
+                  <p
+                    className={`mt-1.5 text-sm font-semibold tabular-nums ${
+                      selectedInfo.permanent ? 'text-emerald-300' : 'text-amber-300'
+                    }`}
+                  >
+                    {selectedInfo.permanent || !selectedInfo.expiresAt
+                      ? t('tracking_permanent')
+                      : formatRoleCountdown(selectedInfo.expiresAt, nowMs, t)}
+                  </p>
+                </div>
+
+                <div className="grid gap-2.5">
+                  <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] px-3.5 py-3">
+                    <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-[#b5bac1]">
+                      <LuShoppingBag className="h-3.5 w-3.5" />
+                      {selectedInfo.fromStore
+                        ? t('discord_card_role_purchased_at')
+                        : t('discord_card_role_source')}
+                    </div>
+                    <p className="mt-1.5 text-sm text-[#dbdee1]">
+                      {selectedInfo.fromStore
+                        ? formatDateTime(selectedInfo.appliedAt, dateLocale) ??
+                          t('discord_card_role_purchase_unknown')
+                        : t('discord_card_role_source_server')}
+                    </p>
+                  </div>
+
+                  {selectedInfo.fromStore && (
+                    <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] px-3.5 py-3">
+                      <p className="text-[11px] font-bold uppercase tracking-wide text-[#b5bac1]">
+                        {t('tracking_end_date')}
+                      </p>
+                      <p className="mt-1.5 text-sm text-[#dbdee1]">
+                        {selectedInfo.permanent || !selectedInfo.expiresAt
+                          ? t('tracking_permanent')
+                          : formatDateTime(selectedInfo.expiresAt, dateLocale)}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
