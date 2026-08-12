@@ -1,0 +1,8 @@
+{
+  "greeting_morning": "Jó reggelt",
+  "greeting_afternoon": "Jó napot",
+  "greeting_evening": "Jó estét",
+  "greeting_night": "Jó éjszakát",
+  "overview_subtitle_with_server": "Kövesd az üzeneteidet, hangidődet és kereseteidet a(z) {serverName} szerveren.",
+  "overview_subtitle_fallback": "Kövesd az üzeneteidet, hangidődet és kereseteidet ezen a szerveren."
+}

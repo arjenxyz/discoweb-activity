@@ -1,0 +1,8 @@
+{
+  "greeting_morning": "Günaydın",
+  "greeting_afternoon": "İyi günler",
+  "greeting_evening": "İyi akşamlar",
+  "greeting_night": "İyi geceler",
+  "overview_subtitle_with_server": "{serverName} sunucusundaki mesaj, ses ve kazançlarını buradan takip et.",
+  "overview_subtitle_fallback": "Mesaj, ses ve kazançlarını buradan takip et."
+}

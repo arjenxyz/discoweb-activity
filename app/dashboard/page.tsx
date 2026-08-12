@@ -1541,6 +1541,7 @@ export default function DashboardPage() {
                   profileError={profileError}
                   unauthorized={unauthorized}
                   profile={profile}
+                  serverName={headerServer.data?.name}
                   renderPapelAmount={renderPapelAmount}
                   formatRoleColor={formatRoleColor}
                   pendingEarnings={pendingEarnings}

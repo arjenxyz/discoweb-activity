@@ -1,0 +1,8 @@
+{
+  "greeting_morning": "Selamat pagi",
+  "greeting_afternoon": "Selamat siang",
+  "greeting_evening": "Selamat sore",
+  "greeting_night": "Selamat malam",
+  "overview_subtitle_with_server": "Pantau pesan, waktu suara, dan penghasilanmu di {serverName}.",
+  "overview_subtitle_fallback": "Pantau pesan, waktu suara, dan penghasilanmu di server ini."
+}

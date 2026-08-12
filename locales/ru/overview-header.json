@@ -1,0 +1,8 @@
+{
+  "greeting_morning": "Доброе утро",
+  "greeting_afternoon": "Добрый день",
+  "greeting_evening": "Добрый вечер",
+  "greeting_night": "Доброй ночи",
+  "overview_subtitle_with_server": "Отслеживай сообщения, время в голосе и заработок на сервере {serverName}.",
+  "overview_subtitle_fallback": "Отслеживай сообщения, время в голосе и заработок на этом сервере."
+}

@@ -14,6 +14,7 @@ import trWallet from '@/locales/tr/wallet.json';
 import trWelcome from '@/locales/tr/welcome.json';
 import trSupport from '@/locales/tr/support.json';
 import trMaintenance from '@/locales/tr/maintenance.json';
+import trOverviewHeader from '@/locales/tr/overview-header.json';
 
 import enAuth from '@/locales/en/auth.json';
 import enDashboard from '@/locales/en/dashboard.json';
@@ -29,6 +30,7 @@ import enWallet from '@/locales/en/wallet.json';
 import enWelcome from '@/locales/en/welcome.json';
 import enSupport from '@/locales/en/support.json';
 import enMaintenance from '@/locales/en/maintenance.json';
+import enOverviewHeader from '@/locales/en/overview-header.json';
 
 import deDashboard from '@/locales/de/dashboard.json';
 import deDm from '@/locales/de/dm.json';
@@ -37,6 +39,7 @@ import deMail from '@/locales/de/mail.json';
 import deNotifications from '@/locales/de/notifications.json';
 import deSplash from '@/locales/de/splash.json';
 import deMaintenance from '@/locales/de/maintenance.json';
+import deOverviewHeader from '@/locales/de/overview-header.json';
 
 import esDashboard from '@/locales/es/dashboard.json';
 import esDm from '@/locales/es/dm.json';
@@ -45,6 +48,7 @@ import esMail from '@/locales/es/mail.json';
 import esNotifications from '@/locales/es/notifications.json';
 import esSplash from '@/locales/es/splash.json';
 import esMaintenance from '@/locales/es/maintenance.json';
+import esOverviewHeader from '@/locales/es/overview-header.json';
 
 import frDashboard from '@/locales/fr/dashboard.json';
 import frDm from '@/locales/fr/dm.json';
@@ -53,6 +57,7 @@ import frMail from '@/locales/fr/mail.json';
 import frNotifications from '@/locales/fr/notifications.json';
 import frSplash from '@/locales/fr/splash.json';
 import frMaintenance from '@/locales/fr/maintenance.json';
+import frOverviewHeader from '@/locales/fr/overview-header.json';
 
 import ruDashboard from '@/locales/ru/dashboard.json';
 import ruDm from '@/locales/ru/dm.json';
@@ -61,19 +66,24 @@ import ruMail from '@/locales/ru/mail.json';
 import ruNotifications from '@/locales/ru/notifications.json';
 import ruSplash from '@/locales/ru/splash.json';
 import ruMaintenance from '@/locales/ru/maintenance.json';
+import ruOverviewHeader from '@/locales/ru/overview-header.json';
 
 import idMail from '@/locales/id/mail.json';
 import idSplash from '@/locales/id/splash.json';
 import idMaintenance from '@/locales/id/maintenance.json';
+import idOverviewHeader from '@/locales/id/overview-header.json';
 import huMail from '@/locales/hu/mail.json';
 import huSplash from '@/locales/hu/splash.json';
 import huMaintenance from '@/locales/hu/maintenance.json';
+import huOverviewHeader from '@/locales/hu/overview-header.json';
 import jaMail from '@/locales/ja/mail.json';
 import jaSplash from '@/locales/ja/splash.json';
 import jaMaintenance from '@/locales/ja/maintenance.json';
+import jaOverviewHeader from '@/locales/ja/overview-header.json';
 import koMail from '@/locales/ko/mail.json';
 import koSplash from '@/locales/ko/splash.json';
 import koMaintenance from '@/locales/ko/maintenance.json';
+import koOverviewHeader from '@/locales/ko/overview-header.json';
 
 import ptAuth from '@/locales/pt-br/auth.json';
 import ptDashboard from '@/locales/pt-br/dashboard.json';
@@ -89,6 +99,7 @@ import ptWallet from '@/locales/pt-br/wallet.json';
 import ptWelcome from '@/locales/pt-br/welcome.json';
 import ptSupport from '@/locales/pt-br/support.json';
 import ptMaintenance from '@/locales/pt-br/maintenance.json';
+import ptOverviewHeader from '@/locales/pt-br/overview-header.json';
 
 import {
   type LanguageCode,
@@ -104,30 +115,30 @@ const mergeBundles = (...bundles: TranslationMap[]): TranslationMap =>
 
 const enBundle = mergeBundles(
   enAuth, enDashboard, enDm, enErrors, enMail, enMisc,
-  enNotifications, enProfile, enStore, enUI, enWallet, enWelcome, enSupport, enMaintenance,
+  enNotifications, enProfile, enStore, enUI, enWallet, enWelcome, enSupport, enMaintenance, enOverviewHeader,
 );
 
 const trBundle = mergeBundles(
   trAuth, trDashboard, trDm, trDocs, trErrors, trMail, trMisc,
-  trNotifications, trPrivacy, trProfile, trStore, trUI, trWallet, trWelcome, trSupport, trMaintenance,
+  trNotifications, trPrivacy, trProfile, trStore, trUI, trWallet, trWelcome, trSupport, trMaintenance, trOverviewHeader,
 );
 
 export const translations: Record<LanguageCode, TranslationMap> = {
   en: enBundle,
   tr: trBundle,
-  de: mergeBundles(enBundle, deDashboard, deDm, deErrors, deMail, deNotifications, deSplash, deMaintenance),
-  es: mergeBundles(enBundle, esDashboard, esDm, esErrors, esMail, esNotifications, esSplash, esMaintenance),
-  fr: mergeBundles(enBundle, frDashboard, frDm, frErrors, frMail, frNotifications, frSplash, frMaintenance),
-  ru: mergeBundles(enBundle, ruDashboard, ruDm, ruErrors, ruMail, ruNotifications, ruSplash, ruMaintenance),
+  de: mergeBundles(enBundle, deDashboard, deDm, deErrors, deMail, deNotifications, deSplash, deMaintenance, deOverviewHeader),
+  es: mergeBundles(enBundle, esDashboard, esDm, esErrors, esMail, esNotifications, esSplash, esMaintenance, esOverviewHeader),
+  fr: mergeBundles(enBundle, frDashboard, frDm, frErrors, frMail, frNotifications, frSplash, frMaintenance, frOverviewHeader),
+  ru: mergeBundles(enBundle, ruDashboard, ruDm, ruErrors, ruMail, ruNotifications, ruSplash, ruMaintenance, ruOverviewHeader),
   pt: mergeBundles(
     enBundle,
     ptAuth, ptDashboard, ptDm, ptErrors, ptMail, ptMisc,
-    ptNotifications, ptProfile, ptStore, ptUI, ptWallet, ptWelcome, ptSupport, ptMaintenance,
+    ptNotifications, ptProfile, ptStore, ptUI, ptWallet, ptWelcome, ptSupport, ptMaintenance, ptOverviewHeader,
   ),
-  id: mergeBundles(enBundle, idMail, idSplash, idMaintenance),
-  hu: mergeBundles(enBundle, huMail, huSplash, huMaintenance),
-  ja: mergeBundles(enBundle, jaMail, jaSplash, jaMaintenance),
-  ko: mergeBundles(enBundle, koMail, koSplash, koMaintenance),
+  id: mergeBundles(enBundle, idMail, idSplash, idMaintenance, idOverviewHeader),
+  hu: mergeBundles(enBundle, huMail, huSplash, huMaintenance, huOverviewHeader),
+  ja: mergeBundles(enBundle, jaMail, jaSplash, jaMaintenance, jaOverviewHeader),
+  ko: mergeBundles(enBundle, koMail, koSplash, koMaintenance, koOverviewHeader),
 };
 
 /**

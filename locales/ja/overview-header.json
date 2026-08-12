@@ -1,0 +1,8 @@
+{
+  "greeting_morning": "おはようございます",
+  "greeting_afternoon": "こんにちは",
+  "greeting_evening": "こんばんは",
+  "greeting_night": "おやすみなさい",
+  "overview_subtitle_with_server": "{serverName} でのメッセージ、ボイス時間、収益をここで確認できます。",
+  "overview_subtitle_fallback": "このサーバーでのメッセージ、ボイス時間、収益をここで確認できます。"
+}

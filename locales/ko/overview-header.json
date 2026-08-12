@@ -1,0 +1,8 @@
+{
+  "greeting_morning": "좋은 아침이에요",
+  "greeting_afternoon": "좋은 오후예요",
+  "greeting_evening": "좋은 저녁이에요",
+  "greeting_night": "좋은 밤이에요",
+  "overview_subtitle_with_server": "{serverName}에서 메시지, 음성 시간, 수익을 여기서 확인하세요.",
+  "overview_subtitle_fallback": "이 서버에서 메시지, 음성 시간, 수익을 여기서 확인하세요."
+}

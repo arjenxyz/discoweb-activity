@@ -1,0 +1,8 @@
+{
+  "greeting_morning": "Buenos días",
+  "greeting_afternoon": "Buenas tardes",
+  "greeting_evening": "Buenas tardes",
+  "greeting_night": "Buenas noches",
+  "overview_subtitle_with_server": "Sigue tus mensajes, tiempo en voz y ganancias en {serverName}.",
+  "overview_subtitle_fallback": "Sigue tus mensajes, tiempo en voz y ganancias en este servidor."
+}
