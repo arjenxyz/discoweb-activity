@@ -304,6 +304,52 @@ function CopyIdButton({ value, t }: { value: string; t: Translate }) {
   );
 }
 
+function PromoCodeChip({ value, t }: { value: string; t: Translate }) {
+  const [copied, setCopied] = useState(false);
+
+  const onCopy = async () => {
+    const ok = await copyTextToClipboard(value);
+    if (!ok) return;
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1600);
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        void onCopy();
+      }}
+      className="group flex w-full min-w-0 items-center gap-3 rounded-xl border border-dashed border-emerald-400/35 bg-gradient-to-r from-emerald-500/[0.12] via-emerald-500/[0.06] to-transparent px-3.5 py-3 text-left transition hover:border-emerald-300/50 hover:from-emerald-500/[0.16]"
+      title={t('mail_txn_copy_id')}
+    >
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-emerald-400/20 bg-emerald-500/10 text-emerald-300">
+        <LuTicket className="h-4 w-4" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-300/45">
+          {t('mail_txn_promo_code')}
+        </p>
+        <p className="mt-1 break-all font-mono text-base font-bold tracking-[0.14em] text-emerald-100 [overflow-wrap:anywhere]">
+          {value}
+        </p>
+      </div>
+      <span
+        className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border transition ${
+          copied
+            ? 'border-emerald-400/35 bg-emerald-500/20 text-emerald-300'
+            : 'border-white/10 bg-black/25 text-white/40 group-hover:border-emerald-400/25 group-hover:text-emerald-200'
+        }`}
+      >
+        {copied ? <LuCheck className="h-3.5 w-3.5" /> : <LuCopy className="h-3.5 w-3.5" />}
+      </span>
+      <span className="sr-only">{copied ? t('mail_txn_copied') : t('mail_txn_copy_id')}</span>
+    </button>
+  );
+}
+
 /** Shared shell for all transactional mails — one card, no overflow. */
 function ReceiptCard({
   children,
@@ -624,20 +670,19 @@ export default function MailTransactionReceipt({ mail, txn, t }: Props) {
       <ReceiptCard accent="emerald">
         <ReceiptSection>
           <SectionLabel>{t('mail_txn_promo_details')}</SectionLabel>
-          <div className="flex min-w-0 items-start gap-3">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-emerald-500/20 bg-emerald-500/10 text-emerald-300">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-emerald-500/20 bg-emerald-500/10 text-emerald-300">
               <LuGift className="h-5 w-5" />
             </div>
-            <div className="min-w-0 flex-1 space-y-1.5">
-              <p className="text-base font-semibold text-white">DiscoWeb</p>
-              {code ? (
-                <div className="flex min-w-0 flex-col gap-1 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2">
-                  <span className="shrink-0 text-[11px] text-white/35">{t('mail_txn_promo_code')}</span>
-                  <CopyIdButton value={code} t={t} />
-                </div>
-              ) : null}
-            </div>
+            <p className="min-w-0 break-words text-base font-semibold text-white [overflow-wrap:anywhere]">
+              DiscoWeb
+            </p>
           </div>
+          {code ? (
+            <div className="mt-3.5 min-w-0">
+              <PromoCodeChip value={code} t={t} />
+            </div>
+          ) : null}
         </ReceiptSection>
         <ReceiptDivider />
         <ReceiptSection>
