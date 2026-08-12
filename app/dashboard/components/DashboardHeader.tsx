@@ -13,6 +13,7 @@ import { useT } from '@/contexts/LocaleContext';
 import { ENABLE_TAG_BADGE_SECTION } from '../featureFlags';
 import SupportMenu from './SupportMenu';
 import ServerTimeClock from './ServerTimeClock';
+import { playMoneyInSound } from '@/lib/uiClickSound';
 
 type DashboardHeaderProps = {
   isActivityEmbed?: boolean;
@@ -138,6 +139,20 @@ export default function DashboardHeader({
   const [profileHeaderBg, setProfileHeaderBg] = useState(pickProfileMenuBackground);
   const [, setFetchedIcons] = useState<Record<string, string | null>>({});
   const fetchedIconsSeenRef = useRef<Set<string>>(new Set());
+  const prevWalletBalanceRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (walletLoading || unauthorized) return;
+
+    const prev = prevWalletBalanceRef.current;
+    prevWalletBalanceRef.current = walletBalance;
+
+    // Skip first known balance (initial load / hydration).
+    if (prev === null) return;
+    if (walletBalance > prev + 0.009) {
+      playMoneyInSound();
+    }
+  }, [walletBalance, walletLoading, unauthorized]);
 
   const toggleProfileOpen = () => {
     if (!isProfileOpen) {

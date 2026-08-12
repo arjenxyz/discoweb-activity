@@ -128,6 +128,63 @@ export function playPurchaseSound(opts?: { force?: boolean; volume01?: number })
   shimmer.stop(t0 + 0.4);
 }
 
+let lastMoneyInAt = 0;
+
+/** Incoming funds — warmer coin cascade when Papel balance increases. */
+export function playMoneyInSound(opts?: { force?: boolean; volume01?: number }) {
+  if (typeof window === 'undefined') return;
+
+  const master = opts?.volume01 != null ? Math.min(1, Math.max(0, opts.volume01)) : getSfxVolume01();
+  if (!opts?.force && master <= 0.001) return;
+
+  const now = performance.now();
+  if (!opts?.force && now - lastMoneyInAt < 700) return;
+  lastMoneyInAt = now;
+
+  const ctx = ensureCtx();
+  if (!ctx) return;
+
+  void ctx.resume().catch(() => {});
+
+  const t0 = ctx.currentTime;
+  const gainMaster = Math.min(0.32, 0.1 + master * 0.22);
+
+  const notes = [
+    { freq: 523.25, at: 0, dur: 0.16 },
+    { freq: 659.25, at: 0.08, dur: 0.16 },
+    { freq: 783.99, at: 0.16, dur: 0.18 },
+    { freq: 1046.5, at: 0.26, dur: 0.28 },
+  ];
+
+  for (const note of notes) {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(note.freq, t0 + note.at);
+    gain.gain.setValueAtTime(0.0001, t0 + note.at);
+    gain.gain.exponentialRampToValueAtTime(gainMaster * 0.9, t0 + note.at + 0.012);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + note.at + note.dur);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(t0 + note.at);
+    osc.stop(t0 + note.at + note.dur + 0.02);
+  }
+
+  // Soft low cash body
+  const body = ctx.createOscillator();
+  const bodyGain = ctx.createGain();
+  body.type = 'triangle';
+  body.frequency.setValueAtTime(220, t0);
+  body.frequency.exponentialRampToValueAtTime(140, t0 + 0.2);
+  bodyGain.gain.setValueAtTime(0.0001, t0);
+  bodyGain.gain.exponentialRampToValueAtTime(gainMaster * 0.4, t0 + 0.02);
+  bodyGain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.35);
+  body.connect(bodyGain);
+  bodyGain.connect(ctx.destination);
+  body.start(t0);
+  body.stop(t0 + 0.38);
+}
+
 function isInteractiveTarget(target: EventTarget | null): boolean {
   if (!(target instanceof Element)) return false;
   const el = target.closest(
