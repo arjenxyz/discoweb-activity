@@ -42,5 +42,10 @@
   "maintenance_transfers_title": "Переводы на обслуживании",
   "maintenance_transfers_description": "Переводы Papel временно приостановлены.",
   "maintenance_transfers_helper": "Пожалуйста, попробуйте позже.",
-  "maintenance_transfers_short": "Переводы на обслуживании"
+  "maintenance_transfers_short": "Переводы на обслуживании",
+
+  "maintenance_incident_title": "Аварийная остановка",
+  "maintenance_incident_description": "Мы устраняем критическую проблему. Все сервисы временно приостановлены.",
+  "maintenance_incident_helper": "Не закрывайте этот экран — приложение откроется автоматически после устранения проблемы.",
+  "maintenance_incident_short": "Платформа в режиме аварийной остановки"
 }

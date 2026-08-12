@@ -42,5 +42,10 @@
   "maintenance_transfers_title": "Átutalások karbantartás alatt",
   "maintenance_transfers_description": "A Papel átutalások átmenetileg szünetelnek.",
   "maintenance_transfers_helper": "Kérjük, próbáld újra később.",
-  "maintenance_transfers_short": "Az átutalások karbantartás alatt vannak"
+  "maintenance_transfers_short": "Az átutalások karbantartás alatt vannak",
+
+  "maintenance_incident_title": "Vészleállítás",
+  "maintenance_incident_description": "Kritikus hibát javítunk. Minden szolgáltatás ideiglenesen szünetel.",
+  "maintenance_incident_helper": "Ne zárd be ezt a képernyőt — az alkalmazás automatikusan megnyílik, amint a hiba megoldódik.",
+  "maintenance_incident_short": "Platform vészhelyzeti módban"
 }

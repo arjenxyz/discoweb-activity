@@ -42,5 +42,10 @@
   "maintenance_transfers_title": "송금 점검 중",
   "maintenance_transfers_description": "Papel 송금이 일시적으로 중지되었습니다.",
   "maintenance_transfers_helper": "나중에 다시 시도해 주세요.",
-  "maintenance_transfers_short": "송금 점검 중"
+  "maintenance_transfers_short": "송금 점검 중",
+
+  "maintenance_incident_title": "긴급 정지",
+  "maintenance_incident_description": "중요한 문제를 해결하고 있습니다. 모든 서비스가 일시적으로 중단되었습니다.",
+  "maintenance_incident_helper": "이 화면을 닫지 마세요. 문제가 해결되면 앱이 자동으로 다시 열립니다.",
+  "maintenance_incident_short": "플랫폼이 긴급 정지 모드입니다"
 }

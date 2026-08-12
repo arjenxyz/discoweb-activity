@@ -42,5 +42,10 @@
   "maintenance_transfers_title": "送金 メンテナンス中",
   "maintenance_transfers_description": "Papel の送金は一時的に停止しています。",
   "maintenance_transfers_helper": "後でもう一度お試しください。",
-  "maintenance_transfers_short": "送金はメンテナンス中です"
+  "maintenance_transfers_short": "送金はメンテナンス中です",
+
+  "maintenance_incident_title": "緊急停止",
+  "maintenance_incident_description": "重大な問題の解決に取り組んでいます。すべてのサービスは一時的に停止しています。",
+  "maintenance_incident_helper": "この画面を閉じないでください。問題が解決するとアプリは自動的に再開します。",
+  "maintenance_incident_short": "プラットフォームは緊急停止モードです"
 }

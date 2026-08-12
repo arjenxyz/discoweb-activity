@@ -8,8 +8,8 @@ import { apiUrl } from '@/lib/api';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { getDiscordSdk } from '@/lib/discordSdk';
 import { useT } from '@/contexts/LocaleContext';
-import type { MaintenanceKey } from '@/lib/maintenanceKeys';
-import { isMaintenanceKey } from '@/lib/maintenanceCopy';
+import type { MaintenanceUiKey } from '@/lib/maintenanceKeys';
+import { isMaintenanceUiKey } from '@/lib/maintenanceCopy';
 
 type Props = {
   onEnter: () => void;
@@ -22,7 +22,8 @@ export default function SplashScreen({ onEnter }: Props) {
   const [muted, setMuted] = useState(true);
   const [visible, setVisible] = useState(false);
   const [maintenance, setMaintenance] = useState(false);
-  const [splashMaintenanceKey, setSplashMaintenanceKey] = useState<MaintenanceKey | null>(null);
+  const [incident, setIncident] = useState(false);
+  const [splashMaintenanceKey, setSplashMaintenanceKey] = useState<MaintenanceUiKey | null>(null);
   const [maintenanceChecked, setMaintenanceChecked] = useState(false);
   const [isDeveloper, setIsDeveloper] = useState(false);
   const [isDeveloperChecked, setIsDeveloperChecked] = useState(false);
@@ -135,9 +136,12 @@ export default function SplashScreen({ onEnter }: Props) {
       fetch(apiUrl('/api/activity/maintenance'))
         .then(r => r.json())
         .then(d => {
+          setIncident(d.incident === true);
           setMaintenance(d.maintenance === true);
           const key = d.splashBlockingKey;
-          if (typeof key === 'string' && isMaintenanceKey(key)) {
+          if (d.incident === true) {
+            setSplashMaintenanceKey('incident');
+          } else if (typeof key === 'string' && isMaintenanceUiKey(key)) {
             setSplashMaintenanceKey(key);
           } else if (d.maintenance === true) {
             setSplashMaintenanceKey('site');
@@ -202,8 +206,8 @@ export default function SplashScreen({ onEnter }: Props) {
 
   const openDiscoWeb = async () => { await openLink('https://discoweb.tech'); };
 
-  const stillLoading = !maintenanceChecked || (maintenance && !isDeveloperChecked);
-  const blocked = maintenance && !isDeveloper;
+  const stillLoading = !maintenanceChecked || (maintenance && !incident && !isDeveloperChecked);
+  const blocked = incident || (maintenance && !isDeveloper);
   const activeSplashMaintenanceKey = splashMaintenanceKey ?? 'site';
 
   const handleScreenClick = (e: React.MouseEvent) => {

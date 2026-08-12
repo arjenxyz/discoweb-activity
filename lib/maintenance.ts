@@ -152,7 +152,7 @@ const resolveCallerUserId = async (request?: Request): Promise<string | null> =>
 };
 
 /** Soft-read active emergency stop (no hard fail if table missing). */
-const getActiveIncidentMessage = async (): Promise<string | null> => {
+export async function getActiveIncidentMessage(): Promise<string | null> {
   const supabase = getSupabase();
   if (!supabase) return null;
 
@@ -169,7 +169,12 @@ const getActiveIncidentMessage = async (): Promise<string | null> => {
     (typeof data.public_message === 'string' && data.public_message.trim()) ||
     'Şu anda büyük bir sorunu çözmek için çalışıyoruz, lütfen sabırlı olun.'
   );
-};
+}
+
+export async function isIncidentActive(): Promise<boolean> {
+  const message = await getActiveIncidentMessage();
+  return Boolean(message);
+}
 
 export const checkMaintenance = async (
   keys: MaintenanceKey[],
@@ -178,9 +183,15 @@ export const checkMaintenance = async (
   const request = guildIdOrRequest instanceof Request ? guildIdOrRequest : undefined;
   const guildId = typeof guildIdOrRequest === 'string' ? guildIdOrRequest : undefined;
 
-  // Developers (and local-dev) bypass maintenance at API level — same as web.
+  // Developers (and local-dev) bypass panel maintenance — NOT global incident stop.
   if (await isLocalDev()) {
     return { blocked: false as const, key: null, reason: null };
+  }
+
+  // Incident freeze is never bypassed (even for developers).
+  const incidentMessage = await getActiveIncidentMessage();
+  if (incidentMessage) {
+    return { blocked: true as const, key: 'site' as MaintenanceKey, reason: incidentMessage };
   }
 
   try {
@@ -190,12 +201,6 @@ export const checkMaintenance = async (
     }
   } catch {
     /* non-session callers still subject to flags */
-  }
-
-  // Incident freeze is independent of maintenance panel toggles.
-  const incidentMessage = await getActiveIncidentMessage();
-  if (incidentMessage) {
-    return { blocked: true as const, key: 'site' as MaintenanceKey, reason: incidentMessage };
   }
 
   const data = await getMaintenanceFlags(guildId);

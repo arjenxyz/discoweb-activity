@@ -42,5 +42,10 @@
   "maintenance_transfers_title": "Transfers Under Maintenance",
   "maintenance_transfers_description": "Papel transfers are temporarily paused.",
   "maintenance_transfers_helper": "Please try again later.",
-  "maintenance_transfers_short": "Transfers are under maintenance"
+  "maintenance_transfers_short": "Transfers are under maintenance",
+
+  "maintenance_incident_title": "Emergency Stop",
+  "maintenance_incident_description": "We're working on resolving a critical issue. All services are temporarily paused.",
+  "maintenance_incident_helper": "Please keep this screen open — the app will reopen automatically when the issue is resolved.",
+  "maintenance_incident_short": "Platform is in emergency stop mode"
 }

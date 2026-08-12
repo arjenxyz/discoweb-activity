@@ -20,6 +20,7 @@ export type ActivityReadinessStatus =
   | 'missing_bot_token'
   | 'bot_not_in_guild'
   | 'bot_maintenance'
+  | 'incident'
   | 'user_not_in_guild'
   | 'missing_user_profile'
   | 'missing_verify_role'
@@ -173,6 +174,7 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry, onB
     missing_verify_role: { title: t('gate_missing_verify_role_title'), description: t('gate_missing_verify_role_description'), helper: t('gate_missing_verify_role_helper') },
     bot_not_in_guild: { title: t('gate_bot_not_in_guild_title'), description: t('gate_bot_not_in_guild_description'), helper: t('gate_bot_not_in_guild_helper') },
     bot_maintenance: { title: '', description: '', helper: '' },
+    incident: { title: '', description: '', helper: '' },
     user_not_in_guild: { title: t('gate_user_not_in_guild_title'), description: t('gate_user_not_in_guild_description'), helper: t('gate_user_not_in_guild_helper') },
     discord_api_error: { title: t('gate_discord_api_error_title'), description: t('gate_discord_api_error_description'), helper: t('gate_discord_api_error_helper') },
     maintenance: { title: '', description: '', helper: '' },

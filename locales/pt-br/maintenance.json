@@ -42,5 +42,10 @@
   "maintenance_transfers_title": "Transferências em Manutenção",
   "maintenance_transfers_description": "Transferências de Papel estão temporariamente pausadas.",
   "maintenance_transfers_helper": "Tente novamente mais tarde.",
-  "maintenance_transfers_short": "Transferências em manutenção"
+  "maintenance_transfers_short": "Transferências em manutenção",
+
+  "maintenance_incident_title": "Parada de emergência",
+  "maintenance_incident_description": "Estamos resolvendo um problema crítico. Todos os serviços estão temporariamente pausados.",
+  "maintenance_incident_helper": "Não feche esta tela — o app abrirá automaticamente quando o problema for resolvido.",
+  "maintenance_incident_short": "Plataforma em modo de emergência"
 }

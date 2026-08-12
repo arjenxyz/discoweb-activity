@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { requireSessionUser } from '@/lib/auth';
 import { getSelectedGuildId } from '@/lib/guild';
-import { checkMaintenance, getMaintenanceFlags } from '@/lib/maintenance';
+import { checkMaintenance, getMaintenanceFlags, isIncidentActive } from '@/lib/maintenance';
 import { isLocalDevRequest, localDevReadiness } from '@/lib/localDev';
 
 type ReadinessStatus =
@@ -17,6 +17,7 @@ type ReadinessStatus =
   | 'missing_bot_token'
   | 'bot_not_in_guild'
   | 'bot_maintenance'
+  | 'incident'
   | 'user_not_in_guild'
   | 'missing_user_profile'
   | 'missing_verify_role'
@@ -181,7 +182,18 @@ export async function GET(request: Request) {
     return NextResponse.json(localDevReadiness);
   }
 
-  const maintenance = await checkMaintenance(['site', 'activity']);
+  // Emergency stop — never bypassed (including developers).
+  if (await isIncidentActive()) {
+    return NextResponse.json(
+      buildResponse({
+        status: 'incident',
+        debug: { key: 'incident' },
+      }),
+      { status: 503 },
+    );
+  }
+
+  const maintenance = await checkMaintenance(['site', 'activity'], request);
   if (maintenance.blocked) {
     return NextResponse.json(
       buildResponse({

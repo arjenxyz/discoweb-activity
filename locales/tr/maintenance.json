@@ -42,5 +42,10 @@
   "maintenance_transfers_title": "Transfer bakımda",
   "maintenance_transfers_description": "Papel transferleri geçici olarak durduruldu.",
   "maintenance_transfers_helper": "Lütfen daha sonra tekrar dene.",
-  "maintenance_transfers_short": "Transfer bakımda"
+  "maintenance_transfers_short": "Transfer bakımda",
+
+  "maintenance_incident_title": "Acil Durum Durdurma",
+  "maintenance_incident_description": "Kritik bir sorunu çözmek için çalışıyoruz. Tüm hizmetler geçici olarak durduruldu.",
+  "maintenance_incident_helper": "Lütfen bu ekranı kapatmayın; sorun çözülünce uygulama otomatik açılacak.",
+  "maintenance_incident_short": "Platform acil durum modunda"
 }

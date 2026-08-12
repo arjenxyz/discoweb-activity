@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseServiceClient } from '@/lib/supabaseServiceClient';
 import { requireSessionUser } from '@/lib/auth';
-import { getMaintenanceFlags } from '@/lib/maintenance';
+import { getMaintenanceFlags, isIncidentActive } from '@/lib/maintenance';
 import { syncBotMaintenanceToBot } from '@/lib/botMaintenanceSync';
 
 export const dynamic = 'force-dynamic';
@@ -27,6 +27,19 @@ async function isDeveloper(userId: string): Promise<boolean> {
 
 /** Global activity + bot maintenance status for Discord bot / Activity clients. */
 export async function GET() {
+  if (await isIncidentActive()) {
+    return NextResponse.json({
+      scope: 'global',
+      maintenance: true,
+      incident: true,
+      splashBlockingKey: 'incident',
+      activity: false,
+      bot: false,
+      site: false,
+      reason: null,
+    });
+  }
+
   const data = await getMaintenanceFlags();
   const activity = Boolean(data?.flags.activity?.is_active);
   const bot = Boolean(data?.flags.bot?.is_active);

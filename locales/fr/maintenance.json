@@ -42,5 +42,10 @@
   "maintenance_transfers_title": "Transferts en maintenance",
   "maintenance_transfers_description": "Les transferts de Papel sont temporairement suspendus.",
   "maintenance_transfers_helper": "Réessaie plus tard.",
-  "maintenance_transfers_short": "Les transferts sont en maintenance"
+  "maintenance_transfers_short": "Les transferts sont en maintenance",
+
+  "maintenance_incident_title": "Arrêt d'urgence",
+  "maintenance_incident_description": "Nous travaillons à la résolution d'un problème critique. Tous les services sont temporairement suspendus.",
+  "maintenance_incident_helper": "Ne fermez pas cet écran — l'application se rouvrira automatiquement une fois le problème résolu.",
+  "maintenance_incident_short": "Plateforme en mode urgence"
 }

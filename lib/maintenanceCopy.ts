@@ -1,4 +1,4 @@
-import { MAINTENANCE_KEYS, type MaintenanceKey } from '@/lib/maintenanceKeys';
+import { INCIDENT_UI_KEY, MAINTENANCE_KEYS, type MaintenanceKey, type MaintenanceUiKey } from '@/lib/maintenanceKeys';
 
 export type MaintenanceCopy = {
   title: string;
@@ -14,20 +14,25 @@ export function isMaintenanceKey(value: string): value is MaintenanceKey {
   return (MAINTENANCE_KEYS as readonly string[]).includes(value);
 }
 
+export function isMaintenanceUiKey(value: string): value is MaintenanceUiKey {
+  return value === INCIDENT_UI_KEY || isMaintenanceKey(value);
+}
+
 export function resolveMaintenanceKey(
   status: string,
   debug?: Record<string, unknown>,
-): MaintenanceKey | null {
+): MaintenanceUiKey | null {
+  if (status === 'incident') return INCIDENT_UI_KEY;
   if (status === 'bot_maintenance') return 'bot';
   if (status !== 'maintenance') return null;
 
   const key = debug?.key;
-  if (typeof key === 'string' && isMaintenanceKey(key)) return key;
+  if (typeof key === 'string' && isMaintenanceUiKey(key)) return key;
   return 'site';
 }
 
 export function getMaintenanceCopy(
-  key: MaintenanceKey,
+  key: MaintenanceUiKey,
   t: TranslateFn,
 ): MaintenanceCopy {
   return {
@@ -38,7 +43,7 @@ export function getMaintenanceCopy(
 }
 
 export function getMaintenanceShortMessage(
-  key: MaintenanceKey,
+  key: MaintenanceUiKey,
   t: TranslateFn,
 ): string {
   return t(`maintenance_${key}_short`);

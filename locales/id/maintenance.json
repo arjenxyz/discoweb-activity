@@ -42,5 +42,10 @@
   "maintenance_transfers_title": "Transfer Dalam Pemeliharaan",
   "maintenance_transfers_description": "Transfer Papel dijeda sementara.",
   "maintenance_transfers_helper": "Silakan coba lagi nanti.",
-  "maintenance_transfers_short": "Transfer sedang dalam pemeliharaan"
+  "maintenance_transfers_short": "Transfer sedang dalam pemeliharaan",
+
+  "maintenance_incident_title": "Penghentian darurat",
+  "maintenance_incident_description": "Kami sedang menyelesaikan masalah kritis. Semua layanan dijeda sementara.",
+  "maintenance_incident_helper": "Jangan tutup layar ini — aplikasi akan terbuka otomatis setelah masalah selesai.",
+  "maintenance_incident_short": "Platform dalam mode darurat"
 }

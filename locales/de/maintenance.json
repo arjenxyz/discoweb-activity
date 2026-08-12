@@ -42,5 +42,10 @@
   "maintenance_transfers_title": "Überweisungen in Wartung",
   "maintenance_transfers_description": "Papel-Überweisungen sind vorübergehend pausiert.",
   "maintenance_transfers_helper": "Bitte versuche es später erneut.",
-  "maintenance_transfers_short": "Überweisungen sind in Wartung"
+  "maintenance_transfers_short": "Überweisungen sind in Wartung",
+
+  "maintenance_incident_title": "Notfall-Stopp",
+  "maintenance_incident_description": "Wir arbeiten an der Behebung eines kritischen Problems. Alle Dienste sind vorübergehend pausiert.",
+  "maintenance_incident_helper": "Bitte schließe diesen Bildschirm nicht — die App öffnet sich automatisch wieder, sobald das Problem behoben ist.",
+  "maintenance_incident_short": "Plattform im Notfallmodus"
 }
