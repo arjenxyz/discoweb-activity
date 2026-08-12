@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getSupabaseServiceClient } from '@/lib/supabaseServiceClient';
 import { requireSessionUser } from '@/lib/auth';
 import { getMaintenanceFlags } from '@/lib/maintenance';
+import { syncBotMaintenanceToBot } from '@/lib/botMaintenanceSync';
 
 export const dynamic = 'force-dynamic';
 
@@ -71,6 +72,10 @@ export async function PATCH(request: Request) {
   );
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  if (key === 'bot') {
+    void syncBotMaintenanceToBot(enabled, null);
+  }
 
   return NextResponse.json({ maintenance: enabled, key, scope: 'global' });
 }

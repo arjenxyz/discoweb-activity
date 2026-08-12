@@ -16,6 +16,7 @@ type ReadinessStatus =
   | 'server_setup_required'
   | 'missing_bot_token'
   | 'bot_not_in_guild'
+  | 'bot_maintenance'
   | 'user_not_in_guild'
   | 'missing_user_profile'
   | 'missing_verify_role'
@@ -188,6 +189,20 @@ export async function GET(request: Request) {
         debug: {
           key: maintenance.key,
           reason: maintenance.reason,
+        },
+      }),
+      { status: 503 },
+    );
+  }
+
+  const botMaintenance = await checkMaintenance(['bot']);
+  if (botMaintenance.blocked) {
+    return NextResponse.json(
+      buildResponse({
+        status: 'bot_maintenance',
+        debug: {
+          key: botMaintenance.key,
+          reason: botMaintenance.reason,
         },
       }),
       { status: 503 },
