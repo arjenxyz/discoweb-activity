@@ -221,5 +221,6 @@
   "mail_fab_open": "Tindakan",
   "mail_fab_close": "Tutup",
   "mail_fab_menus": "Menu",
-  "mail_fab_menus_subtitle": "Halaman"
+  "mail_fab_menus_subtitle": "Halaman",
+  "mail_txn_promo_created_by": "Dibuat oleh"
 }

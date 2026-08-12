@@ -216,5 +216,6 @@
   "mail_earn_setting_boost_bonus_message": "Bônus de boost (mensagem)",
   "mail_earn_setting_boost_bonus_voice": "Bônus de boost (voz)",
   "mail_earn_rows": "{count} registros de ganhos processados",
-  "mail_earn_body": "Seus ganhos acumulados foram transferidos para sua carteira."
+  "mail_earn_body": "Seus ganhos acumulados foram transferidos para sua carteira.",
+  "mail_txn_promo_created_by": "Criado por"
 }

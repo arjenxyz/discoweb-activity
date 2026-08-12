@@ -221,5 +221,6 @@
   "mail_fab_open": "Действия",
   "mail_fab_close": "Закрыть",
   "mail_fab_menus": "Меню",
-  "mail_fab_menus_subtitle": "Страницы"
+  "mail_fab_menus_subtitle": "Страницы",
+  "mail_txn_promo_created_by": "Создал"
 }

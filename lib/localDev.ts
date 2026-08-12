@@ -605,6 +605,9 @@ export const localDevMailsSeed = [
       code: 'WELCOME50',
       amount: 50,
       balanceAfter: 1250,
+      createdBy: '139725308086878208',
+      createdByUsername: 'thearjen',
+      createdByAvatarUrl: LOCAL_DEV_AVATAR,
     },
   },
   {

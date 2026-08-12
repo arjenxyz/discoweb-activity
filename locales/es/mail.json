@@ -221,5 +221,6 @@
   "mail_fab_open": "Acciones",
   "mail_fab_close": "Cerrar",
   "mail_fab_menus": "Menús",
-  "mail_fab_menus_subtitle": "Páginas"
+  "mail_fab_menus_subtitle": "Páginas",
+  "mail_txn_promo_created_by": "Creado por"
 }

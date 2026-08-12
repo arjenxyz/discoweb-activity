@@ -221,5 +221,6 @@
   "mail_fab_open": "操作",
   "mail_fab_close": "閉じる",
   "mail_fab_menus": "メニュー",
-  "mail_fab_menus_subtitle": "ページ"
+  "mail_fab_menus_subtitle": "ページ",
+  "mail_txn_promo_created_by": "作成者"
 }

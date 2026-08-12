@@ -33,6 +33,9 @@ type PromoMeta = {
   amount: number;
   code: string | null;
   balanceAfter: number | null;
+  createdBy: string | null;
+  createdByUsername: string | null;
+  createdByAvatarUrl: string | null;
 };
 
 type DiscountMeta = {
@@ -257,6 +260,17 @@ export function parseMailTransaction(mail: MailItem): ParsedTxn | null {
           num(meta.balanceAfter) ??
           num(meta.balance_after) ??
           (balanceFromBody ? Number(String(balanceFromBody).replace(',', '.')) : null),
+        createdBy: str(meta.createdBy) ?? str(meta.created_by),
+        createdByUsername:
+          str(meta.createdByUsername) ??
+          str(meta.created_by_username) ??
+          str(meta.creatorUsername) ??
+          str(meta.creator_username),
+        createdByAvatarUrl:
+          str(meta.createdByAvatarUrl) ??
+          str(meta.created_by_avatar_url) ??
+          str(meta.creatorAvatarUrl) ??
+          str(meta.creator_avatar_url),
       },
     };
   }
@@ -663,7 +677,8 @@ export default function MailTransactionReceipt({ mail, txn, t }: Props) {
     );
   }
 
-  const { amount, code } = txn.data;
+  const { amount, code, createdByUsername, createdByAvatarUrl } = txn.data;
+  const creatorName = createdByUsername || 'DiscoWeb';
 
   return (
     <div className="w-full min-w-0 space-y-3">
@@ -671,12 +686,30 @@ export default function MailTransactionReceipt({ mail, txn, t }: Props) {
         <ReceiptSection>
           <SectionLabel>{t('mail_txn_promo_details')}</SectionLabel>
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-emerald-500/20 bg-emerald-500/10 text-emerald-300">
-              <LuGift className="h-5 w-5" />
+            {createdByAvatarUrl ? (
+              <div className="h-11 w-11 shrink-0 overflow-hidden rounded-full border border-emerald-500/20 bg-emerald-500/10">
+                <Image
+                  src={createdByAvatarUrl}
+                  alt={creatorName}
+                  width={44}
+                  height={44}
+                  className="h-full w-full object-cover"
+                  unoptimized
+                />
+              </div>
+            ) : (
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-emerald-500/20 bg-emerald-500/10 text-emerald-300">
+                <LuGift className="h-5 w-5" />
+              </div>
+            )}
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/30">
+                {t('mail_txn_promo_created_by')}
+              </p>
+              <p className="mt-0.5 min-w-0 break-words text-base font-semibold text-white [overflow-wrap:anywhere]">
+                {creatorName}
+              </p>
             </div>
-            <p className="min-w-0 break-words text-base font-semibold text-white [overflow-wrap:anywhere]">
-              DiscoWeb
-            </p>
           </div>
           {code ? (
             <div className="mt-3.5 min-w-0">
