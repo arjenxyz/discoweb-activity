@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useT } from '@/contexts/LocaleContext';
+import { getMaintenanceCopy } from '@/lib/maintenanceCopy';
+import type { MaintenanceKey } from '@/lib/maintenance';
 
 type PromotionsModalProps = {
   isOpen: boolean;
@@ -11,7 +13,7 @@ type PromotionsModalProps = {
   loading?: boolean;
   error?: string | null;
   success?: string | null;
-  maintenance?: { is_active: boolean; reason: string | null } | null;
+  maintenance?: { is_active: boolean; reason: string | null; key?: MaintenanceKey } | null;
 };
 
 export default function PromotionsModal({
@@ -65,6 +67,7 @@ export default function PromotionsModal({
   if (!isOpen) return null;
 
   if (maintenance?.is_active) {
+    const copy = getMaintenanceCopy(maintenance.key ?? 'promotions', t, maintenance.reason);
     return createPortal(
       <div
         className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/80 backdrop-blur-md px-6 pointer-events-auto"
@@ -78,11 +81,11 @@ export default function PromotionsModal({
           onTouchStart={(e) => e.stopPropagation()}
         >
           <div>
-            <p className="text-lg font-semibold text-white">{t('maintenance_modal_title')}</p>
-            <p className="text-xs text-white/50">{t('maintenance_modal_subtitle')}</p>
+            <p className="text-lg font-semibold text-white">{copy.title}</p>
+            <p className="text-xs text-white/50">{copy.helper}</p>
           </div>
           <div className="mt-5">
-            <p className="text-sm text-white/60">{maintenance.reason || t('maintenance_modal_default_reason')}</p>
+            <p className="text-sm text-white/60">{copy.description}</p>
           </div>
           <div className="mt-6 flex items-center justify-end">
             <button

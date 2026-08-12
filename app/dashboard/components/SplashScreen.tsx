@@ -8,6 +8,8 @@ import { apiUrl } from '@/lib/api';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { getDiscordSdk } from '@/lib/discordSdk';
 import { useT } from '@/contexts/LocaleContext';
+import type { MaintenanceKey } from '@/lib/maintenance';
+import { isMaintenanceKey } from '@/lib/maintenanceCopy';
 
 type Props = {
   onEnter: () => void;
@@ -20,6 +22,7 @@ export default function SplashScreen({ onEnter }: Props) {
   const [muted, setMuted] = useState(true);
   const [visible, setVisible] = useState(false);
   const [maintenance, setMaintenance] = useState(false);
+  const [splashMaintenanceKey, setSplashMaintenanceKey] = useState<MaintenanceKey | null>(null);
   const [maintenanceChecked, setMaintenanceChecked] = useState(false);
   const [isDeveloper, setIsDeveloper] = useState(false);
   const [isDeveloperChecked, setIsDeveloperChecked] = useState(false);
@@ -131,7 +134,18 @@ export default function SplashScreen({ onEnter }: Props) {
     const checkMaintenance = (initial = false) => {
       fetch(apiUrl('/api/activity/maintenance'))
         .then(r => r.json())
-        .then(d => { setMaintenance(d.maintenance === true); if (initial) setMaintenanceChecked(true); })
+        .then(d => {
+          setMaintenance(d.maintenance === true);
+          const key = d.splashBlockingKey;
+          if (typeof key === 'string' && isMaintenanceKey(key)) {
+            setSplashMaintenanceKey(key);
+          } else if (d.maintenance === true) {
+            setSplashMaintenanceKey('site');
+          } else {
+            setSplashMaintenanceKey(null);
+          }
+          if (initial) setMaintenanceChecked(true);
+        })
         .catch(() => { if (initial) setMaintenanceChecked(true); });
     };
 
@@ -190,6 +204,7 @@ export default function SplashScreen({ onEnter }: Props) {
 
   const stillLoading = !maintenanceChecked || (maintenance && !isDeveloperChecked);
   const blocked = maintenance && !isDeveloper;
+  const activeSplashMaintenanceKey = splashMaintenanceKey ?? 'site';
 
   const handleScreenClick = (e: React.MouseEvent) => {
     if (stillLoading || blocked) return;
@@ -272,7 +287,9 @@ export default function SplashScreen({ onEnter }: Props) {
                         : t('splash_welcome_generic')}
                   </span>
                   <span className="text-xs text-white/50" style={{ textShadow: '0 1px 8px rgba(0,0,0,1)' }}>
-                    {blocked ? t('splash_welcome_subtitle_maintenance') : t('splash_welcome_subtitle')}
+                    {blocked
+                      ? t(`maintenance_${activeSplashMaintenanceKey}_description`)
+                      : t('splash_welcome_subtitle')}
                   </span>
                 </div>
               </div>
@@ -305,7 +322,7 @@ export default function SplashScreen({ onEnter }: Props) {
               <path d="M8 2a6 6 0 016 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
             </svg>
           ) : blocked ? (
-            <span className="text-sm text-white/25">{t('splash_maintenance_title')}</span>
+            <span className="text-sm text-white/25">{t(`maintenance_${activeSplashMaintenanceKey}_title`)}</span>
           ) : (
             <span
               className="text-sm text-white/50 tracking-wide"

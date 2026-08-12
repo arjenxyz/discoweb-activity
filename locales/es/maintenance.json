@@ -1,0 +1,46 @@
+{
+  "maintenance_site_title": "En mantenimiento",
+  "maintenance_site_description": "La plataforma está en mantenimiento general. Todos los servicios del panel están temporalmente pausados.",
+  "maintenance_site_helper": "El acceso se reabrirá automáticamente cuando termine el mantenimiento.",
+  "maintenance_site_short": "La plataforma está en mantenimiento",
+
+  "maintenance_activity_title": "Activity en mantenimiento",
+  "maintenance_activity_description": "Discord Activity no está disponible temporalmente mientras realizamos actualizaciones.",
+  "maintenance_activity_helper": "Inténtalo de nuevo cuando termine el mantenimiento — la app se abrirá automáticamente.",
+  "maintenance_activity_short": "Activity está en mantenimiento",
+
+  "maintenance_bot_title": "Bot en mantenimiento",
+  "maintenance_bot_description": "El bot de Discord está en mantenimiento. Las ganancias y operaciones de roles están pausadas.",
+  "maintenance_bot_helper": "Las operaciones se reanudarán automáticamente cuando termine el mantenimiento.",
+  "maintenance_bot_short": "El bot está en mantenimiento",
+
+  "maintenance_store_title": "Tienda en mantenimiento",
+  "maintenance_store_description": "La tienda está cerrada temporalmente por mantenimiento. Las compras no están disponibles.",
+  "maintenance_store_helper": "Las compras en la tienda estarán disponibles pronto.",
+  "maintenance_store_short": "La tienda está en mantenimiento",
+
+  "maintenance_transactions_title": "Transacciones en mantenimiento",
+  "maintenance_transactions_description": "El historial de transacciones y funciones relacionadas no están disponibles temporalmente.",
+  "maintenance_transactions_helper": "Inténtalo de nuevo más tarde.",
+  "maintenance_transactions_short": "Las transacciones están en mantenimiento",
+
+  "maintenance_tracking_title": "Seguimiento de tienda en mantenimiento",
+  "maintenance_tracking_description": "La duración de roles y las vistas de seguimiento de la tienda no están disponibles temporalmente.",
+  "maintenance_tracking_helper": "Inténtalo de nuevo más tarde.",
+  "maintenance_tracking_short": "El seguimiento de tienda está en mantenimiento",
+
+  "maintenance_promotions_title": "Promociones en mantenimiento",
+  "maintenance_promotions_description": "El canje de códigos promocionales está temporalmente desactivado.",
+  "maintenance_promotions_helper": "Inténtalo de nuevo más tarde.",
+  "maintenance_promotions_short": "Las promociones están en mantenimiento",
+
+  "maintenance_discounts_title": "Descuentos en mantenimiento",
+  "maintenance_discounts_description": "Los códigos de descuento no se pueden usar durante el mantenimiento.",
+  "maintenance_discounts_helper": "Inténtalo de nuevo más tarde.",
+  "maintenance_discounts_short": "Los descuentos están en mantenimiento",
+
+  "maintenance_transfers_title": "Transferencias en mantenimiento",
+  "maintenance_transfers_description": "Las transferencias de Papel están temporalmente pausadas.",
+  "maintenance_transfers_helper": "Inténtalo de nuevo más tarde.",
+  "maintenance_transfers_short": "Las transferencias están en mantenimiento"
+}

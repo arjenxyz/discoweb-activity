@@ -31,17 +31,19 @@ export async function GET() {
   const activity = Boolean(data?.flags.activity?.is_active);
   const bot = Boolean(data?.flags.bot?.is_active);
   const site = Boolean(data?.flags.site?.is_active);
+  const splashBlockingKey = site ? 'site' : activity ? 'activity' : null;
 
   return NextResponse.json({
     scope: 'global',
     maintenance: activity || site,
+    splashBlockingKey,
     activity,
     bot,
     site,
     reason:
-      data?.flags.activity?.reason ??
+      (site ? data?.flags.site?.reason : null) ??
+      (activity ? data?.flags.activity?.reason : null) ??
       data?.flags.bot?.reason ??
-      data?.flags.site?.reason ??
       null,
   });
 }

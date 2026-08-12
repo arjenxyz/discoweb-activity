@@ -1,0 +1,46 @@
+{
+  "maintenance_site_title": "Wartungsarbeiten",
+  "maintenance_site_description": "Die Plattform befindet sich in einer siteweiten Wartung. Alle Dashboard-Dienste sind vorübergehend pausiert.",
+  "maintenance_site_helper": "Der Zugang wird automatisch wieder freigegeben, sobald die Wartung beendet ist.",
+  "maintenance_site_short": "Plattform ist in Wartung",
+
+  "maintenance_activity_title": "Activity in Wartung",
+  "maintenance_activity_description": "Discord Activity ist während der Updates vorübergehend nicht verfügbar.",
+  "maintenance_activity_helper": "Versuche es erneut, wenn die Wartung beendet ist — die App öffnet sich automatisch.",
+  "maintenance_activity_short": "Activity ist in Wartung",
+
+  "maintenance_bot_title": "Bot in Wartung",
+  "maintenance_bot_description": "Der Discord-Bot ist in Wartung. Verdienste und Rollenoperationen sind vorübergehend pausiert.",
+  "maintenance_bot_helper": "Die Vorgänge werden automatisch fortgesetzt, wenn die Wartung beendet ist.",
+  "maintenance_bot_short": "Bot ist in Wartung",
+
+  "maintenance_store_title": "Shop in Wartung",
+  "maintenance_store_description": "Der Shop ist wegen Wartung vorübergehend geschlossen. Käufe sind nicht möglich.",
+  "maintenance_store_helper": "Shop-Käufe sind bald wieder verfügbar.",
+  "maintenance_store_short": "Shop ist in Wartung",
+
+  "maintenance_transactions_title": "Transaktionen in Wartung",
+  "maintenance_transactions_description": "Transaktionsverlauf und zugehörige Funktionen sind vorübergehend nicht verfügbar.",
+  "maintenance_transactions_helper": "Bitte versuche es später erneut.",
+  "maintenance_transactions_short": "Transaktionen sind in Wartung",
+
+  "maintenance_tracking_title": "Shop-Tracking in Wartung",
+  "maintenance_tracking_description": "Rollendauer und Shop-Tracking-Ansichten sind vorübergehend nicht verfügbar.",
+  "maintenance_tracking_helper": "Bitte versuche es später erneut.",
+  "maintenance_tracking_short": "Shop-Tracking ist in Wartung",
+
+  "maintenance_promotions_title": "Promotionen in Wartung",
+  "maintenance_promotions_description": "Das Einlösen von Promo-Codes ist vorübergehend deaktiviert.",
+  "maintenance_promotions_helper": "Bitte versuche es später erneut.",
+  "maintenance_promotions_short": "Promotionen sind in Wartung",
+
+  "maintenance_discounts_title": "Rabattcodes in Wartung",
+  "maintenance_discounts_description": "Rabattcodes können während der Wartung nicht verwendet werden.",
+  "maintenance_discounts_helper": "Bitte versuche es später erneut.",
+  "maintenance_discounts_short": "Rabattcodes sind in Wartung",
+
+  "maintenance_transfers_title": "Überweisungen in Wartung",
+  "maintenance_transfers_description": "Papel-Überweisungen sind vorübergehend pausiert.",
+  "maintenance_transfers_helper": "Bitte versuche es später erneut.",
+  "maintenance_transfers_short": "Überweisungen sind in Wartung"
+}

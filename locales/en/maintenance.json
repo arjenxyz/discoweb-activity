@@ -1,0 +1,46 @@
+{
+  "maintenance_site_title": "Under Maintenance",
+  "maintenance_site_description": "The platform is under site-wide maintenance. All dashboard services are temporarily paused.",
+  "maintenance_site_helper": "Access will reopen automatically when maintenance ends.",
+  "maintenance_site_short": "Platform is under maintenance",
+
+  "maintenance_activity_title": "Activity Under Maintenance",
+  "maintenance_activity_description": "Discord Activity is temporarily unavailable while we perform updates.",
+  "maintenance_activity_helper": "Try again when maintenance ends — the app will open automatically.",
+  "maintenance_activity_short": "Activity is under maintenance",
+
+  "maintenance_bot_title": "Bot Under Maintenance",
+  "maintenance_bot_description": "The Discord bot is in maintenance. Earnings and role operations are temporarily paused.",
+  "maintenance_bot_helper": "Operations will resume automatically when maintenance ends.",
+  "maintenance_bot_short": "Bot is under maintenance",
+
+  "maintenance_store_title": "Store Under Maintenance",
+  "maintenance_store_description": "The store is temporarily closed for maintenance. Purchases are unavailable.",
+  "maintenance_store_helper": "Store purchases will be available again soon.",
+  "maintenance_store_short": "Store is under maintenance",
+
+  "maintenance_transactions_title": "Transactions Under Maintenance",
+  "maintenance_transactions_description": "Transaction history and related features are temporarily unavailable.",
+  "maintenance_transactions_helper": "Please try again later.",
+  "maintenance_transactions_short": "Transactions are under maintenance",
+
+  "maintenance_tracking_title": "Store Tracking Under Maintenance",
+  "maintenance_tracking_description": "Role duration and store tracking views are temporarily unavailable.",
+  "maintenance_tracking_helper": "Please try again later.",
+  "maintenance_tracking_short": "Store tracking is under maintenance",
+
+  "maintenance_promotions_title": "Promotions Under Maintenance",
+  "maintenance_promotions_description": "Promo code redemption is temporarily disabled.",
+  "maintenance_promotions_helper": "Please try again later.",
+  "maintenance_promotions_short": "Promotions are under maintenance",
+
+  "maintenance_discounts_title": "Discounts Under Maintenance",
+  "maintenance_discounts_description": "Discount codes cannot be used during maintenance.",
+  "maintenance_discounts_helper": "Please try again later.",
+  "maintenance_discounts_short": "Discount codes are under maintenance",
+
+  "maintenance_transfers_title": "Transfers Under Maintenance",
+  "maintenance_transfers_description": "Papel transfers are temporarily paused.",
+  "maintenance_transfers_helper": "Please try again later.",
+  "maintenance_transfers_short": "Transfers are under maintenance"
+}

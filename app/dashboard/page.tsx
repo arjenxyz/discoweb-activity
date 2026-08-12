@@ -31,6 +31,7 @@ import IncidentOverlay from './components/IncidentOverlay';
 import { sanitizeHtml } from '@/lib/sanitizeHtml';
 import { useRealtimeDashboard } from '@/lib/utils/useRealtimeDashboard';
 import { useT } from '@/contexts/LocaleContext';
+import { getMaintenanceShortMessage } from '@/lib/maintenanceCopy';
 import { getDiscordSdk } from '@/lib/discordSdk';
 import DuyuruPage from './duyuru/page';
 import { ENABLE_TAG_BADGE_SECTION } from './featureFlags';
@@ -1024,7 +1025,7 @@ export default function DashboardPage() {
 
   const handleTransfer = async () => {
     if (isSiteMaintenance || isTransfersMaintenance) {
-      setTransferError(transfersReason ?? t('transfer_error_maintenance'));
+      setTransferError(getMaintenanceShortMessage('transfers', t, transfersReason));
       return;
     }
 
@@ -1246,7 +1247,7 @@ export default function DashboardPage() {
 
   const handleOpenTransfer = useCallback(() => {
     if (isSiteMaintenance || isTransfersMaintenance) {
-      setTransferError(transfersReason ?? t('transfer_error_maintenance'));
+      setTransferError(getMaintenanceShortMessage('transfers', t, transfersReason));
       setTransferSuccess(null);
       setTransferModalOpen(true);
       setTransferRecipientProfile(null);
@@ -1301,7 +1302,7 @@ export default function DashboardPage() {
           already_used: t('promo_error_already_used'),
           profile_not_found: t('promo_error_profile_not_found'),
           wallet_update_failed: t('promo_error_wallet_failed'),
-          maintenance: t('purchase_error_maintenance'),
+          maintenance: getMaintenanceShortMessage('store', t),
         };
         setPromoError(errorMap[data.error ?? ''] ?? t('promo_error_generic'));
       } else {
@@ -1317,7 +1318,7 @@ export default function DashboardPage() {
 
   const handlePurchase = async (itemId: string) => {
     if (isSiteMaintenance || isStoreMaintenance) {
-      setPurchaseFeedback(prev => ({ ...prev, [itemId]: { status: 'error', message: t('purchase_error_maintenance') } }));
+      setPurchaseFeedback(prev => ({ ...prev, [itemId]: { status: 'error', message: getMaintenanceShortMessage('store', t) } }));
       setTimeout(() => setPurchaseFeedback(prev => ({ ...prev, [itemId]: undefined })), 3000);
       return;
     }
@@ -1608,7 +1609,7 @@ export default function DashboardPage() {
 
             {effectiveSection === 'settings' && !isSiteMaintenance && isPromotionsMaintenance && (
               <section className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-6 text-sm text-amber-100/80">
-                {promotionsReason ?? t('promotions_maintenance_fallback')}
+                {getMaintenanceShortMessage('promotions', t, promotionsReason)}
                 {promotionsUpdater && (
                   <div className="mt-3 flex items-center gap-2 text-xs text-amber-100/70">
                     <Image
@@ -1771,6 +1772,7 @@ export default function DashboardPage() {
           maintenanceFlags?.promotions?.is_active || isSiteMaintenance
             ? {
                 is_active: true,
+                key: maintenanceFlags?.promotions?.is_active ? 'promotions' : 'site',
                 reason: maintenanceFlags?.promotions?.reason ?? siteReason ?? null,
               }
             : null
@@ -1793,7 +1795,7 @@ export default function DashboardPage() {
             const data = await res.json() as { success?: boolean; error?: string };
             if (!res.ok) {
               if (data.error === 'maintenance') {
-                setDiscountError(t('purchase_error_maintenance'));
+                setDiscountError(getMaintenanceShortMessage('discounts', t));
               } else {
               const errorMap: Record<string, string> = {
                 wrong_server: t('discount_error_wrong_server'),
@@ -1820,6 +1822,7 @@ export default function DashboardPage() {
           maintenanceFlags?.discounts?.is_active || isSiteMaintenance
             ? {
                 is_active: true,
+                key: maintenanceFlags?.discounts?.is_active ? 'discounts' : 'site',
                 reason: maintenanceFlags?.discounts?.reason ?? siteReason ?? null,
               }
             : null

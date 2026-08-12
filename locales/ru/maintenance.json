@@ -1,0 +1,46 @@
+{
+  "maintenance_site_title": "На обслуживании",
+  "maintenance_site_description": "Платформа находится на глобальном обслуживании. Все сервисы панели временно приостановлены.",
+  "maintenance_site_helper": "Доступ автоматически восстановится после завершения обслуживания.",
+  "maintenance_site_short": "Платформа на обслуживании",
+
+  "maintenance_activity_title": "Activity на обслуживании",
+  "maintenance_activity_description": "Discord Activity временно недоступна во время обновлений.",
+  "maintenance_activity_helper": "Попробуйте снова после обслуживания — приложение откроется автоматически.",
+  "maintenance_activity_short": "Activity на обслуживании",
+
+  "maintenance_bot_title": "Бот на обслуживании",
+  "maintenance_bot_description": "Discord-бот на обслуживании. Начисления и операции с ролями временно приостановлены.",
+  "maintenance_bot_helper": "Операции автоматически возобновятся после обслуживания.",
+  "maintenance_bot_short": "Бот на обслуживании",
+
+  "maintenance_store_title": "Магазин на обслуживании",
+  "maintenance_store_description": "Магазин временно закрыт на обслуживание. Покупки недоступны.",
+  "maintenance_store_helper": "Покупки в магазине скоро снова будут доступны.",
+  "maintenance_store_short": "Магазин на обслуживании",
+
+  "maintenance_transactions_title": "Транзакции на обслуживании",
+  "maintenance_transactions_description": "История транзакций и связанные функции временно недоступны.",
+  "maintenance_transactions_helper": "Пожалуйста, попробуйте позже.",
+  "maintenance_transactions_short": "Транзакции на обслуживании",
+
+  "maintenance_tracking_title": "Отслеживание магазина на обслуживании",
+  "maintenance_tracking_description": "Сроки ролей и экраны отслеживания магазина временно недоступны.",
+  "maintenance_tracking_helper": "Пожалуйста, попробуйте позже.",
+  "maintenance_tracking_short": "Отслеживание магазина на обслуживании",
+
+  "maintenance_promotions_title": "Акции на обслуживании",
+  "maintenance_promotions_description": "Использование промокодов временно отключено.",
+  "maintenance_promotions_helper": "Пожалуйста, попробуйте позже.",
+  "maintenance_promotions_short": "Акции на обслуживании",
+
+  "maintenance_discounts_title": "Скидки на обслуживании",
+  "maintenance_discounts_description": "Скидочные коды нельзя использовать во время обслуживания.",
+  "maintenance_discounts_helper": "Пожалуйста, попробуйте позже.",
+  "maintenance_discounts_short": "Скидки на обслуживании",
+
+  "maintenance_transfers_title": "Переводы на обслуживании",
+  "maintenance_transfers_description": "Переводы Papel временно приостановлены.",
+  "maintenance_transfers_helper": "Пожалуйста, попробуйте позже.",
+  "maintenance_transfers_short": "Переводы на обслуживании"
+}

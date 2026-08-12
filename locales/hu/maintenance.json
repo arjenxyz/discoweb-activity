@@ -1,0 +1,46 @@
+{
+  "maintenance_site_title": "Karbantartás alatt",
+  "maintenance_site_description": "A platform teljes rendszerű karbantartás alatt áll. Az összes irányítópult-szolgáltatás szünetel.",
+  "maintenance_site_helper": "A hozzáférés automatikusan visszaáll, amint a karbantartás véget ér.",
+  "maintenance_site_short": "A platform karbantartás alatt van",
+
+  "maintenance_activity_title": "Activity karbantartás alatt",
+  "maintenance_activity_description": "A Discord Activity frissítések miatt átmenetileg nem érhető el.",
+  "maintenance_activity_helper": "Próbáld újra a karbantartás után — az app automatikusan megnyílik.",
+  "maintenance_activity_short": "Az Activity karbantartás alatt van",
+
+  "maintenance_bot_title": "Bot karbantartás alatt",
+  "maintenance_bot_description": "A Discord bot karbantartás alatt van. A keresetek és szerepkör-műveletek szünetelnek.",
+  "maintenance_bot_helper": "A műveletek automatikusan folytatódnak a karbantartás után.",
+  "maintenance_bot_short": "A bot karbantartás alatt van",
+
+  "maintenance_store_title": "Bolt karbantartás alatt",
+  "maintenance_store_description": "A bolt karbantartás miatt átmenetileg zárva. A vásárlás nem elérhető.",
+  "maintenance_store_helper": "A bolt hamarosan újra elérhető lesz.",
+  "maintenance_store_short": "A bolt karbantartás alatt van",
+
+  "maintenance_transactions_title": "Tranzakciók karbantartás alatt",
+  "maintenance_transactions_description": "A tranzakcióelőzmények és kapcsolódó funkciók átmenetileg nem érhetők el.",
+  "maintenance_transactions_helper": "Kérjük, próbáld újra később.",
+  "maintenance_transactions_short": "A tranzakciók karbantartás alatt vannak",
+
+  "maintenance_tracking_title": "Bolt követés karbantartás alatt",
+  "maintenance_tracking_description": "A szerepkör-időtartam és bolt-követési nézetek átmenetileg nem érhetők el.",
+  "maintenance_tracking_helper": "Kérjük, próbáld újra később.",
+  "maintenance_tracking_short": "A bolt követés karbantartás alatt van",
+
+  "maintenance_promotions_title": "Promóciók karbantartás alatt",
+  "maintenance_promotions_description": "A promóciós kódok beváltása átmenetileg le van tiltva.",
+  "maintenance_promotions_helper": "Kérjük, próbáld újra később.",
+  "maintenance_promotions_short": "A promóciók karbantartás alatt vannak",
+
+  "maintenance_discounts_title": "Kedvezmények karbantartás alatt",
+  "maintenance_discounts_description": "A kedvezménykódok karbantartás alatt nem használhatók.",
+  "maintenance_discounts_helper": "Kérjük, próbáld újra később.",
+  "maintenance_discounts_short": "A kedvezmények karbantartás alatt vannak",
+
+  "maintenance_transfers_title": "Átutalások karbantartás alatt",
+  "maintenance_transfers_description": "A Papel átutalások átmenetileg szünetelnek.",
+  "maintenance_transfers_helper": "Kérjük, próbáld újra később.",
+  "maintenance_transfers_short": "Az átutalások karbantartás alatt vannak"
+}

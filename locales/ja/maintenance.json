@@ -1,0 +1,46 @@
+{
+  "maintenance_site_title": "メンテナンス中",
+  "maintenance_site_description": "プラットフォーム全体のメンテナンス中です。ダッシュボードのサービスは一時停止しています。",
+  "maintenance_site_helper": "メンテナンス終了後、アクセスは自動的に再開されます。",
+  "maintenance_site_short": "プラットフォームはメンテナンス中です",
+
+  "maintenance_activity_title": "Activity メンテナンス中",
+  "maintenance_activity_description": "更新作業のため、Discord Activity は一時的に利用できません。",
+  "maintenance_activity_helper": "メンテナンス終了後に再度お試しください — アプリは自動的に開きます。",
+  "maintenance_activity_short": "Activity はメンテナンス中です",
+
+  "maintenance_bot_title": "Bot メンテナンス中",
+  "maintenance_bot_description": "Discord bot はメンテナンス中です。収益とロール操作は一時停止しています。",
+  "maintenance_bot_helper": "メンテナンス終了後、操作は自動的に再開されます。",
+  "maintenance_bot_short": "Bot はメンテナンス中です",
+
+  "maintenance_store_title": "ストア メンテナンス中",
+  "maintenance_store_description": "ストアはメンテナンスのため一時的に閉鎖されています。購入はできません。",
+  "maintenance_store_helper": "ストアの購入はまもなく再開されます。",
+  "maintenance_store_short": "ストアはメンテナンス中です",
+
+  "maintenance_transactions_title": "取引 メンテナンス中",
+  "maintenance_transactions_description": "取引履歴と関連機能は一時的に利用できません。",
+  "maintenance_transactions_helper": "後でもう一度お試しください。",
+  "maintenance_transactions_short": "取引はメンテナンス中です",
+
+  "maintenance_tracking_title": "ストア追跡 メンテナンス中",
+  "maintenance_tracking_description": "ロール期間とストア追跡画面は一時的に利用できません。",
+  "maintenance_tracking_helper": "後でもう一度お試しください。",
+  "maintenance_tracking_short": "ストア追跡はメンテナンス中です",
+
+  "maintenance_promotions_title": "プロモーション メンテナンス中",
+  "maintenance_promotions_description": "プロモコードの利用は一時的に無効です。",
+  "maintenance_promotions_helper": "後でもう一度お試しください。",
+  "maintenance_promotions_short": "プロモーションはメンテナンス中です",
+
+  "maintenance_discounts_title": "割引 メンテナンス中",
+  "maintenance_discounts_description": "メンテナンス中は割引コードを使用できません。",
+  "maintenance_discounts_helper": "後でもう一度お試しください。",
+  "maintenance_discounts_short": "割引はメンテナンス中です",
+
+  "maintenance_transfers_title": "送金 メンテナンス中",
+  "maintenance_transfers_description": "Papel の送金は一時的に停止しています。",
+  "maintenance_transfers_helper": "後でもう一度お試しください。",
+  "maintenance_transfers_short": "送金はメンテナンス中です"
+}

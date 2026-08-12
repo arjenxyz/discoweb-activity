@@ -6,6 +6,7 @@ import VerifyRoleScreen from './VerifyRoleScreen';
 import { getDiscordSdk } from '@/lib/discordSdk';
 import { VideoBackground, MuteButton } from './VideoBackground';
 import { useT } from '@/contexts/LocaleContext';
+import { getMaintenanceCopy, resolveMaintenanceKey } from '@/lib/maintenanceCopy';
 
 export type ActivityReadinessStatus =
   | 'ready'
@@ -171,24 +172,10 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry, onB
     missing_user_profile: { title: t('gate_missing_user_profile_title'), description: t('gate_missing_user_profile_description'), helper: t('gate_missing_user_profile_helper') },
     missing_verify_role: { title: t('gate_missing_verify_role_title'), description: t('gate_missing_verify_role_description'), helper: t('gate_missing_verify_role_helper') },
     bot_not_in_guild: { title: t('gate_bot_not_in_guild_title'), description: t('gate_bot_not_in_guild_description'), helper: t('gate_bot_not_in_guild_helper') },
-    bot_maintenance: {
-      title: t('gate_bot_maintenance_title'),
-      description:
-        typeof readiness.debug?.reason === 'string' && readiness.debug.reason.trim()
-          ? readiness.debug.reason
-          : t('gate_bot_maintenance_description'),
-      helper: t('gate_bot_maintenance_helper'),
-    },
+    bot_maintenance: { title: '', description: '', helper: '' },
     user_not_in_guild: { title: t('gate_user_not_in_guild_title'), description: t('gate_user_not_in_guild_description'), helper: t('gate_user_not_in_guild_helper') },
     discord_api_error: { title: t('gate_discord_api_error_title'), description: t('gate_discord_api_error_description'), helper: t('gate_discord_api_error_helper') },
-    maintenance: {
-      title: t('gate_maintenance_title'),
-      description:
-        typeof readiness.debug?.reason === 'string' && readiness.debug.reason.trim()
-          ? readiness.debug.reason
-          : t('gate_maintenance_description'),
-      helper: t('gate_maintenance_helper'),
-    },
+    maintenance: { title: '', description: '', helper: '' },
   };
   const [copied, setCopied] = useState(false);
   const [muted, setMuted] = useState(true);
@@ -271,6 +258,12 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry, onB
     t,
     readiness.isAdmin,
   );
+  const maintenanceKey = resolveMaintenanceKey(readiness.status, readiness.debug);
+  if (maintenanceKey) {
+    const customReason =
+      typeof readiness.debug?.reason === 'string' ? readiness.debug.reason : null;
+    copy = getMaintenanceCopy(maintenanceKey, t, customReason);
+  }
   if (readiness.status === 'member_banned') {
     copy = isTemporaryBan
       ? { title: t('gate_member_temp_banned_title'), description: t('gate_member_temp_banned_description'), helper: t('gate_member_temp_banned_helper') }

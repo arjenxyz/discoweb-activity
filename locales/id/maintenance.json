@@ -1,0 +1,46 @@
+{
+  "maintenance_site_title": "Sedang Dalam Pemeliharaan",
+  "maintenance_site_description": "Platform sedang dalam pemeliharaan sitewide. Semua layanan dashboard dijeda sementara.",
+  "maintenance_site_helper": "Akses akan dibuka kembali otomatis setelah pemeliharaan selesai.",
+  "maintenance_site_short": "Platform sedang dalam pemeliharaan",
+
+  "maintenance_activity_title": "Activity Dalam Pemeliharaan",
+  "maintenance_activity_description": "Discord Activity sementara tidak tersedia selama pembaruan.",
+  "maintenance_activity_helper": "Coba lagi setelah pemeliharaan selesai — aplikasi akan terbuka otomatis.",
+  "maintenance_activity_short": "Activity sedang dalam pemeliharaan",
+
+  "maintenance_bot_title": "Bot Dalam Pemeliharaan",
+  "maintenance_bot_description": "Bot Discord sedang dalam pemeliharaan. Penghasilan dan operasi role dijeda sementara.",
+  "maintenance_bot_helper": "Operasi akan dilanjutkan otomatis setelah pemeliharaan selesai.",
+  "maintenance_bot_short": "Bot sedang dalam pemeliharaan",
+
+  "maintenance_store_title": "Toko Dalam Pemeliharaan",
+  "maintenance_store_description": "Toko ditutup sementara untuk pemeliharaan. Pembelian tidak tersedia.",
+  "maintenance_store_helper": "Pembelian toko akan segera tersedia kembali.",
+  "maintenance_store_short": "Toko sedang dalam pemeliharaan",
+
+  "maintenance_transactions_title": "Transaksi Dalam Pemeliharaan",
+  "maintenance_transactions_description": "Riwayat transaksi dan fitur terkait sementara tidak tersedia.",
+  "maintenance_transactions_helper": "Silakan coba lagi nanti.",
+  "maintenance_transactions_short": "Transaksi sedang dalam pemeliharaan",
+
+  "maintenance_tracking_title": "Pelacakan Toko Dalam Pemeliharaan",
+  "maintenance_tracking_description": "Durasi role dan tampilan pelacakan toko sementara tidak tersedia.",
+  "maintenance_tracking_helper": "Silakan coba lagi nanti.",
+  "maintenance_tracking_short": "Pelacakan toko sedang dalam pemeliharaan",
+
+  "maintenance_promotions_title": "Promosi Dalam Pemeliharaan",
+  "maintenance_promotions_description": "Penukaran kode promo sementara dinonaktifkan.",
+  "maintenance_promotions_helper": "Silakan coba lagi nanti.",
+  "maintenance_promotions_short": "Promosi sedang dalam pemeliharaan",
+
+  "maintenance_discounts_title": "Diskon Dalam Pemeliharaan",
+  "maintenance_discounts_description": "Kode diskon tidak dapat digunakan selama pemeliharaan.",
+  "maintenance_discounts_helper": "Silakan coba lagi nanti.",
+  "maintenance_discounts_short": "Diskon sedang dalam pemeliharaan",
+
+  "maintenance_transfers_title": "Transfer Dalam Pemeliharaan",
+  "maintenance_transfers_description": "Transfer Papel dijeda sementara.",
+  "maintenance_transfers_helper": "Silakan coba lagi nanti.",
+  "maintenance_transfers_short": "Transfer sedang dalam pemeliharaan"
+}

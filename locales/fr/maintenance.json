@@ -1,0 +1,46 @@
+{
+  "maintenance_site_title": "Maintenance en cours",
+  "maintenance_site_description": "La plateforme est en maintenance globale. Tous les services du panneau sont temporairement suspendus.",
+  "maintenance_site_helper": "L'accès sera rétabli automatiquement à la fin de la maintenance.",
+  "maintenance_site_short": "La plateforme est en maintenance",
+
+  "maintenance_activity_title": "Activity en maintenance",
+  "maintenance_activity_description": "Discord Activity est temporairement indisponible pendant les mises à jour.",
+  "maintenance_activity_helper": "Réessaie quand la maintenance sera terminée — l'app s'ouvrira automatiquement.",
+  "maintenance_activity_short": "Activity est en maintenance",
+
+  "maintenance_bot_title": "Bot en maintenance",
+  "maintenance_bot_description": "Le bot Discord est en maintenance. Les gains et opérations de rôles sont suspendus.",
+  "maintenance_bot_helper": "Les opérations reprendront automatiquement à la fin de la maintenance.",
+  "maintenance_bot_short": "Le bot est en maintenance",
+
+  "maintenance_store_title": "Boutique en maintenance",
+  "maintenance_store_description": "La boutique est temporairement fermée pour maintenance. Les achats sont indisponibles.",
+  "maintenance_store_helper": "Les achats seront bientôt à nouveau disponibles.",
+  "maintenance_store_short": "La boutique est en maintenance",
+
+  "maintenance_transactions_title": "Transactions en maintenance",
+  "maintenance_transactions_description": "L'historique des transactions et les fonctionnalités associées sont temporairement indisponibles.",
+  "maintenance_transactions_helper": "Réessaie plus tard.",
+  "maintenance_transactions_short": "Les transactions sont en maintenance",
+
+  "maintenance_tracking_title": "Suivi boutique en maintenance",
+  "maintenance_tracking_description": "La durée des rôles et les vues de suivi boutique sont temporairement indisponibles.",
+  "maintenance_tracking_helper": "Réessaie plus tard.",
+  "maintenance_tracking_short": "Le suivi boutique est en maintenance",
+
+  "maintenance_promotions_title": "Promotions en maintenance",
+  "maintenance_promotions_description": "L'utilisation des codes promo est temporairement désactivée.",
+  "maintenance_promotions_helper": "Réessaie plus tard.",
+  "maintenance_promotions_short": "Les promotions sont en maintenance",
+
+  "maintenance_discounts_title": "Codes promo en maintenance",
+  "maintenance_discounts_description": "Les codes de réduction ne peuvent pas être utilisés pendant la maintenance.",
+  "maintenance_discounts_helper": "Réessaie plus tard.",
+  "maintenance_discounts_short": "Les codes promo sont en maintenance",
+
+  "maintenance_transfers_title": "Transferts en maintenance",
+  "maintenance_transfers_description": "Les transferts de Papel sont temporairement suspendus.",
+  "maintenance_transfers_helper": "Réessaie plus tard.",
+  "maintenance_transfers_short": "Les transferts sont en maintenance"
+}

@@ -1,0 +1,46 @@
+{
+  "maintenance_site_title": "점검 중",
+  "maintenance_site_description": "플랫폼 전체 점검 중입니다. 모든 대시보드 서비스가 일시 중지되었습니다.",
+  "maintenance_site_helper": "점검이 끝나면 접근이 자동으로 다시 열립니다.",
+  "maintenance_site_short": "플랫폼 점검 중",
+
+  "maintenance_activity_title": "Activity 점검 중",
+  "maintenance_activity_description": "업데이트 작업으로 Discord Activity를 일시적으로 사용할 수 없습니다.",
+  "maintenance_activity_helper": "점검이 끝난 후 다시 시도하세요 — 앱이 자동으로 열립니다.",
+  "maintenance_activity_short": "Activity 점검 중",
+
+  "maintenance_bot_title": "봇 점검 중",
+  "maintenance_bot_description": "Discord 봇이 점검 중입니다. 수익 및 역할 작업이 일시 중지되었습니다.",
+  "maintenance_bot_helper": "점검이 끝나면 작업이 자동으로 재개됩니다.",
+  "maintenance_bot_short": "봇 점검 중",
+
+  "maintenance_store_title": "상점 점검 중",
+  "maintenance_store_description": "상점이 점검으로 일시적으로 닫혔습니다. 구매할 수 없습니다.",
+  "maintenance_store_helper": "상점 구매는 곧 다시 이용할 수 있습니다.",
+  "maintenance_store_short": "상점 점검 중",
+
+  "maintenance_transactions_title": "거래 점검 중",
+  "maintenance_transactions_description": "거래 내역 및 관련 기능을 일시적으로 사용할 수 없습니다.",
+  "maintenance_transactions_helper": "나중에 다시 시도해 주세요.",
+  "maintenance_transactions_short": "거래 점검 중",
+
+  "maintenance_tracking_title": "상점 추적 점검 중",
+  "maintenance_tracking_description": "역할 기간 및 상점 추적 화면을 일시적으로 사용할 수 없습니다.",
+  "maintenance_tracking_helper": "나중에 다시 시도해 주세요.",
+  "maintenance_tracking_short": "상점 추적 점검 중",
+
+  "maintenance_promotions_title": "프로모션 점검 중",
+  "maintenance_promotions_description": "프로모 코드 사용이 일시적으로 비활성화되었습니다.",
+  "maintenance_promotions_helper": "나중에 다시 시도해 주세요.",
+  "maintenance_promotions_short": "프로모션 점검 중",
+
+  "maintenance_discounts_title": "할인 점검 중",
+  "maintenance_discounts_description": "점검 중에는 할인 코드를 사용할 수 없습니다.",
+  "maintenance_discounts_helper": "나중에 다시 시도해 주세요.",
+  "maintenance_discounts_short": "할인 점검 중",
+
+  "maintenance_transfers_title": "송금 점검 중",
+  "maintenance_transfers_description": "Papel 송금이 일시적으로 중지되었습니다.",
+  "maintenance_transfers_helper": "나중에 다시 시도해 주세요.",
+  "maintenance_transfers_short": "송금 점검 중"
+}

@@ -1,0 +1,46 @@
+{
+  "maintenance_site_title": "Bakımdayız",
+  "maintenance_site_description": "Platform genel bakımda. Tüm panel hizmetleri geçici olarak durduruldu.",
+  "maintenance_site_helper": "Bakım bitince erişim otomatik olarak açılacak.",
+  "maintenance_site_short": "Platform bakımda",
+
+  "maintenance_activity_title": "Activity bakımda",
+  "maintenance_activity_description": "Discord Activity şu anda güncelleme nedeniyle geçici olarak kullanılamıyor.",
+  "maintenance_activity_helper": "Bakım bitince tekrar dene — uygulama otomatik açılacak.",
+  "maintenance_activity_short": "Activity bakımda",
+
+  "maintenance_bot_title": "Bot bakımda",
+  "maintenance_bot_description": "Discord botu bakımda. Kazanç ve rol işlemleri geçici olarak durduruldu.",
+  "maintenance_bot_helper": "Bakım bitince işlemler otomatik devam edecek.",
+  "maintenance_bot_short": "Bot bakımda",
+
+  "maintenance_store_title": "Mağaza bakımda",
+  "maintenance_store_description": "Mağaza bakım nedeniyle geçici olarak kapalı. Satın alma yapılamaz.",
+  "maintenance_store_helper": "Mağaza kısa süre içinde tekrar açılacak.",
+  "maintenance_store_short": "Mağaza bakımda",
+
+  "maintenance_transactions_title": "İşlemler bakımda",
+  "maintenance_transactions_description": "İşlem geçmişi ve ilgili özellikler geçici olarak kullanılamıyor.",
+  "maintenance_transactions_helper": "Lütfen daha sonra tekrar dene.",
+  "maintenance_transactions_short": "İşlemler bakımda",
+
+  "maintenance_tracking_title": "Mağaza takibi bakımda",
+  "maintenance_tracking_description": "Rol süresi ve mağaza takip ekranları geçici olarak kullanılamıyor.",
+  "maintenance_tracking_helper": "Lütfen daha sonra tekrar dene.",
+  "maintenance_tracking_short": "Mağaza takibi bakımda",
+
+  "maintenance_promotions_title": "Promosyonlar bakımda",
+  "maintenance_promotions_description": "Promosyon kodu kullanımı geçici olarak devre dışı.",
+  "maintenance_promotions_helper": "Lütfen daha sonra tekrar dene.",
+  "maintenance_promotions_short": "Promosyonlar bakımda",
+
+  "maintenance_discounts_title": "İndirim kodları bakımda",
+  "maintenance_discounts_description": "Bakım sırasında indirim kodları kullanılamaz.",
+  "maintenance_discounts_helper": "Lütfen daha sonra tekrar dene.",
+  "maintenance_discounts_short": "İndirim kodları bakımda",
+
+  "maintenance_transfers_title": "Transfer bakımda",
+  "maintenance_transfers_description": "Papel transferleri geçici olarak durduruldu.",
+  "maintenance_transfers_helper": "Lütfen daha sonra tekrar dene.",
+  "maintenance_transfers_short": "Transfer bakımda"
+}
