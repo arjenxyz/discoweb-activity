@@ -50,6 +50,25 @@ function buildRoleExpiryMap(activePerks: ActivePerk[]): Map<string, RoleExpiryIn
   return map;
 }
 
+function resolveRoleExpiryInfo(
+  roleId: string,
+  roleExpiryMap: Map<string, RoleExpiryInfo>,
+): RoleExpiryInfo {
+  const fromStore = roleExpiryMap.get(roleId);
+  if (fromStore) return fromStore;
+  // Normal Discord roles — no tracked expiry in our system.
+  return { permanent: true, expiresAt: null };
+}
+
+function getRoleExpiryLabel(
+  info: RoleExpiryInfo,
+  nowMs: number,
+  t: (key: string, vars?: Record<string, string | number>) => string,
+): string {
+  if (info.permanent || !info.expiresAt) return t('tracking_permanent');
+  return formatRoleCountdown(info.expiresAt, nowMs, t);
+}
+
 function formatRoleCountdown(
   expiresAt: Date,
   nowMs: number,
@@ -133,12 +152,11 @@ function ProfileCardBody({
   const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const roleExpiryMap = useMemo(() => buildRoleExpiryMap(activePerks), [activePerks]);
-  const hasStoreRoles = roleExpiryMap.size > 0;
 
   useEffect(() => {
     if (!selectedRoleId) return;
-    const info = roleExpiryMap.get(selectedRoleId);
-    if (!info || info.permanent || !info.expiresAt) return;
+    const info = resolveRoleExpiryInfo(selectedRoleId, roleExpiryMap);
+    if (info.permanent || !info.expiresAt) return;
 
     const timer = window.setInterval(() => setNowMs(Date.now()), 1000);
     return () => window.clearInterval(timer);
@@ -255,38 +273,22 @@ function ProfileCardBody({
               <div className="flex flex-wrap gap-1.5">
                 {roles.map((role) => {
                   const color = role.color > 0 ? formatRoleColor(role.color) : '#99aab5';
-                  const expiryInfo = roleExpiryMap.get(role.id);
-                  const isStoreRole = Boolean(expiryInfo);
+                  const expiryInfo = resolveRoleExpiryInfo(role.id, roleExpiryMap);
                   const isSelected = selectedRoleId === role.id;
-                  const expiryLabel =
-                    isSelected && expiryInfo
-                      ? expiryInfo.permanent
-                        ? t('tracking_permanent')
-                        : expiryInfo.expiresAt
-                          ? formatRoleCountdown(expiryInfo.expiresAt, nowMs, t)
-                          : t('tracking_permanent')
-                      : null;
-
-                  const Wrapper = isStoreRole ? 'button' : 'span';
+                  const expiryLabel = isSelected ? getRoleExpiryLabel(expiryInfo, nowMs, t) : null;
 
                   return (
-                    <Wrapper
+                    <button
                       key={role.id}
-                      type={isStoreRole ? 'button' : undefined}
-                      onClick={
-                        isStoreRole
-                          ? () => setSelectedRoleId(isSelected ? null : role.id)
-                          : undefined
-                      }
-                      className={`inline-flex max-w-full flex-col items-start gap-0.5 rounded-full border px-2 py-0.5 text-left text-[11px] font-medium text-[#dbdee1] transition-colors ${
-                        isStoreRole ? 'cursor-pointer hover:border-white/15 hover:bg-white/[0.06]' : ''
-                      } ${
+                      type="button"
+                      onClick={() => setSelectedRoleId(isSelected ? null : role.id)}
+                      className={`inline-flex max-w-full cursor-pointer flex-col items-start gap-0.5 rounded-full border px-2 py-0.5 text-left text-[11px] font-medium text-[#dbdee1] transition-colors hover:border-white/15 hover:bg-white/[0.06] ${
                         isSelected
                           ? 'border-amber-400/35 bg-amber-500/10'
                           : 'border-white/[0.06] bg-[#111214]/80'
                       }`}
-                      aria-pressed={isStoreRole ? isSelected : undefined}
-                      title={isStoreRole ? t('discord_card_role_tap_title') : undefined}
+                      aria-pressed={isSelected}
+                      title={t('discord_card_role_tap_title')}
                     >
                       <span className="inline-flex max-w-full items-center gap-1.5">
                         <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: color }} />
@@ -297,7 +299,7 @@ function ProfileCardBody({
                           {expiryLabel}
                         </span>
                       )}
-                    </Wrapper>
+                    </button>
                   );
                 })}
               </div>
@@ -310,7 +312,7 @@ function ProfileCardBody({
             <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-[#b5bac1]">
               {t('discord_card_note')}
             </p>
-            {hasStoreRoles && (
+            {roles.length > 0 && (
               <p className="mb-1.5 text-[11px] leading-snug text-[#949ba4]">
                 {t('discord_card_roles_tap_hint')}
               </p>
