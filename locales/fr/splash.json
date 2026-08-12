@@ -1,0 +1,23 @@
+{
+  "splash_welcome_user": "Bienvenue, {username}",
+  "splash_welcome_generic": "Bienvenue 👋",
+  "splash_welcome_subtitle": "Tu entres dans un nouveau monde économique.",
+  "splash_welcome_ready": "Prêt à commencer ?",
+  "splash_tap_to_start": "Appuie sur l'écran pour commencer",
+  "splash_click_to_start": "Clique sur l'écran pour commencer",
+  "splash_welcome_subtitle_maintenance": "Des améliorations du système sont en cours.",
+  "splash_platform_name": "Plateforme économique Discord",
+  "splash_start_button": "C'est parti !",
+  "splash_maintenance_title": "Maintenance en cours",
+  "splash_terms": "Conditions d'utilisation",
+  "splash_privacy": "Politique de confidentialité",
+  "splash_tip_earn_papel": "Tu peux gagner du Papel en envoyant des messages et en passant du temps dans les salons vocaux.",
+  "splash_tip_mailbox_rewards": "Des récompenses et des notifications système t'attendent peut-être dans ta boîte aux lettres.",
+  "splash_tip_store": "Achète des rôles et des produits dans la boutique, et économise davantage avec des coupons de réduction.",
+  "splash_tip_quiz": "Participe aux événements Quiz, réponds aux questions et gagne du Papel supplémentaire.",
+  "splash_tip_watch_earn": "Regarde des vidéos dans Regarder & Gagner pour collecter des récompenses en Papel.",
+  "splash_tip_announcements": "Suis les actualités du serveur, les sondages et les mises à jour depuis la page Annonces.",
+  "splash_tip_leaderboard": "Tu peux voir les membres les plus actifs de ton serveur et ton classement dans le tableau de bord.",
+  "splash_tip_referral_code": "Invite tes amis et gagne du Papel supplémentaire grâce à ton code de parrainage.",
+  "splash_thanks_button": "Merci"
+}

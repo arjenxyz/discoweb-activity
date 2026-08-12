@@ -33,29 +33,37 @@ import deDm from '@/locales/de/dm.json';
 import deErrors from '@/locales/de/errors.json';
 import deMail from '@/locales/de/mail.json';
 import deNotifications from '@/locales/de/notifications.json';
+import deSplash from '@/locales/de/splash.json';
 
 import esDashboard from '@/locales/es/dashboard.json';
 import esDm from '@/locales/es/dm.json';
 import esErrors from '@/locales/es/errors.json';
 import esMail from '@/locales/es/mail.json';
 import esNotifications from '@/locales/es/notifications.json';
+import esSplash from '@/locales/es/splash.json';
 
 import frDashboard from '@/locales/fr/dashboard.json';
 import frDm from '@/locales/fr/dm.json';
 import frErrors from '@/locales/fr/errors.json';
 import frMail from '@/locales/fr/mail.json';
 import frNotifications from '@/locales/fr/notifications.json';
+import frSplash from '@/locales/fr/splash.json';
 
 import ruDashboard from '@/locales/ru/dashboard.json';
 import ruDm from '@/locales/ru/dm.json';
 import ruErrors from '@/locales/ru/errors.json';
 import ruMail from '@/locales/ru/mail.json';
 import ruNotifications from '@/locales/ru/notifications.json';
+import ruSplash from '@/locales/ru/splash.json';
 
 import idMail from '@/locales/id/mail.json';
+import idSplash from '@/locales/id/splash.json';
 import huMail from '@/locales/hu/mail.json';
+import huSplash from '@/locales/hu/splash.json';
 import jaMail from '@/locales/ja/mail.json';
+import jaSplash from '@/locales/ja/splash.json';
 import koMail from '@/locales/ko/mail.json';
+import koSplash from '@/locales/ko/splash.json';
 
 import ptAuth from '@/locales/pt-br/auth.json';
 import ptDashboard from '@/locales/pt-br/dashboard.json';
@@ -96,19 +104,19 @@ const trBundle = mergeBundles(
 export const translations: Record<LanguageCode, TranslationMap> = {
   en: enBundle,
   tr: trBundle,
-  de: mergeBundles(enBundle, deDashboard, deDm, deErrors, deMail, deNotifications),
-  es: mergeBundles(enBundle, esDashboard, esDm, esErrors, esMail, esNotifications),
-  fr: mergeBundles(enBundle, frDashboard, frDm, frErrors, frMail, frNotifications),
-  ru: mergeBundles(enBundle, ruDashboard, ruDm, ruErrors, ruMail, ruNotifications),
+  de: mergeBundles(enBundle, deDashboard, deDm, deErrors, deMail, deNotifications, deSplash),
+  es: mergeBundles(enBundle, esDashboard, esDm, esErrors, esMail, esNotifications, esSplash),
+  fr: mergeBundles(enBundle, frDashboard, frDm, frErrors, frMail, frNotifications, frSplash),
+  ru: mergeBundles(enBundle, ruDashboard, ruDm, ruErrors, ruMail, ruNotifications, ruSplash),
   pt: mergeBundles(
     enBundle,
     ptAuth, ptDashboard, ptDm, ptErrors, ptMail, ptMisc,
     ptNotifications, ptProfile, ptStore, ptUI, ptWallet, ptWelcome, ptSupport,
   ),
-  id: mergeBundles(enBundle, idMail),
-  hu: mergeBundles(enBundle, huMail),
-  ja: mergeBundles(enBundle, jaMail),
-  ko: mergeBundles(enBundle, koMail),
+  id: mergeBundles(enBundle, idMail, idSplash),
+  hu: mergeBundles(enBundle, huMail, huSplash),
+  ja: mergeBundles(enBundle, jaMail, jaSplash),
+  ko: mergeBundles(enBundle, koMail, koSplash),
 };
 
 /**

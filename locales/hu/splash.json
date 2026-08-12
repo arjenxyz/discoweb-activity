@@ -1,0 +1,23 @@
+{
+  "splash_welcome_user": "Üdvözlünk, {username}",
+  "splash_welcome_generic": "Üdvözlünk 👋",
+  "splash_welcome_subtitle": "Beléptél egy új gazdasági világba.",
+  "splash_welcome_ready": "Készen állsz a kezdésre?",
+  "splash_tap_to_start": "Koppints a képernyőre a kezdéshez",
+  "splash_click_to_start": "Kattints a képernyőre a kezdéshez",
+  "splash_welcome_subtitle_maintenance": "Jelenleg rendszerfejlesztések folynak.",
+  "splash_platform_name": "Discord gazdasági platform",
+  "splash_start_button": "Kezdjük!",
+  "splash_maintenance_title": "Karbantartás alatt",
+  "splash_terms": "Felhasználási feltételek",
+  "splash_privacy": "Adatvédelmi irányelvek",
+  "splash_tip_earn_papel": "Papel-t szerezhetsz üzenetek küldésével és hangcsatornákban töltött idővel.",
+  "splash_tip_mailbox_rewards": "A postaládádban jutalmak és rendszerértesítések várhatnak rád.",
+  "splash_tip_store": "Vásárolj szerepköröket és termékeket a boltban, és spórolj a kedvezménykuponokkal.",
+  "splash_tip_quiz": "Vegyél részt Quiz eseményeken, válaszolj a kérdésekre, és szerezz extra Papel-t.",
+  "splash_tip_watch_earn": "Nézz videókat a Nézd és keress szekcióban, hogy Papel jutalmakat gyűjts.",
+  "splash_tip_announcements": "Kövesd a szerver híreit, szavazásait és frissítéseit a Közlemények oldalon.",
+  "splash_tip_leaderboard": "A ranglistán megnézheted a szerver legaktívabb tagjait és a saját helyezésedet.",
+  "splash_tip_referral_code": "Hívd meg barátaidat, és szerezz extra Papel-t az ajánlókódoddal.",
+  "splash_thanks_button": "Köszönöm"
+}

@@ -1,0 +1,23 @@
+{
+  "splash_welcome_user": "ようこそ、{username}さん",
+  "splash_welcome_generic": "ようこそ 👋",
+  "splash_welcome_subtitle": "新しい経済の世界へようこそ。",
+  "splash_welcome_ready": "始める準備はできましたか？",
+  "splash_tap_to_start": "画面をタップして開始",
+  "splash_click_to_start": "画面をクリックして開始",
+  "splash_welcome_subtitle_maintenance": "現在、システムの改善作業を行っています。",
+  "splash_platform_name": "Discord 経済プラットフォーム",
+  "splash_start_button": "さあ、始めよう！",
+  "splash_maintenance_title": "メンテナンス中",
+  "splash_terms": "利用規約",
+  "splash_privacy": "プライバシーポリシー",
+  "splash_tip_earn_papel": "メッセージを送ったり、ボイスチャンネルで過ごしたりして Papel を獲得できます。",
+  "splash_tip_mailbox_rewards": "メールボックスに報酬やシステム通知が届いているかもしれません。",
+  "splash_tip_store": "ストアでロールや商品を購入し、割引クーポンでお得にお買い物できます。",
+  "splash_tip_quiz": "Quiz イベントに参加して質問に答え、追加の Papel を獲得しましょう。",
+  "splash_tip_watch_earn": "視聴して獲得で動画を視聴して Papel 報酬を集めましょう。",
+  "splash_tip_announcements": "お知らせページでサーバーのニュース、投票、アップデートを確認できます。",
+  "splash_tip_leaderboard": "リーダーボードでサーバーの最もアクティブなメンバーと自分の順位を確認できます。",
+  "splash_tip_referral_code": "友達を招待して、紹介コードで追加の Papel を獲得しましょう。",
+  "splash_thanks_button": "ありがとう"
+}

@@ -1,0 +1,23 @@
+{
+  "splash_welcome_user": "Selamat datang, {username}",
+  "splash_welcome_generic": "Selamat datang 👋",
+  "splash_welcome_subtitle": "Kamu memasuki dunia ekonomi yang baru.",
+  "splash_welcome_ready": "Siap untuk mulai?",
+  "splash_tap_to_start": "Ketuk layar untuk memulai",
+  "splash_click_to_start": "Klik layar untuk memulai",
+  "splash_welcome_subtitle_maintenance": "Peningkatan sistem sedang berlangsung.",
+  "splash_platform_name": "Platform Ekonomi Discord",
+  "splash_start_button": "Ayo Mulai!",
+  "splash_maintenance_title": "Sedang Dalam Pemeliharaan",
+  "splash_terms": "Ketentuan Layanan",
+  "splash_privacy": "Kebijakan Privasi",
+  "splash_tip_earn_papel": "Kamu bisa mendapatkan Papel dengan mengirim pesan dan menghabiskan waktu di channel suara.",
+  "splash_tip_mailbox_rewards": "Mungkin ada hadiah dan notifikasi sistem yang menunggumu di kotak surat.",
+  "splash_tip_store": "Beli role dan produk dari toko, dan hemat lebih banyak dengan kupon diskon.",
+  "splash_tip_quiz": "Ikuti event Quiz, jawab pertanyaan, dan dapatkan Papel tambahan.",
+  "splash_tip_watch_earn": "Tonton video di Tonton & Dapatkan untuk mengumpulkan hadiah Papel.",
+  "splash_tip_announcements": "Ikuti berita server, polling, dan pembaruan dari halaman Pengumuman.",
+  "splash_tip_leaderboard": "Kamu bisa melihat anggota paling aktif di server dan peringkatmu dari papan peringkat.",
+  "splash_tip_referral_code": "Undang teman-temanmu dan dapatkan Papel tambahan melalui kode referral-mu.",
+  "splash_thanks_button": "Terima kasih"
+}

@@ -1,0 +1,23 @@
+{
+  "splash_welcome_user": "Willkommen, {username}",
+  "splash_welcome_generic": "Willkommen 👋",
+  "splash_welcome_subtitle": "Du betrittst eine neue Welt der Wirtschaft.",
+  "splash_welcome_ready": "Bereit loszulegen?",
+  "splash_tap_to_start": "Tippe auf den Bildschirm, um zu starten",
+  "splash_click_to_start": "Klicke auf den Bildschirm, um zu starten",
+  "splash_welcome_subtitle_maintenance": "Derzeit werden Systemverbesserungen durchgeführt.",
+  "splash_platform_name": "Discord-Wirtschaftsplattform",
+  "splash_start_button": "Los geht's!",
+  "splash_maintenance_title": "Wartungsarbeiten",
+  "splash_terms": "Nutzungsbedingungen",
+  "splash_privacy": "Datenschutzrichtlinie",
+  "splash_tip_earn_papel": "Du kannst Papel verdienen, indem du Nachrichten sendest und Zeit in Sprachkanälen verbringst.",
+  "splash_tip_mailbox_rewards": "In deinem Postfach könnten Belohnungen und Systembenachrichtigungen auf dich warten.",
+  "splash_tip_store": "Kaufe Rollen und Produkte im Shop und spare mit Rabattcoupons.",
+  "splash_tip_quiz": "Nimm an Quiz-Events teil, beantworte Fragen und verdiene extra Papel.",
+  "splash_tip_watch_earn": "Schau Videos in Schauen & Verdienen an, um Papel-Belohnungen zu sammeln.",
+  "splash_tip_announcements": "Verfolge Server-Neuigkeiten, Umfragen und Updates auf der Ankündigungsseite.",
+  "splash_tip_leaderboard": "In der Bestenliste siehst du die aktivsten Mitglieder deines Servers und deine Platzierung.",
+  "splash_tip_referral_code": "Lade deine Freunde ein und verdiene extra Papel über deinen Empfehlungscode.",
+  "splash_thanks_button": "Danke"
+}
