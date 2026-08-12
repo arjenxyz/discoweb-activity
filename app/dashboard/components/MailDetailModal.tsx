@@ -206,14 +206,30 @@ export default function MailDetailModal({
     );
   };
 
-  const transferSenderAvatar =
+  const headerAvatar =
     txn?.kind === 'transfer'
       ? txn.data.senderAvatarUrl ?? mail.author_avatar_url
-      : mail.author_avatar_url;
-  const transferSenderName =
+      : txn?.kind === 'promotion'
+        ? txn.data.createdByAvatarUrl ?? mail.author_avatar_url
+        : mail.author_avatar_url;
+  const headerName =
     txn?.kind === 'transfer'
       ? txn.data.senderUsername ?? mail.author_name ?? senderName
-      : mail.author_name ?? senderName;
+      : txn?.kind === 'promotion'
+        ? txn.data.createdByUsername ?? mail.author_name ?? 'DiscoWeb'
+        : mail.author_name ?? senderName;
+  const headerIsSystemBrand =
+    txn?.kind === 'discount' ||
+    mailTemplate === 'discount' ||
+    mailTemplate === 'order' ||
+    mailTemplate === 'order_confirmed' ||
+    mailTemplate === 'order_rejected' ||
+    mailTemplate === 'earn_claim' ||
+    mailTemplate === 'earn_rejected' ||
+    mailTemplate === 'quiz_reward' ||
+    mailTemplate === 'quiz_motivation' ||
+    mailTemplate === 'earn_settings';
+  const showVerified = headerIsSystemBrand || (txn?.kind !== 'transfer' && txn?.kind !== 'promotion' && senderCfg.verified);
 
   const panelInner = (
     <div
@@ -282,10 +298,10 @@ export default function MailDetailModal({
         <div className="px-5 py-6 sm:px-8">
           <div className="mb-5 flex items-start justify-between gap-3">
             <div className="flex items-center gap-3">
-              {transferSenderAvatar ? (
+              {headerAvatar ? (
                 <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-full border border-white/10 bg-white/[0.06]">
                   <Image
-                    src={transferSenderAvatar}
+                    src={headerAvatar}
                     alt="avatar"
                     width={40}
                     height={40}
@@ -319,31 +335,9 @@ export default function MailDetailModal({
               <div>
                 <div className="flex items-center gap-1.5">
                   <span className="text-sm font-semibold text-white">
-                    {txn?.kind === 'promotion' ||
-                    txn?.kind === 'discount' ||
-                    mailTemplate === 'discount' ||
-                    mailTemplate === 'order' ||
-                    mailTemplate === 'order_confirmed' ||
-                    mailTemplate === 'order_rejected' ||
-                    mailTemplate === 'earn_claim' ||
-                    mailTemplate === 'earn_rejected' ||
-                    mailTemplate === 'quiz_reward' ||
-                    mailTemplate === 'quiz_motivation' ||
-                    mailTemplate === 'earn_settings'
-                      ? 'DiscoWeb'
-                      : transferSenderName}
+                    {headerIsSystemBrand ? 'DiscoWeb' : headerName}
                   </span>
-                  {(txn?.kind === 'promotion' ||
-                    txn?.kind === 'discount' ||
-                    mailTemplate === 'order' ||
-                    mailTemplate === 'order_confirmed' ||
-                    mailTemplate === 'order_rejected' ||
-                    mailTemplate === 'earn_claim' ||
-                    mailTemplate === 'earn_rejected' ||
-                    mailTemplate === 'quiz_reward' ||
-                    mailTemplate === 'quiz_motivation' ||
-                    mailTemplate === 'earn_settings' ||
-                    senderCfg.verified) && (
+                  {showVerified && (
                     <LuShield className="h-3.5 w-3.5 text-[#5865F2]" title={t('mail_detail_verified_tooltip')} />
                   )}
                 </div>
@@ -352,7 +346,7 @@ export default function MailDetailModal({
             </div>
           </div>
 
-          <h1 className="mb-2 text-xl font-bold leading-tight text-white sm:text-2xl">
+          <h1 className="mb-4 text-xl font-bold leading-tight text-white sm:text-2xl">
             {displayTitle}
           </h1>
 

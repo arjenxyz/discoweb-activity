@@ -672,47 +672,62 @@ export default function MailTransactionReceipt({ mail, txn, t }: Props) {
   const creatorName = createdByUsername || 'DiscoWeb';
 
   return (
-    <div className="w-full min-w-0 space-y-3">
-      <ReceiptCard accent="emerald">
-        <ReceiptSection>
-          <SectionLabel>{t('mail_txn_promo_details')}</SectionLabel>
-          <div className="flex min-w-0 items-center gap-3">
+    <div className="w-full min-w-0">
+      <div className="relative w-full min-w-0 overflow-hidden rounded-2xl border border-emerald-500/20 bg-gradient-to-b from-emerald-500/[0.08] via-white/[0.03] to-white/[0.02]">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-300/35 to-transparent" />
+
+        <div className="min-w-0 px-4 pb-1 pt-5 text-center sm:px-5">
+          <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-200/45">
+            {t('mail_txn_promo_credit')}
+          </p>
+          <div className="flex min-w-0 flex-wrap items-center justify-center gap-2.5">
+            <Image
+              src="/papel.gif"
+              alt="Papel"
+              width={32}
+              height={32}
+              className="h-8 w-8 shrink-0"
+              unoptimized
+            />
+            <span className="text-4xl font-black tabular-nums tracking-tight text-emerald-300 sm:text-5xl">
+              +{amount.toLocaleString('tr-TR', { maximumFractionDigits: 2 })}
+            </span>
+            <span className="text-base font-bold text-emerald-400/90">Papel</span>
+          </div>
+        </div>
+
+        <div className="mx-4 mb-4 mt-5 min-w-0 rounded-xl border border-white/[0.07] bg-black/25 p-3 text-center sm:mx-5">
+          <p className="mb-2.5 text-[10px] font-bold uppercase tracking-[0.16em] text-white/30">
+            {t('mail_txn_promo_created_by')}
+          </p>
+          <div className="flex min-w-0 flex-col items-center gap-2">
             {createdByAvatarUrl ? (
-              <div className="h-11 w-11 shrink-0 overflow-hidden rounded-full border border-emerald-500/20 bg-emerald-500/10">
+              <div className="h-12 w-12 shrink-0 overflow-hidden rounded-full border border-white/10 bg-white/[0.06]">
                 <Image
                   src={createdByAvatarUrl}
                   alt={creatorName}
-                  width={44}
-                  height={44}
+                  width={48}
+                  height={48}
                   className="h-full w-full object-cover"
                   unoptimized
                 />
               </div>
             ) : (
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-emerald-500/20 bg-emerald-500/10 text-emerald-300">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-emerald-500/20 bg-emerald-500/10 text-emerald-300">
                 <LuGift className="h-5 w-5" />
               </div>
             )}
-            <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/30">
-                {t('mail_txn_promo_created_by')}
-              </p>
-              <p className="mt-0.5 min-w-0 break-words text-base font-semibold text-white [overflow-wrap:anywhere]">
-                {creatorName}
-              </p>
-            </div>
+            <p className="max-w-full break-words text-sm font-semibold text-white [overflow-wrap:anywhere]">
+              {creatorName}
+            </p>
           </div>
           {code ? (
-            <div className="mt-3 min-w-0">
+            <div className="mt-3 flex min-w-0 justify-center border-t border-white/[0.06] pt-3">
               <PromoCodeChip value={code} t={t} />
             </div>
           ) : null}
-        </ReceiptSection>
-        <ReceiptDivider />
-        <ReceiptSection>
-          <AmountInline amount={amount} label={t('mail_txn_promo_credit')} accent="emerald" />
-        </ReceiptSection>
-      </ReceiptCard>
+        </div>
+      </div>
     </div>
   );
 }
