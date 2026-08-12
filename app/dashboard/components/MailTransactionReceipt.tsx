@@ -336,29 +336,20 @@ function PromoCodeChip({ value, t }: { value: string; t: Translate }) {
         e.stopPropagation();
         void onCopy();
       }}
-      className="group flex w-full min-w-0 items-center gap-3 rounded-xl border border-dashed border-emerald-400/35 bg-gradient-to-r from-emerald-500/[0.12] via-emerald-500/[0.06] to-transparent px-3.5 py-3 text-left transition hover:border-emerald-300/50 hover:from-emerald-500/[0.16]"
+      className="group inline-flex max-w-full items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1.5 text-left transition hover:border-white/20 hover:bg-white/[0.06]"
       title={t('mail_txn_copy_id')}
     >
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-emerald-400/20 bg-emerald-500/10 text-emerald-300">
-        <LuTicket className="h-4 w-4" />
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-300/45">
-          {t('mail_txn_promo_code')}
-        </p>
-        <p className="mt-1 break-all font-mono text-base font-bold tracking-[0.14em] text-emerald-100 [overflow-wrap:anywhere]">
-          {value}
-        </p>
-      </div>
-      <span
-        className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border transition ${
-          copied
-            ? 'border-emerald-400/35 bg-emerald-500/20 text-emerald-300'
-            : 'border-white/10 bg-black/25 text-white/40 group-hover:border-emerald-400/25 group-hover:text-emerald-200'
-        }`}
-      >
-        {copied ? <LuCheck className="h-3.5 w-3.5" /> : <LuCopy className="h-3.5 w-3.5" />}
+      <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/35">
+        {t('mail_txn_promo_code')}
       </span>
+      <span className="min-w-0 break-all font-mono text-xs font-semibold tracking-wide text-white/80 [overflow-wrap:anywhere] group-hover:text-white">
+        {value}
+      </span>
+      {copied ? (
+        <LuCheck className="h-3.5 w-3.5 shrink-0 text-emerald-400" />
+      ) : (
+        <LuCopy className="h-3.5 w-3.5 shrink-0 text-white/30 group-hover:text-white/55" />
+      )}
       <span className="sr-only">{copied ? t('mail_txn_copied') : t('mail_txn_copy_id')}</span>
     </button>
   );
@@ -712,7 +703,7 @@ export default function MailTransactionReceipt({ mail, txn, t }: Props) {
             </div>
           </div>
           {code ? (
-            <div className="mt-3.5 min-w-0">
+            <div className="mt-3 min-w-0">
               <PromoCodeChip value={code} t={t} />
             </div>
           ) : null}
