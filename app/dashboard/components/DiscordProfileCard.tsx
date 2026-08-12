@@ -149,7 +149,7 @@ function RoleDetailModal({
 
   return (
     <div
-      className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/70 px-4 py-6 backdrop-blur-sm"
+      className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/65 px-4 py-6 backdrop-blur-[6px]"
       onClick={onClose}
       role="presentation"
     >
@@ -158,66 +158,65 @@ function RoleDetailModal({
         aria-modal="true"
         aria-labelledby="role-detail-title"
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-[320px] animate-in fade-in zoom-in-95 duration-200 overflow-hidden rounded-2xl border border-white/10 bg-[#16181d] shadow-[0_20px_60px_rgba(0,0,0,0.5)]"
+        className="relative w-full max-w-[340px] animate-in fade-in zoom-in-95 duration-200 overflow-hidden rounded-2xl border border-white/[0.09] bg-[#1e1f22] shadow-[0_24px_64px_rgba(0,0,0,0.55)]"
       >
+        <div className="h-1 w-full" style={{ backgroundColor: roleColor }} />
+
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full text-white/45 transition hover:bg-white/10 hover:text-white"
+          className="absolute right-3 top-4 flex h-8 w-8 items-center justify-center rounded-full text-[#b5bac1] transition hover:bg-white/[0.08] hover:text-white"
           aria-label={t('discord_card_role_close')}
         >
           <LuX className="h-4 w-4" />
         </button>
 
-        <div className="px-5 pb-5 pt-5">
-          <div className="flex items-center gap-2.5 pr-8">
-            <span
-              className="h-3 w-3 shrink-0 rounded-full"
-              style={{ backgroundColor: roleColor }}
-            />
-            <div className="min-w-0">
-              <h3 id="role-detail-title" className="truncate text-base font-bold text-white">
-                {role.name}
-              </h3>
-              {info.itemTitle && info.itemTitle !== role.name && (
-                <p className="truncate text-xs text-white/40">{info.itemTitle}</p>
-              )}
-            </div>
-          </div>
+        <div className="px-5 pb-5 pt-4">
+          <span
+            className="inline-flex max-w-[calc(100%-2.5rem)] items-center gap-2 rounded-full border border-white/[0.08] bg-[#111214] px-3 py-1.5"
+          >
+            <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: roleColor }} />
+            <span id="role-detail-title" className="truncate text-sm font-semibold text-[#f2f3f5]">
+              {role.name}
+            </span>
+          </span>
+          {info.itemTitle && info.itemTitle !== role.name && (
+            <p className="mt-2 truncate text-xs text-[#949ba4]">{info.itemTitle}</p>
+          )}
 
-          <div className="mt-4 rounded-xl bg-white/[0.04] px-3.5 py-3">
-            <p className="text-[11px] text-white/40">
+          <div className="mt-4 rounded-xl border border-white/[0.06] bg-[#2b2d31] px-4 py-3.5">
+            <p className="text-[11px] font-medium uppercase tracking-wide text-[#949ba4]">
               {isPermanent ? t('discord_card_role_status') : t('discord_card_role_remaining')}
             </p>
             <p
-              className={`mt-1 text-lg font-semibold tabular-nums ${
-                isPermanent ? 'text-emerald-300' : 'text-amber-300'
-              }`}
+              className="mt-1.5 text-[1.25rem] font-semibold tabular-nums leading-none"
+              style={{ color: isPermanent ? '#3ba55d' : roleColor }}
             >
               {isPermanent ? t('tracking_permanent') : countdown}
             </p>
           </div>
 
-          <div className="mt-3 space-y-2 text-sm">
-            {info.fromStore ? (
-              <>
-                <div className="flex items-center justify-between gap-3 text-white/55">
-                  <span>{t('discord_card_role_purchased_at')}</span>
-                  <span className="text-right text-white/85">
-                    {purchasedAt ?? t('discord_card_role_purchase_unknown')}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between gap-3 text-white/55">
-                  <span>{t('tracking_end_date')}</span>
-                  <span className="text-right text-white/85">
-                    {isPermanent ? t('tracking_permanent') : endsAt ?? '—'}
-                  </span>
-                </div>
-              </>
-            ) : (
-              <p className="text-white/50">{t('discord_card_role_source_server')}</p>
-            )}
-          </div>
+          {info.fromStore ? (
+            <div className="mt-3 overflow-hidden rounded-xl border border-white/[0.06] bg-[#2b2d31]/70">
+              <div className="flex items-center justify-between gap-3 px-4 py-3">
+                <span className="text-xs text-[#949ba4]">{t('discord_card_role_purchased_at')}</span>
+                <span className="text-right text-xs font-medium text-[#dbdee1]">
+                  {purchasedAt ?? t('discord_card_role_purchase_unknown')}
+                </span>
+              </div>
+              <div className="h-px bg-white/[0.06]" />
+              <div className="flex items-center justify-between gap-3 px-4 py-3">
+                <span className="text-xs text-[#949ba4]">{t('tracking_end_date')}</span>
+                <span className="text-right text-xs font-medium text-[#dbdee1]">
+                  {isPermanent ? t('tracking_permanent') : endsAt ?? '—'}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <p className="mt-3 text-xs leading-relaxed text-[#949ba4]">
+              {t('discord_card_role_source_server')}
+            </p>
+          )}
         </div>
       </div>
     </div>
