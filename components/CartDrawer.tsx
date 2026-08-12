@@ -9,7 +9,6 @@ import Image from 'next/image';
 import { useCart } from '../lib/cart';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { useT } from '@/contexts/LocaleContext';
-import { playPurchaseSound } from '@/lib/uiClickSound';
 
 const MIN_WIDTH = 320;
 const MAX_WIDTH = 600;
@@ -195,7 +194,6 @@ export default function CartDrawer() {
   const handleCheckout = async () => {
     if (isCheckoutDisabled) return;
 
-    playPurchaseSound();
     setCheckoutLoading(true);
     setCheckoutError(false);
     setCheckoutErrorType(null);

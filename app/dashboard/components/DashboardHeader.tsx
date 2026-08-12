@@ -13,7 +13,7 @@ import { useT } from '@/contexts/LocaleContext';
 import { ENABLE_TAG_BADGE_SECTION } from '../featureFlags';
 import SupportMenu from './SupportMenu';
 import ServerTimeClock from './ServerTimeClock';
-import { playMoneyInSound } from '@/lib/uiClickSound';
+import { playMoneyInSound, playMoneyOutSound } from '@/lib/uiClickSound';
 
 type DashboardHeaderProps = {
   isActivityEmbed?: boolean;
@@ -151,6 +151,8 @@ export default function DashboardHeader({
     if (prev === null) return;
     if (walletBalance > prev + 0.009) {
       playMoneyInSound();
+    } else if (walletBalance < prev - 0.009) {
+      playMoneyOutSound();
     }
   }, [walletBalance, walletLoading, unauthorized]);
 
