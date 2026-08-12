@@ -122,12 +122,6 @@ export default function OverviewSection({
                   <span>{greeting}{displayName ? `, ${displayName}` : ''}</span>
                   <span aria-hidden className="text-white/70">👋</span>
                 </span>
-                {!overviewLoading && (
-                  <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-300/90">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    {t('overview_live')}
-                  </span>
-                )}
               </div>
 
               <div className="flex flex-col gap-0.5">
