@@ -260,9 +260,7 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry, onB
   );
   const maintenanceKey = resolveMaintenanceKey(readiness.status, readiness.debug);
   if (maintenanceKey) {
-    const customReason =
-      typeof readiness.debug?.reason === 'string' ? readiness.debug.reason : null;
-    copy = getMaintenanceCopy(maintenanceKey, t, customReason);
+    copy = getMaintenanceCopy(maintenanceKey, t);
   }
   if (readiness.status === 'member_banned') {
     copy = isTemporaryBan

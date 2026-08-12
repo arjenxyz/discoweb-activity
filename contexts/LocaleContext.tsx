@@ -18,11 +18,26 @@ const LocaleContext = createContext<LocaleContextValue>({
 /** SSR + ilk client paint aynı olmalı; tarayıcı dilini mount sonrası uygula. */
 const SSR_SAFE_LOCALE: SupportedLocale = 'en';
 
+function isActivityEmbedHost(): boolean {
+  if (typeof window === 'undefined') return false;
+  const host = window.location.hostname.toLowerCase();
+  return host.includes('discordsays.com') || host.includes('discordapp.com') || host.includes('discord.com');
+}
+
 export function LocaleProvider({ children }: { children: React.ReactNode }) {
   const [locale, setLocale] = useState<SupportedLocale>(SSR_SAFE_LOCALE);
 
   useEffect(() => {
     try {
+      // Activity: Discord kullanıcısının dili öncelikli (admin panel notu değil).
+      if (isActivityEmbedHost()) {
+        const discordLocale = window.localStorage.getItem('discord_locale');
+        if (discordLocale) {
+          setLocale(resolveLocale(discordLocale));
+          return;
+        }
+      }
+
       const stored = window.localStorage.getItem('dashboard_locale');
       if (stored) {
         setLocale(resolveLocale(stored));
@@ -40,6 +55,7 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
     const next = resolveLocale(discordLocale);
     setLocale(next);
     try {
+      window.localStorage.setItem('discord_locale', discordLocale);
       window.localStorage.setItem('dashboard_locale', next);
     } catch {
       // ignore storage errors

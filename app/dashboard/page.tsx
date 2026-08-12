@@ -31,7 +31,7 @@ import IncidentOverlay from './components/IncidentOverlay';
 import { sanitizeHtml } from '@/lib/sanitizeHtml';
 import { useRealtimeDashboard } from '@/lib/utils/useRealtimeDashboard';
 import { useT } from '@/contexts/LocaleContext';
-import { getMaintenanceShortMessage } from '@/lib/maintenanceCopy';
+import { getMaintenanceCopy, getMaintenanceShortMessage } from '@/lib/maintenanceCopy';
 import { getDiscordSdk } from '@/lib/discordSdk';
 import DuyuruPage from './duyuru/page';
 import { ENABLE_TAG_BADGE_SECTION } from './featureFlags';
@@ -497,19 +497,15 @@ export default function DashboardPage() {
   const isSiteMaintenance = Boolean(maintenanceFlags?.site?.is_active);
   const isActivityMaintenance = Boolean(maintenanceFlags?.activity?.is_active);
   const isFullMaintenance = isSiteMaintenance || isActivityMaintenance;
-  const siteReason =
-    (isSiteMaintenance ? maintenanceFlags?.site?.reason : null) ??
-    (isActivityMaintenance ? maintenanceFlags?.activity?.reason : null);
+  const fullMaintenanceKey = isSiteMaintenance ? 'site' : isActivityMaintenance ? 'activity' : 'site';
+  const fullMaintenanceCopy = getMaintenanceCopy(fullMaintenanceKey, t);
   const isStoreMaintenance = Boolean(maintenanceFlags?.store?.is_active);
-  const storeReason = maintenanceFlags?.store?.reason;
+  const storeMaintenanceCopy = getMaintenanceCopy('store', t);
   const storeUpdater = maintenanceFlags?.store?.updated_by ? maintenanceUpdaters[maintenanceFlags.store.updated_by] : null;
   const isPromotionsMaintenance = Boolean(
     maintenanceFlags?.promotions?.is_active || maintenanceFlags?.discounts?.is_active,
   );
-  const promotionsReason =
-    maintenanceFlags?.promotions?.reason ?? maintenanceFlags?.discounts?.reason ?? null;
   const isTransfersMaintenance = Boolean(maintenanceFlags?.transfers?.is_active);
-  const transfersReason = maintenanceFlags?.transfers?.reason;
   const siteUpdater = maintenanceFlags?.site?.updated_by ? maintenanceUpdaters[maintenanceFlags.site.updated_by] : null;
   const promotionsUpdater = maintenanceFlags?.promotions?.updated_by
     ? maintenanceUpdaters[maintenanceFlags.promotions.updated_by]
@@ -1025,7 +1021,7 @@ export default function DashboardPage() {
 
   const handleTransfer = async () => {
     if (isSiteMaintenance || isTransfersMaintenance) {
-      setTransferError(getMaintenanceShortMessage('transfers', t, transfersReason));
+      setTransferError(getMaintenanceShortMessage('transfers', t));
       return;
     }
 
@@ -1247,7 +1243,7 @@ export default function DashboardPage() {
 
   const handleOpenTransfer = useCallback(() => {
     if (isSiteMaintenance || isTransfersMaintenance) {
-      setTransferError(getMaintenanceShortMessage('transfers', t, transfersReason));
+      setTransferError(getMaintenanceShortMessage('transfers', t));
       setTransferSuccess(null);
       setTransferModalOpen(true);
       setTransferRecipientProfile(null);
@@ -1261,7 +1257,7 @@ export default function DashboardPage() {
     setTransferSuccess(null);
     setTransferRecipientProfile(null);
     setTransferRecipientStatus('idle');
-  }, [isSiteMaintenance, isTransfersMaintenance, transfersReason]);
+  }, [isSiteMaintenance, isTransfersMaintenance]);
 
   const handleAddToCart = (_item: StoreItem) => {
     try {
@@ -1512,9 +1508,9 @@ export default function DashboardPage() {
         <main className={`${mainWrapperClass} flex flex-col flex-1 min-h-0 ${mainSpacingClass} ${effectiveSection === 'quiz' && quizImmersive ? 'overflow-hidden' : 'overflow-y-auto custom-scrollbar'} bg-[#0e1018]`}>
             {!maintenanceLoading && isFullMaintenance && (
               <section className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-6">
-                <p className="text-sm font-semibold text-amber-200">Site bakımda</p>
+                <p className="text-sm font-semibold text-amber-200">{fullMaintenanceCopy.title}</p>
                 <p className="mt-2 text-sm text-amber-100/80">
-                  {siteReason ?? 'Sistem geçici olarak bakıma alınmıştır. Lütfen daha sonra tekrar deneyin.'}
+                  {fullMaintenanceCopy.description}
                 </p>
                 {siteUpdater && (
                   <div className="mt-3 flex items-center gap-2 text-xs text-amber-100/70">
@@ -1577,7 +1573,8 @@ export default function DashboardPage() {
 
             {effectiveSection === 'store' && !isSiteMaintenance && isStoreMaintenance && (
               <section className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-6 text-sm text-amber-100/80">
-                {storeReason ?? 'MaÄŸaza geÃ§ici olarak bakÄ±mdadÄ±r.'}
+                <p className="font-semibold text-amber-200">{storeMaintenanceCopy.title}</p>
+                <p className="mt-2">{storeMaintenanceCopy.description}</p>
                 {storeUpdater && (
                   <div className="mt-3 flex items-center gap-2 text-xs text-amber-100/70">
                     <Image
@@ -1610,7 +1607,7 @@ export default function DashboardPage() {
 
             {effectiveSection === 'settings' && !isSiteMaintenance && isPromotionsMaintenance && (
               <section className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-6 text-sm text-amber-100/80">
-                {getMaintenanceShortMessage('promotions', t, promotionsReason)}
+                {getMaintenanceShortMessage('promotions', t)}
                 {promotionsUpdater && (
                   <div className="mt-3 flex items-center gap-2 text-xs text-amber-100/70">
                     <Image
@@ -1774,7 +1771,7 @@ export default function DashboardPage() {
             ? {
                 is_active: true,
                 key: maintenanceFlags?.promotions?.is_active ? 'promotions' : 'site',
-                reason: maintenanceFlags?.promotions?.reason ?? siteReason ?? null,
+                reason: null,
               }
             : null
         }
@@ -1824,7 +1821,7 @@ export default function DashboardPage() {
             ? {
                 is_active: true,
                 key: maintenanceFlags?.discounts?.is_active ? 'discounts' : 'site',
-                reason: maintenanceFlags?.discounts?.reason ?? siteReason ?? null,
+                reason: null,
               }
             : null
         }

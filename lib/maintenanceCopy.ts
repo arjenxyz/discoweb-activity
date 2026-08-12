@@ -29,11 +29,10 @@ export function resolveMaintenanceKey(
 export function getMaintenanceCopy(
   key: MaintenanceKey,
   t: TranslateFn,
-  customReason?: string | null,
 ): MaintenanceCopy {
   return {
     title: t(`maintenance_${key}_title`),
-    description: customReason?.trim() ? customReason.trim() : t(`maintenance_${key}_description`),
+    description: t(`maintenance_${key}_description`),
     helper: t(`maintenance_${key}_helper`),
   };
 }
@@ -41,9 +40,8 @@ export function getMaintenanceCopy(
 export function getMaintenanceShortMessage(
   key: MaintenanceKey,
   t: TranslateFn,
-  customReason?: string | null,
 ): string {
-  return customReason?.trim() || t(`maintenance_${key}_short`);
+  return t(`maintenance_${key}_short`);
 }
 
 /** First active entry-blocking module (site → activity → bot). */

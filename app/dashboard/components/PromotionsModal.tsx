@@ -67,7 +67,7 @@ export default function PromotionsModal({
   if (!isOpen) return null;
 
   if (maintenance?.is_active) {
-    const copy = getMaintenanceCopy(maintenance.key ?? 'promotions', t, maintenance.reason);
+    const copy = getMaintenanceCopy(maintenance.key ?? 'promotions', t);
     return createPortal(
       <div
         className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/80 backdrop-blur-md px-6 pointer-events-auto"
