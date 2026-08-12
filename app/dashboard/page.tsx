@@ -1428,7 +1428,7 @@ export default function DashboardPage() {
         <div className="relative z-10 flex flex-col gap-4">
           <div className="flex items-center gap-3">
             <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white/80" />
-            <p className="text-sm text-white/50">Sunucu durumu kontrol ediliyor...</p>
+            <p className="text-sm text-white/50">{t('splash_checking_server_status')}</p>
           </div>
         </div>
       </div>
