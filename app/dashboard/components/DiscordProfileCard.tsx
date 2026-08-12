@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
-import { LuTag, LuZap, LuX, LuClock, LuShoppingBag, LuInfinity } from 'react-icons/lu';
+import { LuTag, LuZap, LuX, LuClock, LuShoppingBag, LuInfinity, LuShield, LuCalendar, LuHourglass } from 'react-icons/lu';
 import { useLocale, useT } from '@/contexts/LocaleContext';
 import type { MemberProfile, ActivePerk } from '../types';
 
@@ -121,6 +121,236 @@ function formatDateTime(date: Date | null, locale: string): string | null {
     hour: '2-digit',
     minute: '2-digit',
   });
+}
+
+function getTimedRoleProgress(appliedAt: Date | null, expiresAt: Date | null, nowMs: number): number | null {
+  if (!appliedAt || !expiresAt) return null;
+  const start = appliedAt.getTime();
+  const end = expiresAt.getTime();
+  if (!(end > start)) return null;
+  return Math.min(100, Math.max(0, ((nowMs - start) / (end - start)) * 100));
+}
+
+function RoleDetailModal({
+  role,
+  info,
+  nowMs,
+  dateLocale,
+  formatRoleColor,
+  onClose,
+  t,
+}: {
+  role: { id: string; name: string; color: number };
+  info: RoleExpiryInfo;
+  nowMs: number;
+  dateLocale: string;
+  formatRoleColor: (color: number) => string;
+  onClose: () => void;
+  t: (key: string, vars?: Record<string, string | number>) => string;
+}) {
+  const roleColor = role.color > 0 ? formatRoleColor(role.color) : '#99aab5';
+  const isPermanent = info.permanent || !info.expiresAt;
+  const countdown =
+    !isPermanent && info.expiresAt ? formatRoleCountdown(info.expiresAt, nowMs, t) : null;
+  const progressPct = !isPermanent
+    ? getTimedRoleProgress(info.appliedAt, info.expiresAt, nowMs)
+    : null;
+  const purchasedAt = formatDateTime(info.appliedAt, dateLocale);
+  const endsAt = formatDateTime(info.expiresAt, dateLocale);
+  const initial = role.name.trim().charAt(0).toUpperCase() || 'R';
+
+  return (
+    <div
+      className="fixed inset-0 z-[100000] flex items-center justify-center px-4 py-6"
+      onClick={onClose}
+      role="presentation"
+    >
+      <div
+        className="absolute inset-0 bg-[#05060a]/80 backdrop-blur-xl"
+        style={{
+          backgroundImage: `radial-gradient(ellipse 80% 55% at 50% 20%, ${roleColor}33, transparent 70%)`,
+        }}
+      />
+
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="role-detail-title"
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-[400px] animate-in fade-in zoom-in-95 slide-in-from-bottom-2 duration-300 overflow-hidden rounded-[28px] border border-white/[0.12] bg-[#0f1117] shadow-[0_32px_100px_rgba(0,0,0,0.65)]"
+      >
+        {/* Hero */}
+        <div className="relative overflow-hidden px-5 pb-5 pt-5">
+          <div
+            className="pointer-events-none absolute inset-0 opacity-90"
+            style={{
+              background: `linear-gradient(145deg, ${roleColor}55 0%, ${roleColor}14 42%, transparent 75%)`,
+            }}
+          />
+          <div
+            className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full blur-3xl"
+            style={{ backgroundColor: `${roleColor}40` }}
+          />
+          <div
+            className="pointer-events-none absolute -bottom-16 left-8 h-28 w-28 rounded-full blur-3xl"
+            style={{ backgroundColor: `${roleColor}22` }}
+          />
+
+          <div className="relative flex items-start justify-between gap-3">
+            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-white/55">
+              {t('discord_card_role_detail_title')}
+            </p>
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/15 bg-black/35 text-white/70 transition hover:bg-black/50 hover:text-white"
+              aria-label={t('discord_card_role_close')}
+            >
+              <LuX className="h-4 w-4" />
+            </button>
+          </div>
+
+          <div className="relative mt-5 flex items-center gap-4">
+            <div
+              className="relative flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-[22px] shadow-[0_12px_40px_rgba(0,0,0,0.35)] ring-1 ring-white/20"
+              style={{
+                background: `linear-gradient(145deg, ${roleColor}, ${roleColor}99)`,
+              }}
+            >
+              <span className="text-3xl font-black text-white drop-shadow-md">{initial}</span>
+              <span
+                className="absolute -bottom-1.5 -right-1.5 flex h-7 w-7 items-center justify-center rounded-full border border-white/20 bg-[#0f1117] text-white/80"
+                style={{ boxShadow: `0 0 16px ${roleColor}55` }}
+              >
+                {info.fromStore ? <LuShoppingBag className="h-3.5 w-3.5" /> : <LuShield className="h-3.5 w-3.5" />}
+              </span>
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <h3 id="role-detail-title" className="truncate text-[22px] font-black tracking-tight text-white">
+                {role.name}
+              </h3>
+              {info.itemTitle && info.itemTitle !== role.name && (
+                <p className="mt-0.5 truncate text-sm text-white/50">{info.itemTitle}</p>
+              )}
+              <div className="mt-2.5 flex flex-wrap gap-1.5">
+                <span
+                  className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+                    isPermanent
+                      ? 'border-emerald-400/30 bg-emerald-500/15 text-emerald-300'
+                      : 'border-amber-400/30 bg-amber-500/15 text-amber-300'
+                  }`}
+                >
+                  {isPermanent ? <LuInfinity className="h-3 w-3" /> : <LuHourglass className="h-3 w-3" />}
+                  {isPermanent ? t('tracking_permanent') : t('discord_card_role_timed')}
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.06] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white/65">
+                  {info.fromStore ? t('discord_card_role_badge_store') : t('discord_card_role_badge_server')}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Live status */}
+        <div className="px-5 pb-4">
+          <div
+            className={`relative overflow-hidden rounded-2xl border px-4 py-4 ${
+              isPermanent
+                ? 'border-emerald-400/20 bg-gradient-to-br from-emerald-500/15 via-emerald-500/[0.06] to-transparent'
+                : 'border-amber-400/20 bg-gradient-to-br from-amber-500/15 via-amber-500/[0.06] to-transparent'
+            }`}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/45">
+                  {t('discord_card_role_status')}
+                </p>
+                {isPermanent ? (
+                  <p className="mt-2 text-2xl font-black tracking-tight text-emerald-300">
+                    {t('tracking_permanent')}
+                  </p>
+                ) : (
+                  <p className="mt-2 text-[1.35rem] font-black tabular-nums leading-tight tracking-tight text-amber-200">
+                    {countdown}
+                  </p>
+                )}
+                <p className="mt-1.5 text-xs leading-snug text-white/45">
+                  {isPermanent
+                    ? info.fromStore
+                      ? t('discord_card_role_status_permanent_store')
+                      : t('discord_card_role_status_permanent_server')
+                    : t('discord_card_role_status_countdown')}
+                </p>
+              </div>
+
+              <div
+                className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border ${
+                  isPermanent
+                    ? 'border-emerald-400/25 bg-emerald-500/15 text-emerald-300'
+                    : 'border-amber-400/25 bg-amber-500/15 text-amber-300'
+                }`}
+              >
+                {isPermanent ? <LuInfinity className="h-5 w-5" /> : <LuClock className="h-5 w-5" />}
+              </div>
+            </div>
+
+            {progressPct != null && (
+              <div className="mt-4">
+                <div className="mb-1.5 flex items-center justify-between text-[10px] font-semibold uppercase tracking-wide text-white/40">
+                  <span>{t('discord_card_role_progress')}</span>
+                  <span className="tabular-nums text-amber-200/90">{Math.round(progressPct)}%</span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-black/35">
+                  <div
+                    className="h-full rounded-full transition-[width] duration-700 ease-out"
+                    style={{
+                      width: `${progressPct}%`,
+                      background: `linear-gradient(90deg, ${roleColor}, #fbbf24)`,
+                      boxShadow: `0 0 12px ${roleColor}66`,
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Meta cards */}
+        <div className="grid gap-2.5 px-5 pb-5 sm:grid-cols-2">
+          <div className="rounded-2xl border border-white/[0.08] bg-white/[0.035] px-3.5 py-3.5">
+            <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-white/40">
+              {info.fromStore ? <LuShoppingBag className="h-3.5 w-3.5" /> : <LuShield className="h-3.5 w-3.5" />}
+              {info.fromStore ? t('discord_card_role_purchased_at') : t('discord_card_role_source')}
+            </div>
+            <p className="mt-2 text-sm font-semibold leading-snug text-white/90">
+              {info.fromStore
+                ? purchasedAt ?? t('discord_card_role_purchase_unknown')
+                : t('discord_card_role_source_server')}
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-white/[0.08] bg-white/[0.035] px-3.5 py-3.5">
+            <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-white/40">
+              <LuCalendar className="h-3.5 w-3.5" />
+              {t('tracking_end_date')}
+            </div>
+            <p className="mt-2 text-sm font-semibold leading-snug text-white/90">
+              {isPermanent ? t('tracking_permanent') : endsAt ?? '—'}
+            </p>
+          </div>
+        </div>
+
+        <div className="border-t border-white/[0.06] px-5 py-3.5">
+          <p className="text-center text-[11px] leading-relaxed text-white/35">
+            {info.fromStore
+              ? t('discord_card_role_footer_store')
+              : t('discord_card_role_footer_server')}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function discordCreatedAt(userId?: string): Date | null {
@@ -362,103 +592,15 @@ function ProfileCardBody({
         selectedRole &&
         selectedInfo &&
         createPortal(
-          <div
-            className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/75 px-4 py-6 backdrop-blur-md"
-            onClick={() => setSelectedRoleId(null)}
-            role="presentation"
-          >
-            <div
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="role-detail-title"
-              onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-[360px] animate-in fade-in zoom-in-95 duration-200 overflow-hidden rounded-2xl border border-white/[0.10] bg-[#16181d] shadow-[0_24px_80px_rgba(0,0,0,0.55)]"
-            >
-              <button
-                type="button"
-                onClick={() => setSelectedRoleId(null)}
-                className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-black/30 text-white/60 transition hover:text-white"
-                aria-label={t('discord_card_role_close')}
-              >
-                <LuX className="h-4 w-4" />
-              </button>
-
-              <div className="border-b border-white/[0.06] px-5 pb-4 pt-5">
-                <p className="text-[11px] font-bold uppercase tracking-wide text-[#b5bac1]">
-                  {t('discord_card_role_detail_title')}
-                </p>
-                <div className="mt-3 flex items-center gap-3">
-                  <span
-                    className="h-4 w-4 shrink-0 rounded-full ring-2 ring-white/10"
-                    style={{
-                      backgroundColor:
-                        selectedRole.color > 0 ? formatRoleColor(selectedRole.color) : '#99aab5',
-                    }}
-                  />
-                  <div className="min-w-0">
-                    <h3 id="role-detail-title" className="truncate text-lg font-bold text-white">
-                      {selectedRole.name}
-                    </h3>
-                    {selectedInfo.itemTitle && selectedInfo.itemTitle !== selectedRole.name && (
-                      <p className="truncate text-xs text-white/45">{selectedInfo.itemTitle}</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-3 px-5 py-4">
-                <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] px-3.5 py-3">
-                  <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-[#b5bac1]">
-                    {selectedInfo.permanent ? (
-                      <LuInfinity className="h-3.5 w-3.5 text-emerald-300" />
-                    ) : (
-                      <LuClock className="h-3.5 w-3.5 text-amber-300" />
-                    )}
-                    {t('discord_card_role_status')}
-                  </div>
-                  <p
-                    className={`mt-1.5 text-sm font-semibold tabular-nums ${
-                      selectedInfo.permanent ? 'text-emerald-300' : 'text-amber-300'
-                    }`}
-                  >
-                    {selectedInfo.permanent || !selectedInfo.expiresAt
-                      ? t('tracking_permanent')
-                      : formatRoleCountdown(selectedInfo.expiresAt, nowMs, t)}
-                  </p>
-                </div>
-
-                <div className="grid gap-2.5">
-                  <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] px-3.5 py-3">
-                    <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-[#b5bac1]">
-                      <LuShoppingBag className="h-3.5 w-3.5" />
-                      {selectedInfo.fromStore
-                        ? t('discord_card_role_purchased_at')
-                        : t('discord_card_role_source')}
-                    </div>
-                    <p className="mt-1.5 text-sm text-[#dbdee1]">
-                      {selectedInfo.fromStore
-                        ? formatDateTime(selectedInfo.appliedAt, dateLocale) ??
-                          t('discord_card_role_purchase_unknown')
-                        : t('discord_card_role_source_server')}
-                    </p>
-                  </div>
-
-                  {selectedInfo.fromStore && (
-                    <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] px-3.5 py-3">
-                      <p className="text-[11px] font-bold uppercase tracking-wide text-[#b5bac1]">
-                        {t('tracking_end_date')}
-                      </p>
-                      <p className="mt-1.5 text-sm text-[#dbdee1]">
-                        {selectedInfo.permanent || !selectedInfo.expiresAt
-                          ? t('tracking_permanent')
-                          : formatDateTime(selectedInfo.expiresAt, dateLocale)}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>,
+          <RoleDetailModal
+            role={selectedRole}
+            info={selectedInfo}
+            nowMs={nowMs}
+            dateLocale={dateLocale}
+            formatRoleColor={formatRoleColor}
+            onClose={() => setSelectedRoleId(null)}
+            t={t}
+          />,
           document.body,
         )}
     </div>
