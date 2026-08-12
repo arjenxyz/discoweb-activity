@@ -458,7 +458,7 @@ export default function MailDetailModal({
 
       {receiptOpen && receiptBody ? (
         <div
-          className="absolute inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-[2px] sm:p-6"
+          className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md sm:p-6"
           onClick={() => setReceiptOpen(false)}
           role="presentation"
         >
