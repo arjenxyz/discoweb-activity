@@ -445,59 +445,6 @@ function MetaRow({
   );
 }
 
-function PersonHeader({
-  label,
-  name,
-  avatarUrl,
-  userId,
-  t,
-  fallbackIcon,
-}: {
-  label: string;
-  name: string;
-  avatarUrl: string | null;
-  userId: string | null;
-  t: Translate;
-  fallbackIcon?: ReactNode;
-}) {
-  return (
-    <div className="min-w-0">
-      <SectionLabel>{label}</SectionLabel>
-      <div className="flex min-w-0 items-start gap-3">
-        {avatarUrl ? (
-          <div className="h-12 w-12 shrink-0 overflow-hidden rounded-full border border-white/10 bg-white/[0.06]">
-            <Image
-              src={avatarUrl}
-              alt={name}
-              width={48}
-              height={48}
-              className="h-full w-full object-cover"
-              unoptimized
-            />
-          </div>
-        ) : (
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-white/10 bg-[#5865F2]/20 text-[#a5b4ff]">
-            {fallbackIcon ?? <LuUser className="h-5 w-5" />}
-          </div>
-        )}
-        <div className="min-w-0 flex-1 space-y-1.5">
-          <p className="break-words text-base font-semibold leading-snug text-white [overflow-wrap:anywhere]">
-            {name}
-          </p>
-          {userId ? (
-            <div className="flex min-w-0 flex-col gap-1 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2">
-              <span className="shrink-0 text-[11px] text-white/35">{t('mail_txn_sender_id')}</span>
-              <CopyIdButton value={userId} t={t} />
-            </div>
-          ) : (
-            <p className="text-[11px] text-white/30">{t('mail_txn_id_unavailable')}</p>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default function MailTransactionReceipt({ mail, txn, t }: Props) {
   if (txn.kind === 'transfer') {
     const { amount, note, senderId, senderUsername, senderAvatarUrl } = txn.data;
