@@ -458,31 +458,26 @@ export default function MailDetailModal({
 
       {receiptOpen && receiptBody ? (
         <div
-          className="absolute inset-0 z-50 flex flex-col bg-black/70 backdrop-blur-[2px]"
+          className="absolute inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-[2px] sm:p-6"
           onClick={() => setReceiptOpen(false)}
           role="presentation"
         >
           <div
-            className="mt-auto flex max-h-[min(88%,720px)] min-h-0 w-full flex-col overflow-hidden rounded-t-2xl border border-white/[0.1] border-b-0 bg-[#10131a] shadow-2xl shadow-black/50 sm:mx-auto sm:mb-6 sm:mt-auto sm:max-w-lg sm:rounded-2xl sm:border-b"
+            className="relative max-h-[min(86vh,720px)] w-full max-w-md min-w-0 overflow-y-auto overscroll-contain"
             onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-modal="true"
             aria-label={t('mail_receipt_label')}
           >
-            <div className="flex flex-shrink-0 items-center justify-between border-b border-white/[0.06] px-4 py-3">
-              <p className="text-sm font-semibold text-white">{t('mail_receipt_label')}</p>
-              <button
-                type="button"
-                onClick={() => setReceiptOpen(false)}
-                className="rounded-lg p-1.5 text-white/40 transition hover:bg-white/[0.06] hover:text-white"
-                aria-label={t('mail_detail_close_aria')}
-              >
-                <LuX className="h-4 w-4" />
-              </button>
-            </div>
-            <div className="mail-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-5">
-              {receiptBody}
-            </div>
+            <button
+              type="button"
+              onClick={() => setReceiptOpen(false)}
+              className="absolute -right-1 -top-1 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-[#0c0e12]/95 text-white/70 shadow-lg backdrop-blur-sm transition hover:bg-white/10 hover:text-white"
+              aria-label={t('mail_detail_close_aria')}
+            >
+              <LuX className="h-4 w-4" />
+            </button>
+            {receiptBody}
           </div>
         </div>
       ) : null}
