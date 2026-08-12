@@ -136,7 +136,7 @@
   "mail_preview_quiz_reward": "+{amount} Papel · {title}",
   "mail_preview_quiz_motivation": "{title}",
   "mail_preview_earn_settings": "Verdiensteinstellungen aktualisiert",
-  "mail_discount_note_cart_delay": "Es kann einige Sekunden dauern, bis der Code im Warenkorb erscheint; aktualisiere die Seite, falls nicht.",
+  "mail_discount_note_cart_delay": "Kann kurz dauern; bei Bedarf aktualisieren.",
   "mail_order_items": "Artikel",
   "mail_order_number": "Bestell-ID",
   "mail_order_subtotal": "Zwischensumme",

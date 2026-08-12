@@ -136,7 +136,7 @@
   "mail_preview_quiz_reward": "+{amount} Papel · {title}",
   "mail_preview_quiz_motivation": "{title}",
   "mail_preview_earn_settings": "収益設定が更新されました",
-  "mail_discount_note_cart_delay": "カートに表示されるまで数秒かかる場合があります。表示されない場合は更新してください。",
+  "mail_discount_note_cart_delay": "表示まで数秒かかることがあります。見えなければ更新してください。",
   "mail_order_items": "商品",
   "mail_order_number": "注文ID",
   "mail_order_subtotal": "小計",

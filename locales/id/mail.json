@@ -136,7 +136,7 @@
   "mail_preview_quiz_reward": "+{amount} Papel · {title}",
   "mail_preview_quiz_motivation": "{title}",
   "mail_preview_earn_settings": "Pengaturan penghasilan diperbarui",
-  "mail_discount_note_cart_delay": "Mungkin perlu beberapa detik untuk muncul di keranjang; segarkan jika belum terlihat.",
+  "mail_discount_note_cart_delay": "Bisa tertunda beberapa detik; segarkan jika belum muncul.",
   "mail_order_items": "Item",
   "mail_order_number": "ID Pesanan",
   "mail_order_subtotal": "Subtotal",

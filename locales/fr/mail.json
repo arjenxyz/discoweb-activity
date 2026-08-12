@@ -136,7 +136,7 @@
   "mail_preview_quiz_reward": "+{amount} Papel · {title}",
   "mail_preview_quiz_motivation": "{title}",
   "mail_preview_earn_settings": "Paramètres de gains mis à jour",
-  "mail_discount_note_cart_delay": "L'affichage dans votre panier peut prendre quelques secondes ; actualisez si vous ne le voyez pas.",
+  "mail_discount_note_cart_delay": "Peut prendre quelques secondes ; actualisez si absent.",
   "mail_order_items": "Articles",
   "mail_order_number": "ID commande",
   "mail_order_subtotal": "Sous-total",

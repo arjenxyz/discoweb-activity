@@ -622,7 +622,7 @@ export const localDevMailsSeed = [
       'Kişi başı limit: 1',
       'Bitiş tarihi: Yok',
       '',
-      'Not: Sepette görünmesi birkaç saniye alabilir; görünmüyorsa sayfayı yenileyin.',
+      'Not: Birkaç saniye gecikebilir; görünmezse yenileyin.',
     ].join('\n'),
     category: 'system',
     status: 'published' as const,

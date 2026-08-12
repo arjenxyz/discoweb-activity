@@ -136,7 +136,7 @@
   "mail_preview_quiz_reward": "+{amount} Papel · {title}",
   "mail_preview_quiz_motivation": "{title}",
   "mail_preview_earn_settings": "수익 설정이 업데이트되었습니다",
-  "mail_discount_note_cart_delay": "장바구니에 표시되기까지 몇 초 걸릴 수 있습니다. 보이지 않으면 새로고침하세요.",
+  "mail_discount_note_cart_delay": "몇 초 지연될 수 있습니다. 보이지 않으면 새로고침하세요.",
   "mail_order_items": "항목",
   "mail_order_number": "주문 ID",
   "mail_order_subtotal": "소계",

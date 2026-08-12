@@ -136,7 +136,7 @@
   "mail_preview_quiz_reward": "+{amount} Papel · {title}",
   "mail_preview_quiz_motivation": "{title}",
   "mail_preview_earn_settings": "Keresési beállítások frissítve",
-  "mail_discount_note_cart_delay": "Néhány másodpercbe telhet, míg megjelenik a kosárban; frissíts, ha nem látod.",
+  "mail_discount_note_cart_delay": "Néhány másodperces késés lehet; frissíts, ha nem látszik.",
   "mail_order_items": "Tételek",
   "mail_order_number": "Rendelés ID",
   "mail_order_subtotal": "Részösszeg",

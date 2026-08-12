@@ -136,7 +136,7 @@
   "mail_preview_quiz_reward": "+{amount} Papel · {title}",
   "mail_preview_quiz_motivation": "{title}",
   "mail_preview_earn_settings": "Настройки заработка обновлены",
-  "mail_discount_note_cart_delay": "Появление в корзине может занять несколько секунд; обновите страницу, если не видите.",
+  "mail_discount_note_cart_delay": "Может появиться с задержкой; обновите, если не видно.",
   "mail_order_items": "Товары",
   "mail_order_number": "ID заказа",
   "mail_order_subtotal": "Промежуточный итог",

@@ -124,7 +124,7 @@
   "mail_preview_quiz_reward": "+{amount} Papel · {title}",
   "mail_preview_quiz_motivation": "{title}",
   "mail_preview_earn_settings": "Configurações de ganhos atualizadas",
-  "mail_discount_note_cart_delay": "Pode levar alguns segundos para aparecer no carrinho; atualize se não vir.",
+  "mail_discount_note_cart_delay": "Pode demorar alguns segundos; atualize se não aparecer.",
   "mail_txn_received": "Valor recebido",
   "mail_txn_from": "De",
   "mail_txn_user_id": "ID do usuário",

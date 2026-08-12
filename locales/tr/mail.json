@@ -136,7 +136,7 @@
   "mail_preview_quiz_reward": "+{amount} Papel · {title}",
   "mail_preview_quiz_motivation": "{title}",
   "mail_preview_earn_settings": "Kazanç ayarları güncellendi",
-  "mail_discount_note_cart_delay": "Sepette görünmesi birkaç saniye alabilir; görünmüyorsa sayfayı yenileyin.",
+  "mail_discount_note_cart_delay": "Birkaç saniye gecikebilir; görünmezse yenileyin.",
   "mail_order_items": "Ürünler",
   "mail_order_number": "Sipariş No",
   "mail_order_subtotal": "Ara toplam",
