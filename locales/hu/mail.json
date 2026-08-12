@@ -126,7 +126,7 @@
   "mail_title_quiz_reward": "{title} — {amount} Papel",
   "mail_title_quiz_motivation": "{title} — Köszönjük a részvételt",
   "mail_title_earn_settings": "Gazdasági frissítés",
-  "mail_preview_transfer": "+{amount} Papel · {sender}",
+  "mail_preview_transfer": "{sender} +{amount} Papelt küldött. A megjegyzés és a nyugta a részletekben vár.",
   "mail_preview_promo": "+{amount} Papel · {code}",
   "mail_preview_discount": "{percent}% kedvezmény · {code}",
   "mail_preview_order": "Rendelés összege {total} Papel",

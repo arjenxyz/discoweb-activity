@@ -114,7 +114,7 @@
   "mail_title_quiz_reward": "{title} — {amount} Papel",
   "mail_title_quiz_motivation": "{title} — Obrigado por participar",
   "mail_title_earn_settings": "Atualização da economia",
-  "mail_preview_transfer": "+{amount} Papel · {sender}",
+  "mail_preview_transfer": "{sender} enviou +{amount} Papel. A nota e o recibo estão nos detalhes.",
   "mail_preview_promo": "+{amount} Papel · {code}",
   "mail_preview_discount": "{percent}% de desconto · {code}",
   "mail_preview_order": "Total do pedido {total} Papel",
