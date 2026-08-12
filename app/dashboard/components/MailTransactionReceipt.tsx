@@ -477,40 +477,38 @@ export default function MailTransactionReceipt({ mail, txn, t }: Props) {
           </div>
 
           {/* Sender strip */}
-          <div className="mx-4 mt-5 min-w-0 rounded-xl border border-white/[0.07] bg-black/25 p-3 sm:mx-5">
-            <div className="flex min-w-0 items-center gap-3">
+          <div className="mx-4 mt-5 min-w-0 rounded-xl border border-white/[0.07] bg-black/25 p-3 text-center sm:mx-5">
+            <p className="mb-2.5 text-[10px] font-bold uppercase tracking-[0.16em] text-white/30">
+              {t('mail_txn_from')}
+            </p>
+            <div className="flex min-w-0 flex-col items-center gap-2">
               {senderAvatarUrl ? (
-                <div className="h-11 w-11 shrink-0 overflow-hidden rounded-full border border-white/10 bg-white/[0.06]">
+                <div className="h-12 w-12 shrink-0 overflow-hidden rounded-full border border-white/10 bg-white/[0.06]">
                   <Image
                     src={senderAvatarUrl}
                     alt={displayName}
-                    width={44}
-                    height={44}
+                    width={48}
+                    height={48}
                     className="h-full w-full object-cover"
                     unoptimized
                   />
                 </div>
               ) : (
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/10 bg-[#5865F2]/20 text-[#a5b4ff]">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-white/10 bg-[#5865F2]/20 text-[#a5b4ff]">
                   <LuUser className="h-5 w-5" />
                 </div>
               )}
-              <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/30">
-                  {t('mail_txn_from')}
-                </p>
-                <p className="mt-0.5 truncate text-sm font-semibold text-white">{displayName}</p>
-              </div>
+              <p className="max-w-full break-words text-sm font-semibold text-white [overflow-wrap:anywhere]">
+                {displayName}
+              </p>
             </div>
             {senderId ? (
-              <div className="mt-2.5 flex min-w-0 items-center gap-2 border-t border-white/[0.06] pt-2.5">
-                <span className="shrink-0 text-[11px] text-white/35">{t('mail_txn_sender_id')}</span>
-                <div className="min-w-0 flex-1">
-                  <CopyIdButton value={senderId} t={t} />
-                </div>
+              <div className="mt-3 flex min-w-0 flex-col items-center gap-1.5 border-t border-white/[0.06] pt-3">
+                <span className="text-[11px] text-white/35">{t('mail_txn_sender_id')}</span>
+                <CopyIdButton value={senderId} t={t} />
               </div>
             ) : (
-              <p className="mt-2.5 border-t border-white/[0.06] pt-2.5 text-[11px] text-white/30">
+              <p className="mt-3 border-t border-white/[0.06] pt-3 text-[11px] text-white/30">
                 {t('mail_txn_id_unavailable')}
               </p>
             )}
@@ -518,12 +516,12 @@ export default function MailTransactionReceipt({ mail, txn, t }: Props) {
 
           {/* Note */}
           {note ? (
-            <div className="min-w-0 px-4 py-4 sm:px-5">
-              <div className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.16em] text-white/30">
+            <div className="min-w-0 px-4 py-4 text-center sm:px-5">
+              <div className="mb-2 inline-flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-[0.16em] text-white/30">
                 <LuMessageSquareText className="h-3.5 w-3.5 shrink-0 text-white/35" />
                 {t('mail_txn_note')}
               </div>
-              <p className="max-w-full break-words text-sm leading-relaxed text-white/70 whitespace-pre-wrap [overflow-wrap:anywhere]">
+              <p className="mx-auto max-w-full break-words text-sm leading-relaxed text-white/70 whitespace-pre-wrap [overflow-wrap:anywhere]">
                 {note}
               </p>
             </div>
