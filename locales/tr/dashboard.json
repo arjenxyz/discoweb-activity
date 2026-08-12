@@ -130,6 +130,8 @@
   "discord_card_roles": "Roller",
   "discord_card_note": "Not (sadece sana görünür)",
   "discord_card_note_placeholder": "Not eklemek için tıkla",
+  "discord_card_roles_tap_hint": "Süreli veya süresiz mağaza rollerinin kalan süresini görmek için rollerin üzerine tıkla.",
+  "discord_card_role_tap_title": "Rol süresini görmek için tıkla",
   "discord_card_online": "Çevrimiçi",
   "pending_earnings_title": "Biriken Kazanç",
   "pending_earnings_claim": "Kazancı Al",

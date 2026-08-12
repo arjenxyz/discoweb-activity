@@ -376,6 +376,7 @@ export default function OverviewSection({
             formatRoleColor={formatRoleColor}
             hasTag={hasTag}
             isBooster={isBooster}
+            activePerks={(overviewStats as OverviewStatsExpanded | null)?.activePerks}
           />
         </aside>
       </div>

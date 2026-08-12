@@ -100,7 +100,7 @@ export type OverviewStats = {
 
 export type ActivePerk = {
   role_id: string;
-  title: string | null;
+  item_title: string | null;
   applied_at: string | null;
   expires_at: string | null;
 };

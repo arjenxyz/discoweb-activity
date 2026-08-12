@@ -130,6 +130,8 @@
   "discord_card_roles": "Roles",
   "discord_card_note": "Note (only visible to you)",
   "discord_card_note_placeholder": "Click to add a note",
+  "discord_card_roles_tap_hint": "Tap store roles above to see remaining time or permanent status.",
+  "discord_card_role_tap_title": "Tap to show role duration",
   "discord_card_online": "Online",
   "pending_earnings_title": "Pending Earnings",
   "pending_earnings_claim": "Claim Earnings",

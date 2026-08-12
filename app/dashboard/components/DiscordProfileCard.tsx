@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import Image from 'next/image';
 import { LuTag, LuZap, LuX } from 'react-icons/lu';
 import { useLocale, useT } from '@/contexts/LocaleContext';
-import type { MemberProfile } from '../types';
+import type { MemberProfile, ActivePerk } from '../types';
 
 type DiscordProfileCardProps = {
   profile: MemberProfile | null;
@@ -13,7 +13,65 @@ type DiscordProfileCardProps = {
   formatRoleColor: (color: number) => string;
   hasTag?: boolean;
   isBooster?: boolean;
+  activePerks?: ActivePerk[];
 };
+
+type RoleExpiryInfo = {
+  permanent: boolean;
+  expiresAt: Date | null;
+};
+
+function buildRoleExpiryMap(activePerks: ActivePerk[]): Map<string, RoleExpiryInfo> {
+  const map = new Map<string, RoleExpiryInfo>();
+
+  for (const perk of activePerks) {
+    if (!perk.role_id) continue;
+    const permanent = !perk.expires_at;
+    const expiresAt = perk.expires_at ? new Date(perk.expires_at) : null;
+    const existing = map.get(perk.role_id);
+
+    if (!existing) {
+      map.set(perk.role_id, { permanent, expiresAt });
+      continue;
+    }
+
+    if (permanent || existing.permanent) {
+      map.set(perk.role_id, { permanent: true, expiresAt: null });
+      continue;
+    }
+
+    const existingMs = existing.expiresAt?.getTime() ?? 0;
+    const nextMs = expiresAt?.getTime() ?? 0;
+    if (nextMs > existingMs) {
+      map.set(perk.role_id, { permanent: false, expiresAt });
+    }
+  }
+
+  return map;
+}
+
+function formatRoleCountdown(
+  expiresAt: Date,
+  nowMs: number,
+  t: (key: string, vars?: Record<string, string | number>) => string,
+): string {
+  const totalSeconds = Math.max(0, Math.floor((expiresAt.getTime() - nowMs) / 1000));
+  if (totalSeconds <= 0) return t('tracking_expired');
+
+  const totalDays = Math.floor(totalSeconds / 86400);
+  const months = Math.floor(totalDays / 30);
+  const days = totalDays % 30;
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const seconds = totalSeconds % 60;
+  const parts: string[] = [];
+
+  if (months > 0) parts.push(t('tracking_duration_months', { count: months }));
+  if (days > 0) parts.push(t('tracking_duration_days', { count: days }));
+  if (hours > 0) parts.push(t('tracking_duration_hours', { count: hours }));
+  if (seconds > 0 || parts.length === 0) parts.push(t('tracking_duration_seconds', { count: seconds }));
+
+  return parts.join(' ');
+}
 
 function discordCreatedAt(userId?: string): Date | null {
   if (!userId || !/^\d+$/.test(userId)) return null;
@@ -59,6 +117,7 @@ function ProfileCardBody({
   formatRoleColor,
   hasTag,
   isBooster,
+  activePerks = [],
   dateLocale,
   t,
 }: {
@@ -67,9 +126,23 @@ function ProfileCardBody({
   formatRoleColor: (color: number) => string;
   hasTag: boolean;
   isBooster: boolean;
+  activePerks?: ActivePerk[];
   dateLocale: string;
   t: (key: string, vars?: Record<string, string | number>) => string;
 }) {
+  const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null);
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  const roleExpiryMap = useMemo(() => buildRoleExpiryMap(activePerks), [activePerks]);
+  const hasStoreRoles = roleExpiryMap.size > 0;
+
+  useEffect(() => {
+    if (!selectedRoleId) return;
+    const info = roleExpiryMap.get(selectedRoleId);
+    if (!info || info.permanent || !info.expiresAt) return;
+
+    const timer = window.setInterval(() => setNowMs(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [roleExpiryMap, selectedRoleId]);
   const displayName = profile.nickname ?? profile.displayName ?? profile.username ?? '—';
   const username = profile.username || '—';
   const bannerColor = pickBannerColor(profile, formatRoleColor);
@@ -182,14 +255,49 @@ function ProfileCardBody({
               <div className="flex flex-wrap gap-1.5">
                 {roles.map((role) => {
                   const color = role.color > 0 ? formatRoleColor(role.color) : '#99aab5';
+                  const expiryInfo = roleExpiryMap.get(role.id);
+                  const isStoreRole = Boolean(expiryInfo);
+                  const isSelected = selectedRoleId === role.id;
+                  const expiryLabel =
+                    isSelected && expiryInfo
+                      ? expiryInfo.permanent
+                        ? t('tracking_permanent')
+                        : expiryInfo.expiresAt
+                          ? formatRoleCountdown(expiryInfo.expiresAt, nowMs, t)
+                          : t('tracking_permanent')
+                      : null;
+
+                  const Wrapper = isStoreRole ? 'button' : 'span';
+
                   return (
-                    <span
+                    <Wrapper
                       key={role.id}
-                      className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-white/[0.06] bg-[#111214]/80 px-2 py-0.5 text-[11px] font-medium text-[#dbdee1]"
+                      type={isStoreRole ? 'button' : undefined}
+                      onClick={
+                        isStoreRole
+                          ? () => setSelectedRoleId(isSelected ? null : role.id)
+                          : undefined
+                      }
+                      className={`inline-flex max-w-full flex-col items-start gap-0.5 rounded-full border px-2 py-0.5 text-left text-[11px] font-medium text-[#dbdee1] transition-colors ${
+                        isStoreRole ? 'cursor-pointer hover:border-white/15 hover:bg-white/[0.06]' : ''
+                      } ${
+                        isSelected
+                          ? 'border-amber-400/35 bg-amber-500/10'
+                          : 'border-white/[0.06] bg-[#111214]/80'
+                      }`}
+                      aria-pressed={isStoreRole ? isSelected : undefined}
+                      title={isStoreRole ? t('discord_card_role_tap_title') : undefined}
                     >
-                      <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: color }} />
-                      <span className="truncate">{role.name}</span>
-                    </span>
+                      <span className="inline-flex max-w-full items-center gap-1.5">
+                        <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: color }} />
+                        <span className="truncate">{role.name}</span>
+                      </span>
+                      {expiryLabel && (
+                        <span className="max-w-full truncate pl-3.5 text-[10px] font-semibold tabular-nums text-amber-300/90">
+                          {expiryLabel}
+                        </span>
+                      )}
+                    </Wrapper>
                   );
                 })}
               </div>
@@ -202,6 +310,11 @@ function ProfileCardBody({
             <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-[#b5bac1]">
               {t('discord_card_note')}
             </p>
+            {hasStoreRoles && (
+              <p className="mb-1.5 text-[11px] leading-snug text-[#949ba4]">
+                {t('discord_card_roles_tap_hint')}
+              </p>
+            )}
             <p className={`text-[12px] leading-snug ${note ? 'text-[#dbdee1]' : 'italic text-[#6d6f78]'}`}>
               {note ?? t('discord_card_note_placeholder')}
             </p>
@@ -219,6 +332,7 @@ export default function DiscordProfileCard({
   formatRoleColor,
   hasTag = false,
   isBooster = false,
+  activePerks = [],
 }: DiscordProfileCardProps) {
   const t = useT();
   const { locale } = useLocale();
@@ -371,6 +485,7 @@ export default function DiscordProfileCard({
     formatRoleColor,
     hasTag,
     isBooster,
+    activePerks,
     dateLocale,
     t,
   };
