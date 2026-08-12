@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
-import { LuCircleCheck, LuPlay, LuX, LuGift, LuMaximize, LuMinimize } from 'react-icons/lu';
+import { LuCircleCheck, LuPlay, LuX, LuGift, LuMaximize, LuMinimize, LuRotateCcw } from 'react-icons/lu';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { toActivityMediaUrl } from '@/lib/watchEarnMedia';
 import {
@@ -101,6 +101,7 @@ export default function WatchEarnSection() {
   const [tasks, setTasks] = useState<WatchEarnTask[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeVideo, setActiveVideo] = useState<string | null>(null);
+  const [isReplay, setIsReplay] = useState(false);
   const [watchedTasks, setWatchedTasks] = useState<Record<string, boolean>>({});
   const [claimingId, setClaimingId] = useState<string | null>(null);
 
@@ -177,6 +178,7 @@ export default function WatchEarnSection() {
       setIsPlaying(true);
       setIsFullscreen(false);
       setControlsVisible(true);
+      setIsReplay(false);
       if (controlsHideTimerRef.current) {
         clearTimeout(controlsHideTimerRef.current);
         controlsHideTimerRef.current = null;
@@ -332,15 +334,25 @@ export default function WatchEarnSection() {
     }
   }, [enterFullscreen, exitFullscreenSafe, isFullscreen]);
 
+  const openWatch = useCallback((taskId: string, replay = false) => {
+    setIsReplay(replay);
+    setActiveVideo(taskId);
+  }, []);
+
   const closePlayer = useCallback(async () => {
+    const replay = isReplay;
     await exitFullscreenSafe();
     setActiveVideo(null);
-    showToast('Videoyu kapattığın için ödül kazanamadın.', 'error');
-  }, [exitFullscreenSafe]);
+    setIsReplay(false);
+    if (!replay) {
+      showToast('Videoyu kapattığın için ödül kazanamadın.', 'error');
+    }
+  }, [exitFullscreenSafe, isReplay]);
 
   const handleVideoEnded = async () => {
     const taskId = activeVideo;
-    if (taskId) {
+    const replay = isReplay;
+    if (taskId && !replay) {
       const next = markWatchedLocal(taskId);
       setWatchedTasks(next);
       try {
@@ -355,7 +367,12 @@ export default function WatchEarnSection() {
     }
     await exitFullscreenSafe();
     setActiveVideo(null);
-    showToast('Görevi tamamladın! Şimdi ödülünü alabilirsin.', 'success');
+    setIsReplay(false);
+    if (replay) {
+      showToast('Tekrar izleme tamamlandı.', 'success');
+    } else {
+      showToast('Görevi tamamladın! Şimdi ödülünü alabilirsin.', 'success');
+    }
   };
 
   const togglePlay = () => {
@@ -614,6 +631,7 @@ export default function WatchEarnSection() {
           {tasks.map((task) => {
             const isWatched = Boolean(watchedTasks[task.id] || task.watched || task.claimed);
             const isClaimed = task.claimed;
+            const canReplay = isWatched || isClaimed;
 
             return (
               <div
@@ -623,6 +641,17 @@ export default function WatchEarnSection() {
                 <div className="relative h-32 w-full shrink-0 sm:h-36">
                   <Image src={task.banner} alt={task.title} fill className="object-cover opacity-70" unoptimized />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#1e1f25] via-[#1e1f25]/60 to-transparent" />
+
+                  {canReplay && (
+                    <button
+                      type="button"
+                      onClick={() => openWatch(task.id, true)}
+                      className="absolute right-2.5 top-2.5 z-10 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/55 px-2.5 py-1 text-[11px] font-semibold text-white/90 shadow-lg backdrop-blur-md transition hover:bg-black/70 hover:text-white"
+                    >
+                      <LuRotateCcw className="h-3 w-3" />
+                      Tekrar izle
+                    </button>
+                  )}
 
                   <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between gap-2">
                     <div className="min-w-0">
@@ -666,7 +695,8 @@ export default function WatchEarnSection() {
                   <div className="mt-auto flex w-full items-center pt-1">
                     {!isWatched && !isClaimed && (
                       <button
-                        onClick={() => setActiveVideo(task.id)}
+                        type="button"
+                        onClick={() => openWatch(task.id, false)}
                         className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#5865F2] px-5 py-3 text-sm font-bold text-white shadow-lg shadow-[#5865F2]/20 transition-colors hover:bg-[#4752C4]"
                       >
                         <LuPlay className="h-5 w-5" />
@@ -676,6 +706,7 @@ export default function WatchEarnSection() {
 
                     {isWatched && !isClaimed && (
                       <button
+                        type="button"
                         onClick={() => void handleClaim(task.id)}
                         disabled={claimingId === task.id}
                         className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-500/20 transition-colors hover:bg-emerald-600 disabled:opacity-60"
@@ -687,6 +718,7 @@ export default function WatchEarnSection() {
 
                     {isClaimed && (
                       <button
+                        type="button"
                         disabled
                         className="flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-bold text-white/40"
                       >
