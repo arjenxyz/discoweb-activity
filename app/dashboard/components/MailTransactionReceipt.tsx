@@ -617,7 +617,7 @@ export default function MailTransactionReceipt({ mail, txn, t }: Props) {
     );
   }
 
-  const { amount, code, balanceAfter } = txn.data;
+  const { amount, code } = txn.data;
 
   return (
     <div className="w-full min-w-0 space-y-3">
@@ -642,17 +642,6 @@ export default function MailTransactionReceipt({ mail, txn, t }: Props) {
         <ReceiptDivider />
         <ReceiptSection>
           <AmountInline amount={amount} label={t('mail_txn_promo_credit')} accent="emerald" />
-          {balanceAfter != null ? (
-            <div className="mt-3 min-w-0 rounded-xl border border-white/[0.06] bg-black/20 px-3 py-2.5">
-              <MetaRow icon={<LuGift className="h-3.5 w-3.5" />} label={t('mail_txn_new_balance')}>
-                <span className="inline-flex flex-wrap items-center justify-end gap-1.5">
-                  <Image src="/papel.gif" alt="" width={14} height={14} className="h-3.5 w-3.5" unoptimized />
-                  {balanceAfter.toLocaleString('tr-TR', { maximumFractionDigits: 2 })}
-                  <span className="text-xs font-semibold text-amber-400">Papel</span>
-                </span>
-              </MetaRow>
-            </div>
-          ) : null}
         </ReceiptSection>
       </ReceiptCard>
     </div>
