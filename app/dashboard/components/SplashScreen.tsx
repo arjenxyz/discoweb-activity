@@ -274,13 +274,17 @@ export default function SplashScreen({ onEnter }: Props) {
             <div className="flex flex-col gap-4">
               {/* Welcome */}
               <div
-                className="flex items-center gap-2.5"
+                className="flex items-center gap-3"
                 style={{ transition: 'opacity 0.4s ease', opacity: visible ? 1 : 0 }}
               >
                 {user?.avatarUrl ? (
-                  <img src={user.avatarUrl} alt={user.username} className="h-7 w-7 rounded-full ring-1 ring-white/10 flex-shrink-0" />
+                  <img
+                    src={user.avatarUrl}
+                    alt={user.username}
+                    className="h-11 w-11 rounded-full object-cover ring-2 ring-white/15 flex-shrink-0"
+                  />
                 ) : (
-                  <div className="h-7 w-7 rounded-full bg-white/10 flex-shrink-0" />
+                  <div className="h-11 w-11 rounded-full bg-white/10 flex-shrink-0" />
                 )}
                 <div className="flex flex-col gap-0.5">
                   <span className="text-base font-semibold text-white/90" style={{ textShadow: '0 1px 12px rgba(0,0,0,1)' }}>
