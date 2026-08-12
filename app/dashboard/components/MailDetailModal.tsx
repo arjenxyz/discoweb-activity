@@ -7,8 +7,12 @@ import { apiUrl } from '@/lib/api';
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { sanitizeHtml } from '@/lib/sanitizeHtml';
 import { useT } from '@/contexts/LocaleContext';
+import MailTransactionReceipt, { parseMailTransaction } from './MailTransactionReceipt';
+import MailLocalizedBody from './MailLocalizedBody';
+import { resolveMailPreview, resolveMailTemplateId, resolveMailTitle } from '@/lib/mailI18n';
 import {
   LuChevronLeft,
+  LuChevronRight,
   LuTrash2,
   LuStar,
   LuShield,
@@ -17,9 +21,6 @@ import {
   LuGift,
   LuLoader,
 } from 'react-icons/lu';
-import MailTransactionReceipt, { parseMailTransaction } from './MailTransactionReceipt';
-import MailLocalizedBody from './MailLocalizedBody';
-import { resolveMailTemplateId, resolveMailTitle } from '@/lib/mailI18n';
 
 /* ─── Kategori → Gönderici Bilgisi ─── */
 type SenderConfig = { nameKey: string; avatar: string; verified: boolean };
@@ -83,20 +84,29 @@ export default function MailDetailModal({
   const t = useT();
   const modalRef = useRef<HTMLDivElement>(null);
   const [claiming, setClaiming] = useState(false);
+  const [receiptOpen, setReceiptOpen] = useState(false);
   const isInline = variant === 'inline';
   const isFullscreen = variant === 'fullscreen';
 
   useEffect(() => {
     setClaiming(false);
+    setReceiptOpen(false);
   }, [mail?.id]);
 
   // ESC ile kapat (inline panel'de de çalışır)
   useEffect(() => {
     if (isInline && !mail) return undefined;
-    const handleEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      if (receiptOpen) {
+        setReceiptOpen(false);
+        return;
+      }
+      onClose();
+    };
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
-  }, [onClose, isInline, mail]);
+  }, [onClose, isInline, mail, receiptOpen]);
 
   // Okundu işaretle
   useEffect(() => {
@@ -137,6 +147,46 @@ export default function MailDetailModal({
   const txn = parseMailTransaction(mail);
   const mailTemplate = resolveMailTemplateId(mail);
   const displayTitle = resolveMailTitle(mail, t);
+  const displayPreview = resolveMailPreview(mail, t);
+  const hasStructuredReceipt = Boolean(
+    txn ||
+      mailTemplate === 'order_confirmed' ||
+      mailTemplate === 'order_rejected' ||
+      mailTemplate === 'order' ||
+      mailTemplate === 'earn_claim' ||
+      mailTemplate === 'earn_rejected' ||
+      mailTemplate === 'quiz_reward' ||
+      mailTemplate === 'quiz_motivation' ||
+      mailTemplate === 'earn_settings',
+  );
+
+  const receiptBody = txn ? (
+    <MailTransactionReceipt mail={mail} txn={txn} t={t} />
+  ) : mailTemplate === 'order_confirmed' ||
+    mailTemplate === 'order_rejected' ||
+    mailTemplate === 'order' ||
+    mailTemplate === 'earn_claim' ||
+    mailTemplate === 'earn_rejected' ||
+    mailTemplate === 'quiz_reward' ||
+    mailTemplate === 'quiz_motivation' ||
+    mailTemplate === 'earn_settings' ? (
+    <MailLocalizedBody
+      mail={mail}
+      template={
+        mailTemplate === 'order'
+          ? 'order_confirmed'
+          : (mailTemplate as
+              | 'order_confirmed'
+              | 'order_rejected'
+              | 'earn_claim'
+              | 'earn_rejected'
+              | 'quiz_reward'
+              | 'quiz_motivation'
+              | 'earn_settings')
+      }
+      t={t}
+    />
+  ) : null;
 
   const formatDate = (date: string) => {
     const d = new Date(date);
@@ -310,9 +360,27 @@ export default function MailDetailModal({
             </div>
           </div>
 
-          <h1 className="mb-5 text-xl font-bold leading-tight text-white sm:text-2xl">
+          <h1 className="mb-2 text-xl font-bold leading-tight text-white sm:text-2xl">
             {displayTitle}
           </h1>
+
+          {hasStructuredReceipt ? (
+            <div className="mb-6 min-w-0">
+              {displayPreview ? (
+                <p className="mb-4 break-words text-sm leading-relaxed text-white/50 [overflow-wrap:anywhere]">
+                  {displayPreview}
+                </p>
+              ) : null}
+              <button
+                type="button"
+                onClick={() => setReceiptOpen(true)}
+                className="inline-flex items-center gap-2 rounded-xl border border-white/[0.1] bg-white/[0.04] px-4 py-2.5 text-sm font-semibold text-white/85 transition hover:border-white/20 hover:bg-white/[0.07] hover:text-white"
+              >
+                {t('mail_detail_view_details')}
+                <LuChevronRight className="h-4 w-4 text-white/40" />
+              </button>
+            </div>
+          ) : null}
 
           {mail.image_url && (
             <div className="mb-5 overflow-hidden rounded-xl border border-white/[0.06]">
@@ -335,37 +403,11 @@ export default function MailDetailModal({
             </div>
           )}
 
-          <div className="mb-6 min-w-0 overflow-hidden">
-            {txn ? (
-              <MailTransactionReceipt mail={mail} txn={txn} t={t} />
-            ) : mailTemplate === 'order_confirmed' ||
-              mailTemplate === 'order_rejected' ||
-              mailTemplate === 'order' ||
-              mailTemplate === 'earn_claim' ||
-              mailTemplate === 'earn_rejected' ||
-              mailTemplate === 'quiz_reward' ||
-              mailTemplate === 'quiz_motivation' ||
-              mailTemplate === 'earn_settings' ? (
-              <MailLocalizedBody
-                mail={mail}
-                template={
-                  mailTemplate === 'order'
-                    ? 'order_confirmed'
-                    : (mailTemplate as
-                        | 'order_confirmed'
-                        | 'order_rejected'
-                        | 'earn_claim'
-                        | 'earn_rejected'
-                        | 'quiz_reward'
-                        | 'quiz_motivation'
-                        | 'earn_settings')
-                }
-                t={t}
-              />
-            ) : (
-              renderEmailBody(mail.body ?? '')
-            )}
-          </div>
+          {!hasStructuredReceipt ? (
+            <div className="mb-6 min-w-0 overflow-hidden">
+              {renderEmailBody(mail.body ?? '')}
+            </div>
+          ) : null}
 
           {mail.category === 'reward' && onClaim && (
             <div className="mb-6">
@@ -413,6 +455,37 @@ export default function MailDetailModal({
           )}
         </div>
       </div>
+
+      {receiptOpen && receiptBody ? (
+        <div
+          className="absolute inset-0 z-50 flex flex-col bg-black/70 backdrop-blur-[2px]"
+          onClick={() => setReceiptOpen(false)}
+          role="presentation"
+        >
+          <div
+            className="mt-auto flex max-h-[min(88%,720px)] min-h-0 w-full flex-col overflow-hidden rounded-t-2xl border border-white/[0.1] border-b-0 bg-[#10131a] shadow-2xl shadow-black/50 sm:mx-auto sm:mb-6 sm:mt-auto sm:max-w-lg sm:rounded-2xl sm:border-b"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-label={t('mail_receipt_label')}
+          >
+            <div className="flex flex-shrink-0 items-center justify-between border-b border-white/[0.06] px-4 py-3">
+              <p className="text-sm font-semibold text-white">{t('mail_receipt_label')}</p>
+              <button
+                type="button"
+                onClick={() => setReceiptOpen(false)}
+                className="rounded-lg p-1.5 text-white/40 transition hover:bg-white/[0.06] hover:text-white"
+                aria-label={t('mail_detail_close_aria')}
+              >
+                <LuX className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="mail-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-5">
+              {receiptBody}
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 
