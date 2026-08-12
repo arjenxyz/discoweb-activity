@@ -115,6 +115,7 @@ export default function WatchEarnSection() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const playerShellRef = useRef<HTMLDivElement>(null);
   const controlsHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const touchUiRef = useRef(false);
 
   const [toast, setToast] = useState<{ open: boolean; message: string; type?: 'success' | 'error' }>({
     open: false,
@@ -169,6 +170,7 @@ export default function WatchEarnSection() {
 
   useEffect(() => {
     setPortalReady(true);
+    touchUiRef.current = isCoarsePointerMobile();
   }, []);
 
   useEffect(() => {
@@ -206,45 +208,58 @@ export default function WatchEarnSection() {
     };
   }, [activeVideo]);
 
-  const revealControls = useCallback(() => {
-    setControlsVisible(true);
+  const clearControlsHideTimer = useCallback(() => {
     if (controlsHideTimerRef.current) {
       clearTimeout(controlsHideTimerRef.current);
       controlsHideTimerRef.current = null;
     }
-    // Duraklatılmışken kontroller kalsın; oynarken kısa süre sonra gizle
+  }, []);
+
+  const scheduleControlsHide = useCallback(() => {
+    clearControlsHideTimer();
     const video = videoRef.current;
-    const playing = video ? !video.paused : isPlaying;
-    if (!playing) return;
+    if (video?.paused) return;
     controlsHideTimerRef.current = setTimeout(() => {
       setControlsVisible(false);
       controlsHideTimerRef.current = null;
     }, 2500);
-  }, [isPlaying]);
+  }, [clearControlsHideTimer]);
+
+  const showControls = useCallback(
+    (autoHide = true) => {
+      setControlsVisible(true);
+      clearControlsHideTimer();
+      if (autoHide) scheduleControlsHide();
+    },
+    [clearControlsHideTimer, scheduleControlsHide],
+  );
+
+  const handlePlayerPointerMove = useCallback(() => {
+    // Mobilde sürekli pointer/touch olayları gizleme zamanlayıcısını sıfırlamasın
+    if (touchUiRef.current) return;
+    showControls();
+  }, [showControls]);
+
+  const handlePlayerPointerDown = useCallback(() => {
+    if (!touchUiRef.current) return;
+    showControls();
+  }, [showControls]);
 
   useEffect(() => {
     if (!activeVideo) return;
-    revealControls();
-    return () => {
-      if (controlsHideTimerRef.current) {
-        clearTimeout(controlsHideTimerRef.current);
-        controlsHideTimerRef.current = null;
-      }
-    };
-  }, [activeVideo, revealControls]);
+    showControls();
+    return clearControlsHideTimer;
+  }, [activeVideo, showControls, clearControlsHideTimer]);
 
   useEffect(() => {
     if (!activeVideo) return;
     if (!isPlaying) {
       setControlsVisible(true);
-      if (controlsHideTimerRef.current) {
-        clearTimeout(controlsHideTimerRef.current);
-        controlsHideTimerRef.current = null;
-      }
+      clearControlsHideTimer();
       return;
     }
-    revealControls();
-  }, [activeVideo, isPlaying, revealControls]);
+    scheduleControlsHide();
+  }, [activeVideo, isPlaying, clearControlsHideTimer, scheduleControlsHide]);
 
   useEffect(() => {
     const onFsChange = () => {
@@ -381,15 +396,12 @@ export default function WatchEarnSection() {
         videoRef.current.pause();
         setIsPlaying(false);
         setControlsVisible(true);
-        if (controlsHideTimerRef.current) {
-          clearTimeout(controlsHideTimerRef.current);
-          controlsHideTimerRef.current = null;
-        }
+        clearControlsHideTimer();
       } else {
         void videoRef.current.play().then(
           () => {
             setIsPlaying(true);
-            revealControls();
+            showControls();
           },
           () => setIsPlaying(false),
         );
@@ -469,8 +481,8 @@ export default function WatchEarnSection() {
             ref={playerShellRef}
             className="fixed inset-0 z-[99999] overflow-hidden bg-black"
             style={{ top: 0, right: 0, bottom: 0, left: 0 }}
-            onPointerMove={revealControls}
-            onTouchStart={revealControls}
+            onPointerMove={handlePlayerPointerMove}
+            onPointerDown={handlePlayerPointerDown}
           >
             <div className="absolute inset-0 cursor-pointer bg-black" onClick={togglePlay}>
               <video
@@ -533,7 +545,9 @@ export default function WatchEarnSection() {
 
             <div
               className={`pointer-events-none absolute inset-x-0 top-0 z-10 flex items-start justify-between gap-3 bg-gradient-to-b from-black/70 via-black/25 to-transparent px-3 pb-10 pt-[max(0.75rem,env(safe-area-inset-top))] transition-all duration-300 sm:px-5 ${
-                controlsVisible ? 'translate-y-0 opacity-100' : '-translate-y-2 opacity-0'
+                controlsVisible
+                  ? 'visible translate-y-0 opacity-100'
+                  : 'invisible -translate-y-2 opacity-0'
               }`}
             >
               <div className="pointer-events-none min-w-0 pt-1.5">
@@ -565,7 +579,7 @@ export default function WatchEarnSection() {
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    revealControls();
+                    showControls();
                     void toggleFullscreen();
                   }}
                   className="flex h-9 w-9 items-center justify-center rounded-full text-white/90 transition hover:bg-white/10 hover:text-white active:scale-95"
@@ -592,7 +606,9 @@ export default function WatchEarnSection() {
 
             <div
               className={`pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/75 via-black/30 to-transparent px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-10 transition-all duration-300 sm:px-5 ${
-                controlsVisible ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'
+                controlsVisible
+                  ? 'visible translate-y-0 opacity-100'
+                  : 'invisible translate-y-2 opacity-0'
               }`}
             >
               <div className="mx-auto w-full max-w-3xl">
