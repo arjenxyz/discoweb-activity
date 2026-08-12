@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useCallback, useContext, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { resolveLocale, translations, type SupportedLocale } from '@/lib/i18n';
 
 interface LocaleContextValue {
@@ -15,29 +15,34 @@ const LocaleContext = createContext<LocaleContextValue>({
   t: (key) => key,
 });
 
+/** SSR + ilk client paint aynı olmalı; tarayıcı dilini mount sonrası uygula. */
+const SSR_SAFE_LOCALE: SupportedLocale = 'en';
+
 export function LocaleProvider({ children }: { children: React.ReactNode }) {
-  const [locale, setLocale] = useState<SupportedLocale>(() => {
-    const browserLocale = typeof navigator !== 'undefined' ? navigator.language : '';
-    if (typeof window !== 'undefined') {
-      try {
-        const stored = window.localStorage.getItem('dashboard_locale');
-        if (stored) return resolveLocale(stored);
-      } catch {
-        // ignore storage errors
+  const [locale, setLocale] = useState<SupportedLocale>(SSR_SAFE_LOCALE);
+
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem('dashboard_locale');
+      if (stored) {
+        setLocale(resolveLocale(stored));
+        return;
       }
+    } catch {
+      // ignore storage errors
     }
-    return resolveLocale(browserLocale);
-  });
+    if (typeof navigator !== 'undefined' && navigator.language) {
+      setLocale(resolveLocale(navigator.language));
+    }
+  }, []);
 
   const setDiscordLocale = useCallback((discordLocale: string) => {
     const next = resolveLocale(discordLocale);
     setLocale(next);
-    if (typeof window !== 'undefined') {
-      try {
-        window.localStorage.setItem('dashboard_locale', next);
-      } catch {
-        // ignore storage errors
-      }
+    try {
+      window.localStorage.setItem('dashboard_locale', next);
+    } catch {
+      // ignore storage errors
     }
   }, []);
 
