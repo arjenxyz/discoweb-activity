@@ -463,7 +463,7 @@ export default function MailDetailModal({
           role="presentation"
         >
           <div
-            className="relative max-h-[min(86vh,720px)] w-full max-w-md min-w-0 overflow-y-auto overscroll-contain"
+            className="relative max-h-[min(86vh,720px)] w-full max-w-md min-w-0 overflow-x-hidden overflow-y-auto overscroll-contain"
             onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-modal="true"
@@ -472,7 +472,7 @@ export default function MailDetailModal({
             <button
               type="button"
               onClick={() => setReceiptOpen(false)}
-              className="absolute -right-1 -top-1 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-[#0c0e12]/95 text-white/70 shadow-lg backdrop-blur-sm transition hover:bg-white/10 hover:text-white"
+              className="absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-[#0c0e12]/95 text-white/70 shadow-lg backdrop-blur-sm transition hover:bg-white/10 hover:text-white"
               aria-label={t('mail_detail_close_aria')}
             >
               <LuX className="h-4 w-4" />
