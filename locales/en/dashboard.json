@@ -133,7 +133,7 @@
   "discord_card_roles_tap_hint": "Tap a role to view its details.",
   "discord_card_role_tap_title": "Open role details",
   "discord_card_role_detail_title": "Role details",
-  "discord_card_role_status": "Status",
+  "discord_card_role_remaining": "Time left",
   "discord_card_role_purchased_at": "Purchased",
   "discord_card_role_purchase_unknown": "Date unknown",
   "discord_card_role_source": "Source",
