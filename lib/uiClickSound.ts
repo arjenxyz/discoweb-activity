@@ -79,6 +79,55 @@ export function playUiClickPreview(volumePercent?: number) {
   playUiClick({ force: true, volumeScale: 1.1, volume01: Math.max(volume01, 0.05) });
 }
 
+/** Coin / purchase confirm — short bright chime for buy buttons. */
+export function playPurchaseSound(opts?: { force?: boolean; volume01?: number }) {
+  if (typeof window === 'undefined') return;
+
+  const master = opts?.volume01 != null ? Math.min(1, Math.max(0, opts.volume01)) : getSfxVolume01();
+  if (!opts?.force && master <= 0.001) return;
+
+  const ctx = ensureCtx();
+  if (!ctx) return;
+
+  void ctx.resume().catch(() => {});
+
+  const t0 = ctx.currentTime;
+  const gainMaster = Math.min(0.28, 0.08 + master * 0.2);
+
+  const notes = [
+    { freq: 880, at: 0, dur: 0.12 },
+    { freq: 1174.66, at: 0.07, dur: 0.14 },
+    { freq: 1567.98, at: 0.14, dur: 0.22 },
+  ];
+
+  for (const note of notes) {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(note.freq, t0 + note.at);
+    gain.gain.setValueAtTime(0.0001, t0 + note.at);
+    gain.gain.exponentialRampToValueAtTime(gainMaster, t0 + note.at + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + note.at + note.dur);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(t0 + note.at);
+    osc.stop(t0 + note.at + note.dur + 0.02);
+  }
+
+  // Soft shimmer overtone
+  const shimmer = ctx.createOscillator();
+  const shimmerGain = ctx.createGain();
+  shimmer.type = 'sine';
+  shimmer.frequency.setValueAtTime(2349, t0 + 0.12);
+  shimmerGain.gain.setValueAtTime(0.0001, t0 + 0.12);
+  shimmerGain.gain.exponentialRampToValueAtTime(gainMaster * 0.35, t0 + 0.14);
+  shimmerGain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.38);
+  shimmer.connect(shimmerGain);
+  shimmerGain.connect(ctx.destination);
+  shimmer.start(t0 + 0.12);
+  shimmer.stop(t0 + 0.4);
+}
+
 function isInteractiveTarget(target: EventTarget | null): boolean {
   if (!(target instanceof Element)) return false;
   const el = target.closest(

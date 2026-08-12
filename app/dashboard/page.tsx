@@ -15,6 +15,7 @@ import ProfileSection from './components/ProfileSection';
 import StoreSection from './components/StoreSection';
 import SettingsSection from './components/SettingsSection';
 import UiClickSound from './components/UiClickSound';
+import { playPurchaseSound } from '@/lib/uiClickSound';
 import MailSection from './components/MailSection';
 import SessionExpiredModal from './components/SessionExpiredModal';
 import TagBadgeSection from './components/TagBadgeSection';
@@ -1319,6 +1320,7 @@ export default function DashboardPage() {
       return;
     }
 
+    playPurchaseSound();
     setPurchaseLoadingId(itemId);
     setPurchaseFeedback(prev => ({ ...prev, [itemId]: undefined })); // clear previous
 
