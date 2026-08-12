@@ -235,11 +235,7 @@ export default function DashboardPage() {
 
   const isBlockedByReadiness = Boolean(
     activityReadiness?.blocking &&
-      !(
-        (activityReadiness.status === 'maintenance' ||
-          activityReadiness.status === 'bot_maintenance') &&
-        isDeveloper
-      ),
+      !(activityReadiness.status === 'maintenance' && isDeveloper),
   );
 
   useEffect(() => {

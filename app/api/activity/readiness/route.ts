@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { requireSessionUser } from '@/lib/auth';
 import { getSelectedGuildId } from '@/lib/guild';
-import { checkMaintenance } from '@/lib/maintenance';
+import { checkMaintenance, getMaintenanceFlags } from '@/lib/maintenance';
 import { isLocalDevRequest, localDevReadiness } from '@/lib/localDev';
 
 type ReadinessStatus =
@@ -195,14 +195,15 @@ export async function GET(request: Request) {
     );
   }
 
-  const botMaintenance = await checkMaintenance(['bot']);
-  if (botMaintenance.blocked) {
+  // Bot flag: always block entry (no developer bypass — gate must match other readiness screens).
+  const flagData = await getMaintenanceFlags();
+  if (flagData?.flags.bot?.is_active) {
     return NextResponse.json(
       buildResponse({
         status: 'bot_maintenance',
         debug: {
-          key: botMaintenance.key,
-          reason: botMaintenance.reason,
+          key: 'bot',
+          reason: flagData.flags.bot.reason,
         },
       }),
       { status: 503 },
