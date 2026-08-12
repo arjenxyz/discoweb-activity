@@ -126,7 +126,7 @@
   "mail_title_quiz_reward": "{title} — {amount} Papel",
   "mail_title_quiz_motivation": "{title} — 참여해 주셔서 감사합니다",
   "mail_title_earn_settings": "경제 업데이트",
-  "mail_preview_transfer": "{sender}님이 +{amount} Papel을 보냈습니다. 메모와 영수증은 상세에서 확인하세요.",
+  "mail_preview_transfer": "+{amount} Papel · {sender}",
   "mail_preview_promo": "+{amount} Papel · {code}",
   "mail_preview_discount": "{percent}% 할인 · {code}",
   "mail_preview_order": "주문 합계 {total} Papel",

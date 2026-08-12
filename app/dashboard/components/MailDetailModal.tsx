@@ -9,10 +9,9 @@ import { sanitizeHtml } from '@/lib/sanitizeHtml';
 import { useT } from '@/contexts/LocaleContext';
 import MailTransactionReceipt, { parseMailTransaction } from './MailTransactionReceipt';
 import MailLocalizedBody from './MailLocalizedBody';
-import { resolveMailPreview, resolveMailTemplateId, resolveMailTitle } from '@/lib/mailI18n';
+import { resolveMailTemplateId, resolveMailTitle } from '@/lib/mailI18n';
 import {
   LuChevronLeft,
-  LuChevronRight,
   LuTrash2,
   LuStar,
   LuShield,
@@ -84,13 +83,11 @@ export default function MailDetailModal({
   const t = useT();
   const modalRef = useRef<HTMLDivElement>(null);
   const [claiming, setClaiming] = useState(false);
-  const [receiptOpen, setReceiptOpen] = useState(false);
   const isInline = variant === 'inline';
   const isFullscreen = variant === 'fullscreen';
 
   useEffect(() => {
     setClaiming(false);
-    setReceiptOpen(false);
   }, [mail?.id]);
 
   // ESC ile kapat (inline panel'de de çalışır)
@@ -98,15 +95,11 @@ export default function MailDetailModal({
     if (isInline && !mail) return undefined;
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return;
-      if (receiptOpen) {
-        setReceiptOpen(false);
-        return;
-      }
       onClose();
     };
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
-  }, [onClose, isInline, mail, receiptOpen]);
+  }, [onClose, isInline, mail]);
 
   // Okundu işaretle
   useEffect(() => {
@@ -147,7 +140,6 @@ export default function MailDetailModal({
   const txn = parseMailTransaction(mail);
   const mailTemplate = resolveMailTemplateId(mail);
   const displayTitle = resolveMailTitle(mail, t);
-  const displayPreview = resolveMailPreview(mail, t);
   const hasStructuredReceipt = Boolean(
     txn ||
       mailTemplate === 'order_confirmed' ||
@@ -364,22 +356,8 @@ export default function MailDetailModal({
             {displayTitle}
           </h1>
 
-          {hasStructuredReceipt ? (
-            <div className="mb-6 min-w-0">
-              {displayPreview ? (
-                <p className="mb-4 break-words text-sm leading-relaxed text-white/50 [overflow-wrap:anywhere]">
-                  {displayPreview}
-                </p>
-              ) : null}
-              <button
-                type="button"
-                onClick={() => setReceiptOpen(true)}
-                className="inline-flex items-center gap-2 rounded-xl border border-white/[0.1] bg-white/[0.04] px-4 py-2.5 text-sm font-semibold text-white/85 transition hover:border-white/20 hover:bg-white/[0.07] hover:text-white"
-              >
-                {t('mail_detail_view_details')}
-                <LuChevronRight className="h-4 w-4 text-white/40" />
-              </button>
-            </div>
+          {hasStructuredReceipt && receiptBody ? (
+            <div className="mb-6 min-w-0">{receiptBody}</div>
           ) : null}
 
           {mail.image_url && (
@@ -456,31 +434,6 @@ export default function MailDetailModal({
         </div>
       </div>
 
-      {receiptOpen && receiptBody ? (
-        <div
-          className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md sm:p-6"
-          onClick={() => setReceiptOpen(false)}
-          role="presentation"
-        >
-          <div
-            className="relative max-h-[min(86vh,720px)] w-full max-w-md min-w-0 overflow-x-hidden overflow-y-auto overscroll-contain"
-            onClick={(e) => e.stopPropagation()}
-            role="dialog"
-            aria-modal="true"
-            aria-label={t('mail_receipt_label')}
-          >
-            <button
-              type="button"
-              onClick={() => setReceiptOpen(false)}
-              className="absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-[#0c0e12]/95 text-white/70 shadow-lg backdrop-blur-sm transition hover:bg-white/10 hover:text-white"
-              aria-label={t('mail_detail_close_aria')}
-            >
-              <LuX className="h-4 w-4" />
-            </button>
-            {receiptBody}
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 
