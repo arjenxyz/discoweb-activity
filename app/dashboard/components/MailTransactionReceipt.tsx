@@ -504,23 +504,86 @@ export default function MailTransactionReceipt({ mail, txn, t }: Props) {
     const displayName = senderUsername || mail.author_name || t('mail_detail_sender_label');
 
     return (
-      <div className="w-full min-w-0 space-y-3">
-        <ReceiptCard accent="amber">
-          <ReceiptSection>
-            <PersonHeader
-              label={t('mail_txn_from')}
-              name={displayName}
-              avatarUrl={senderAvatarUrl}
-              userId={senderId}
-              t={t}
-            />
-          </ReceiptSection>
-          <ReceiptDivider />
-          <ReceiptSection>
-            <AmountInline amount={amount} label={t('mail_txn_received')} accent="amber" />
-            {note ? <NoteBlock note={note} t={t} accent="amber" /> : null}
-          </ReceiptSection>
-        </ReceiptCard>
+      <div className="w-full min-w-0">
+        <div className="relative w-full min-w-0 overflow-hidden rounded-2xl border border-amber-400/20 bg-gradient-to-b from-amber-500/[0.07] via-white/[0.03] to-white/[0.02]">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-300/40 to-transparent" />
+
+          {/* Amount hero */}
+          <div className="min-w-0 px-4 pb-1 pt-5 text-center sm:px-5">
+            <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.2em] text-amber-200/45">
+              {t('mail_txn_received')}
+            </p>
+            <div className="flex min-w-0 flex-wrap items-center justify-center gap-2.5">
+              <Image
+                src="/papel.gif"
+                alt="Papel"
+                width={32}
+                height={32}
+                className="h-8 w-8 shrink-0"
+                unoptimized
+              />
+              <span className="text-4xl font-black tabular-nums tracking-tight text-amber-300 sm:text-5xl">
+                +{amount.toLocaleString('tr-TR', { maximumFractionDigits: 2 })}
+              </span>
+              <span className="text-base font-bold text-amber-400/90">Papel</span>
+            </div>
+          </div>
+
+          {/* Sender strip */}
+          <div className="mx-4 mt-5 min-w-0 rounded-xl border border-white/[0.07] bg-black/25 p-3 sm:mx-5">
+            <div className="flex min-w-0 items-center gap-3">
+              {senderAvatarUrl ? (
+                <div className="h-11 w-11 shrink-0 overflow-hidden rounded-full border border-white/10 bg-white/[0.06]">
+                  <Image
+                    src={senderAvatarUrl}
+                    alt={displayName}
+                    width={44}
+                    height={44}
+                    className="h-full w-full object-cover"
+                    unoptimized
+                  />
+                </div>
+              ) : (
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/10 bg-[#5865F2]/20 text-[#a5b4ff]">
+                  <LuUser className="h-5 w-5" />
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/30">
+                  {t('mail_txn_from')}
+                </p>
+                <p className="mt-0.5 truncate text-sm font-semibold text-white">{displayName}</p>
+              </div>
+            </div>
+            {senderId ? (
+              <div className="mt-2.5 flex min-w-0 items-center gap-2 border-t border-white/[0.06] pt-2.5">
+                <span className="shrink-0 text-[11px] text-white/35">{t('mail_txn_sender_id')}</span>
+                <div className="min-w-0 flex-1">
+                  <CopyIdButton value={senderId} t={t} />
+                </div>
+              </div>
+            ) : (
+              <p className="mt-2.5 border-t border-white/[0.06] pt-2.5 text-[11px] text-white/30">
+                {t('mail_txn_id_unavailable')}
+              </p>
+            )}
+          </div>
+
+          {/* Note */}
+          {note ? (
+            <div className="min-w-0 px-4 py-4 sm:px-5">
+              <div className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.16em] text-white/30">
+                <LuMessageSquareText className="h-3.5 w-3.5 shrink-0 text-white/35" />
+                {t('mail_txn_note')}
+              </div>
+              <p className="max-w-full break-words text-sm leading-relaxed text-white/70 whitespace-pre-wrap [overflow-wrap:anywhere]">
+                {note}
+              </p>
+            </div>
+          ) : (
+            <div className="h-4" />
+          )}
+        </div>
       </div>
     );
   }
