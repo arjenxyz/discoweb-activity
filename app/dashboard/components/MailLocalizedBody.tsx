@@ -395,22 +395,20 @@ export default function MailLocalizedBody({ mail, template, t }: Props) {
                   const item = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
                   const position = num(item.position);
                   const reward = num(item.papel_reward ?? item.papelReward);
-                  const label = typeof item.label === 'string' && item.label.trim() ? item.label.trim() : null;
                   return (
                     <li
                       key={`${position}-${idx}`}
-                      className="flex min-w-0 items-start justify-between gap-3 text-sm"
+                      className="flex min-w-0 items-center justify-between gap-3 text-sm"
                     >
                       <span className="min-w-0 break-words text-white/80">
                         {t('mail_quiz_checkpoint', { position })}
-                        {label ? <span className="text-white/40"> · {label}</span> : null}
                       </span>
                       <PapelAmount amount={reward} className="shrink-0 text-sm text-white" />
                     </li>
                   );
                 })}
                 {perfectBonus > 0 ? (
-                  <li className="flex min-w-0 items-start justify-between gap-3 text-sm">
+                  <li className="flex min-w-0 items-center justify-between gap-3 text-sm">
                     <span className="min-w-0 break-words text-white/80">{t('mail_quiz_perfect_bonus')}</span>
                     <PapelAmount amount={perfectBonus} className="shrink-0 text-sm text-white" />
                   </li>

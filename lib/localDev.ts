@@ -775,8 +775,8 @@ export const localDevMailsSeed = [
       wrong_count: 0,
       is_perfect: true,
       breakdown: [
-        { position: 3, papel_reward: 25, label: 'İlk checkpoint' },
-        { position: 7, papel_reward: 50, label: null },
+        { position: 3, papel_reward: 25 },
+        { position: 7, papel_reward: 50 },
       ],
     },
   },
