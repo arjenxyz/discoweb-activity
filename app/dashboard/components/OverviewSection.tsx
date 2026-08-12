@@ -109,45 +109,45 @@ export default function OverviewSection({
 
   return (
     <section className="flex flex-col gap-3 pt-4 pb-4 px-4 sm:pt-5 sm:pb-5 sm:px-5">
+      <div className="flex flex-col lg:flex-row gap-4 lg:gap-5 items-start">
+        <div className="w-full lg:flex-1 min-w-0 flex flex-col gap-3">
+          {/* SAYFA BAŞLIĞI — sol sütunda; profil kartını aşağı itmez */}
+          <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-gradient-to-br from-white/[0.07] via-white/[0.03] to-transparent px-4 py-3.5 sm:px-5 sm:py-4">
+            <div className="pointer-events-none absolute -right-6 -top-6 h-28 w-28 rounded-full bg-indigo-500/[0.12] blur-2xl" />
+            <div className="pointer-events-none absolute -bottom-8 left-1/3 h-20 w-20 rounded-full bg-violet-500/[0.08] blur-2xl" />
 
-      {/* SAYFA BAŞLIĞI */}
-      <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-gradient-to-br from-white/[0.07] via-white/[0.03] to-transparent px-4 py-4 sm:px-5 sm:py-5">
-        <div className="pointer-events-none absolute -right-6 -top-6 h-28 w-28 rounded-full bg-indigo-500/[0.12] blur-2xl" />
-        <div className="pointer-events-none absolute -bottom-8 left-1/3 h-20 w-20 rounded-full bg-violet-500/[0.08] blur-2xl" />
+            <div className="relative flex flex-col gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-black/20 px-2.5 py-1 text-[11px] font-medium tracking-wide text-white/55 backdrop-blur-sm">
+                  <span>{greeting}{displayName ? `, ${displayName}` : ''}</span>
+                  <span aria-hidden className="text-white/70">👋</span>
+                </span>
+                {!overviewLoading && (
+                  <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-300/90">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    {t('overview_live')}
+                  </span>
+                )}
+              </div>
 
-        <div className="relative flex flex-col gap-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-black/20 px-2.5 py-1 text-[11px] font-medium tracking-wide text-white/55 backdrop-blur-sm">
-              <span>{greeting}{displayName ? `, ${displayName}` : ''}</span>
-              <span aria-hidden className="text-white/70">👋</span>
-            </span>
-            {!overviewLoading && (
-              <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-300/90">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                {t('overview_live')}
-              </span>
-            )}
+              <div className="flex flex-col gap-0.5">
+                <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white">
+                  {t('overview_title')}
+                </h1>
+                <p className="max-w-lg text-sm leading-relaxed text-white/45">
+                  {subtitle}
+                </p>
+              </div>
+            </div>
           </div>
 
-          <div className="flex flex-col gap-1">
-            <h1 className="text-2xl sm:text-[1.75rem] font-black tracking-tight text-white">
-              {t('overview_title')}
-            </h1>
-            <p className="max-w-xl text-sm leading-relaxed text-white/45">
-              {subtitle}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {overviewLoading ? (
-        <div className="flex items-center gap-3 py-12 text-white/30">
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/10 border-t-white/40" />
-          <span className="text-sm">{t('overview_loading')}</span>
-        </div>
-      ) : (
-        <div className="flex flex-col lg:flex-row gap-4 lg:gap-5 items-start">
-          <div className="w-full lg:flex-1 min-w-0 flex flex-col gap-3 order-2 lg:order-1">
+          {overviewLoading ? (
+            <div className="flex items-center gap-3 py-12 text-white/30">
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/10 border-t-white/40" />
+              <span className="text-sm">{t('overview_loading')}</span>
+            </div>
+          ) : (
+            <>
           {/* İSTATİSTİK KARTLARI */}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {[
@@ -370,20 +370,21 @@ export default function OverviewSection({
               </div>
             </div>
           )}
-          </div>
-
-          <aside className="contents lg:sticky lg:top-6 lg:order-2 lg:block lg:w-[300px] lg:shrink-0 xl:w-[320px]">
-            <DiscordProfileCard
-              profile={unauthorized ? null : profile}
-              loading={profileLoading}
-              joinedAt={overviewStats?.joinedAt ?? null}
-              formatRoleColor={formatRoleColor}
-              hasTag={hasTag}
-              isBooster={isBooster}
-            />
-          </aside>
+            </>
+          )}
         </div>
-      )}
+
+        <aside className="order-first lg:order-none w-full lg:w-[280px] lg:shrink-0 xl:w-[300px] lg:sticky lg:top-6 self-start">
+          <DiscordProfileCard
+            profile={unauthorized ? null : profile}
+            loading={profileLoading}
+            joinedAt={overviewStats?.joinedAt ?? null}
+            formatRoleColor={formatRoleColor}
+            hasTag={hasTag}
+            isBooster={isBooster}
+          />
+        </aside>
+      </div>
 
     </section>
   );
