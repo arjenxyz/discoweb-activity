@@ -119,6 +119,7 @@ export async function GET(request: Request) {
 
   try {
     let profile: Record<string, any> | null = null;
+    let createdNewGuildProfile = false;
     try {
       const { data, error } = await supabase
         .from('member_profiles')
@@ -132,23 +133,6 @@ export async function GET(request: Request) {
       }
 
       profile = data;
-
-      if (!profile) {
-        const { data: anyProfile, error: anyError } = await supabase
-          .from('member_profiles')
-          .select('*')
-          .eq('user_id', userId)
-          .maybeSingle();
-
-        if (anyError && anyError.code !== 'PGRST116') {
-          throw anyError;
-        }
-
-        if (anyProfile) {
-          console.warn('member/profile: no server-specific profile, using global user profile', anyProfile);
-          profile = anyProfile;
-        }
-      }
     } catch (fetchError) {
       console.error('member/profile: profile query failed', fetchError);
       return NextResponse.json({ error: 'profile_query_failed' }, { status: 500 });
@@ -272,6 +256,45 @@ export async function GET(request: Request) {
       console.warn('member/profile: profile upsert failed', insertError);
       return NextResponse.json({ error: 'profile_creation_failed' }, { status: 500 });
     }
+    createdNewGuildProfile = true;
+
+    // Yeni sunucu hesabı: üye (verify) rolünü otomatik ver
+    if (createdNewGuildProfile && botToken) {
+      try {
+        const { data: serverRow } = await supabase
+          .from('servers')
+          .select('verify_role_id')
+          .eq('discord_id', selectedGuildId)
+          .maybeSingle();
+
+        const verifyRoleId = serverRow?.verify_role_id ?? null;
+        if (verifyRoleId) {
+          const alreadyHas =
+            Array.isArray(discordMember?.roles) && discordMember.roles.includes(verifyRoleId);
+          if (!alreadyHas) {
+            const roleRes = await fetch(
+              `https://discord.com/api/guilds/${selectedGuildId}/members/${userId}/roles/${verifyRoleId}`,
+              {
+                method: 'PUT',
+                headers: {
+                  Authorization: `Bot ${botToken}`,
+                  'X-Audit-Log-Reason': 'DiscoWeb welcome profile created',
+                },
+              },
+            );
+            if (!roleRes.ok && roleRes.status !== 204) {
+              const body = await roleRes.text().catch(() => '');
+              console.warn('[member/profile] auto verify-role assign failed', {
+                status: roleRes.status,
+                body: body.slice(0, 200),
+              });
+            }
+          }
+        }
+      } catch (roleErr) {
+        console.warn('[member/profile] auto verify-role assign error', roleErr);
+      }
+    }
 
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
       ?? request.headers.get('x-real-ip') ?? null;
@@ -286,7 +309,7 @@ export async function GET(request: Request) {
       userAgent: ua,
     });
 
-    return NextResponse.json(payload);
+    return NextResponse.json({ ...payload, created: true, verifyRoleAssigned: true });
   } catch (error) {
     console.error('Profile fetch error:', error);
     return NextResponse.json({ error: 'fetch_failed' }, { status: 500 });

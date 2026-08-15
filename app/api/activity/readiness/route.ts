@@ -421,6 +421,7 @@ export async function GET(request: Request) {
     guild.owner_id === session.userId;
 
   // Kullanıcının bu sunucuda kayıtlı bir profilinin olup olmadığını kontrol et
+  // (başka sunucudaki profil, bu sunucu için "hesap var" sayılmaz)
   let memberProfile = null;
   let profileError = null;
 
@@ -434,24 +435,6 @@ export async function GET(request: Request) {
 
     memberProfile = result.data;
     profileError = result.error;
-
-    if (!memberProfile) {
-      // Global user profile tutkusu
-      const globalResult = await supabase
-        .from('member_profiles')
-        .select('user_id')
-        .eq('user_id', session.userId)
-        .maybeSingle();
-      memberProfile = globalResult.data;
-      profileError = profileError || globalResult.error;
-
-      if (memberProfile) {
-        console.warn('[activity/readiness] user has global member profile, treating as ready for this guild', {
-          userId: session.userId,
-          guildId,
-        });
-      }
-    }
   } catch (err) {
     console.warn('[activity/readiness] profile check failed', err);
   }

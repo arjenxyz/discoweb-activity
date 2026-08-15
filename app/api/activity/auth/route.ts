@@ -260,7 +260,7 @@ const envFlags = {
         if (server) {
           const { data: existingProfile } = await supabase
             .from('member_profiles')
-            .select('*')
+            .select('user_id')
             .eq('guild_id', guildId)
             .eq('user_id', user.id)
             .maybeSingle();
@@ -268,18 +268,9 @@ const envFlags = {
           if (existingProfile) {
             console.log('✅ Existing member profile found for server:', guildName);
           } else {
-            console.log('👤 Creating new member profile for server:', guildName);
-            await supabase
-              .from('member_profiles')
-              .upsert(
-                {
-                  guild_id: guildId,
-                  user_id: user.id,
-                  created_at: new Date().toISOString(),
-                  updated_at: new Date().toISOString(),
-                },
-                { onConflict: 'guild_id,user_id' }
-              );
+            // Bu sunucu için profili WelcomeScreen ("Yeni hesap oluştur") oluştursun.
+            // Auth sırasında otomatik oluşturmak, yeni sunucuda Get Role ekranına düşürüyordu.
+            console.log('👤 No member profile yet for server (welcome gate will create):', guildName);
           }
         }
       }

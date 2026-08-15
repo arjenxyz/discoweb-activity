@@ -77,6 +77,14 @@ export default function WelcomeScreen({ readiness, onRetry }: Props) {
         setPhase('intro');
         return;
       }
+
+      // Profil oluşturulduktan sonra üye rolünü de güvenceye al
+      try {
+        await fetchWithCreds('/api/member/verify-role', { method: 'POST' });
+      } catch {
+        // Rol ataması bot tarafında da olabilir; readiness tekrar kontrol eder
+      }
+
       setPhase('success');
     } catch {
       setError(t('welcome_error_generic'));
