@@ -147,9 +147,13 @@ function RoleDetailModal({
   const purchasedAt = formatDateTime(info.appliedAt, dateLocale);
   const endsAt = formatDateTime(info.expiresAt, dateLocale);
 
+  const sourceLabel = info.fromStore
+    ? t('discord_card_role_badge_store')
+    : t('discord_card_role_badge_server');
+
   return (
     <div
-      className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/65 px-4 py-6 backdrop-blur-[6px]"
+      className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/60 px-4 py-6 backdrop-blur-[4px]"
       onClick={onClose}
       role="presentation"
     >
@@ -158,65 +162,48 @@ function RoleDetailModal({
         aria-modal="true"
         aria-labelledby="role-detail-title"
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-[340px] animate-in fade-in zoom-in-95 duration-200 overflow-hidden rounded-2xl border border-white/[0.09] bg-[#1e1f22] shadow-[0_24px_64px_rgba(0,0,0,0.55)]"
+        className="relative w-full max-w-[280px] animate-in fade-in zoom-in-95 duration-200 overflow-hidden rounded-[14px] bg-[#232428] shadow-[0_20px_48px_rgba(0,0,0,0.5)]"
       >
-        <div className="h-1 w-full" style={{ backgroundColor: roleColor }} />
+        <div className="absolute inset-x-0 top-0 h-[2px]" style={{ backgroundColor: roleColor }} />
 
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute right-3 top-4 flex h-8 w-8 items-center justify-center rounded-full text-[#b5bac1] transition hover:bg-white/[0.08] hover:text-white"
-          aria-label={t('discord_card_role_close')}
-        >
-          <LuX className="h-4 w-4" />
-        </button>
-
-        <div className="px-5 pb-5 pt-4">
-          <span
-            className="inline-flex max-w-[calc(100%-2.5rem)] items-center gap-2 rounded-full border border-white/[0.08] bg-[#111214] px-3 py-1.5"
-          >
-            <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: roleColor }} />
-            <span id="role-detail-title" className="truncate text-sm font-semibold text-[#f2f3f5]">
-              {role.name}
+        <div className="px-4 pb-4 pt-4">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex min-w-0 flex-1 items-center gap-2 rounded-full bg-white/[0.04] px-2.5 py-1.5">
+              <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: roleColor }} />
+              <span id="role-detail-title" className="truncate text-[13px] font-semibold tracking-tight text-[#f2f3f5]">
+                {role.name}
+              </span>
             </span>
-          </span>
-          {info.itemTitle && info.itemTitle !== role.name && (
-            <p className="mt-2 truncate text-xs text-[#949ba4]">{info.itemTitle}</p>
-          )}
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[#949ba4] transition hover:bg-white/[0.06] hover:text-[#dbdee1]"
+              aria-label={t('discord_card_role_close')}
+            >
+              <LuX className="h-3.5 w-3.5" />
+            </button>
+          </div>
 
-          <div className="mt-4 rounded-xl border border-white/[0.06] bg-[#2b2d31] px-4 py-3.5">
-            <p className="text-[11px] font-medium uppercase tracking-wide text-[#949ba4]">
-              {isPermanent ? t('discord_card_role_status') : t('discord_card_role_remaining')}
-            </p>
+          <div className="mt-3 rounded-[10px] bg-[#1a1b1e] px-4 py-5 text-center">
             <p
-              className="mt-1.5 text-[1.25rem] font-semibold tabular-nums leading-none"
-              style={{ color: isPermanent ? '#3ba55d' : roleColor }}
+              className="text-[22px] font-semibold tabular-nums leading-none tracking-tight"
+              style={{ color: isPermanent ? '#23a55a' : roleColor }}
             >
               {isPermanent ? t('tracking_permanent') : countdown}
             </p>
+            {!isPermanent && endsAt ? (
+              <p className="mt-2.5 text-[11px] tabular-nums text-[#6d6f78]">{endsAt}</p>
+            ) : null}
           </div>
 
-          {info.fromStore ? (
-            <div className="mt-3 overflow-hidden rounded-xl border border-white/[0.06] bg-[#2b2d31]/70">
-              <div className="flex items-center justify-between gap-3 px-4 py-3">
-                <span className="text-xs text-[#949ba4]">{t('discord_card_role_purchased_at')}</span>
-                <span className="text-right text-xs font-medium text-[#dbdee1]">
-                  {purchasedAt ?? t('discord_card_role_purchase_unknown')}
-                </span>
-              </div>
-              <div className="h-px bg-white/[0.06]" />
-              <div className="flex items-center justify-between gap-3 px-4 py-3">
-                <span className="text-xs text-[#949ba4]">{t('tracking_end_date')}</span>
-                <span className="text-right text-xs font-medium text-[#dbdee1]">
-                  {isPermanent ? t('tracking_permanent') : endsAt ?? '—'}
-                </span>
-              </div>
-            </div>
-          ) : (
-            <p className="mt-3 text-xs leading-relaxed text-[#949ba4]">
-              {t('discord_card_role_source_server')}
-            </p>
-          )}
+          <div className="mt-3 flex items-center justify-between gap-3 px-0.5">
+            <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-[#6d6f78]">
+              {sourceLabel}
+            </span>
+            {info.fromStore && purchasedAt ? (
+              <span className="truncate text-[11px] tabular-nums text-[#6d6f78]">{purchasedAt}</span>
+            ) : null}
+          </div>
         </div>
       </div>
     </div>
