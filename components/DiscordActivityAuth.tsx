@@ -8,9 +8,7 @@ import { useLocale, useT } from '@/contexts/LocaleContext';
 import DmScreen from '@/app/dashboard/components/DmScreen';
 import { VideoBackground, MuteButton } from '@/app/dashboard/components/VideoBackground';
 import {
-  DiscordSdkRichPresenceProvider,
-  applyRichPresence,
-  RichPresenceConfig,
+  syncDiscordRichPresence,
 } from '@/services/richPresence';
 
 interface DiscordActivityAuthProps {
@@ -333,20 +331,12 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
 
       // Rich Presence ayarla
       try {
-        const rpGuildName = result.user?.guildName ?? null;
-
-        const richPresenceConfig: RichPresenceConfig = {
-          guildName: rpGuildName,
-          state: 'Economy & Role Management',
-          buttons: [{ label: 'Open DiscoWeb', url: 'https://discoweb.tech' }],
-          assets: { large_image: 'discoweb', large_text: 'DiscoWeb' },
-        };
-
-        const provider = new DiscordSdkRichPresenceProvider(
-          sdk as unknown as { commands: { setActivity: (activity: { activity: unknown }) => Promise<unknown> } },
-        );
-
-        await applyRichPresence(provider, richPresenceConfig, addLog);
+        syncDiscordRichPresence({
+          guildName: result.user?.guildName ?? null,
+          state: 'Anasayfa',
+          logger: addLog,
+          immediate: true,
+        });
       } catch {
         addLog('Rich Presence ayarlanamadı (görmezden gelinir)');
       }
@@ -470,18 +460,12 @@ export default function DiscordActivityAuth({ children }: DiscordActivityAuthPro
                 } else {
                   addLog(`discord-token endpoint hatası: ${tokenRes.status}`);
                 }
-                const richPresenceConfig: RichPresenceConfig = {
+                syncDiscordRichPresence({
                   guildName,
-                  state: 'Economy & Role Management',
-                  buttons: [{ label: 'Open DiscoWeb', url: 'https://discoweb.tech' }],
-                  assets: { large_image: 'discoweb', large_text: 'DiscoWeb' },
-                };
-
-                const provider = new DiscordSdkRichPresenceProvider(
-                  fastSdk as unknown as { commands: { setActivity: (activity: { activity: unknown }) => Promise<unknown> } },
-                );
-
-                await applyRichPresence(provider, richPresenceConfig, addLog);
+                  state: 'Anasayfa',
+                  logger: addLog,
+                  immediate: true,
+                });
               } catch (e) {
                 addLog(`Rich Presence ayarlanamadı (hızlı yol): ${JSON.stringify(e)}`);
               }

@@ -33,6 +33,7 @@ import { useRealtimeDashboard } from '@/lib/utils/useRealtimeDashboard';
 import { useT } from '@/contexts/LocaleContext';
 import { getMaintenanceCopy, getMaintenanceShortMessage } from '@/lib/maintenanceCopy';
 import { getDiscordSdk } from '@/lib/discordSdk';
+import { presenceLabelForSection, syncDiscordRichPresence } from '@/services/richPresence';
 import DuyuruPage from './duyuru/page';
 import { ENABLE_TAG_BADGE_SECTION } from './featureFlags';
 import type {
@@ -346,6 +347,22 @@ export default function DashboardPage() {
   useEffect(() => {
     if (effectiveSection !== 'quiz') setQuizImmersive(false);
   }, [effectiveSection]);
+
+  useEffect(() => {
+    if (!isActivityEmbed) return;
+    if (isBlockedByReadiness) return;
+    const guildName = headerServer.data?.name ?? activityReadiness?.guildName ?? null;
+    const state = presenceLabelForSection(effectiveSection, t, { leaderboardOpen });
+    syncDiscordRichPresence({ guildName, state });
+  }, [
+    isActivityEmbed,
+    isBlockedByReadiness,
+    effectiveSection,
+    leaderboardOpen,
+    headerServer.data?.name,
+    activityReadiness?.guildName,
+    t,
+  ]);
 
   const getCurrentGuildId = () => {
     if (typeof window === 'undefined') return null;

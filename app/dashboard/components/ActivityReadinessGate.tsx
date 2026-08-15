@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import WelcomeScreen from './WelcomeScreen';
 import VerifyRoleScreen from './VerifyRoleScreen';
 import { getDiscordSdk } from '@/lib/discordSdk';
+import { syncDiscordRichPresence } from '@/services/richPresence';
 import { VideoBackground, MuteButton } from './VideoBackground';
 import { useT } from '@/contexts/LocaleContext';
 import { getMaintenanceCopy, resolveMaintenanceKey } from '@/lib/maintenanceCopy';
@@ -221,6 +222,22 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry, onB
     setBanRetryTriggered(true);
     onRetry();
   }, [banRetryTriggered, isTemporaryBan, onRetry, remainingMs]);
+
+  useEffect(() => {
+    if (loading || readiness.status === 'ready') return;
+    const statusState: Partial<Record<ActivityReadinessStatus, string>> = {
+      missing_verify_role: t('presence_page_verify'),
+      missing_user_profile: t('presence_page_welcome'),
+      maintenance: t('presence_page_maintenance'),
+      bot_maintenance: t('presence_page_maintenance'),
+      incident: t('presence_page_maintenance'),
+    };
+    const state = statusState[readiness.status] ?? t('presence_page_default');
+    syncDiscordRichPresence({
+      guildName: readiness.guildName,
+      state: state === 'presence_page_default' ? t('presence_page_overview') : state,
+    });
+  }, [loading, readiness.status, readiness.guildName, t]);
 
   const toggleMute = () => {
     const v = videoRef.current;
