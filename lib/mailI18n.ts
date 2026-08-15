@@ -48,6 +48,14 @@ export function resolveMailTemplateId(mail: MailLike): string | null {
     if (explicit === 'quiz_reward') return 'quiz_reward';
     if (explicit === 'quiz_motivation') return 'quiz_motivation';
     if (explicit === 'earn_settings' || explicit === 'economy_update') return 'earn_settings';
+    if (
+      explicit === 'activity_welcome' ||
+      explicit === 'activity_welcome_back' ||
+      explicit === 'welcome' ||
+      explicit === 'welcome_first_login'
+    ) {
+      return 'activity_welcome';
+    }
     if (explicit.startsWith('mail_title_')) return explicit.replace(/^mail_title_/, '');
   }
 
@@ -124,6 +132,7 @@ const TITLE_KEYS: Record<string, string> = {
   quiz_reward: 'mail_title_quiz_reward',
   quiz_motivation: 'mail_title_quiz_motivation',
   earn_settings: 'mail_title_earn_settings',
+  activity_welcome: 'mail_title_welcome',
 };
 
 const PREVIEW_KEYS: Record<string, string> = {
@@ -138,6 +147,7 @@ const PREVIEW_KEYS: Record<string, string> = {
   quiz_reward: 'mail_preview_quiz_reward',
   quiz_motivation: 'mail_preview_quiz_motivation',
   earn_settings: 'mail_preview_earn_settings',
+  activity_welcome: 'mail_preview_welcome',
 };
 
 export function resolveMailTitle(mail: MailLike, t: MailT): string {
@@ -161,6 +171,13 @@ export function resolveMailTitle(mail: MailLike, t: MailT): string {
       title: eventTitle || 'Quiz',
     });
     return translated === 'mail_title_quiz_motivation' ? (mail.title ?? '') : translated;
+  }
+
+  if (template === 'activity_welcome') {
+    const returning = str(meta.variant) === 'returning';
+    const key = returning ? 'mail_title_welcome_back' : 'mail_title_welcome';
+    const translated = t(key);
+    return translated === key ? (mail.title ?? '') : translated;
   }
 
   const key = TITLE_KEYS[template];
@@ -234,6 +251,11 @@ export function resolveMailPreview(mail: MailLike, t: MailT, maxLen = 120): stri
 
   if (template === 'earn_settings') {
     return t('mail_preview_earn_settings');
+  }
+
+  if (template === 'activity_welcome') {
+    const returning = str(meta.variant) === 'returning';
+    return returning ? t('mail_preview_welcome_back') : t('mail_preview_welcome');
   }
 
   if (template && PREVIEW_KEYS[template]) {

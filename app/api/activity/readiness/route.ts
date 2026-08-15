@@ -4,6 +4,7 @@ import { requireSessionUser } from '@/lib/auth';
 import { getSelectedGuildId } from '@/lib/guild';
 import { checkMaintenance, getMaintenanceFlags, isIncidentActive } from '@/lib/maintenance';
 import { isLocalDevRequest, localDevReadiness } from '@/lib/localDev';
+import { markActivityAccessRevoked, maybeSendActivityWelcome } from '@/lib/welcomeMail';
 
 type ReadinessStatus =
   | 'ready'
@@ -472,6 +473,11 @@ export async function GET(request: Request) {
   // Verify rolü kontrolü: profil var ama verify rolü yoksa
   const verifyRoleId = (server as { verify_role_id?: string | null }).verify_role_id;
   if (verifyRoleId && !roleIds.includes(verifyRoleId)) {
+    try {
+      await markActivityAccessRevoked(supabase, guildId, session.userId);
+    } catch (err) {
+      console.warn('[activity/readiness] mark access revoked failed', err);
+    }
     return nonOkStatus({
       status: 'missing_verify_role',
       guildId,
@@ -481,11 +487,22 @@ export async function GET(request: Request) {
     });
   }
 
+  const guildName = guild.name ?? server.name ?? null;
+  try {
+    await maybeSendActivityWelcome(supabase, {
+      guildId,
+      userId: session.userId,
+      guildName,
+    });
+  } catch (err) {
+    console.warn('[activity/readiness] welcome mail failed', err);
+  }
+
   return NextResponse.json(
     buildResponse({
       status: 'ready',
       guildId,
-      guildName: guild.name ?? server.name ?? null,
+      guildName,
       isAdmin,
       canInviteBot: isAdmin,
     }),

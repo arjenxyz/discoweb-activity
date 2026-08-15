@@ -149,7 +149,8 @@ export default function MailDetailModal({
       mailTemplate === 'earn_rejected' ||
       mailTemplate === 'quiz_reward' ||
       mailTemplate === 'quiz_motivation' ||
-      mailTemplate === 'earn_settings',
+      mailTemplate === 'earn_settings' ||
+      mailTemplate === 'activity_welcome',
   );
 
   const receiptBody = txn ? (
@@ -161,7 +162,8 @@ export default function MailDetailModal({
     mailTemplate === 'earn_rejected' ||
     mailTemplate === 'quiz_reward' ||
     mailTemplate === 'quiz_motivation' ||
-    mailTemplate === 'earn_settings' ? (
+    mailTemplate === 'earn_settings' ||
+    mailTemplate === 'activity_welcome' ? (
     <MailLocalizedBody
       mail={mail}
       template={
@@ -174,7 +176,8 @@ export default function MailDetailModal({
               | 'earn_rejected'
               | 'quiz_reward'
               | 'quiz_motivation'
-              | 'earn_settings')
+              | 'earn_settings'
+              | 'activity_welcome')
       }
       t={t}
     />
@@ -228,7 +231,8 @@ export default function MailDetailModal({
     mailTemplate === 'earn_rejected' ||
     mailTemplate === 'quiz_reward' ||
     mailTemplate === 'quiz_motivation' ||
-    mailTemplate === 'earn_settings';
+    mailTemplate === 'earn_settings' ||
+    mailTemplate === 'activity_welcome';
   const showVerified = headerIsSystemBrand || (txn?.kind !== 'transfer' && txn?.kind !== 'promotion' && senderCfg.verified);
 
   const panelInner = (
@@ -329,7 +333,9 @@ export default function MailDetailModal({
                                   ? '🎯'
                                   : mailTemplate === 'earn_settings'
                                     ? '⚙️'
-                                    : senderCfg.avatar}
+                                    : mailTemplate === 'activity_welcome'
+                                      ? '✨'
+                                      : senderCfg.avatar}
                 </div>
               )}
               <div>

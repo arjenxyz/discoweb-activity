@@ -18,6 +18,8 @@ import {
   LuTrophy,
   LuTriangleAlert,
   LuWallet,
+  LuSparkles,
+  LuBadgeCheck,
 } from 'react-icons/lu';
 
 type Props = {
@@ -30,7 +32,8 @@ type Props = {
     | 'earn_rejected'
     | 'quiz_reward'
     | 'quiz_motivation'
-    | 'earn_settings';
+    | 'earn_settings'
+    | 'activity_welcome';
   t: MailT;
 };
 
@@ -111,6 +114,80 @@ export default function MailLocalizedBody({ mail, template, t }: Props) {
   const isQuiz = template === 'quiz_reward' || isQuizMotivation;
   const isOrderReject = template === 'order_rejected';
   const isOrder = template === 'order' || template === 'order_confirmed' || isOrderReject;
+
+  if (template === 'activity_welcome') {
+    const returning = String(meta.variant ?? '') === 'returning';
+    const username = typeof meta.username === 'string' && meta.username.trim() ? meta.username.trim() : '';
+    const guildName =
+      (typeof meta.guildName === 'string' && meta.guildName.trim() ? meta.guildName.trim() : null) ??
+      (typeof meta.guild_name === 'string' && meta.guild_name.trim() ? meta.guild_name.trim() : '');
+    const features = [
+      t('mail_welcome_feature_earn'),
+      t('mail_welcome_feature_store'),
+      t('mail_welcome_feature_mail'),
+      t('mail_welcome_feature_community'),
+    ];
+
+    return (
+      <div className="w-full min-w-0 overflow-hidden rounded-2xl border border-indigo-500/25 bg-white/[0.03]">
+        <div className="min-w-0 px-4 py-4">
+          <p className="mb-2.5 text-[10px] font-bold uppercase tracking-[0.18em] text-white/30">
+            {returning ? t('mail_welcome_status_back') : t('mail_welcome_status')}
+          </p>
+          <div className="flex min-w-0 items-start gap-3">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-indigo-500/25 bg-indigo-500/10 text-indigo-300">
+              <LuSparkles className="h-5 w-5" />
+            </div>
+            <div className="min-w-0 flex-1 space-y-1.5">
+              <p className="text-base font-semibold text-white">DiscoWeb</p>
+              <p className="break-words text-sm font-medium text-white/85 [overflow-wrap:anywhere]">
+                {t('mail_welcome_greeting', { username: username || t('mail_welcome_member_fallback') })}
+              </p>
+              <p className="break-words text-sm leading-relaxed text-white/65 [overflow-wrap:anywhere]">
+                {returning
+                  ? t('mail_welcome_intro_back', { guild: guildName || t('mail_welcome_guild_fallback') })
+                  : t('mail_welcome_intro', { guild: guildName || t('mail_welcome_guild_fallback') })}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="mx-4 border-t border-white/[0.07]" />
+
+        <div className="min-w-0 space-y-3 px-4 py-4">
+          <div className="flex items-center justify-between gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-3">
+            <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-emerald-300/80">
+              <LuBadgeCheck className="h-4 w-4" />
+              {t('mail_welcome_access_label')}
+            </span>
+            <span className="text-right text-sm font-semibold text-emerald-200">
+              {returning ? t('mail_welcome_access_value_back') : t('mail_welcome_access_value')}
+            </span>
+          </div>
+
+          <div className="min-w-0 rounded-xl border border-white/[0.06] bg-black/20 p-3">
+            <p className="mb-2.5 text-[10px] font-bold uppercase tracking-[0.18em] text-white/30">
+              {t('mail_welcome_features_title')}
+            </p>
+            <ul className="space-y-2.5">
+              {features.map((line) => (
+                <li key={line} className="flex min-w-0 items-start gap-2.5 text-sm leading-relaxed text-white/75">
+                  <LuBadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-indigo-300" />
+                  <span className="min-w-0 break-words [overflow-wrap:anywhere]">{line}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] px-3 py-3 text-sm leading-relaxed text-white/60">
+            {returning ? t('mail_welcome_role_note_back') : t('mail_welcome_role_note')}
+          </div>
+
+          <p className="text-[11px] leading-relaxed text-white/35">{t('mail_welcome_footer')}</p>
+        </div>
+      </div>
+    );
+  }
 
   if (template === 'earn_settings') {
     const groupsRaw = meta.groups && typeof meta.groups === 'object' && !Array.isArray(meta.groups)
