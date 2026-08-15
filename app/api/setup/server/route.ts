@@ -31,6 +31,13 @@ function slugify(text: string): string {
     .replace(/-+$/, '');            // Trim - from end of text
 }
 
+const EARN_RATE_MAX = 5000;
+const clampEarnRate = (value: unknown) => {
+  const n = Number(value ?? 0);
+  if (!Number.isFinite(n) || n < 0) return 0;
+  return Math.min(EARN_RATE_MAX, Number(n.toFixed(2)));
+};
+
 // Type used for summary items retrieved from DB
 type SavedChannel = { channel_type: string; channel_name: string; webhook_url?: string | null };
 
@@ -213,13 +220,13 @@ export async function POST(request: Request) {
           is_setup: true,
           tag_id: guildId,
           message_earn_enabled: Boolean(messageEarnEnabled),
-          earn_per_message: Number(earnPerMessage ?? 0),
+          earn_per_message: clampEarnRate(earnPerMessage),
           voice_earn_enabled: Boolean(voiceEarnEnabled),
-          earn_per_voice_minute: Number(earnPerVoiceMinute ?? 0),
-          tag_bonus_message: Number(tagBonusMessage ?? 0),
-          tag_bonus_voice: Number(tagBonusVoice ?? 0),
-          booster_bonus_message: Number(boosterBonusMessage ?? 0),
-          booster_bonus_voice: Number(boosterBonusVoice ?? 0),
+          earn_per_voice_minute: clampEarnRate(earnPerVoiceMinute),
+          tag_bonus_message: clampEarnRate(tagBonusMessage),
+          tag_bonus_voice: clampEarnRate(tagBonusVoice),
+          booster_bonus_message: clampEarnRate(boosterBonusMessage),
+          booster_bonus_voice: clampEarnRate(boosterBonusVoice),
           approval_threshold: Math.min(100, Math.max(50, Number(approvalThreshold ?? 80))),
         })
         .eq('discord_id', guildId)
@@ -249,13 +256,13 @@ export async function POST(request: Request) {
           is_setup: true,
           tag_id: guildId,
           message_earn_enabled: Boolean(messageEarnEnabled),
-          earn_per_message: Number(earnPerMessage ?? 0),
+          earn_per_message: clampEarnRate(earnPerMessage),
           voice_earn_enabled: Boolean(voiceEarnEnabled),
-          earn_per_voice_minute: Number(earnPerVoiceMinute ?? 0),
-          tag_bonus_message: Number(tagBonusMessage ?? 0),
-          tag_bonus_voice: Number(tagBonusVoice ?? 0),
-          booster_bonus_message: Number(boosterBonusMessage ?? 0),
-          booster_bonus_voice: Number(boosterBonusVoice ?? 0),
+          earn_per_voice_minute: clampEarnRate(earnPerVoiceMinute),
+          tag_bonus_message: clampEarnRate(tagBonusMessage),
+          tag_bonus_voice: clampEarnRate(tagBonusVoice),
+          booster_bonus_message: clampEarnRate(boosterBonusMessage),
+          booster_bonus_voice: clampEarnRate(boosterBonusVoice),
           approval_threshold: Math.min(100, Math.max(50, Number(approvalThreshold ?? 80))),
         })
         .select('id, discord_id, admin_role_id, verify_role_id')
