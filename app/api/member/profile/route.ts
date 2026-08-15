@@ -269,8 +269,8 @@ export async function GET(request: Request) {
 
         const verifyRoleId = serverRow?.verify_role_id ?? null;
         if (verifyRoleId) {
-          const alreadyHas =
-            Array.isArray(discordMember?.roles) && discordMember.roles.includes(verifyRoleId);
+          const roles = discordMember?.roles;
+          const alreadyHas = Array.isArray(roles) && roles.includes(verifyRoleId);
           if (!alreadyHas) {
             const roleRes = await fetch(
               `https://discord.com/api/guilds/${selectedGuildId}/members/${userId}/roles/${verifyRoleId}`,
