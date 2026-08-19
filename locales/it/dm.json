@@ -1,1 +1,10 @@
-{}
+{
+  "dm_badge": "DM o chat di gruppo",
+  "dm_title": "Ci serve un server!",
+  "dm_subtitle": "",
+  "dm_steps_title": "Come iniziare",
+  "dm_step_1": "Entra in un server Discord o creane uno tuo.",
+  "dm_step_2": "Apri la sezione attività.",
+  "dm_step_3": "Cerca 'DiscoWeb' e avvia l'attività.",
+  "dm_close_hint": "Ora puoi chiudere questa finestra."
+}

@@ -10,6 +10,23 @@ import {
   isDiscordActivityClient,
   setDiscordOrientationLock,
 } from '@/lib/discordSdk';
+import { useLocale, useT } from '@/contexts/LocaleContext';
+import type { LanguageCode } from '@/lib/languages';
+
+const DATE_LOCALES: Record<LanguageCode, string> = {
+  en: 'en-US',
+  pt: 'pt-BR',
+  id: 'id-ID',
+  es: 'es-MX',
+  de: 'de-DE',
+  tr: 'tr-TR',
+  fr: 'fr-FR',
+  hu: 'hu-HU',
+  ja: 'ja-JP',
+  ko: 'ko-KR',
+  ru: 'ru-RU',
+  it: 'it-IT',
+};
 
 type WatchEarnTask = {
   id: string;
@@ -68,17 +85,17 @@ const clearWatchedLocal = (taskId: string) => {
   return next;
 };
 
-const formatEndDate = (iso: string) => {
+const formatEndDate = (iso: string, locale: string) => {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit' });
+  return d.toLocaleDateString(locale, { day: '2-digit', month: '2-digit' });
 };
 
-const formatClaimedDate = (iso: string | null) => {
-  if (!iso) return new Date().toLocaleDateString('tr-TR');
+const formatClaimedDate = (iso: string | null, locale: string) => {
+  if (!iso) return new Date().toLocaleDateString(locale);
   const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return new Date().toLocaleDateString('tr-TR');
-  return d.toLocaleDateString('tr-TR');
+  if (Number.isNaN(d.getTime())) return new Date().toLocaleDateString(locale);
+  return d.toLocaleDateString(locale);
 };
 
 const formatRemaining = (totalSeconds: number) => {
@@ -98,6 +115,9 @@ const isCoarsePointerMobile = () => {
 };
 
 export default function WatchEarnSection() {
+  const t = useT();
+  const { locale } = useLocale();
+  const dateLocale = DATE_LOCALES[locale] ?? 'en-US';
   const [tasks, setTasks] = useState<WatchEarnTask[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeVideo, setActiveVideo] = useState<string | null>(null);
@@ -453,8 +473,8 @@ export default function WatchEarnSection() {
       });
       showToast(
         typeof data?.reward === 'number'
-          ? `+${data.reward} Papel hesabına eklendi!`
-          : 'Ödül başarıyla hesabınıza eklendi!',
+          ? t('mail_rewards_claimed_toast', { amount: String(data.reward) })
+          : t('watch_earn_toast_success'),
         'success',
       );
       try {
@@ -464,7 +484,7 @@ export default function WatchEarnSection() {
       }
       await loadTasks();
     } catch {
-      showToast('Ödül alınamadı. Tekrar dene.', 'error');
+      showToast(t('watch_earn_toast_error'), 'error');
     } finally {
       setClaimingId(null);
     }
@@ -583,7 +603,7 @@ export default function WatchEarnSection() {
                     void toggleFullscreen();
                   }}
                   className="flex h-9 w-9 items-center justify-center rounded-full text-white/90 transition hover:bg-white/10 hover:text-white active:scale-95"
-                  aria-label={isFullscreen ? 'Tam ekrandan çık' : 'Tam ekran'}
+                  aria-label={isFullscreen ? t('watch_earn_exit_fullscreen') : t('watch_earn_fullscreen')}
                   tabIndex={controlsVisible ? 0 : -1}
                 >
                   {isFullscreen ? <LuMinimize className="h-[18px] w-[18px]" /> : <LuMaximize className="h-[18px] w-[18px]" />}
@@ -596,7 +616,7 @@ export default function WatchEarnSection() {
                     void closePlayer();
                   }}
                   className="flex h-9 w-9 items-center justify-center rounded-full text-white/90 transition hover:bg-rose-500/25 hover:text-rose-200 active:scale-95"
-                  aria-label="Kapat"
+                  aria-label={t('watch_earn_close')}
                   tabIndex={controlsVisible ? 0 : -1}
                 >
                   <LuX className="h-[18px] w-[18px]" />
@@ -633,15 +653,15 @@ export default function WatchEarnSection() {
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-4 md:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto w-full">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">İzle Kazan Görevleri</h1>
-          <p className="text-sm text-white/50 mt-1">Videoları sonuna kadar izleyerek Papel ödüllerini topla.</p>
+          <h1 className="text-2xl font-bold text-white">{t('watch_earn_title')}</h1>
+          <p className="text-sm text-white/50 mt-1">{t('watch_earn_subtitle')}</p>
         </div>
       </div>
 
       {loading ? (
-        <p className="text-sm text-white/40 text-center py-10">Yükleniyor...</p>
+        <p className="text-sm text-white/40 text-center py-10">{t('watch_earn_loading')}</p>
       ) : tasks.length === 0 ? (
-        <p className="text-sm text-white/40 text-center py-10">Şu an aktif İzle Kazan görevi yok.</p>
+        <p className="text-sm text-white/40 text-center py-10">{t('watch_earn_empty')}</p>
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5 xl:grid-cols-3">
           {tasks.map((task) => {
@@ -665,7 +685,7 @@ export default function WatchEarnSection() {
                       className="absolute right-2.5 top-2.5 z-10 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/55 px-2.5 py-1 text-[11px] font-semibold text-white/90 shadow-lg backdrop-blur-md transition hover:bg-black/70 hover:text-white"
                     >
                       <LuRotateCcw className="h-3 w-3" />
-                      Tekrar izle
+                      {t('watch_earn_replay')}
                     </button>
                   )}
 
@@ -675,13 +695,13 @@ export default function WatchEarnSection() {
                         {task.logoText}
                       </h3>
                       <div className="mt-1 flex min-w-0 items-center gap-1.5 text-[11px] font-medium text-white/70">
-                        <span className="shrink-0">Tarafından sunuluyor</span>
+                        <span className="shrink-0">{t('watch_earn_sponsored_by')}</span>
                         <LuCircleCheck className="h-3.5 w-3.5 shrink-0 text-emerald-400" />
                         <span className="truncate font-bold text-white">{task.sponsor}</span>
                       </div>
                     </div>
                     <div className="shrink-0 text-[11px] font-medium text-white/50">
-                      Bitiş: {formatEndDate(task.endsAt)}
+                      {t('watch_earn_ends', { date: formatEndDate(task.endsAt, dateLocale) })}
                     </div>
                   </div>
                 </div>
@@ -704,7 +724,7 @@ export default function WatchEarnSection() {
                   </div>
                   {isClaimed && (
                     <p className="text-xs font-medium text-white/40">
-                      Bu ödülü {formatClaimedDate(task.claimedAt)} tarihinde aldın
+                      {t('watch_earn_claimed_on', { date: formatClaimedDate(task.claimedAt, dateLocale) })}
                     </p>
                   )}
 
@@ -716,7 +736,7 @@ export default function WatchEarnSection() {
                         className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#5865F2] px-5 py-3 text-sm font-bold text-white shadow-lg shadow-[#5865F2]/20 transition-colors hover:bg-[#4752C4]"
                       >
                         <LuPlay className="h-5 w-5" />
-                        İzle
+                        {t('watch_earn_watch')}
                       </button>
                     )}
 
@@ -728,7 +748,7 @@ export default function WatchEarnSection() {
                         className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-500/20 transition-colors hover:bg-emerald-600 disabled:opacity-60"
                       >
                         <LuGift className="h-5 w-5" />
-                        {claimingId === task.id ? 'Alınıyor...' : 'Ödülü Al'}
+                        {claimingId === task.id ? t('watch_earn_claiming') : t('watch_earn_claim')}
                       </button>
                     )}
 
@@ -738,7 +758,7 @@ export default function WatchEarnSection() {
                         disabled
                         className="flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-bold text-white/40"
                       >
-                        Ödül Alındı
+                        {t('watch_earn_claimed')}
                       </button>
                     )}
                   </div>

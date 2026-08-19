@@ -6,6 +6,7 @@ export type LanguageCode =
   | 'de'
   | 'tr'
   | 'fr'
+  | 'it'
   | 'ja'
   | 'ko'
   | 'ru'
@@ -29,6 +30,7 @@ export const SUPPORTED_LANGUAGES: readonly LanguageDefinition[] = [
   { code: 'de', label: 'German', nativeLabel: 'Deutsch', country: 'Germany' },
   { code: 'tr', label: 'Turkish', nativeLabel: 'Türkçe', country: 'Türkiye' },
   { code: 'fr', label: 'French', nativeLabel: 'Français', country: 'France' },
+  { code: 'it', label: 'Italian', nativeLabel: 'Italiano', country: 'Italy' },
   { code: 'hu', label: 'Hungarian', nativeLabel: 'Magyar', country: 'Hungary' },
   { code: 'ja', label: 'Japanese', nativeLabel: '日本語', country: 'Japan' },
   { code: 'ko', label: 'Korean', nativeLabel: '한국어', country: 'South Korea' },

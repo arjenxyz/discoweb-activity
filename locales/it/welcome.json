@@ -1,1 +1,19 @@
-{}
+{
+  "welcome_title": "Benvenuto!",
+  "welcome_subtitle": "Devi creare un profilo per entrare nella piattaforma.",
+  "welcome_create_profile_button": "Crea profilo",
+  "welcome_loading": "Caricamento...",
+  "welcome_success_title": "Sei pronto!",
+  "welcome_success_subtitle": "Reindirizzamento alla dashboard...",
+  "welcome_error_no_guild": "Info server non trovate, riprova.",
+  "welcome_error_profile_create": "Creazione profilo non riuscita.",
+  "welcome_error_generic": "Si è verificato un errore, riprova.",
+  "verify_role_title": "Accesso richiesto",
+  "verify_role_subtitle": "Devi avere il ruolo di membro verificato.",
+  "verify_role_button": "Ottieni ruolo",
+  "verify_role_assigning": "Assegnazione...",
+  "verify_role_success_title": "Verificato!",
+  "verify_role_success_subtitle": "Reindirizzamento alla dashboard...",
+  "verify_role_error_assign": "Assegnazione ruolo non riuscita.",
+  "verify_role_error_generic": "Si è verificato un errore, riprova."
+}

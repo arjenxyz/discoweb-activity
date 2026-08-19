@@ -83,5 +83,6 @@
   "duyuru_vote_failed": "Vote gagal disimpan.",
   "duyuru_load_failed": "Pengumuman gagal dimuat",
   "duyuru_video_failed": "Video tidak dapat diputar — buka di Discord atau tab baru",
-  "duyuru_media_failed": "Media gagal dimuat — buka tautan"
+  "duyuru_media_failed": "Media gagal dimuat — buka tautan",
+  "duyuru_channel_title": "pengumuman"
 }

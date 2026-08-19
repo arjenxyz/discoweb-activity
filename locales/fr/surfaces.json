@@ -83,5 +83,6 @@
   "duyuru_vote_failed": "Le vote n'a pas pu être enregistré.",
   "duyuru_load_failed": "Impossible de charger les annonces",
   "duyuru_video_failed": "La vidéo n’a pas pu être lue — ouvrez-la dans Discord ou un nouvel onglet",
-  "duyuru_media_failed": "Le média n’a pas pu être chargé — ouvrir le lien"
+  "duyuru_media_failed": "Le média n’a pas pu être chargé — ouvrir le lien",
+  "duyuru_channel_title": "annonces"
 }

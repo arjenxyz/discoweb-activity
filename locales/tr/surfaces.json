@@ -83,5 +83,6 @@
   "duyuru_vote_failed": "Oy kaydedilemedi.",
   "duyuru_load_failed": "Duyurular yüklenemedi",
   "duyuru_video_failed": "Video oynatılamadı — Discord’da veya yeni sekmede aç",
-  "duyuru_media_failed": "Medya yüklenemedi — bağlantıyı aç"
+  "duyuru_media_failed": "Medya yüklenemedi — bağlantıyı aç",
+  "duyuru_channel_title": "duyurular"
 }

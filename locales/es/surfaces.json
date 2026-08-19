@@ -83,5 +83,6 @@
   "duyuru_vote_failed": "No se pudo guardar el voto.",
   "duyuru_load_failed": "No se pudieron cargar los anuncios",
   "duyuru_video_failed": "No se pudo reproducir el video — ábrelo en Discord o en una pestaña nueva",
-  "duyuru_media_failed": "No se pudo cargar el medio — abre el enlace"
+  "duyuru_media_failed": "No se pudo cargar el medio — abre el enlace",
+  "duyuru_channel_title": "anuncios"
 }

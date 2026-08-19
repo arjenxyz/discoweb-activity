@@ -348,7 +348,7 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry, onB
           type="button"
           onClick={() => setInfoOpen((v) => !v)}
           className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-black/20 text-white/70 backdrop-blur-sm transition hover:bg-black/35 hover:text-white"
-          aria-label="Bilgi paneli"
+          aria-label={t('gate_info_aria')}
         >
           <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4">
             <path fillRule="evenodd" d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm9 3a1 1 0 11-2 0 1 1 0 012 0zm-.25-6.25a.75.75 0 00-1.5 0v3.5a.75.75 0 001.5 0v-3.5z" />
@@ -367,7 +367,7 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry, onB
                   <path d="M7.22 1.63a1 1 0 011.56 0l1.22 1.46 1.86-.38a1 1 0 011.16.9l.17 1.9 1.6 1.04a1 1 0 010 1.7l-1.6 1.04-.17 1.9a1 1 0 01-1.16.9l-1.86-.38-1.22 1.46a1 1 0 01-1.56 0L6 10.21l-1.86.38a1 1 0 01-1.16-.9l-.17-1.9L1.21 6.75a1 1 0 010-1.7l1.6-1.04.17-1.9a1 1 0 011.16-.9L6 1.59l1.22-1.46z" />
                 </svg>
               }
-              label="Karşılama ekranına dön"
+              label={t('gate_back_to_splash')}
               onClick={() => {
                 setInfoOpen(false);
                 onBackToSplash();
@@ -383,7 +383,7 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry, onB
                     </svg>
                   }
                   label="Discord"
-                  sub="Destek kanalı"
+                  sub={t('support_menu_discord_sub')}
                   onClick={() => { setInfoOpen(false); openLink('https://discord.gg/vxK95JTFPw'); }}
                 />
                 <MenuItem
@@ -392,8 +392,8 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry, onB
                       <path d="M1 2.75C1 1.784 1.784 1 2.75 1h10.5c.966 0 1.75.784 1.75 1.75v7.5A1.75 1.75 0 0113.25 12H9.06l.038.48.016.2c.017.193.035.327.06.45a.75.75 0 01-.605.894l-.01.001a.75.75 0 01-.848-.532c-.067-.228-.107-.483-.131-.724L7.5 12.5H5a.75.75 0 01-.596-.295L3 10.5H2.75A1.75 1.75 0 011 8.75v-6zM2.75 2.5a.25.25 0 00-.25.25v6.25c0 .138.112.25.25.25h.5a.75.75 0 01.596.295l1.404 1.705H7.5a.75.75 0 01.75.75v.059l.013.191H13.25a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25H2.75z" />
                     </svg>
                   }
-                  label="Dokümantasyon"
-                  sub="Kılavuzlar"
+                  label={t('support_menu_docs_label')}
+                  sub={t('support_menu_docs_sub')}
                   onClick={() => { setInfoOpen(false); openLink('https://discoweb.tech/docs'); }}
                 />
               </>
@@ -462,7 +462,7 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry, onB
                   type="button"
                   onClick={() => setInfoOpen((v) => !v)}
                   className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-black/20 text-white/70 backdrop-blur-sm transition hover:bg-black/35 hover:text-white"
-                  aria-label="Bilgi paneli"
+                  aria-label={t('gate_info_aria')}
                 >
                   <svg viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4">
                     <path fillRule="evenodd" d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm9 3a1 1 0 11-2 0 1 1 0 012 0zm-.25-6.25a.75.75 0 00-1.5 0v3.5a.75.75 0 001.5 0v-3.5z" />
@@ -482,7 +482,7 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry, onB
                         <path d="M7.22 1.63a1 1 0 011.56 0l1.22 1.46 1.86-.38a1 1 0 011.16.9l.17 1.9 1.6 1.04a1 1 0 010 1.7l-1.6 1.04-.17 1.9a1 1 0 01-1.16.9l-1.86-.38-1.22 1.46a1 1 0 01-1.56 0L6 10.21l-1.86.38a1 1 0 01-1.16-.9l-.17-1.9L1.21 6.75a1 1 0 010-1.7l1.6-1.04.17-1.9a1 1 0 011.16-.9L6 1.59l1.22-1.46z" />
                       </svg>
                     }
-                    label="Karşılama ekranına dön"
+                    label={t('gate_back_to_splash')}
                     onClick={() => {
                       setInfoOpen(false);
                       onBackToSplash();
@@ -498,7 +498,7 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry, onB
                           </svg>
                         }
                         label="Discord"
-                        sub="Destek kanalı"
+                        sub={t('support_menu_discord_sub')}
                         onClick={() => { setInfoOpen(false); openLink('https://discord.gg/vxK95JTFPw'); }}
                       />
                       <MenuItem
@@ -507,8 +507,8 @@ export default function ActivityReadinessGate({ readiness, loading, onRetry, onB
                             <path d="M1 2.75C1 1.784 1.784 1 2.75 1h10.5c.966 0 1.75.784 1.75 1.75v7.5A1.75 1.75 0 0113.25 12H9.06l.038.48.016.2c.017.193.035.327.06.45a.75.75 0 01-.605.894l-.01.001a.75.75 0 01-.848-.532c-.067-.228-.107-.483-.131-.724L7.5 12.5H5a.75.75 0 01-.596-.295L3 10.5H2.75A1.75 1.75 0 011 8.75v-6zM2.75 2.5a.25.25 0 00-.25.25v6.25c0 .138.112.25.25.25h.5a.75.75 0 01.596.295l1.404 1.705H7.5a.75.75 0 01.75.75v.059l.013.191H13.25a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25H2.75z" />
                           </svg>
                         }
-                        label="Dokümantasyon"
-                        sub="Kılavuzlar"
+                        label={t('support_menu_docs_label')}
+                        sub={t('support_menu_docs_sub')}
                         onClick={() => { setInfoOpen(false); openLink('https://discoweb.tech/docs'); }}
                       />
                     </>

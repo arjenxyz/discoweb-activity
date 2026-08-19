@@ -83,5 +83,6 @@
   "duyuru_vote_failed": "Vote could not be saved.",
   "duyuru_load_failed": "Could not load announcements",
   "duyuru_video_failed": "Video couldn't play — open in Discord or a new tab",
-  "duyuru_media_failed": "Media failed to load — open the link"
+  "duyuru_media_failed": "Media failed to load — open the link",
+  "duyuru_channel_title": "announcements"
 }

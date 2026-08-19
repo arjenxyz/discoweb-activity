@@ -83,5 +83,6 @@
   "duyuru_vote_failed": "A szavazatot nem sikerült menteni.",
   "duyuru_load_failed": "A közlemények nem tölthetők be",
   "duyuru_video_failed": "A videó nem játszható le — nyisd meg Discordban vagy új lapon",
-  "duyuru_media_failed": "A média nem tölthető be — nyisd meg a hivatkozást"
+  "duyuru_media_failed": "A média nem tölthető be — nyisd meg a hivatkozást",
+  "duyuru_channel_title": "közlemények"
 }

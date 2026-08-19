@@ -83,5 +83,6 @@
   "duyuru_vote_failed": "投票を保存できませんでした。",
   "duyuru_load_failed": "お知らせを読み込めませんでした",
   "duyuru_video_failed": "動画を再生できません — Discordまたは新しいタブで開く",
-  "duyuru_media_failed": "メディアを読み込めませんでした — リンクを開く"
+  "duyuru_media_failed": "メディアを読み込めませんでした — リンクを開く",
+  "duyuru_channel_title": "お知らせ"
 }

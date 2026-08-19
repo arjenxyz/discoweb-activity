@@ -77,6 +77,13 @@ const FLAGS: Record<LanguageCode, ReactNode> = {
       <rect x="21.33" width="10.67" height="32" fill="#ED2939" />
     </>
   )),
+  it: clip('f-it', (
+    <>
+      <rect width="10.67" height="32" fill="#009246" />
+      <rect x="10.67" width="10.67" height="32" fill="#fff" />
+      <rect x="21.33" width="10.67" height="32" fill="#CE2B37" />
+    </>
+  )),
   hu: clip('f-hu', (
     <>
       <rect width="32" height="10.67" fill="#CE2939" />
@@ -120,6 +127,7 @@ export const LANGUAGE_BG_LABELS: {
   { code: 'tr', text: 'Dili ayarla', left: '58%', rotate: 8, size: 'text-base', duration: '22s', delay: '-3s' },
   { code: 'de', text: 'Sprache wählen', left: '78%', rotate: -6, size: 'text-sm', duration: '20s', delay: '-7s' },
   { code: 'fr', text: 'Choisir la langue', left: '10%', rotate: 9, size: 'text-sm', duration: '24s', delay: '-11s' },
+  { code: 'it', text: 'Imposta lingua', left: '62%', rotate: 7, size: 'text-sm', duration: '21s', delay: '-6s' },
   { code: 'es', text: 'Ajustar idioma', left: '48%', rotate: -8, size: 'text-base', duration: '19s', delay: '-5s' },
   { code: 'pt', text: 'Ajustar idioma', left: '28%', rotate: 5, size: 'text-sm', duration: '21s', delay: '-14s' },
   { code: 'ja', text: '言語を設定', left: '4%', rotate: -4, size: 'text-base', duration: '23s', delay: '-9s' },

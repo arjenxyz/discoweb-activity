@@ -52,6 +52,7 @@ const DATE_LOCALES: Record<LanguageCode, string> = {
   ja: 'ja-JP',
   ko: 'ko-KR',
   ru: 'ru-RU',
+  it: 'it-IT',
 };
 
 type SettingsSectionProps = {

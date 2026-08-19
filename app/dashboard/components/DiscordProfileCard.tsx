@@ -690,7 +690,7 @@ export default function DiscordProfileCard({
               type="button"
               onClick={() => setModalOpen(false)}
               className="absolute -right-1 -top-1 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-[#0b0d12] text-white/60 shadow-lg transition hover:text-white"
-              aria-label="Kapat"
+              aria-label={t('discord_card_role_close')}
             >
               <LuX className="h-4 w-4" />
             </button>

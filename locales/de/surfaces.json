@@ -83,5 +83,6 @@
   "duyuru_vote_failed": "Stimme konnte nicht gespeichert werden.",
   "duyuru_load_failed": "Ankündigungen konnten nicht geladen werden",
   "duyuru_video_failed": "Video konnte nicht abgespielt werden — in Discord oder neuem Tab öffnen",
-  "duyuru_media_failed": "Medien konnten nicht geladen werden — Link öffnen"
+  "duyuru_media_failed": "Medien konnten nicht geladen werden — Link öffnen",
+  "duyuru_channel_title": "Ankündigungen"
 }

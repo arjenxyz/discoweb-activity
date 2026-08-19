@@ -1,0 +1,51 @@
+{
+  "maintenance_site_title": "In manutenzione",
+  "maintenance_site_description": "La piattaforma è in manutenzione globale. Tutti i servizi della dashboard sono temporaneamente in pausa.",
+  "maintenance_site_helper": "L'accesso si riaprirà automaticamente a fine manutenzione.",
+  "maintenance_site_short": "La piattaforma è in manutenzione",
+
+  "maintenance_activity_title": "Activity in manutenzione",
+  "maintenance_activity_description": "Discord Activity è temporaneamente non disponibile durante gli aggiornamenti.",
+  "maintenance_activity_helper": "Riprova a fine manutenzione — l'app si aprirà automaticamente.",
+  "maintenance_activity_short": "Activity è in manutenzione",
+
+  "maintenance_bot_title": "Bot in manutenzione",
+  "maintenance_bot_description": "Il bot Discord è in manutenzione. Guadagni e operazioni sui ruoli sono in pausa.",
+  "maintenance_bot_helper": "Le operazioni riprenderanno automaticamente a fine manutenzione.",
+  "maintenance_bot_short": "Il bot è in manutenzione",
+
+  "maintenance_store_title": "Negozio in manutenzione",
+  "maintenance_store_description": "Il negozio è temporaneamente chiuso per manutenzione. Gli acquisti non sono disponibili.",
+  "maintenance_store_helper": "Gli acquisti torneranno disponibili a breve.",
+  "maintenance_store_short": "Il negozio è in manutenzione",
+
+  "maintenance_transactions_title": "Transazioni in manutenzione",
+  "maintenance_transactions_description": "Lo storico transazioni e le funzioni collegate sono temporaneamente non disponibili.",
+  "maintenance_transactions_helper": "Riprova più tardi.",
+  "maintenance_transactions_short": "Le transazioni sono in manutenzione",
+
+  "maintenance_tracking_title": "Monitoraggio negozio in manutenzione",
+  "maintenance_tracking_description": "Durata ruoli e viste di monitoraggio negozio sono temporaneamente non disponibili.",
+  "maintenance_tracking_helper": "Riprova più tardi.",
+  "maintenance_tracking_short": "Il monitoraggio negozio è in manutenzione",
+
+  "maintenance_promotions_title": "Promozioni in manutenzione",
+  "maintenance_promotions_description": "Il riscatto dei codici promo è temporaneamente disattivato.",
+  "maintenance_promotions_helper": "Riprova più tardi.",
+  "maintenance_promotions_short": "Le promozioni sono in manutenzione",
+
+  "maintenance_discounts_title": "Sconti in manutenzione",
+  "maintenance_discounts_description": "I codici sconto non si possono usare durante la manutenzione.",
+  "maintenance_discounts_helper": "Riprova più tardi.",
+  "maintenance_discounts_short": "I codici sconto sono in manutenzione",
+
+  "maintenance_transfers_title": "Trasferimenti in manutenzione",
+  "maintenance_transfers_description": "I trasferimenti di Papel sono temporaneamente in pausa.",
+  "maintenance_transfers_helper": "Riprova più tardi.",
+  "maintenance_transfers_short": "I trasferimenti sono in manutenzione",
+
+  "maintenance_incident_title": "Stop di emergenza",
+  "maintenance_incident_description": "Stiamo risolvendo un problema critico. Tutti i servizi sono temporaneamente in pausa.",
+  "maintenance_incident_helper": "Tieni aperta questa schermata — l'app si riaprirà automaticamente a problema risolto.",
+  "maintenance_incident_short": "La piattaforma è in modalità emergenza"
+}

@@ -83,5 +83,6 @@
   "duyuru_vote_failed": "투표를 저장하지 못했습니다.",
   "duyuru_load_failed": "공지를 불러오지 못했습니다",
   "duyuru_video_failed": "동영상을 재생할 수 없습니다 — Discord 또는 새 탭에서 열기",
-  "duyuru_media_failed": "미디어를 불러오지 못했습니다 — 링크 열기"
+  "duyuru_media_failed": "미디어를 불러오지 못했습니다 — 링크 열기",
+  "duyuru_channel_title": "공지"
 }
