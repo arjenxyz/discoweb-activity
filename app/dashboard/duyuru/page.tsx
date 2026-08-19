@@ -12,8 +12,47 @@ import {
 } from '@/lib/announcementMedia';
 import { stripEveryoneFromText } from '@/lib/announcementEveryone';
 import { LuCircleCheck } from 'react-icons/lu';
+import { useLocale, useT } from '@/contexts/LocaleContext';
+import type { LanguageCode } from '@/lib/languages';
 
-// ---------- types (unchanged) ----------
+const DATE_LOCALES: Record<LanguageCode, string> = {
+  en: 'en-US',
+  pt: 'pt-BR',
+  id: 'id-ID',
+  es: 'es-MX',
+  de: 'de-DE',
+  tr: 'tr-TR',
+  fr: 'fr-FR',
+  hu: 'hu-HU',
+  ja: 'ja-JP',
+  ko: 'ko-KR',
+  ru: 'ru-RU',
+};
+
+type Translate = (key: string, vars?: Record<string, string | number>) => string;
+
+function formatRelativeDate(value: string, locale: string, t: Translate) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+  const diffDays = Math.round((today.getTime() - target.getTime()) / (1000 * 60 * 60 * 24));
+
+  const time = date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
+
+  if (diffDays === 0) return t('duyuru_today', { time });
+  if (diffDays === 1) return t('duyuru_yesterday', { time });
+  return (
+    date.toLocaleDateString(locale, {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }) + ` ${time}`
+  );
+}
 type AnnouncementMessage = {
   id: string;
   title: string;
@@ -48,28 +87,6 @@ type AnnouncementResponse = {
 type DuyuruPageProps = {
   variant?: 'page' | 'panel';
 };
-
-// ---------- helpers ----------
-function formatRelativeDate(value: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-
-  const diffDays = Math.round((today.getTime() - target.getTime()) / (1000 * 60 * 60 * 24));
-
-  const time = date.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
-
-  if (diffDays === 0) return `Bugün saat ${time}`;
-  if (diffDays === 1) return `Dün saat ${time}`;
-  return date.toLocaleDateString('tr-TR', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }) + ` ${time}`;
-}
 
 function parseAnnouncementBody(body: string) {
   const lines = body.split('\n');
@@ -177,6 +194,9 @@ function LinkPreviewEmbed({ url }: { url: string }) {
 
 // ---------- component ----------
 export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
+  const t = useT();
+  const { locale } = useLocale();
+  const dateLocale = DATE_LOCALES[locale] ?? 'en-US';
   const [messages, setMessages] = useState<AnnouncementMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -200,9 +220,9 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
             setLastSeenAt(null);
           }
         }
-        const res = await fetchWithCreds(apiUrl('/api/duyuru?lang=tr'), { cache: 'no-store' });
+        const res = await fetchWithCreds(apiUrl(`/api/duyuru?lang=${encodeURIComponent(locale)}`), { cache: 'no-store' });
         const data = (await res.json()) as AnnouncementResponse;
-        if (!res.ok || data.error) throw new Error(data.error || 'Yüklenemedi');
+        if (!res.ok || data.error) throw new Error(data.error || t('duyuru_load_failed'));
         if (isMounted) setMessages(data.messages ?? []);
       } catch (e: unknown) {
         if (isMounted) setError(e instanceof Error ? e.message : String(e));
@@ -214,7 +234,7 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [locale, t]);
 
   useEffect(() => {
     if (!messages.length) return;
@@ -271,8 +291,8 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
       if (!res.ok || data.error) {
         const msg =
           data.error === 'already_voted'
-            ? 'Bu ankette zaten oy kullandınız. Oy değiştirilemez.'
-            : data.message || data.error || 'Oy kaydedilemedi.';
+            ? t('duyuru_vote_already')
+            : data.message || data.error || t('duyuru_vote_failed');
         throw new Error(msg);
       }
 
@@ -308,20 +328,20 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
           </svg>
-          <span className="text-sm font-medium">Mesajlar yükleniyor...</span>
+          <span className="text-sm font-medium">{t('duyuru_loading')}</span>
         </div>
       )}
 
       {!loading && error && (
         <div className="mx-4 my-4 rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-400">
-          <p className="font-semibold">Bir hata oluştu</p>
+          <p className="font-semibold">{t('duyuru_error_title')}</p>
           <p>{error}</p>
         </div>
       )}
 
       {!loading && !error && messages.length === 0 && (
         <div className="flex flex-col items-center justify-center py-20 text-center text-sm text-white/30">
-          Henüz buralar çok sessiz...
+          {t('duyuru_empty')}
         </div>
       )}
 
@@ -364,7 +384,7 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
                         rel="noopener noreferrer"
                         className="mt-2 inline-block text-xs text-amber-300/90 hover:text-amber-200 underline break-all"
                       >
-                        Video oynatılamadı — Discord&apos;da veya yeni sekmede aç
+                        {t('duyuru_video_failed')}
                       </a>
                     ) : null}
                   </div>
@@ -378,14 +398,14 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={imgSrc}
-                        alt="Medya eklentisi"
+                        alt={t('duyuru_media_alt')}
                         className="max-h-[350px] max-w-[400px] rounded-xl object-contain bg-white/[0.05]"
                         onError={() => setMediaErrors((prev) => ({ ...prev, [mediaKey]: true }))}
                       />
                     </a>
                     {mediaFailed && (
                       <a href={openUrl} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block text-xs text-white/50 hover:text-white underline break-all">
-                        Medya yüklenemedi — bağlantıyı aç
+                        {t('duyuru_media_failed')}
                       </a>
                     )}
                   </div>
@@ -396,7 +416,7 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
 
             const pollTotal = msg.poll?.options.reduce((sum, o) => sum + o.voteCount, 0) ?? 0;
             const isSystem = msg.author_name?.toLowerCase() === 'system';
-            const authorName = isSystem ? 'DiscoWeb' : (msg.author_name || 'Geliştirici');
+            const authorName = isSystem ? 'DiscoWeb' : (msg.author_name || t('duyuru_author_fallback'));
             const authorAvatar = msg.author_avatar_url || '/logo.png';
             const displayTitle = msg.title ? stripEveryoneFromText(msg.title) : '';
             const displayBody = parsed.body ? stripEveryoneFromText(parsed.body) : '';
@@ -421,7 +441,7 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
                 {newDividerIndex === index && (
                   <div className="absolute top-0 left-0 right-0 -mt-[17px] flex items-center px-4">
                     <div className="h-[1px] flex-1 bg-red-500/60" />
-                    <span className="mx-2 text-xs font-bold text-red-400">YENİ MESAJLAR</span>
+                    <span className="mx-2 text-xs font-bold text-red-400">{t('duyuru_new_messages')}</span>
                     <div className="h-[1px] flex-1 bg-red-500/60" />
                   </div>
                 )}
@@ -452,7 +472,7 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
                         </span>
                       )}
                       <span className="ml-1 text-xs font-medium text-white/35">
-                        {formatRelativeDate(msg.created_at)}
+                        {formatRelativeDate(msg.created_at, dateLocale, t)}
                       </span>
                     </div>
 
@@ -474,7 +494,7 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
                     {msg.poll && (
                       <div className="mt-3 max-w-[520px] rounded-xl border border-white/10 bg-white/[0.05] p-4">
                         <div className="mb-3 flex items-center gap-2">
-                          <span className="text-sm font-semibold text-white/50">Anket:</span>
+                          <span className="text-sm font-semibold text-white/50">{t('duyuru_poll')}</span>
                           <span className="text-[15px] font-bold text-white">{msg.poll.question}</span>
                         </div>
                         <div className="space-y-2">
@@ -517,11 +537,11 @@ export default function DuyuruPage({ variant = 'page' }: DuyuruPageProps = {}) {
                             })}
                         </div>
                         <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-white/30">
-                          <span>Toplam {pollTotal} oy kullanıldı</span>
+                          <span>{t('duyuru_votes_total', { count: pollTotal })}</span>
                           {msg.poll.userVoteOptionId ? (
-                            <span className="text-white/45">Oy kullandın — değiştirilemez</span>
+                            <span className="text-white/45">{t('duyuru_voted_locked')}</span>
                           ) : (
-                            <span className="text-white/35">Her kullanıcı yalnızca bir kez oy kullanabilir</span>
+                            <span className="text-white/35">{t('duyuru_vote_once')}</span>
                           )}
                         </div>
                       </div>
