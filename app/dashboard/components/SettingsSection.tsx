@@ -36,7 +36,23 @@ import {
 import fetchWithCreds from '@/lib/fetchWithCreds';
 import { closeDiscordActivity, isDiscordActivityClient } from '@/lib/discordSdk';
 import { playUiClickPreview } from '@/lib/uiClickSound';
+import { useLocale, useT } from '@/contexts/LocaleContext';
+import type { LanguageCode } from '@/lib/languages';
 import type { MemberProfile } from '../types';
+
+const DATE_LOCALES: Record<LanguageCode, string> = {
+  en: 'en-US',
+  pt: 'pt-BR',
+  id: 'id-ID',
+  es: 'es-MX',
+  de: 'de-DE',
+  tr: 'tr-TR',
+  fr: 'fr-FR',
+  hu: 'hu-HU',
+  ja: 'ja-JP',
+  ko: 'ko-KR',
+  ru: 'ru-RU',
+};
 
 type SettingsSectionProps = {
   onOpenPromotionsModal: () => void;
@@ -194,8 +210,11 @@ export default function SettingsSection({
   isActivityEmbed = false,
   onBack,
 }: SettingsSectionProps) {
+  const t = useT();
+  const { locale } = useLocale();
+  const dateLocale = DATE_LOCALES[locale] ?? 'en-US';
   const displayName =
-    profile?.displayName || profile?.nickname || profile?.username || 'Üye';
+    profile?.displayName || profile?.nickname || profile?.username || t('settings_ui_member_fallback');
 
   const formatRoleColor = (color: number) =>
     color ? `#${color.toString(16).padStart(6, '0')}` : '#99aab5';
@@ -216,7 +235,7 @@ export default function SettingsSection({
     if (!value) return null;
     const date = value instanceof Date ? value : new Date(value);
     if (Number.isNaN(date.getTime())) return null;
-    return date.toLocaleDateString('tr-TR', {
+    return date.toLocaleDateString(dateLocale, {
       day: 'numeric',
       month: 'long',
       year: 'numeric',
@@ -227,7 +246,7 @@ export default function SettingsSection({
     if (!value) return null;
     const date = value instanceof Date ? value : new Date(value);
     if (Number.isNaN(date.getTime())) return null;
-    return date.toLocaleString('tr-TR', {
+    return date.toLocaleString(dateLocale, {
       day: 'numeric',
       month: 'short',
       year: 'numeric',
@@ -249,33 +268,33 @@ export default function SettingsSection({
       id: 'identify',
       title: 'identify',
       status: 'granted' as const,
-      description: 'Discord kullanıcı kimliğin, kullanıcı adın ve avatarın.',
-      uses: 'Oturum açma, profil gösterimi, veri talebi doğrulama',
+      description: t('settings_ui_oauth_identify_desc'),
+      uses: t('settings_ui_oauth_identify_uses'),
     },
     {
       id: 'guilds',
       title: 'guilds',
       status: 'granted' as const,
-      description: 'Katıldığın sunucuların listesi (isim, ikon, üyelik).',
-      uses: 'Sunucu seçimi, aktif bağlantı sayısı, sunucu bazlı ekonomi',
+      description: t('settings_ui_oauth_guilds_desc'),
+      uses: t('settings_ui_oauth_guilds_uses'),
     },
     {
       id: 'rpc.activities.write',
       title: 'rpc.activities.write',
       status: isActivityEmbed ? ('granted' as const) : ('optional' as const),
-      description: 'Discord Activity oturumunu başlatma / yazma yetkisi.',
-      uses: 'Activity içinde Discord istemcisiyle entegre çalışma',
+      description: t('settings_ui_oauth_rpc_desc'),
+      uses: t('settings_ui_oauth_rpc_uses'),
     },
     {
       id: 'guilds.members.read',
       title: 'guilds.members.read',
       status: 'web_only' as const,
-      description: 'Web girişinde üye bilgilerini okuma (Activity SDK’da yok).',
-      uses: 'Tarayıcı OAuth akışında ek üye meta verisi',
+      description: t('settings_ui_oauth_members_desc'),
+      uses: t('settings_ui_oauth_members_uses'),
     },
   ];
 
-  const activeGuildName = profile?.guildName || serverName || 'Mevcut sunucu';
+  const activeGuildName = profile?.guildName || serverName || t('settings_ui_current_server');
   const activeGuildIcon = profile?.guildIcon || serverIconUrl || null;
   const accent =
     profile?.bannerColor ||
@@ -418,12 +437,12 @@ export default function SettingsSection({
 
       const result = await response.json().catch(() => ({}));
       if (!response.ok || result.error) {
-        setDeleteError('Veri silme işlemi sırasında bir hata oluştu. Lütfen tekrar deneyin.');
+        setDeleteError(t('settings_ui_delete_error'));
         return;
       }
 
       setDeleteMessage(
-        deleteScope === 'all' ? 'Tüm verileriniz silindi.' : 'Sunucu verileriniz silindi. Sayfa yenileniyor...',
+        deleteScope === 'all' ? t('settings_ui_delete_success_all') : t('settings_ui_delete_success_current'),
       );
       setDeleteModalOpen(false);
 
@@ -457,15 +476,13 @@ export default function SettingsSection({
       const result = await response.json().catch(() => ({}));
       if (!response.ok || result.error) {
         if (result.error === 'dm_closed') {
-          setRequestError(
-            'Veriler gönderilemedi. Lütfen Discord hesabınızda "Sunucu üyelerinden doğrudan mesaja izin ver" ayarınızın açık olduğundan emin olun.',
-          );
+          setRequestError(t('settings_ui_request_error_dm'));
         } else {
-          setRequestError('Veri talep işlemi sırasında bir hata oluştu. Lütfen tekrar deneyin.');
+          setRequestError(t('settings_ui_request_error'));
         }
         return;
       }
-      setRequestMessage('Kişisel verileriniz başarıyla derlendi ve size Özel Mesaj (DM) olarak gönderildi!');
+      setRequestMessage(t('settings_ui_request_success'));
       setRequestModalOpen(false);
     } finally {
       setRequestLoading(false);
@@ -474,51 +491,51 @@ export default function SettingsSection({
 
   const deleteOptionConfig = {
     all: {
-      title: 'Tüm verileri sil',
-      description: 'Platformdaki tüm Activity kayıtların kalıcı olarak silinir.',
-      button: 'Kalıcı olarak sil',
+      title: t('settings_ui_delete_all_title'),
+      description: t('settings_ui_delete_all_desc'),
+      button: t('settings_ui_delete_all_button'),
       tone: 'bg-rose-600 hover:bg-rose-500 shadow-[0_0_24px_rgba(244,63,94,0.25)]',
       badge: 'border-rose-500/30 bg-rose-500/10 text-rose-300',
       iconTone: 'text-rose-400',
-      severity: 'Kritik',
+      severity: t('settings_ui_delete_all_severity'),
       severityTone: 'border-rose-500/40 bg-rose-500/15 text-rose-300',
       ref: 'DEL-ALL',
-      scopeLabel: 'Tüm sunucular',
+      scopeLabel: t('settings_ui_delete_all_scope'),
       items: [
-        'Profil, cüzdan ve ekonomi bakiyeleri',
-        'Portföy, istatistik ve Activity kayıtları',
-        'Sunucu bağlantıları ve yerel tercihler',
+        t('settings_ui_delete_all_item1'),
+        t('settings_ui_delete_all_item2'),
+        t('settings_ui_delete_all_item3'),
       ],
       kept: [] as string[],
     },
     current: {
-      title: 'Bu sunucu verilerini sil',
-      description: 'Yalnızca seçili sunucuya ait Activity kayıtları temizlenir; diğer sunucular etkilenmez.',
-      button: 'Bu sunucuyu temizle',
+      title: t('settings_ui_delete_current_title'),
+      description: t('settings_ui_delete_current_desc'),
+      button: t('settings_ui_delete_current_button'),
       tone: 'bg-amber-600 hover:bg-amber-500 shadow-[0_0_24px_rgba(245,158,11,0.22)]',
       badge: 'border-amber-500/30 bg-amber-500/10 text-amber-300',
       iconTone: 'text-amber-400',
-      severity: 'Sınırlı silme',
+      severity: t('settings_ui_delete_current_severity'),
       severityTone: 'border-amber-500/40 bg-amber-500/15 text-amber-300',
       ref: 'DEL-SRV',
-      scopeLabel: 'Yalnızca mevcut sunucu',
+      scopeLabel: t('settings_ui_delete_current_scope'),
       items: [
-        'Bu sunucudaki ekonomi ve istatistik kayıtları',
-        'Sunucuya özel Activity geçmişi',
-        'Sunucu bağlı portföy / ilerleme verileri',
+        t('settings_ui_delete_current_item1'),
+        t('settings_ui_delete_current_item2'),
+        t('settings_ui_delete_current_item3'),
       ],
       kept: [
-        'Diğer sunuculardaki kayıtların',
-        'Discord hesabın ve genel oturumun',
-        'Platform genelindeki profil kimliğin',
+        t('settings_ui_delete_current_kept1'),
+        t('settings_ui_delete_current_kept2'),
+        t('settings_ui_delete_current_kept3'),
       ],
     },
   };
 
   const navItems = [
-    { id: 'general' as const, label: 'Genel', icon: LuSlidersHorizontal },
-    { id: 'sound' as const, label: 'Ses', icon: LuVolume2 },
-    { id: 'account' as const, label: 'Hesap', icon: LuUser },
+    { id: 'general' as const, label: t('settings_ui_nav_general'), icon: LuSlidersHorizontal },
+    { id: 'sound' as const, label: t('settings_ui_nav_sound'), icon: LuVolume2 },
+    { id: 'account' as const, label: t('settings_ui_nav_account'), icon: LuUser },
   ];
 
   const systemDialog = ({
@@ -560,7 +577,7 @@ export default function SettingsSection({
             type="button"
             onClick={onClose}
             className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-lg border border-white/[0.06] bg-white/[0.03] text-white/40 transition hover:bg-white/[0.06] hover:text-white"
-            aria-label="Kapat"
+            aria-label={t('settings_ui_close')}
           >
             <LuX className="h-4 w-4" />
           </button>
@@ -579,7 +596,7 @@ export default function SettingsSection({
             <div className="border-b border-white/[0.07] px-5 pb-4 pt-5 pr-12">
               <div className="mb-3 flex items-center justify-between gap-3">
                 <span className="rounded-md border border-[#5865F2]/35 bg-[#5865F2]/12 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.14em] text-[#a5b4fc]">
-                  Resmi talep
+                  {t('settings_ui_request_badge')}
                 </span>
                 <span className="font-mono text-[10px] text-white/25">REF · GDPR-DM</span>
               </div>
@@ -589,10 +606,10 @@ export default function SettingsSection({
                 </div>
                 <div className="min-w-0">
                   <h2 className="text-base font-bold tracking-tight text-white sm:text-lg">
-                    Kişisel veri dosyası talebi
+                    {t('settings_ui_request_title')}
                   </h2>
                   <p className="mt-1 text-xs leading-relaxed text-white/45 sm:text-sm">
-                    DiscoWeb, hesap verilerini JSON formatında Discord DM üzerinden iletir.
+                    {t('settings_ui_request_subtitle')}
                   </p>
                 </div>
               </div>
@@ -600,12 +617,12 @@ export default function SettingsSection({
 
             <div className="space-y-3.5 px-5 py-4">
               <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-3.5">
-                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/30">Paket içeriği</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/30">{t('settings_ui_request_package')}</p>
                 <ul className="mt-2.5 space-y-2">
                   {[
-                    'Profil ve kimlik özeti',
-                    'Ekonomi / cüzdan kayıtları',
-                    'Activity kullanım geçmişi',
+                    t('settings_ui_request_item1'),
+                    t('settings_ui_request_item2'),
+                    t('settings_ui_request_item3'),
                   ].map((item) => (
                     <li key={item} className="flex items-start gap-2 text-xs text-white/65">
                       <LuCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#5865F2]" />
@@ -619,8 +636,7 @@ export default function SettingsSection({
                 <div className="flex gap-2.5">
                   <LuTriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
                   <p className="text-xs leading-relaxed text-amber-100/85">
-                    Dosya cihazına ulaştıktan sonra güvenliği ve paylaşımı tamamen sana aittir.
-                    Üçüncü şahıslarla paylaşımından DiscoWeb sorumlu değildir.
+                    {t('settings_ui_request_warning')}
                   </p>
                 </div>
               </div>
@@ -633,7 +649,7 @@ export default function SettingsSection({
                   className="mt-0.5 h-4 w-4 rounded border-white/20 bg-transparent accent-[#5865F2]"
                 />
                 <span className="text-xs leading-relaxed text-white/60">
-                  Sorumluluk bilgisini okudum ve veri dosyasının DM ile gönderilmesini onaylıyorum.
+                  {t('settings_ui_request_ack')}
                 </span>
               </label>
 
@@ -651,7 +667,7 @@ export default function SettingsSection({
                 disabled={requestLoading}
                 className="rounded-xl border border-white/10 px-4 py-2.5 text-sm font-semibold text-white/55 transition hover:bg-white/[0.05] hover:text-white disabled:opacity-50"
               >
-                İptal
+                {t('settings_ui_cancel')}
               </button>
               <button
                 type="button"
@@ -659,7 +675,7 @@ export default function SettingsSection({
                 disabled={requestLoading || !requestAcknowledged}
                 className="rounded-xl bg-[#5865F2] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#4752C4] disabled:cursor-not-allowed disabled:opacity-45"
               >
-                {requestLoading ? 'Gönderiliyor...' : 'Talebi onayla ve gönder'}
+                {requestLoading ? t('settings_ui_request_sending') : t('settings_ui_request_confirm')}
               </button>
             </div>
           </>
@@ -693,12 +709,14 @@ export default function SettingsSection({
                   </div>
                   <div className="min-w-0">
                     <h2 className="text-base font-bold tracking-tight text-white sm:text-lg">
-                      {deleteScope === 'current' ? 'Sunucu verisi temizleme' : 'Tam hesap veri silme'}
+                      {deleteScope === 'current'
+                        ? t('settings_ui_delete_modal_title_current')
+                        : t('settings_ui_delete_modal_title_all')}
                     </h2>
                     <p className="mt-1 text-xs leading-relaxed text-white/45 sm:text-sm">
                       {deleteScope === 'current'
-                        ? 'Kapsam sınırlıdır. Onay sonrası yalnızca bu sunucuya ait Activity kayıtları kaldırılır.'
-                        : 'Bu işlem geri alınamaz. Onay sonrası tüm platform kayıtların silinir ve oturum kapanır.'}
+                        ? t('settings_ui_delete_modal_body_current')
+                        : t('settings_ui_delete_modal_body_all')}
                     </p>
                   </div>
                 </div>
@@ -713,13 +731,13 @@ export default function SettingsSection({
                       </div>
                       <div className="min-w-0">
                         <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-amber-200/60">
-                          Hedef sunucu
+                          {t('settings_ui_target_server')}
                         </p>
                         <p className="mt-0.5 truncate text-sm font-bold text-white">
-                          {serverName?.trim() || 'Mevcut sunucu'}
+                          {serverName?.trim() || t('settings_ui_current_server')}
                         </p>
                         <p className="mt-0.5 text-[11px] text-white/40">
-                          @{profile?.username ?? '—'} · sınırlı kapsam
+                          {t('settings_ui_limited_scope', { username: profile?.username ?? '—' })}
                         </p>
                       </div>
                     </div>
@@ -727,13 +745,13 @@ export default function SettingsSection({
                 ) : (
                   <div className="grid grid-cols-2 gap-2">
                     <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] px-3 py-2.5">
-                      <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-white/30">Kapsam</p>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-white/30">{t('settings_ui_scope')}</p>
                       <p className="mt-1 text-xs font-semibold text-white/80">
                         {deleteOptionConfig[deleteScope].scopeLabel}
                       </p>
                     </div>
                     <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] px-3 py-2.5">
-                      <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-white/30">Hesap</p>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-white/30">{t('settings_ui_account')}</p>
                       <p className="mt-1 truncate text-xs font-semibold text-white/80">
                         @{profile?.username ?? '—'}
                       </p>
@@ -743,7 +761,7 @@ export default function SettingsSection({
 
                 <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-3.5">
                   <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/30">
-                    Silinecek kayıtlar
+                    {t('settings_ui_records_to_delete')}
                   </p>
                   <ul className="mt-2.5 space-y-2">
                     {deleteOptionConfig[deleteScope].items.map((item) => (
@@ -763,7 +781,7 @@ export default function SettingsSection({
                   <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/[0.06] p-3.5">
                     <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-300/80">
                       <LuShieldCheck className="h-3.5 w-3.5" />
-                      Korunacaklar
+                      {t('settings_ui_kept')}
                     </p>
                     <ul className="mt-2.5 space-y-2">
                       {deleteOptionConfig.current.kept.map((item) => (
@@ -794,8 +812,7 @@ export default function SettingsSection({
                         deleteScope === 'all' ? 'text-rose-100/85' : 'text-amber-100/85'
                       }`}
                     >
-                      {deleteOptionConfig[deleteScope].description} Yedeklere erişilemez; onay anında işlem
-                      başlar.
+                      {deleteOptionConfig[deleteScope].description} {t('settings_ui_delete_no_backups')}
                     </p>
                   </div>
                 </div>
@@ -811,8 +828,8 @@ export default function SettingsSection({
                   />
                   <span className="text-xs leading-relaxed text-white/60">
                     {deleteScope === 'current'
-                      ? 'Yalnızca bu sunucuya ait verilerin silineceğini anladım ve onaylıyorum.'
-                      : 'Bu işlemin kalıcı ve geri alınamaz olduğunu anladım; silme işlemini onaylıyorum.'}
+                      ? t('settings_ui_delete_ack_current')
+                      : t('settings_ui_delete_ack_all')}
                   </span>
                 </label>
 
@@ -830,7 +847,7 @@ export default function SettingsSection({
                   disabled={deleteLoading}
                   className="rounded-xl border border-white/10 px-4 py-2.5 text-sm font-semibold text-white/55 transition hover:bg-white/[0.05] hover:text-white disabled:opacity-50"
                 >
-                  İptal
+                  {t('settings_ui_cancel')}
                 </button>
                 <button
                   type="button"
@@ -838,7 +855,7 @@ export default function SettingsSection({
                   disabled={deleteLoading || !deleteAcknowledged}
                   className={`rounded-xl px-4 py-2.5 text-sm font-bold text-white transition disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none ${deleteOptionConfig[deleteScope].tone}`}
                 >
-                  {deleteLoading ? 'İşleniyor...' : deleteOptionConfig[deleteScope].button}
+                  {deleteLoading ? t('settings_ui_processing') : deleteOptionConfig[deleteScope].button}
                 </button>
               </div>
             </>
@@ -853,9 +870,9 @@ export default function SettingsSection({
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-emerald-500/30 bg-emerald-500/10">
             <LuCheck className="h-7 w-7 text-emerald-400" />
           </div>
-          <h2 className="text-2xl font-bold tracking-tight">Verilerin silindi</h2>
+          <h2 className="text-2xl font-bold tracking-tight">{t('settings_ui_deleted_title')}</h2>
           <p className="mt-3 text-sm leading-relaxed text-white/55">
-            DiscoWeb Activity verilerin kalıcı olarak kaldırıldı. Bu pencereyi kapatabilirsin.
+            {t('settings_ui_deleted_body')}
           </p>
         </div>
       </div>
@@ -863,9 +880,9 @@ export default function SettingsSection({
   }
 
   const presets: { id: Preset; label: string; icon: typeof LuZap; hint: string }[] = [
-    { id: 'performance', label: 'Performans', icon: LuZap, hint: 'Az animasyon, düşük ses' },
-    { id: 'balanced', label: 'Dengeli', icon: LuSparkles, hint: 'Önerilen varsayılan' },
-    { id: 'quality', label: 'Kalite', icon: LuEye, hint: 'Tam efekt, yüksek ses' },
+    { id: 'performance', label: t('settings_ui_preset_performance'), icon: LuZap, hint: t('settings_ui_preset_performance_hint') },
+    { id: 'balanced', label: t('settings_ui_preset_balanced'), icon: LuSparkles, hint: t('settings_ui_preset_balanced_hint') },
+    { id: 'quality', label: t('settings_ui_preset_quality'), icon: LuEye, hint: t('settings_ui_preset_quality_hint') },
   ];
 
   return (
@@ -882,10 +899,10 @@ export default function SettingsSection({
               className="group mb-2 inline-flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-white/35 transition hover:text-white"
             >
               <LuArrowLeft className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-0.5" />
-              Geri
+              {t('settings_ui_back')}
             </button>
           )}
-          <h1 className="text-xl font-bold tracking-tight text-white sm:text-2xl">Ayarlar</h1>
+          <h1 className="text-xl font-bold tracking-tight text-white sm:text-2xl">{t('settings_ui_title')}</h1>
         </div>
 
         <div className="flex items-center gap-2.5 rounded-xl border border-white/[0.08] bg-white/[0.03] px-2.5 py-1.5">
@@ -931,7 +948,7 @@ export default function SettingsSection({
         <div className="min-w-0 space-y-3">
           {activeTab === 'general' && (
             <div className="space-y-3 animate-in fade-in duration-200">
-              <Panel title="Önerilen profil">
+              <Panel title={t('settings_ui_panel_presets')}>
                 <div className="grid gap-2 p-3 sm:grid-cols-3">
                   {presets.map((preset) => {
                     const Icon = preset.icon;
@@ -953,11 +970,11 @@ export default function SettingsSection({
                 </div>
               </Panel>
 
-              <Panel title="Arayüz">
+              <Panel title={t('settings_ui_panel_interface')}>
                 <SettingRow
                   icon={LuSparkles}
-                  title="Animasyonlar"
-                  description="Geçiş ve vurgu animasyonlarını kapatır"
+                  title={t('settings_ui_animations')}
+                  description={t('settings_ui_animations_desc')}
                 >
                   <Toggle
                     checked={!draftReduceMotion}
@@ -966,8 +983,8 @@ export default function SettingsSection({
                 </SettingRow>
                 <SettingRow
                   icon={LuSlidersHorizontal}
-                  title="Yoğun görünüm"
-                  description="Daha sıkı boşluklarla kompakt panel"
+                  title={t('settings_ui_density')}
+                  description={t('settings_ui_density_desc')}
                 >
                   <div className="flex rounded-lg border border-white/10 p-0.5">
                     {(['normal', 'compact'] as const).map((mode) => (
@@ -981,15 +998,15 @@ export default function SettingsSection({
                             : 'text-white/45 hover:text-white'
                         }`}
                       >
-                        {mode === 'normal' ? 'Normal' : 'Kompakt'}
+                        {mode === 'normal' ? t('settings_ui_density_normal') : t('settings_ui_density_compact')}
                       </button>
                     ))}
                   </div>
                 </SettingRow>
                 <SettingRow
                   icon={LuPause}
-                  title="Sekme gizlenince müziği duraklat"
-                  description="Activity arka plandayken müziği otomatik kes"
+                  title={t('settings_ui_pause_hidden')}
+                  description={t('settings_ui_pause_hidden_desc')}
                 >
                   <Toggle
                     checked={draftPauseHidden}
@@ -1002,18 +1019,18 @@ export default function SettingsSection({
 
           {activeTab === 'sound' && (
             <div className="space-y-3 animate-in fade-in duration-200">
-              <Panel title="Müzik">
+              <Panel title={t('settings_ui_panel_music')}>
                 <SettingRow
                   icon={draftMusicEnabled ? LuVolume2 : LuVolumeX}
-                  title="Arka plan müziği"
-                  description="Dashboard açılışında müzik çalsın"
+                  title={t('settings_ui_music')}
+                  description={t('settings_ui_music_desc')}
                 >
                   <Toggle
                     checked={draftMusicEnabled}
                     onChange={() => setDraftMusicEnabled((v) => !v)}
                   />
                 </SettingRow>
-                <SettingRow title="Müzik seviyesi" description="0–100">
+                <SettingRow title={t('settings_ui_music_volume')} description={t('settings_ui_volume_range')}>
                   <Slider
                     value={draftMusicVolume}
                     onChange={setDraftMusicVolume}
@@ -1022,11 +1039,11 @@ export default function SettingsSection({
                 </SettingRow>
               </Panel>
 
-              <Panel title="Arayüz sesleri">
+              <Panel title={t('settings_ui_panel_sfx')}>
                 <SettingRow
                   icon={LuVolume2}
-                  title="Efekt seviyesi"
-                  description="Buton ve menü tıklama sesi"
+                  title={t('settings_ui_sfx_volume')}
+                  description={t('settings_ui_sfx_volume_desc')}
                 >
                   <Slider
                     value={draftSfxVolume}
@@ -1036,7 +1053,7 @@ export default function SettingsSection({
                     }}
                   />
                 </SettingRow>
-                <SettingRow title="Sessiz mod" description="Müzik ve efektleri tek tuşta kapat">
+                <SettingRow title={t('settings_ui_mute_mode')} description={t('settings_ui_mute_mode_desc')}>
                   <button
                     type="button"
                     onClick={() => {
@@ -1046,7 +1063,7 @@ export default function SettingsSection({
                     }}
                     className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-[11px] font-semibold text-white/70 transition hover:bg-white/[0.06] hover:text-white"
                   >
-                    Hepsini sustur
+                    {t('settings_ui_mute_all')}
                   </button>
                 </SettingRow>
               </Panel>
@@ -1104,13 +1121,13 @@ export default function SettingsSection({
                               {profile?.has_tag && (
                                 <span className="inline-flex items-center gap-1 rounded-md border border-sky-500/30 bg-sky-500/10 px-1.5 py-0.5 text-[10px] font-bold text-sky-300">
                                   <LuTag className="h-3 w-3" />
-                                  Tag
+                                  {t('settings_ui_badge_tag')}
                                 </span>
                               )}
                               {profile?.is_booster && (
                                 <span className="inline-flex items-center gap-1 rounded-md border border-fuchsia-500/30 bg-fuchsia-500/10 px-1.5 py-0.5 text-[10px] font-bold text-fuchsia-300">
                                   <LuCrown className="h-3 w-3" />
-                                  Booster
+                                  {t('settings_ui_badge_booster')}
                                 </span>
                               )}
                             </div>
@@ -1120,29 +1137,29 @@ export default function SettingsSection({
                         <div className="flex flex-wrap gap-2">
                           <div className="rounded-lg border border-white/[0.07] bg-white/[0.03] px-3 py-1.5 text-center">
                             <p className="text-base font-bold tabular-nums text-white">{serverCount ?? 0}</p>
-                            <p className="text-[10px] text-white/35">bağlı sunucu</p>
+                            <p className="text-[10px] text-white/35">{t('settings_ui_connected_servers')}</p>
                           </div>
                           <div className="rounded-lg border border-white/[0.07] bg-white/[0.03] px-3 py-1.5 text-center">
                             <p className="text-base font-bold tabular-nums text-white">
                               {profile?.roles?.length ?? 0}
                             </p>
-                            <p className="text-[10px] text-white/35">rol</p>
+                            <p className="text-[10px] text-white/35">{t('settings_ui_roles_count')}</p>
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  <Panel title="Kimlik">
+                  <Panel title={t('settings_ui_panel_identity')}>
                     <div className="grid gap-px bg-white/[0.04] sm:grid-cols-2">
                       {[
-                        { label: 'Görünür isim', value: displayName },
-                        { label: 'Kullanıcı adı', value: profile?.username ? `@${profile.username}` : '—' },
-                        { label: 'Sunucu takma adı', value: profile?.nickname || 'Yok' },
+                        { label: t('settings_ui_display_name'), value: displayName },
+                        { label: t('settings_ui_username'), value: profile?.username ? `@${profile.username}` : '—' },
+                        { label: t('settings_ui_nickname'), value: profile?.nickname || t('settings_ui_nickname_none') },
                         {
-                          label: 'Discord hesabı',
+                          label: t('settings_ui_discord_account'),
                           value: formatDate(discordCreatedAt) || '—',
-                          hint: 'Snowflake’ten hesaplandı',
+                          hint: t('settings_ui_snowflake_hint'),
                         },
                       ].map((row) => (
                         <div key={row.label} className="bg-[#12151e] px-3.5 py-3 sm:px-4">
@@ -1162,7 +1179,7 @@ export default function SettingsSection({
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-white/30">
-                          Discord kullanıcı ID
+                          {t('settings_ui_discord_user_id')}
                         </p>
                         <p className="mt-0.5 truncate font-mono text-xs text-white/75">
                           {profile?.userId ?? '—'}
@@ -1175,13 +1192,13 @@ export default function SettingsSection({
                           className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-2.5 py-1.5 text-[11px] font-semibold text-white/55 transition hover:bg-white/[0.05] hover:text-white"
                         >
                           <LuCopy className="h-3.5 w-3.5" />
-                          {copiedField === 'id' ? 'Kopyalandı' : 'Kopyala'}
+                          {copiedField === 'id' ? t('settings_ui_copied') : t('settings_ui_copy')}
                         </button>
                       ) : null}
                     </div>
                   </Panel>
 
-                  <Panel title="Aktif sunucu">
+                  <Panel title={t('settings_ui_panel_active_server')}>
                     <div className="flex items-center gap-3 px-3.5 py-3.5 sm:px-4">
                       <div className="relative h-11 w-11 overflow-hidden rounded-xl border border-white/10 bg-white/5">
                         {activeGuildIcon ? (
@@ -1196,18 +1213,18 @@ export default function SettingsSection({
                         <p className="truncate text-sm font-bold text-white">{activeGuildName}</p>
                         <p className="mt-0.5 text-[11px] text-white/40">
                           {formatDate(profile?.joinedAt)
-                            ? `Katılım: ${formatDate(profile?.joinedAt)}`
-                            : 'Katılım tarihi bilinmiyor'}
+                            ? t('settings_ui_joined', { date: formatDate(profile?.joinedAt) ?? '' })
+                            : t('settings_ui_joined_unknown')}
                         </p>
                       </div>
                       <span className="rounded-md border border-emerald-500/25 bg-emerald-500/10 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-300">
-                        Aktif
+                        {t('settings_ui_active')}
                       </span>
                     </div>
                     <SettingRow
                       icon={LuCalendar}
-                      title="Sunucuya katılma"
-                      description={formatDateTime(profile?.joinedAt) || 'Discord API’den alınamadı'}
+                      title={t('settings_ui_server_join')}
+                      description={formatDateTime(profile?.joinedAt) || t('settings_ui_join_unavailable')}
                     >
                       <span className="text-xs font-semibold text-white/50">
                         {formatDate(profile?.joinedAt) || '—'}
@@ -1215,8 +1232,8 @@ export default function SettingsSection({
                     </SettingRow>
                     <SettingRow
                       icon={LuLink2}
-                      title="Bağlı Activity sunucuları"
-                      description="Oturumunda kayıtlı sunucu bağlantısı sayısı"
+                      title={t('settings_ui_linked_servers')}
+                      description={t('settings_ui_linked_servers_desc')}
                     >
                       <span className="text-xs font-semibold tabular-nums text-white/70">
                         {serverCount ?? 0}
@@ -1224,7 +1241,7 @@ export default function SettingsSection({
                     </SettingRow>
                   </Panel>
 
-                  <Panel title="Roller">
+                  <Panel title={t('settings_ui_panel_roles')}>
                     <div className="px-3.5 py-3 sm:px-4">
                       {profile?.roles?.length ? (
                         <div className="flex flex-wrap gap-1.5">
@@ -1251,47 +1268,47 @@ export default function SettingsSection({
                           })}
                         </div>
                       ) : (
-                        <p className="text-xs text-white/40">Bu sunucuda atanmış rol yok.</p>
+                        <p className="text-xs text-white/40">{t('settings_ui_no_roles')}</p>
                       )}
                     </div>
                   </Panel>
 
                   {(profile?.has_tag || profile?.is_booster || profile?.about) && (
-                    <Panel title="Üyelik durumu">
+                    <Panel title={t('settings_ui_panel_membership')}>
                       {profile?.has_tag && (
                         <SettingRow
                           icon={LuTag}
-                          title="Sunucu etiketi"
+                          title={t('settings_ui_server_tag')}
                           description={
                             formatDateTime(profile.tag_granted_at)
-                              ? `Veriliş: ${formatDateTime(profile.tag_granted_at)}`
-                              : 'Tag aktif'
+                              ? t('settings_ui_granted', { date: formatDateTime(profile.tag_granted_at) ?? '' })
+                              : t('settings_ui_tag_active')
                           }
                         >
                           <span className="rounded-md border border-sky-500/30 bg-sky-500/10 px-2 py-1 text-[10px] font-bold text-sky-300">
-                            Aktif
+                            {t('settings_ui_active')}
                           </span>
                         </SettingRow>
                       )}
                       {profile?.is_booster && (
                         <SettingRow
                           icon={LuCrown}
-                          title="Sunucu boost"
+                          title={t('settings_ui_server_boost')}
                           description={
                             formatDateTime(profile.booster_since)
-                              ? `Başlangıç: ${formatDateTime(profile.booster_since)}`
-                              : 'Booster aktif'
+                              ? t('settings_ui_boost_started', { date: formatDateTime(profile.booster_since) ?? '' })
+                              : t('settings_ui_booster_active')
                           }
                         >
                           <span className="rounded-md border border-fuchsia-500/30 bg-fuchsia-500/10 px-2 py-1 text-[10px] font-bold text-fuchsia-300">
-                            Booster
+                            {t('settings_ui_badge_booster')}
                           </span>
                         </SettingRow>
                       )}
                       {profile?.about ? (
                         <div className="border-t border-white/[0.05] px-3.5 py-3 sm:px-4">
                           <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-white/30">
-                            Hakkında
+                            {t('settings_ui_about')}
                           </p>
                           <p className="mt-1.5 whitespace-pre-wrap text-xs leading-relaxed text-white/65">
                             {profile.about}
@@ -1301,22 +1318,21 @@ export default function SettingsSection({
                     </Panel>
                   )}
 
-                  <Panel title="OAuth2 yetkileri">
+                  <Panel title={t('settings_ui_panel_oauth')}>
                     <div className="border-b border-white/[0.06] px-3.5 py-3 sm:px-4">
                       <div className="flex items-start gap-3">
                         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[#5865F2]/30 bg-[#5865F2]/10 text-[#5865F2]">
                           <LuKeyRound className="h-4 w-4" />
                         </div>
                         <div className="min-w-0">
-                          <p className="text-sm font-semibold text-white">Discord OAuth2 kapsamları</p>
+                          <p className="text-sm font-semibold text-white">{t('settings_ui_oauth_title')}</p>
                           <p className="mt-0.5 text-[11px] leading-relaxed text-white/40">
-                            Bu oturumda Activity’nin talep ettiği / kullanabildiği yetkiler. Ham access token
-                            güvenlik nedeniyle gösterilmez.
+                            {t('settings_ui_oauth_desc')}
                           </p>
                           <p className="mt-1.5 text-[10px] font-medium text-white/30">
-                            Oturum tipi:{' '}
+                            {t('settings_ui_session_type')}{' '}
                             <span className="text-white/55">
-                              {isActivityEmbed ? 'Discord Activity (Embedded SDK)' : 'Tarayıcı / yerel geliştirme'}
+                              {isActivityEmbed ? t('settings_ui_session_activity') : t('settings_ui_session_browser')}
                             </span>
                           </p>
                         </div>
@@ -1332,10 +1348,10 @@ export default function SettingsSection({
                               : 'border-amber-500/30 bg-amber-500/10 text-amber-300';
                         const badgeLabel =
                           scope.status === 'granted'
-                            ? 'Verildi'
+                            ? t('settings_ui_oauth_granted')
                             : scope.status === 'optional'
-                              ? 'Activity dışı'
-                              : 'Yalnızca web';
+                              ? t('settings_ui_oauth_optional')
+                              : t('settings_ui_oauth_web_only');
                         return (
                           <div key={scope.id} className="px-3.5 py-3 sm:px-4">
                             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -1349,7 +1365,7 @@ export default function SettingsSection({
                               </span>
                             </div>
                             <p className="mt-2 text-xs leading-relaxed text-white/60">{scope.description}</p>
-                            <p className="mt-1 text-[11px] text-white/30">Kullanım: {scope.uses}</p>
+                            <p className="mt-1 text-[11px] text-white/30">{t('settings_ui_oauth_usage', { uses: scope.uses })}</p>
                           </div>
                         );
                       })}
@@ -1375,18 +1391,18 @@ export default function SettingsSection({
                 </div>
               )}
 
-              <Panel title="Veri">
+              <Panel title={t('settings_ui_panel_data')}>
                 <SettingRow
                   icon={LuDownload}
-                  title="Veri dosyasını iste"
-                  description="JSON arşivini Discord DM ile gönder"
+                  title={t('settings_ui_request_data')}
+                  description={t('settings_ui_request_data_desc')}
                 >
                   <button
                     type="button"
                     onClick={openRequestModal}
                     className="rounded-lg bg-[#5865F2] px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-[#4752C4]"
                   >
-                    DM gönder
+                    {t('settings_ui_send_dm')}
                   </button>
                 </SettingRow>
               </Panel>
@@ -1395,7 +1411,7 @@ export default function SettingsSection({
                 <div className="border-b border-rose-500/15 bg-rose-500/[0.06] px-3.5 py-2 sm:px-4">
                   <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.16em] text-rose-300/80">
                     <LuTrash2 className="h-3.5 w-3.5" />
-                    Tehlikeli bölge
+                    {t('settings_ui_danger_zone')}
                   </p>
                 </div>
                 {(['current', 'all'] as const).map((scope) => {
@@ -1423,7 +1439,7 @@ export default function SettingsSection({
           <div className="flex items-center justify-between gap-3 rounded-xl border border-[#5865F2]/35 bg-[#0b0d12]/96 px-3 py-2.5 shadow-[0_12px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl">
             <div className="flex min-w-0 items-center gap-2">
               <LuInfo className="h-4 w-4 shrink-0 text-[#5865F2]" />
-              <p className="truncate text-xs font-medium text-white/75">Uygulanmamış değişiklikler</p>
+              <p className="truncate text-xs font-medium text-white/75">{t('settings_ui_unsaved')}</p>
             </div>
             <div className="flex shrink-0 items-center gap-1.5">
               <button
@@ -1432,7 +1448,7 @@ export default function SettingsSection({
                 className="inline-flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-white/45 transition hover:bg-white/[0.05] hover:text-white"
               >
                 <LuUndo2 className="h-3.5 w-3.5" />
-                Geri al
+                {t('settings_ui_revert')}
               </button>
               <button
                 type="button"
@@ -1440,7 +1456,7 @@ export default function SettingsSection({
                 className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[#5865F2] px-3.5 text-xs font-bold text-white transition hover:bg-[#4752C4]"
               >
                 <LuSave className="h-3.5 w-3.5" />
-                Uygula
+                {t('settings_ui_apply')}
               </button>
             </div>
           </div>
