@@ -125,7 +125,7 @@
   "settings_ui_request_confirm": "Confirmar y enviar solicitud",
   "settings_ui_request_error": "Ocurrió un error al solicitar los datos. Inténtalo de nuevo.",
   "settings_ui_request_error_dm": "No se pudieron enviar los datos. Asegúrate de que “Permitir mensajes directos de miembros del servidor” esté activado en tu cuenta de Discord.",
-  "settings_ui_request_success": "Tus datos personales se compilón y se enviaron como Mensaje Directo (DM)!"
+  "settings_ui_request_success": "Tus datos personales se compilón y se enviaron como Mensaje Directo (DM)!",
   "settings_ui_delete_modal_title_all": "Eliminación completa de datos de la cuenta",
   "settings_ui_delete_modal_title_current": "Limpieza de datos del servidor",
   "settings_ui_delete_modal_body_all": "Esta acción no se puede deshacer. Tras confirmar, se eliminan todos los registros de la plataforma y se cierra la sesión.",
