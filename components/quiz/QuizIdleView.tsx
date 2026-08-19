@@ -1,6 +1,7 @@
 'use client';
 
 import { LuCalendar, LuCoins, LuSparkles, LuTrophy, LuUsers, LuZap } from 'react-icons/lu';
+import { useT } from '@/contexts/LocaleContext';
 import { QuizShell } from './QuizShell';
 
 const SPARKLES = [
@@ -11,13 +12,14 @@ const SPARKLES = [
   { top: '38%', left: '8%', delay: '1.9s', size: 4 },
 ];
 
-const PERKS = [
-  { icon: LuCoins, label: 'Papel ödülü', color: 'text-amber-300' },
-  { icon: LuZap, label: 'Canlı sorular', color: 'text-violet-300' },
-  { icon: LuUsers, label: 'Sunucu etkinliği', color: 'text-sky-300' },
-] as const;
-
 export function QuizIdleView() {
+  const t = useT();
+  const perks = [
+    { icon: LuCoins, label: t('quiz_perk_reward'), color: 'text-amber-300' },
+    { icon: LuZap, label: t('quiz_perk_live'), color: 'text-violet-300' },
+    { icon: LuUsers, label: t('quiz_perk_server'), color: 'text-sky-300' },
+  ] as const;
+
   return (
     <QuizShell variant="idle">
       {SPARKLES.map((s, i) => (
@@ -35,7 +37,7 @@ export function QuizIdleView() {
       ))}
 
       <div className="flex min-h-0 flex-1 flex-col items-center justify-center text-center">
-        <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-violet-300/90">Quiz arenası</p>
+        <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-violet-300/90">{t('quiz_idle_kicker')}</p>
 
         <div className="relative mt-6">
           <div className="absolute inset-0 m-auto h-28 w-28 rounded-full bg-amber-400/20 blur-2xl" />
@@ -45,13 +47,11 @@ export function QuizIdleView() {
           <LuSparkles className="absolute -right-2 -top-1 h-5 w-5 text-amber-200/80 animate-quiz-sparkle" />
         </div>
 
-        <h2 className="mt-8 text-2xl font-black text-white sm:text-3xl">Sırada quiz yok</h2>
-        <p className="mt-3 max-w-sm text-sm leading-relaxed text-white/50">
-          Yakında yeni bir etkinlik açıldığında burada belirecek. Hazır ol — sorular hızlı gelir!
-        </p>
+        <h2 className="mt-8 text-2xl font-black text-white sm:text-3xl">{t('quiz_idle_title')}</h2>
+        <p className="mt-3 max-w-sm text-sm leading-relaxed text-white/50">{t('quiz_idle_body')}</p>
 
         <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
-          {PERKS.map(({ icon: Icon, label, color }) => (
+          {perks.map(({ icon: Icon, label, color }) => (
             <span
               key={label}
               className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 text-[11px] font-semibold text-white/70 backdrop-blur-sm"
@@ -64,7 +64,7 @@ export function QuizIdleView() {
 
         <div className="mt-10 flex items-center gap-2 rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-xs text-white/40 backdrop-blur-sm">
           <LuCalendar className="h-4 w-4 shrink-0 text-indigo-300/80" />
-          <span>Duyurular ve etkinlik takvimini kontrol etmeyi unutma</span>
+          <span>{t('quiz_idle_calendar')}</span>
         </div>
       </div>
     </QuizShell>

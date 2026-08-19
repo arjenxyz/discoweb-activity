@@ -45,7 +45,7 @@ const DEFAULT_ASSETS: RichPresenceAssets = { large_image: 'discoweb', large_text
 
 let sessionStartMs: number | null = null;
 let lastSignature = '';
-let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+let debounceTimer: number | null = null;
 
 const SECTION_PRESENCE_KEYS: Record<string, string> = {
   overview: 'presence_page_overview',

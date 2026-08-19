@@ -23,6 +23,34 @@ import { QuizIdleView } from '@/components/quiz/QuizIdleView';
 import { QuizLoadingView } from '@/components/quiz/QuizLoadingView';
 import { QuizProfileMenu, type QuizProfileMenuProps } from '@/components/quiz/QuizProfileMenu';
 import { QUIZ_INTRO_COUNTDOWN_SECONDS } from '@/lib/quiz/constants';
+import { useLocale, useT } from '@/contexts/LocaleContext';
+import type { LanguageCode } from '@/lib/languages';
+
+const DATE_LOCALES: Record<LanguageCode, string> = {
+  en: 'en-US',
+  pt: 'pt-BR',
+  id: 'id-ID',
+  es: 'es-MX',
+  de: 'de-DE',
+  tr: 'tr-TR',
+  fr: 'fr-FR',
+  hu: 'hu-HU',
+  ja: 'ja-JP',
+  ko: 'ko-KR',
+  ru: 'ru-RU',
+};
+
+function useIntlLocale() {
+  const { locale } = useLocale();
+  return DATE_LOCALES[locale] ?? locale;
+}
+
+const JOIN_ERROR_KEYS: Record<string, string> = {
+  registration_closed: 'quiz_join_error_closed',
+  not_joinable: 'quiz_join_error_not_joinable',
+  not_found: 'quiz_join_error_not_found',
+  wrong_guild: 'quiz_join_error_wrong_guild',
+};
 
 type Checkpoint = { position: number; papel_reward: number; label: string | null };
 
@@ -113,6 +141,7 @@ function useCountdown(targetIso: string) {
 }
 
 function InfoButton({ live, onClick }: { live?: boolean; onClick: () => void }) {
+  const t = useT();
   return (
     <button
       type="button"
@@ -121,12 +150,15 @@ function InfoButton({ live, onClick }: { live?: boolean; onClick: () => void }) 
     >
       {live && <span className="h-1.5 w-1.5 rounded-full animate-pulse bg-emerald-400" />}
       <LuInfo className="h-3.5 w-3.5" strokeWidth={2} />
-      Bilgi
+      {t('quiz_info')}
     </button>
   );
 }
 
 function QuizInfoModal({ event, onClose }: { event: EventCard; onClose: () => void }) {
+  const t = useT();
+  const intlLocale = useIntlLocale();
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -153,7 +185,7 @@ function QuizInfoModal({ event, onClose }: { event: EventCard; onClose: () => vo
         <div className="flex items-start justify-between gap-3 mb-4">
           <div>
             <p id="quiz-info-title" className="text-lg font-black text-white">
-              Etkinlik bilgisi
+              {t('quiz_info_title')}
             </p>
             <p className="mt-0.5 text-sm text-white/40">{event.title}</p>
           </div>
@@ -161,7 +193,7 @@ function QuizInfoModal({ event, onClose }: { event: EventCard; onClose: () => vo
             type="button"
             onClick={onClose}
             className="rounded-lg p-1.5 text-white/40 transition-colors hover:bg-white/[0.06] hover:text-white/70"
-            aria-label="Kapat"
+            aria-label={t('quiz_close')}
           >
             <LuX className="h-4 w-4" />
           </button>
@@ -169,33 +201,33 @@ function QuizInfoModal({ event, onClose }: { event: EventCard; onClose: () => vo
 
         <div className="grid grid-cols-2 gap-2 mb-5">
           <StatCard
-            label="Soru"
+            label={t('quiz_stat_questions')}
             value={`${event.total_questions}`}
-            sub={`${event.seconds_per_question} sn / soru`}
+            sub={t('quiz_stat_questions_sub', { seconds: event.seconds_per_question })}
             icon={<LuCircleHelp className="h-4 w-4" />}
             color="text-violet-400"
             compact
           />
           <StatCard
-            label="Hak"
+            label={t('quiz_stat_lives')}
             value={`${event.wrong_allowed}`}
-            sub="yanlış hakkı"
+            sub={t('quiz_stat_lives_sub')}
             icon={<LuHeart className="h-4 w-4" />}
             color="text-rose-400"
             compact
           />
           <StatCard
-            label="Havuz"
-            value={Number(event.prize_pool_papel).toLocaleString('tr-TR')}
-            sub="papel"
+            label={t('quiz_stat_pool')}
+            value={Number(event.prize_pool_papel).toLocaleString(intlLocale)}
+            sub={t('quiz_papel')}
             icon={<LuCoins className="h-4 w-4" />}
             color="text-amber-400"
             highlight
             compact
           />
           <StatCard
-            label="Başlangıç"
-            value={new Date(event.start_at).toLocaleString('tr-TR', { dateStyle: 'short', timeStyle: 'short' })}
+            label={t('quiz_stat_start')}
+            value={new Date(event.start_at).toLocaleString(intlLocale, { dateStyle: 'short', timeStyle: 'short' })}
             icon={<LuCalendar className="h-4 w-4" />}
             color="text-sky-400"
             compact
@@ -206,22 +238,22 @@ function QuizInfoModal({ event, onClose }: { event: EventCard; onClose: () => vo
         {checkpoints.length > 0 && (
           <div className="mb-5">
             <p className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-white/30">
-              Checkpoint ödülleri (etkinlik boyunca)
+              {t('quiz_checkpoints_title')}
             </p>
             <div className="grid gap-2">
               {checkpoints.map((c) => (
                 <div key={c.position} className={`${INNER} flex items-center justify-between gap-3`}>
                   <div>
                     <p className="text-xs font-semibold text-white/70">
-                      Soru {c.position}
+                      {t('quiz_question_n', { position: c.position })}
                       {c.label ? <span className="text-white/35">{` · ${c.label}`}</span> : null}
                     </p>
                     <p className="text-[10px] text-white/30">
-                      {c.position}/{event.total_questions} soru
+                      {t('quiz_question_progress', { position: c.position, total: event.total_questions })}
                     </p>
                   </div>
                   <span className="text-sm font-bold text-amber-300 tabular-nums">
-                    +{Number(c.papel_reward).toLocaleString('tr-TR')}
+                    +{Number(c.papel_reward).toLocaleString(intlLocale)}
                   </span>
                 </div>
               ))}
@@ -232,12 +264,12 @@ function QuizInfoModal({ event, onClose }: { event: EventCard; onClose: () => vo
         <div className={INNER}>
           <div className="flex items-center gap-2 mb-2">
             <LuZap className="h-3.5 w-3.5 text-white/30" />
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-white/30">Kurallar</span>
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-white/30">{t('quiz_rules')}</span>
           </div>
           <ul className="space-y-1.5 text-xs text-white/45 leading-relaxed">
-            <li>Etkinlik başlamadan önce kayıt ol — geç katılım mümkün değil.</li>
-            <li>{event.wrong_allowed} yanlış hakkın var; aşınca elenirsin.</li>
-            <li>Her soru için {event.seconds_per_question} saniyen var.</li>
+            <li>{t('quiz_rule_register')}</li>
+            <li>{t('quiz_rule_lives', { count: event.wrong_allowed })}</li>
+            <li>{t('quiz_rule_timer', { seconds: event.seconds_per_question })}</li>
           </ul>
         </div>
       </div>
@@ -263,6 +295,7 @@ export default function QuizEventSection({
   onImmersiveChange?: (immersive: boolean) => void;
   profileMenu?: QuizProfileMenuProps | null;
 }) {
+  const t = useT();
   const [events, setEvents] = useState<EventCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -349,12 +382,12 @@ export default function QuizEventSection({
         </div>
       )}
 
-      {loading && <QuizLoadingView label="Quiz arenası hazırlanıyor…" />}
+      {loading && <QuizLoadingView label={t('quiz_loading_arena')} />}
 
       {error && !loading && (
         <QuizShell variant="eliminated">
           <div className="flex flex-1 flex-col items-center justify-center gap-3 px-4 text-center">
-            <p className="text-[10px] font-bold uppercase tracking-[0.35em] text-rose-400/80">Bağlantı sorunu</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.35em] text-rose-400/80">{t('quiz_connection_issue')}</p>
             <p className="max-w-sm text-sm text-rose-200/90">{error}</p>
           </div>
         </QuizShell>
@@ -424,6 +457,7 @@ function EventPanel({
   onRefresh: () => void;
   onQuizEnded?: () => void;
 }) {
+  const t = useT();
   const [state, setState] = useState<StateResponse | null>(null);
   const [joining, setJoining] = useState(false);
   const [joinError, setJoinError] = useState<string | null>(null);
@@ -500,17 +534,14 @@ function EventPanel({
       });
       const data = await res.json();
       if (!res.ok) {
-        if (data.error === 'registration_closed') {
-          setJoinError('Kayıt süresi doldu. Etkinlik başladıktan sonra katılım mümkün değil.');
-        } else {
-          setJoinError(data.error || 'Katılım başarısız');
-        }
+        const code = typeof data.error === 'string' ? data.error : '';
+        setJoinError(t(JOIN_ERROR_KEYS[code] ?? 'quiz_join_error_generic'));
         return;
       }
       await pollState();
       onRefresh();
-    } catch (e) {
-      setJoinError(e instanceof Error ? e.message : 'Katılım başarısız');
+    } catch {
+      setJoinError(t('quiz_join_error_generic'));
     } finally {
       setJoining(false);
     }
@@ -561,7 +592,7 @@ function EventPanel({
     );
   }
 
-  if (!state) return <LoadingRow label="Bağlanılıyor…" />;
+  if (!state) return <LoadingRow label={t('quiz_loading_question')} />;
 
   if (state.registration_closed || !state.joined) {
     return <MissedRegistrationView event={event} />;
@@ -604,6 +635,8 @@ function ScheduledView({
   joinError: string | null;
   onCountdownEnd?: () => void;
 }) {
+  const t = useT();
+  const intlLocale = useIntlLocale();
   const [showInfo, setShowInfo] = useState(false);
   const { text: countdown, ended } = useCountdown(event.start_at);
   const countdownFiredRef = useRef(false);
@@ -629,7 +662,7 @@ function ScheduledView({
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col items-center justify-center text-center">
-        <p className="text-[10px] font-bold uppercase tracking-[0.35em] text-indigo-300/80">Quiz lobisi</p>
+        <p className="text-[10px] font-bold uppercase tracking-[0.35em] text-indigo-300/80">{t('quiz_lobby')}</p>
         <h2 className="mt-2 max-w-lg text-xl font-black text-white sm:text-2xl">{event.title}</h2>
         {event.description && (
           <p className="mt-2 max-w-md text-sm leading-relaxed text-white/45">{event.description}</p>
@@ -644,9 +677,9 @@ function ScheduledView({
           {overdue ? (
             <div className="relative z-10 px-4">
               {startBlocked ? (
-                <p className="text-sm font-bold text-amber-300">Başlatılamadı</p>
+                <p className="text-sm font-bold text-amber-300">{t('quiz_start_failed')}</p>
               ) : (
-                <p className="text-lg font-black uppercase tracking-wider text-white/80">Başlatılıyor…</p>
+                <p className="text-lg font-black uppercase tracking-wider text-white/80">{t('quiz_starting')}</p>
               )}
             </div>
           ) : (
@@ -657,15 +690,15 @@ function ScheduledView({
         </div>
 
         <p className="mt-4 text-xs uppercase tracking-wider text-white/35">
-          {overdue ? 'Canlı yayın hazırlanıyor' : 'Etkinlik başlangıcına kalan süre'}
+          {overdue ? t('quiz_going_live') : t('quiz_countdown_label')}
         </p>
 
         <div className="mt-6 grid w-full max-w-md grid-cols-2 gap-2 sm:grid-cols-4">
-          <StatCard label="Soru" value={`${event.total_questions}`} icon={<LuCircleHelp className="h-4 w-4" />} color="text-violet-400" compact small />
-          <StatCard label="Hak" value={`${event.wrong_allowed}`} icon={<LuHeart className="h-4 w-4" />} color="text-rose-400" compact small />
+          <StatCard label={t('quiz_stat_questions')} value={`${event.total_questions}`} icon={<LuCircleHelp className="h-4 w-4" />} color="text-violet-400" compact small />
+          <StatCard label={t('quiz_stat_lives')} value={`${event.wrong_allowed}`} icon={<LuHeart className="h-4 w-4" />} color="text-rose-400" compact small />
           <StatCard
-            label="Havuz"
-            value={Number(event.prize_pool_papel).toLocaleString('tr-TR')}
+            label={t('quiz_stat_pool')}
+            value={Number(event.prize_pool_papel).toLocaleString(intlLocale)}
             icon={<LuCoins className="h-4 w-4" />}
             color="text-amber-400"
             highlight
@@ -673,7 +706,7 @@ function ScheduledView({
             small
           />
           <StatCard
-            label="Süre"
+            label={t('quiz_stat_time')}
             value={`${event.seconds_per_question}s`}
             icon={<LuClock className="h-4 w-4" />}
             color="text-sky-400"
@@ -684,7 +717,7 @@ function ScheduledView({
 
         {startBlocked && (
           <div className="mt-4 w-full max-w-md rounded-xl border border-amber-500/25 bg-amber-500/10 px-4 py-3">
-            <p className="text-sm text-amber-100/90">{startBlocked}</p>
+            <p className="text-sm text-amber-100/90">{t('quiz_start_blocked_detail')}</p>
           </div>
         )}
       </div>
@@ -693,7 +726,7 @@ function ScheduledView({
         {joined ? (
           <div className="flex items-center justify-center gap-2 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
             <LuCheck className="h-4 w-4 shrink-0" />
-            <span>Katıldın — etkinlik başlayınca sorular açılacak</span>
+            <span>{t('quiz_joined')}</span>
           </div>
         ) : canJoin ? (
           <div>
@@ -709,7 +742,7 @@ function ScheduledView({
               ) : (
                 <LuTrophy className="h-5 w-5" />
               )}
-              {joining ? 'Kaydediliyor…' : 'Etkinliğe Katıl'}
+              {joining ? t('quiz_joining') : t('quiz_join')}
             </button>
           </div>
         ) : null}
@@ -721,19 +754,20 @@ function ScheduledView({
 }
 
 function MissedRegistrationView({ event }: { event: EventCard }) {
+  const t = useT();
   return (
     <QuizShell variant="muted">
       <div className="flex flex-1 flex-col items-center justify-center text-center">
         <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/5">
           <LuClock className="h-6 w-6 text-white/35" strokeWidth={1.5} />
         </div>
-        <p className="mt-4 text-[10px] font-bold uppercase tracking-[0.3em] text-emerald-400/80">Canlı</p>
+        <p className="mt-4 text-[10px] font-bold uppercase tracking-[0.3em] text-emerald-400/80">{t('quiz_live')}</p>
         <h2 className="mt-2 text-xl font-black text-white">{event.title}</h2>
         <p className="mx-auto mt-4 max-w-sm text-sm leading-relaxed text-white/45">
-          Bu etkinliğe katılmadın. Sorular yalnızca etkinlik başlamadan önce kayıt olan üyelere gösterilir.
+          {t('quiz_missed_body')}
         </p>
         <p className="mt-6 font-mono text-sm tabular-nums text-white/30">
-          Soru {event.current_position} / {event.total_questions}
+          {t('quiz_question_of', { position: event.current_position, total: event.total_questions })}
         </p>
       </div>
     </QuizShell>
@@ -755,6 +789,8 @@ function LivePlayView({
   lastAnswer: { selected: number; position: number } | null;
   onRevealPoll: () => void;
 }) {
+  const t = useT();
+  const intlLocale = useIntlLocale();
   const { event, current_question: q, me, answered_this_position: answered } = state;
   const [secondsLeft, setSecondsLeft] = useState(event.seconds_per_question);
   const [showInfo, setShowInfo] = useState(false);
@@ -842,7 +878,7 @@ function LivePlayView({
       <QuizShell variant="live">
         <div className="flex flex-1 items-center justify-center">
           <p className="animate-pulse text-sm text-white/50">
-            {!event.questions_locked_at ? 'Sorular hazırlanıyor…' : 'Soru yükleniyor…'}
+            {!event.questions_locked_at ? t('quiz_preparing_questions') : t('quiz_loading_question')}
           </p>
         </div>
       </QuizShell>
@@ -863,7 +899,7 @@ function LivePlayView({
         <div>
           <InfoButton live onClick={() => setShowInfo(true)} />
           <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.25em] text-white/40">
-            Soru {q.position} / {event.total_questions}
+            {t('quiz_question_of', { position: q.position, total: event.total_questions })}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -967,12 +1003,12 @@ function LivePlayView({
 
             {showResult && answeredCorrect && (
               <p className="mt-4 text-center text-sm font-bold text-emerald-300 animate-quiz-pop">
-                Doğru cevap!
+                {t('quiz_correct')}
               </p>
             )}
             {hasAnswered && !showResult && (
               <p className="mt-4 text-center text-xs text-white/40">
-                Cevabın kaydedildi — süre bitince sonuç açıklanacak
+                {t('quiz_answer_saved')}
               </p>
             )}
           </div>
@@ -982,11 +1018,11 @@ function LivePlayView({
       {/* Stats bar */}
       <div className="mt-4 flex flex-wrap items-center justify-center gap-4 rounded-xl border border-white/10 bg-black/25 px-4 py-2.5 text-xs backdrop-blur-md">
         <span className="text-white/40">
-          Doğru <span className="font-black text-emerald-400">{me?.total_correct ?? 0}</span>
+          {t('quiz_stat_correct')} <span className="font-black text-emerald-400">{me?.total_correct ?? 0}</span>
         </span>
         <span className="text-white/20">|</span>
         <span className="text-white/40">
-          Yanlış{' '}
+          {t('quiz_stat_wrong')}{' '}
           <span className="font-black text-rose-400">
             {me?.wrong_count ?? 0}/{event.wrong_allowed}
           </span>
@@ -995,9 +1031,9 @@ function LivePlayView({
         <span className="text-white/40">
           <LuCoins className="mr-1 inline h-3.5 w-3.5 text-amber-400" />
           <span className="font-black text-amber-300">
-            {Number(me?.papel_earned ?? 0).toLocaleString('tr-TR')}
+            {Number(me?.papel_earned ?? 0).toLocaleString(intlLocale)}
           </span>{' '}
-          papel
+          {t('quiz_papel')}
         </span>
       </div>
 
@@ -1007,6 +1043,8 @@ function LivePlayView({
 }
 
 function EliminatedView({ event, me }: { event: EventCard; me: MyState }) {
+  const t = useT();
+  const intlLocale = useIntlLocale();
   const progressPct = event.total_questions > 0
     ? Math.min(100, Math.round((me.last_position / event.total_questions) * 100))
     : 0;
@@ -1023,8 +1061,8 @@ function EliminatedView({ event, me }: { event: EventCard; me: MyState }) {
           </div>
         </div>
 
-        <p className="relative mt-8 text-[11px] font-bold uppercase tracking-[0.45em] text-rose-400">Elendin</p>
-        <h2 className="relative mt-3 text-3xl font-black text-white sm:text-4xl">Tur bitti</h2>
+        <p className="relative mt-8 text-[11px] font-bold uppercase tracking-[0.45em] text-rose-400">{t('quiz_eliminated')}</p>
+        <h2 className="relative mt-3 text-3xl font-black text-white sm:text-4xl">{t('quiz_round_over')}</h2>
 
         <div className="relative mt-4 flex items-center justify-center gap-1.5">
           {Array.from({ length: event.wrong_allowed }).map((_, i) => (
@@ -1037,14 +1075,14 @@ function EliminatedView({ event, me }: { event: EventCard; me: MyState }) {
         </div>
 
         <p className="relative mx-auto mt-4 max-w-md text-sm leading-relaxed text-white/50">
-          {event.wrong_allowed} yanlış hakkını kullandın. Etkinlik bitince otomatik olarak ana sayfaya döneceksin.
+          {t('quiz_eliminated_body', { count: event.wrong_allowed })}
         </p>
 
         <div className="relative mt-8 w-full max-w-lg rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5 backdrop-blur-sm">
           <div className="mb-3 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-white/35">
-            <span>İlerleme</span>
+            <span>{t('quiz_progress')}</span>
             <span>
-              Soru {me.last_position} / {event.total_questions}
+              {t('quiz_question_of', { position: me.last_position, total: event.total_questions })}
             </span>
           </div>
           <div className="h-2 overflow-hidden rounded-full bg-white/[0.06]">
@@ -1057,25 +1095,25 @@ function EliminatedView({ event, me }: { event: EventCard; me: MyState }) {
           <div className="mt-5 grid grid-cols-3 gap-3">
             <div className="rounded-xl border border-emerald-500/15 bg-emerald-500/5 px-3 py-3">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-white/40">Doğru</span>
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-white/40">{t('quiz_stat_correct')}</span>
                 <LuCheck className="h-4 w-4 text-emerald-400" />
               </div>
               <p className="mt-2 text-2xl font-black tabular-nums text-emerald-300">{me.total_correct}</p>
             </div>
             <div className="rounded-xl border border-violet-500/15 bg-violet-500/5 px-3 py-3">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-white/40">Soru</span>
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-white/40">{t('quiz_stat_questions')}</span>
                 <LuCircleHelp className="h-4 w-4 text-violet-400" />
               </div>
               <p className="mt-2 text-2xl font-black tabular-nums text-violet-200">{me.last_position}</p>
             </div>
             <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-3">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-white/40">Papel</span>
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-white/40">{t('quiz_papel')}</span>
                 <LuCoins className="h-4 w-4 text-amber-400" />
               </div>
               <p className="mt-2 text-2xl font-black tabular-nums text-amber-300">
-                {Number(me.papel_earned).toLocaleString('tr-TR')}
+                {Number(me.papel_earned).toLocaleString(intlLocale)}
               </p>
             </div>
           </div>
@@ -1083,7 +1121,7 @@ function EliminatedView({ event, me }: { event: EventCard; me: MyState }) {
 
         <div className="relative mt-6 inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-black/20 px-4 py-2 text-xs text-white/45">
           <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
-          Etkinlik devam ediyor — sonuçlar bitince yönlendirileceksin
+          {t('quiz_still_live')}
         </div>
       </div>
     </QuizShell>
@@ -1091,10 +1129,11 @@ function EliminatedView({ event, me }: { event: EventCard; me: MyState }) {
 }
 
 function FinishRedirect() {
+  const t = useT();
   return (
     <div className="flex items-center justify-center gap-3 py-12 text-white/30">
       <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/10 border-t-white/40" />
-      <span className="text-sm">Ana sayfaya dönülüyor…</span>
+      <span className="text-sm">{t('quiz_returning_home')}</span>
     </div>
   );
 }

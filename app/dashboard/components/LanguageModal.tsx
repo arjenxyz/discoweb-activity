@@ -26,7 +26,7 @@ export default function LanguageModal({ onClose }: Props) {
   }, [handleKeyDown]);
 
   const handleSelect = (code: LanguageCode) => {
-    setDiscordLocale(code);
+    setDiscordLocale(code, 'user');
     onClose();
   };
 

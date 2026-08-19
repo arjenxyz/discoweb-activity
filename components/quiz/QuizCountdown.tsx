@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-
-const STEPS = ['3', '2', '1', 'BAŞLA!'] as const;
+import { useT } from '@/contexts/LocaleContext';
 
 export function QuizCountdown({
   active,
@@ -11,6 +10,8 @@ export function QuizCountdown({
   active: boolean;
   onComplete: () => void;
 }) {
+  const t = useT();
+  const steps = ['3', '2', '1', t('quiz_countdown_go')] as const;
   const [step, setStep] = useState(0);
   const [visible, setVisible] = useState(false);
 
@@ -25,7 +26,7 @@ export function QuizCountdown({
     let i = 0;
     const iv = setInterval(() => {
       i += 1;
-      if (i >= STEPS.length) {
+      if (i >= steps.length) {
         clearInterval(iv);
         setVisible(false);
         onComplete();
@@ -34,7 +35,7 @@ export function QuizCountdown({
       setStep(i);
     }, 750);
     return () => clearInterval(iv);
-  }, [active, onComplete]);
+  }, [active, onComplete, steps.length]);
 
   if (!visible) return null;
 
@@ -44,11 +45,11 @@ export function QuizCountdown({
         key={step}
         className="animate-quiz-countdown-pop font-black uppercase tracking-[0.2em] text-white drop-shadow-[0_8px_32px_rgba(0,0,0,0.8)]"
         style={{
-          fontSize: step === STEPS.length - 1 ? 'clamp(2.5rem, 12vw, 4rem)' : 'clamp(4rem, 22vw, 7rem)',
-          color: step === STEPS.length - 1 ? '#fbbf24' : '#fff',
+          fontSize: step === steps.length - 1 ? 'clamp(2.5rem, 12vw, 4rem)' : 'clamp(4rem, 22vw, 7rem)',
+          color: step === steps.length - 1 ? '#fbbf24' : '#fff',
         }}
       >
-        {STEPS[step]}
+        {steps[step]}
       </span>
     </div>
   );

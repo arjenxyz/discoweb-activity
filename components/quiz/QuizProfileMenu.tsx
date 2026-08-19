@@ -86,7 +86,7 @@ export function QuizProfileMenu({
                   <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/8">
                     <LuHouse className="h-3.5 w-3.5" />
                   </div>
-                  <span className="text-sm font-medium">Ana sayfaya dön</span>
+                  <span className="text-sm font-medium">{t('quiz_go_home')}</span>
                 </div>
                 <LuChevronRight className="h-3.5 w-3.5 text-white/30" />
               </button>
